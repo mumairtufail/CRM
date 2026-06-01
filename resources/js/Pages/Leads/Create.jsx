@@ -7,13 +7,14 @@ import { Textarea } from '@/Components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
-import { ChevronLeft, Plus, X } from 'lucide-react'
+import { ChevronLeft, Plus, X, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
 
 const STATUSES = ['new','contacted','qualified','proposal','negotiation','won','lost','unqualified']
 const PRIORITIES = ['low','medium','high']
 const SOURCES = ['manual','csv','google_sheet','claude_ai','apollo','facebook','instagram']
+const SOCIAL_PLATFORMS = ['linkedin','twitter','facebook','instagram','youtube','tiktok','reddit','github','x','website','other']
 
 function FormField({ label, error, children, required }) {
   return (
@@ -47,14 +48,20 @@ export default function LeadCreate() {
     deal_value: '', currency: 'USD', country: '', city: '', industry: '',
     emails: [{ email: '', type: 'work', is_primary: true }],
     phones: [{ phone: '', type: 'mobile', is_primary: true }],
+    social_handles: [],
   })
 
-  // Strip empty email/phone rows before the request is sent
+  // Strip empty email/phone/social rows before the request is sent
   transform(d => ({
     ...d,
     emails: d.emails.filter(em => em.email.trim() !== ''),
     phones: d.phones.filter(ph => ph.phone.trim() !== ''),
+    social_handles: d.social_handles.filter(h => h.url.trim() !== ''),
   }))
+
+  const addSocial    = ()      => setData('social_handles', [...data.social_handles, { platform: 'linkedin', url: '' }])
+  const removeSocial = (i)     => setData('social_handles', data.social_handles.filter((_, idx) => idx !== i))
+  const setSocial    = (i,k,v) => setData('social_handles', data.social_handles.map((h, idx) => idx === i ? { ...h, [k]: v } : h))
 
   const addEmail = () => setData('emails', [...data.emails, { email: '', type: 'work', is_primary: false }])
   const removeEmail = i => setData('emails', data.emails.filter((_, idx) => idx !== i))
@@ -213,6 +220,43 @@ export default function LeadCreate() {
                         ))}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Social handles */}
+                  <div className="space-y-2 pt-1">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[12px] font-semibold text-slate-600">Social media handles</Label>
+                      <button type="button" onClick={addSocial}
+                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        <Plus size={11} /> Add
+                      </button>
+                    </div>
+                    {data.social_handles.length === 0 && (
+                      <p className="text-[11.5px] text-slate-400 italic">No social handles yet — click Add to include LinkedIn, Twitter, Instagram, etc.</p>
+                    )}
+                    {data.social_handles.map((h, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <select
+                          value={h.platform}
+                          onChange={e => setSocial(i, 'platform', e.target.value)}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-[11.5px] text-slate-700 w-32 shrink-0 focus:outline-none focus:ring-1 focus:ring-ring"
+                        >
+                          {SOCIAL_PLATFORMS.map(p => (
+                            <option key={p} value={p}>{p.charAt(0).toUpperCase() + p.slice(1)}</option>
+                          ))}
+                        </select>
+                        <Input
+                          value={h.url}
+                          onChange={e => setSocial(i, 'url', e.target.value)}
+                          className="h-8 text-xs flex-1"
+                          placeholder="https://…"
+                        />
+                        <button type="button" onClick={() => removeSocial(i)}
+                          className="shrink-0 text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </SectionCard>
               </div>

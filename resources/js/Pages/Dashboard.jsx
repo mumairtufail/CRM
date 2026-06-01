@@ -167,24 +167,24 @@ export default function Dashboard({
             style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', transform: 'translate(30%,-55%)' }} />
           <div className="absolute -bottom-16 left-1/4 w-48 h-48 rounded-full pointer-events-none opacity-[0.08]"
             style={{ background: 'radial-gradient(circle, #4F46E5 0%, transparent 70%)' }} />
-          <div className="relative flex items-center justify-between gap-4">
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1.5">
                 <Sparkles size={12} className="text-violet-300" />
                 <span className="text-violet-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
               </div>
-              <h2 className="text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''} 👋</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''} 👋</h2>
               <p className="text-white/40 text-[12.5px] mt-0.5">Here's your pipeline snapshot for today.</p>
             </div>
-            <div className="hidden lg:flex items-center gap-6 shrink-0">
+            <div className="flex items-center gap-4 sm:gap-6 shrink-0">
               {[
-                { label: 'Total Leads', value: stats?.total_leads ?? 0 },
+                { label: 'Leads', value: stats?.total_leads ?? 0 },
                 { label: 'Pipeline', value: stats?.pipeline_value ? `$${(stats.pipeline_value/1000).toFixed(1)}k` : '$0' },
-                { label: 'Conv. Rate', value: `${stats?.conversion_rate ?? 0}%` },
+                { label: 'Conv.', value: `${stats?.conversion_rate ?? 0}%` },
               ].map(item => (
                 <div key={item.label} className="text-center">
-                  <p className="text-[22px] font-bold text-white leading-none">{item.value}</p>
-                  <p className="text-[10px] text-white/35 uppercase tracking-wider mt-0.5">{item.label}</p>
+                  <p className="text-[18px] sm:text-[22px] font-bold text-white leading-none">{item.value}</p>
+                  <p className="text-[9px] sm:text-[10px] text-white/35 uppercase tracking-wider mt-0.5">{item.label}</p>
                 </div>
               ))}
             </div>
@@ -192,7 +192,7 @@ export default function Dashboard({
         </motion.div>
 
         {/* 5 Stat Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
           <StatCard title="Total Leads"    value={stats?.total_leads ?? 0}     change={stats?.leads_change}  icon={Users}      color="blue"   href="/leads"              index={0} />
           <StatCard title="Won This Month" value={stats?.won_count ?? 0}        change={stats?.won_change}    icon={TrendingUp} color="green"  href="/leads?status=won"   index={1} />
           <StatCard title="Emails Sent"    value={stats?.emails_sent ?? 0}                                    icon={Mail}       color="purple" href="/campaigns"           index={2} />

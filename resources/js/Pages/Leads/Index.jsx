@@ -335,18 +335,18 @@ export default function LeadsIndex({ leads, filters }) {
           }
         />
 
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
           <SearchInput
             value={filters?.search ?? ''}
             onChange={handleSearch}
             placeholder="Search leads…"
-            className="w-64"
+            className="w-full sm:w-64"
           />
           <Select
             value={filters?.status ?? 'all'}
             onValueChange={handleStatusFilter}
           >
-            <SelectTrigger className="h-9 w-40 text-sm bg-white">
+            <SelectTrigger className="h-9 w-full sm:w-40 text-sm bg-white">
               <Filter size={13} className="text-gray-400 mr-1" />
               <SelectValue />
             </SelectTrigger>

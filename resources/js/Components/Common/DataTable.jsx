@@ -48,7 +48,8 @@ export default function DataTable({
 
   return (
     <div className="space-y-3">
-      <div className="rounded-xl border border-gray-100 overflow-hidden bg-white shadow-sm">
+      <div className="rounded-xl border border-gray-100 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map(hg => (
@@ -109,6 +110,7 @@ export default function DataTable({
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Pagination */}

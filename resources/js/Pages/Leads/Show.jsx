@@ -138,18 +138,18 @@ export default function LeadShow({ lead, activities, leadStats }) {
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none opacity-[0.12]"
             style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', transform: 'translate(35%,-55%)' }} />
 
-          <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             {/* Left — avatar + info */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <LeadAvatar name={lead.full_name} size="xl" />
-              <div>
-                <h2 className="text-[22px] font-bold text-white leading-tight">{lead.full_name}</h2>
+              <div className="min-w-0">
+                <h2 className="text-[18px] sm:text-[22px] font-bold text-white leading-tight truncate">{lead.full_name}</h2>
                 {(lead.job_title || lead.company) && (
-                  <p className="text-white/45 text-[13px] mt-0.5">
+                  <p className="text-white/45 text-[12px] sm:text-[13px] mt-0.5 truncate">
                     {[lead.job_title, lead.company].filter(Boolean).join(' · ')}
                   </p>
                 )}
-                <div className="flex items-center flex-wrap gap-2 mt-2.5">
+                <div className="flex items-center flex-wrap gap-2 mt-2">
                   <StatusBadge status={lead.status} />
                   <PriorityBadge priority={lead.priority} />
                   {lead.tags?.map(tag => (
@@ -181,7 +181,7 @@ export default function LeadShow({ lead, activities, leadStats }) {
         </motion.div>
 
         {/* ── Mini stats row ────────────────────────────── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
           <MiniStat icon={DollarSign} label="Deal value"
             value={lead.deal_value ? `${lead.currency} ${Number(lead.deal_value).toLocaleString()}` : 'Not set'}
             color="text-teal-600" bg="bg-teal-50" />

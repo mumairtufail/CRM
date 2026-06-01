@@ -67,12 +67,22 @@ export default function Sidebar({ open, onToggle }) {
 
   const recentPages = useRecentPages(url, component)
 
+  const closeMobile = () => {
+    if (typeof window !== 'undefined' && window.innerWidth < 768) onToggle()
+  }
+
   return (
     <aside
       className={cn(
-        'sidebar-bg flex flex-col shrink-0 relative overflow-hidden',
+        'sidebar-bg flex flex-col overflow-hidden',
         'transition-all duration-300 ease-in-out',
-        open ? 'w-[228px]' : 'w-[62px]'
+        // Mobile: fixed full-height overlay, slides in/out
+        'fixed inset-y-0 left-0 z-50',
+        // Desktop: static sidebar in the flex row
+        'md:relative md:inset-auto md:z-auto md:shrink-0',
+        open
+          ? 'w-[228px] translate-x-0'
+          : 'w-[228px] -translate-x-full md:translate-x-0 md:w-[62px]'
       )}
       style={{ borderRight: '1px solid rgba(255,255,255,0.055)' }}
     >
@@ -129,6 +139,7 @@ export default function Sidebar({ open, onToggle }) {
             const active = url === href || (href !== '/' && url.startsWith(href))
             return (
               <Link key={href} href={href} title={!open ? label : undefined}
+                onClick={closeMobile}
                 className={cn(
                   'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
                   open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
@@ -212,6 +223,7 @@ export default function Sidebar({ open, onToggle }) {
           </div>
         )}
         <Link href="/profile" title={!open ? 'Settings' : undefined}
+          onClick={closeMobile}
           className={cn(
             'flex items-center rounded-[10px] text-white/35 hover:text-white/65 hover:bg-white/[0.06] transition-all group/settings',
             open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]'

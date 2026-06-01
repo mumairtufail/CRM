@@ -81,25 +81,26 @@ export default function InvoicesIndex({ invoices, filters, totals }) {
           }
         />
 
-        {/* Status filter pills */}
-        <div className="flex items-center gap-2 flex-wrap mb-4">
-          <StatPill label="All"     value={totals?.all ?? 0}     active={!activeStatus}    onClick={() => applyFilter({ status: '', page: 1 })} />
-          <StatPill label="Draft"   value={totals?.draft ?? 0}   active={activeStatus === 'draft'}   onClick={() => applyFilter({ status: 'draft', page: 1 })} />
-          <StatPill label="Sent"    value={totals?.sent ?? 0}    active={activeStatus === 'sent'}    onClick={() => applyFilter({ status: 'sent', page: 1 })} />
-          <StatPill label="Paid"    value={totals?.paid ?? 0}    active={activeStatus === 'paid'}    onClick={() => applyFilter({ status: 'paid', page: 1 })} />
-          <StatPill label="Overdue" value={totals?.overdue ?? 0} active={activeStatus === 'overdue'} onClick={() => applyFilter({ status: 'overdue', page: 1 })} />
-
-          <form onSubmit={handleSearch} className="ml-auto flex gap-2">
-            <div className="relative">
+        {/* Status filter pills + search */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <StatPill label="All"     value={totals?.all ?? 0}     active={!activeStatus}    onClick={() => applyFilter({ status: '', page: 1 })} />
+            <StatPill label="Draft"   value={totals?.draft ?? 0}   active={activeStatus === 'draft'}   onClick={() => applyFilter({ status: 'draft', page: 1 })} />
+            <StatPill label="Sent"    value={totals?.sent ?? 0}    active={activeStatus === 'sent'}    onClick={() => applyFilter({ status: 'sent', page: 1 })} />
+            <StatPill label="Paid"    value={totals?.paid ?? 0}    active={activeStatus === 'paid'}    onClick={() => applyFilter({ status: 'paid', page: 1 })} />
+            <StatPill label="Overdue" value={totals?.overdue ?? 0} active={activeStatus === 'overdue'} onClick={() => applyFilter({ status: 'overdue', page: 1 })} />
+          </div>
+          <form onSubmit={handleSearch} className="sm:ml-auto flex gap-2">
+            <div className="relative flex-1 sm:flex-none">
               <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <Input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Search invoices…"
-                className="pl-8 h-8 text-[13px] w-52"
+                className="pl-8 h-8 text-[13px] w-full sm:w-52"
               />
             </div>
-            <Button type="submit" variant="outline" size="sm" className="h-8">Search</Button>
+            <Button type="submit" variant="outline" size="sm" className="h-8 shrink-0">Search</Button>
           </form>
         </div>
 
@@ -113,6 +114,7 @@ export default function InvoicesIndex({ invoices, filters, totals }) {
           />
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full text-[13px]">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/60">
@@ -172,6 +174,7 @@ export default function InvoicesIndex({ invoices, filters, totals }) {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {/* Pagination */}
             {last_page > 1 && (

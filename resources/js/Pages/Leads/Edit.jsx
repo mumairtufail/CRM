@@ -88,14 +88,14 @@ export default function LeadEdit({ lead }) {
           />
 
           <form onSubmit={submit}>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
 
               {/* Left Column - Main Details */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="xl:col-span-2 space-y-6">
                 
                 {/* Basic Info */}
                 <SectionCard title="Basic Info">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="First Name" error={errors.first_name} required>
                       <Input value={data.first_name} onChange={e => setData('first_name', e.target.value)}
                         className="h-9 text-xs" placeholder="John" />
@@ -105,7 +105,7 @@ export default function LeadEdit({ lead }) {
                         className="h-9 text-xs" placeholder="Doe" />
                     </FormField>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="Company" error={errors.company}>
                       <Input value={data.company} onChange={e => setData('company', e.target.value)}
                         className="h-9 text-xs" placeholder="Acme Inc." />
@@ -123,7 +123,7 @@ export default function LeadEdit({ lead }) {
 
                 {/* Contact Info */}
                 <SectionCard title="Contact Information">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField label="Website" error={errors.website}>
                       <Input value={data.website} onChange={e => setData('website', e.target.value)}
                         className="h-9 text-xs" placeholder="https://acme.com" />
@@ -178,7 +178,7 @@ export default function LeadEdit({ lead }) {
               </div>
 
               {/* Middle Column - Pipeline & Details */}
-              <div className="lg:col-span-1 space-y-6 flex flex-col">
+              <div className="xl:col-span-1 space-y-6 flex flex-col">
                 <SectionCard title="Status & Pipeline">
                   <FormField label="Status" error={errors.status}>
                     <Select value={data.status} onValueChange={v => setData('status', v)}>
@@ -211,7 +211,7 @@ export default function LeadEdit({ lead }) {
                     <Input value={data.industry} onChange={e => setData('industry', e.target.value)}
                       className="h-9 text-xs" placeholder="Software" />
                   </FormField>
-                  <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                     <FormField label="Country" error={errors.country}>
                       <Input value={data.country} onChange={e => setData('country', e.target.value)}
                         className="h-9 text-xs" placeholder="United States" />
@@ -225,7 +225,7 @@ export default function LeadEdit({ lead }) {
               </div>
 
               {/* Right Column - Tips & Help */}
-              <div className="lg:col-span-1 flex flex-col space-y-6">
+              <div className="xl:col-span-1 flex flex-col space-y-6">
                 <SectionCard title="Tips & Guidance" className="bg-gradient-to-b from-indigo-50/50 to-white h-full">
                   <div className="text-[12.5px] text-slate-600 space-y-4">
                     <div>

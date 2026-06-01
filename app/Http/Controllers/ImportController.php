@@ -7,6 +7,7 @@ use App\Models\ImportJob;
 use App\Models\Lead;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
@@ -60,40 +61,36 @@ class ImportController extends Controller
         $spreadsheetId = $matches[1];
 
         try {
-            // Google Sheets worksheets feed (works for publicly shared sheets)
-            $feedUrl  = "https://spreadsheets.google.com/feeds/worksheets/{$spreadsheetId}/public/basic?alt=json";
-            $response = Http::timeout(8)->get($feedUrl);
+            // Verify access by fetching a tiny slice of the first sheet via gviz (same endpoint used for the real import).
+            // Google's old Feeds API v3 was shut down in 2021 and always returns 404, so we skip it entirely.
+            $probeUrl = "https://docs.google.com/spreadsheets/d/{$spreadsheetId}/gviz/tq?tqx=out:csv&range=A1:A2";
+            $response = Http::timeout(10)->get($probeUrl);
+
+            Log::info('fetchSheets probe', ['status' => $response->status(), 'id' => $spreadsheetId]);
+
+            if ($response->status() === 401 || $response->status() === 403) {
+                return response()->json([
+                    'error' => 'Access denied (HTTP ' . $response->status() . '). Open the sheet → Share → set to "Anyone with the link can view".',
+                ], 422);
+            }
 
             if (!$response->ok()) {
                 return response()->json([
-                    'spreadsheet_id' => $spreadsheetId,
-                    'sheets'         => ['Sheet1'],
-                    'warning'        => 'Could not load sheet names — the spreadsheet may not be shared publicly. Make sure sharing is set to "Anyone with the link". You can type the sheet name manually.',
-                ]);
+                    'error' => 'Could not reach this spreadsheet (HTTP ' . $response->status() . '). Double-check the URL and sharing settings.',
+                ], 422);
             }
 
-            $data   = $response->json();
-            $sheets = [];
-
-            foreach ($data['feed']['entry'] ?? [] as $entry) {
-                $sheets[] = $entry['title']['$t'];
-            }
-
-            if (empty($sheets)) {
-                $sheets = ['Sheet1'];
-            }
-
+            // Sheet is accessible. We cannot list all tab names without the Sheets API key,
+            // so return a verified status and let the user type the tab name (default Sheet1).
             return response()->json([
                 'spreadsheet_id' => $spreadsheetId,
-                'sheets'         => $sheets,
+                'verified'       => true,
+                'sheets'         => ['Sheet1'],
             ]);
 
         } catch (\Throwable $e) {
-            return response()->json([
-                'spreadsheet_id' => $spreadsheetId,
-                'sheets'         => ['Sheet1'],
-                'warning'        => 'Could not auto-load sheet names. Type the sheet name manually.',
-            ]);
+            Log::error('fetchSheets exception', ['message' => $e->getMessage()]);
+            return response()->json(['error' => 'Connection error: ' . $e->getMessage()], 422);
         }
     }
 
@@ -109,13 +106,25 @@ class ImportController extends Controller
         $id    = $request->input('spreadsheet_id');
         $sheet = $request->input('sheet');
 
-        // Google gviz/tq endpoint exports any public sheet to CSV
         $csvUrl = "https://docs.google.com/spreadsheets/d/{$id}/gviz/tq?tqx=out:csv&sheet=" . urlencode($sheet);
+        Log::channel('import')->info('uploadFromSheets: start', [
+            'spreadsheet_id' => $id,
+            'sheet'          => $sheet,
+            'csv_url'        => $csvUrl,
+        ]);
 
         try {
             $response = Http::timeout(15)->get($csvUrl);
 
+            Log::channel('import')->info('uploadFromSheets: gviz response', [
+                'status'      => $response->status(),
+                'ok'          => $response->ok(),
+                'body_length' => strlen($response->body()),
+                'body_head'   => substr($response->body(), 0, 300),
+            ]);
+
             if (!$response->ok()) {
+                Log::channel('import')->warning('uploadFromSheets: gviz non-OK', ['status' => $response->status()]);
                 return back()->withErrors(['url' => 'Could not access the spreadsheet. Make sure it is shared publicly (Anyone with the link can view).']);
             }
 
@@ -125,7 +134,13 @@ class ImportController extends Controller
             [$headers, $rows] = $this->parseCsvFile($tmpPath);
             unlink($tmpPath);
 
+            Log::channel('import')->info('uploadFromSheets: parsed CSV', [
+                'headers'   => $headers,
+                'row_count' => count($rows),
+            ]);
+
             if (empty($headers)) {
+                Log::channel('import')->warning('uploadFromSheets: empty sheet returned');
                 return back()->withErrors(['sheet' => 'The selected sheet appears to be empty or could not be read.']);
             }
 
@@ -136,9 +151,16 @@ class ImportController extends Controller
                 'total_rows'   => count($rows),
             ]);
 
+            Log::channel('import')->info('uploadFromSheets: job created', ['job_id' => $job->id]);
+
             return redirect()->route('import.index', ['job' => $job->id]);
 
         } catch (\Throwable $e) {
+            Log::channel('import')->error('uploadFromSheets: exception', [
+                'message' => $e->getMessage(),
+                'class'   => get_class($e),
+                'trace'   => $e->getTraceAsString(),
+            ]);
             return back()->withErrors(['url' => 'Import failed. Please check the URL and ensure the sheet is shared publicly.']);
         }
     }

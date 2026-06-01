@@ -1,4 +1,4 @@
-import { Head, Link, useForm, router } from '@inertiajs/react'
+import { Head, Link, useForm } from '@inertiajs/react'
 import { useState } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Button } from '@/Components/ui/button'
@@ -113,13 +113,18 @@ export default function CampaignCreate({ statuses, leadCount }) {
     filters: { status: '' },
   })
 
-  const updateFilter = (key, val) => {
+  const updateFilter = async (key, val) => {
     const filters = { ...data.filters, [key]: val || '' }
     setData('filters', filters)
-    router.get('/campaigns/recipient-count', { filters }, {
-      preserveState: true, replace: true,
-      onSuccess: page => { if (page.props?.count != null) setRecipientCount(page.props.count) },
-    })
+    try {
+      const params = new URLSearchParams()
+      if (filters.status) params.set('filters[status]', filters.status)
+      const res  = await fetch(`/campaigns/recipient-count?${params}`, {
+        headers: { Accept: 'application/json' },
+      })
+      const json = await res.json()
+      if (json.count != null) setRecipientCount(json.count)
+    } catch {}
   }
 
   const submit = e => {

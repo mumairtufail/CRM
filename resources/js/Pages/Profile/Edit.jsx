@@ -11,7 +11,8 @@ import {
 } from '@/Components/ui/dialog'
 import {
   Upload, Trash2, Building2, Plus, Check, Zap, Server,
-  Mail, Settings2, User, ChevronRight, Eye, EyeOff, X
+  Mail, Settings2, User, ChevronRight, Eye, EyeOff, X,
+  LayoutTemplate, ExternalLink, Palette, CheckCircle2
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -59,6 +60,7 @@ const TABS = [
   { id: 'workspace', label: 'Workspace', icon: Building2 },
   { id: 'smtp',      label: 'SMTP',      icon: Server },
   { id: 'mail',      label: 'Mail',      icon: Mail },
+  { id: 'templates', label: 'Templates', icon: LayoutTemplate },
 ]
 
 function TabNav({ active, onChange }) {
@@ -684,12 +686,323 @@ function MailTab({ mailSettings }) {
   )
 }
 
+// ─── Email Templates tab ──────────────────────────────────────────────────────
+
+const TEMPLATE_STYLES = {
+  '#7c3aed': {
+    bg: 'from-violet-500 to-indigo-600',
+    header: 'bg-gradient-to-r from-violet-500 to-indigo-600',
+    body: 'bg-white',
+    footer: 'bg-indigo-950',
+  },
+  '#6366f1': {
+    bg: 'from-indigo-400 to-indigo-600',
+    header: 'bg-white border-t-4 border-indigo-500',
+    body: 'bg-white',
+    footer: 'bg-white border-t border-slate-100',
+  },
+  '#0f172a': {
+    bg: 'from-slate-800 to-slate-900',
+    header: 'bg-slate-900',
+    body: 'bg-slate-900',
+    footer: 'bg-slate-950',
+  },
+}
+
+function TemplateMiniPreview({ color }) {
+  const s = TEMPLATE_STYLES[color] || TEMPLATE_STYLES['#7c3aed']
+  const isDark = color === '#0f172a'
+
+  return (
+    <div className="w-full rounded-lg overflow-hidden border border-slate-100 shadow-sm" style={{ aspectRatio: '4/3' }}>
+      {/* mini header */}
+      <div className={cn('px-3 py-2', s.header)} style={color === '#6366f1' ? { borderTop: '3px solid #6366f1' } : {}}>
+        <div className={cn('h-2 rounded w-16 mb-1', isDark ? 'bg-slate-600' : color === '#6366f1' ? 'bg-slate-800' : 'bg-white/80')} />
+        <div className={cn('h-1.5 rounded w-10', isDark ? 'bg-slate-700' : color === '#6366f1' ? 'bg-slate-300' : 'bg-white/50')} />
+      </div>
+      {/* mini body */}
+      <div className={cn('px-3 py-2 flex-1', s.body)} style={{ minHeight: 52 }}>
+        <div className={cn('h-2 rounded w-24 mb-1.5', isDark ? 'bg-slate-700' : 'bg-slate-200')} />
+        <div className={cn('h-1.5 rounded w-full mb-1', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
+        <div className={cn('h-1.5 rounded w-4/5 mb-1', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
+        <div className={cn('h-1.5 rounded w-3/5', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
+      </div>
+      {/* mini footer */}
+      <div className={cn('px-3 py-1.5', s.footer)}>
+        <div className={cn('h-1.5 rounded w-20 mx-auto', isDark ? 'bg-slate-700' : color === '#6366f1' ? 'bg-slate-200' : 'bg-white/30')} />
+      </div>
+    </div>
+  )
+}
+
+function TemplatePreviewModal({ template, onClose }) {
+  const previewUrl = `/email-templates/${template.id}/preview`
+
+  return (
+    <Dialog open onOpenChange={v => !v && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+        <DialogHeader className="px-5 py-3.5 border-b border-slate-100">
+          <div className="flex items-center justify-between">
+            <div>
+              <DialogTitle className="text-[13.5px] font-semibold">{template.name}</DialogTitle>
+              {template.description && (
+                <p className="text-[11.5px] text-slate-400 mt-0.5">{template.description}</p>
+              )}
+            </div>
+            <a href={previewUrl} target="_blank" rel="noreferrer"
+              className="flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-700 mr-6">
+              <ExternalLink size={11} /> Open full
+            </a>
+          </div>
+        </DialogHeader>
+        <div className="flex-1 overflow-hidden" style={{ minHeight: 500 }}>
+          <iframe
+            src={previewUrl}
+            title={`Preview: ${template.name}`}
+            className="w-full h-full border-0"
+            style={{ minHeight: 500 }}
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function CustomTemplateDialog({ onClose }) {
+  const [form, setForm] = useState({
+    name: '', description: '', thumbnail_color: '#7c3aed', html_content: '',
+  })
+  const [saving, setSaving] = useState(false)
+
+  const COLORS = ['#7c3aed', '#6366f1', '#0f172a', '#0ea5e9', '#10b981', '#ef4444', '#f59e0b']
+
+  const handleSubmit = e => {
+    e.preventDefault()
+    setSaving(true)
+    router.post('/email-templates', form, {
+      preserveState: true, preserveScroll: true,
+      onSuccess: () => { toast.success('Template created'); onClose() },
+      onError: errs => toast.error(Object.values(errs)[0] || 'Validation error'),
+      onFinish: () => setSaving(false),
+    })
+  }
+
+  return (
+    <Dialog open onOpenChange={v => !v && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-[14px]">Create custom template</DialogTitle>
+          <DialogDescription className="text-[12px]">
+            Write a full HTML email document. Use <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{content}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{company_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{from_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{year}}'}</code> as placeholders.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Template name">
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                className="h-8 text-[13px]" placeholder="My Template" required />
+            </Field>
+            <Field label="Description">
+              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                className="h-8 text-[13px]" placeholder="One-line description" />
+            </Field>
+          </div>
+
+          <Field label="Card color">
+            <div className="flex gap-2 mt-1">
+              {COLORS.map(c => (
+                <button key={c} type="button"
+                  onClick={() => setForm(f => ({ ...f, thumbnail_color: c }))}
+                  className="w-6 h-6 rounded-full border-2 transition-all"
+                  style={{
+                    background: c,
+                    borderColor: form.thumbnail_color === c ? '#fff' : 'transparent',
+                    boxShadow: form.thumbnail_color === c ? `0 0 0 2px ${c}` : 'none',
+                  }} />
+              ))}
+            </div>
+          </Field>
+
+          <Field label="HTML content">
+            <textarea
+              value={form.html_content}
+              onChange={e => setForm(f => ({ ...f, html_content: e.target.value }))}
+              rows={12}
+              required
+              placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  {{content}}\n</body>\n</html>'}
+              className="w-full text-[12px] font-mono rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y"
+            />
+          </Field>
+
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
+            <button type="submit" disabled={saving}
+              className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              {saving ? 'Creating…' : 'Create template'}
+            </button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate }) {
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const doDelete = () => {
+    setDeleting(true)
+    router.delete(`/email-templates/${template.id}`, {
+      preserveState: true, preserveScroll: true,
+      onSuccess: () => toast.success('Template removed'),
+      onFinish: () => { setDeleting(false); setConfirmDelete(false) },
+    })
+  }
+
+  return (
+    <>
+      <div className={cn(
+        'rounded-xl border p-3 transition-all hover:shadow-sm',
+        isActive ? 'border-violet-300 bg-violet-50/50 shadow-sm' : 'border-slate-200 bg-white'
+      )}>
+        {/* mini visual preview */}
+        <div className="mb-3 relative">
+          <TemplateMiniPreview color={template.thumbnail_color} />
+          {isActive && (
+            <div className="absolute top-2 right-2 flex items-center gap-1 bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow">
+              <CheckCircle2 size={9} /> Active
+            </div>
+          )}
+          {template.is_system && (
+            <div className="absolute top-2 left-2 bg-slate-700/70 text-white text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+              Built-in
+            </div>
+          )}
+        </div>
+
+        <p className="text-[13px] font-semibold text-slate-800 mb-0.5">{template.name}</p>
+        {template.description && (
+          <p className="text-[11.5px] text-slate-400 leading-snug mb-3">{template.description}</p>
+        )}
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {isActive ? (
+            <button onClick={onDeactivate}
+              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">
+              Deactivate
+            </button>
+          ) : (
+            <button onClick={onActivate}
+              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1">
+              <Check size={10} /> Use template
+            </button>
+          )}
+          <button onClick={onPreview}
+            className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors flex items-center gap-1">
+            <Eye size={10} /> Preview
+          </button>
+          {!template.is_system && (
+            <button onClick={() => setConfirmDelete(true)}
+              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 transition-colors">
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[13px]">Remove "{template.name}"?</DialogTitle>
+            <DialogDescription className="text-[12px]">This template will be permanently deleted.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
+            <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={deleting} onClick={doDelete}>
+              {deleting ? 'Removing…' : 'Remove'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
+
+function TemplatesTab({ templates, activeTemplateId }) {
+  const [previewTemplate, setPreviewTemplate] = useState(null)
+  const [showCreate, setShowCreate]           = useState(false)
+
+  const activate = (template) => {
+    router.patch(`/email-templates/${template.id}/activate`, {}, {
+      preserveState: true, preserveScroll: true,
+      onSuccess: () => toast.success(`"${template.name}" set as active template`),
+    })
+  }
+
+  const deactivate = () => {
+    router.patch('/email-templates/deactivate', {}, {
+      preserveState: true, preserveScroll: true,
+      onSuccess: () => toast.success('Template deactivated — emails will send without a wrapper'),
+    })
+  }
+
+  const activeTemplate = templates.find(t => t.id === activeTemplateId)
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      {/* Info banner */}
+      <div className="bg-violet-50 border border-violet-100 rounded-xl px-4 py-3 text-[12px] text-violet-800 space-y-1">
+        <p className="font-semibold flex items-center gap-1.5"><LayoutTemplate size={13} /> Email templates</p>
+        <p className="text-[11.5px] text-violet-700">
+          The active template wraps every email you send — campaigns, test emails, everything.
+          It injects your <strong>company name</strong>, <strong>from name</strong>, and <strong>campaign content</strong> automatically.
+          {activeTemplate
+            ? <> Currently using <strong>{activeTemplate.name}</strong>.</>
+            : <> No template active — emails will send as raw HTML.</>}
+        </p>
+      </div>
+
+      {/* Template grid */}
+      <div className="grid grid-cols-3 gap-3">
+        {templates.map(template => (
+          <TemplateCard
+            key={template.id}
+            template={template}
+            isActive={template.id === activeTemplateId}
+            onActivate={() => activate(template)}
+            onDeactivate={deactivate}
+            onPreview={() => setPreviewTemplate(template)}
+          />
+        ))}
+        {/* Add custom card */}
+        <button onClick={() => setShowCreate(true)}
+          className="rounded-xl border-2 border-dashed border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 transition-all flex flex-col items-center justify-center gap-2 p-4 min-h-[180px] group">
+          <div className="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-violet-100 flex items-center justify-center transition-colors">
+            <Plus size={16} className="text-slate-400 group-hover:text-violet-600" />
+          </div>
+          <span className="text-[12px] font-medium text-slate-400 group-hover:text-violet-600">Add custom</span>
+        </button>
+      </div>
+
+      {previewTemplate && (
+        <TemplatePreviewModal template={previewTemplate} onClose={() => setPreviewTemplate(null)} />
+      )}
+      {showCreate && <CustomTemplateDialog onClose={() => setShowCreate(false)} />}
+    </div>
+  )
+}
+
 // ─── Page root ────────────────────────────────────────────────────────────────
 
-export default function ProfileEdit({ mustVerifyEmail, smtpCredentials, mailSettings, smtpSuccess }) {
+export default function ProfileEdit({
+  mustVerifyEmail, smtpCredentials, mailSettings,
+  emailTemplates, activeTemplateId, smtpSuccess,
+}) {
   const [tab, setTab] = useState('profile')
 
-  // Surface smtp flash messages as toasts
   React.useEffect(() => {
     if (smtpSuccess) toast.success(smtpSuccess)
   }, [smtpSuccess])
@@ -706,6 +1019,7 @@ export default function ProfileEdit({ mustVerifyEmail, smtpCredentials, mailSett
         {tab === 'workspace' && <WorkspaceTab />}
         {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
         {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
+        {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} />}
       </AppLayout>
     </>
   )

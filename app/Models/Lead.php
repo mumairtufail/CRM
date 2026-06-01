@@ -51,6 +51,11 @@ class Lead extends Model
         return $this->hasMany(EmailSend::class);
     }
 
+    public function invoices()
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
     public function getFullNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");

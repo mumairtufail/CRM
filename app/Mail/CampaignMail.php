@@ -14,7 +14,8 @@ class CampaignMail extends Mailable
 
     public function __construct(
         public readonly EmailCampaign $campaign,
-        public readonly Lead $lead
+        public readonly Lead $lead,
+        public readonly ?string $renderedHtml = null,
     ) {}
 
     public function build(): static
@@ -22,6 +23,6 @@ class CampaignMail extends Mailable
         return $this
             ->from($this->campaign->from_email, $this->campaign->from_name)
             ->subject($this->campaign->subject)
-            ->html($this->campaign->body_html);
+            ->html($this->renderedHtml ?? $this->campaign->body_html);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\EmailTemplate;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,10 +17,23 @@ class ProfileController extends Controller
 {
     public function edit(Request $request): Response
     {
+        $user = $request->user();
+
+        // System templates + user's own custom templates
+        $systemTemplates = EmailTemplate::whereNull('user_id')->where('is_system', true)->get();
+        $userTemplates   = $user->emailTemplates()->get();
+        $allTemplates    = $systemTemplates->merge($userTemplates)->map(fn ($t) => [
+            'id'              => $t->id,
+            'name'            => $t->name,
+            'description'     => $t->description,
+            'thumbnail_color' => $t->thumbnail_color,
+            'is_system'       => $t->is_system,
+        ]);
+
         return Inertia::render('Profile/Edit', [
-            'mustVerifyEmail'    => $request->user() instanceof MustVerifyEmail,
+            'mustVerifyEmail'    => $user instanceof MustVerifyEmail,
             'status'             => session('status'),
-            'smtpCredentials'    => $request->user()->smtpCredentials()->get()->map(fn ($c) => [
+            'smtpCredentials'    => $user->smtpCredentials()->get()->map(fn ($c) => [
                 'id'         => $c->id,
                 'name'       => $c->name,
                 'host'       => $c->host,
@@ -30,11 +44,13 @@ class ProfileController extends Controller
                 'from_email' => $c->from_email,
                 'is_active'  => $c->is_active,
             ]),
-            'mailSettings'       => [
-                'batch_size'  => $request->user()->mail_batch_size ?? 10,
-                'batch_delay' => $request->user()->mail_batch_delay ?? 5,
+            'mailSettings'          => [
+                'batch_size'  => $user->mail_batch_size  ?? 10,
+                'batch_delay' => $user->mail_batch_delay ?? 5,
             ],
-            'smtpSuccess'        => session('smtp_success'),
+            'emailTemplates'        => $allTemplates->values(),
+            'activeTemplateId'      => $user->active_template_id,
+            'smtpSuccess'           => session('smtp_success'),
         ]);
     }
 

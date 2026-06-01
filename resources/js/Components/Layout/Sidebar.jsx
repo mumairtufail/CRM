@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, Zap, PanelLeftClose, PanelLeftOpen,
-  Plus, Clock, ChevronRight,
+  Plus, Clock, ChevronRight, FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -12,6 +12,7 @@ const navItems = [
   { label: 'Leads',     href: '/leads',     icon: Users },
   { label: 'Pipeline',  href: '/pipeline',  icon: Kanban },
   { label: 'Campaigns', href: '/campaigns', icon: Mail },
+  { label: 'Invoices',  href: '/invoices',  icon: FileText },
   { label: 'Import',    href: '/import',    icon: Upload },
   { label: 'Tags',      href: '/tags',      icon: Tag },
 ]
@@ -31,6 +32,9 @@ const COMPONENT_LABELS = {
   'Campaigns/Index':  'Campaigns',
   'Campaigns/Create': 'New Campaign',
   'Campaigns/Show':   'Campaign',
+  'Invoices/Index':   'Invoices',
+  'Invoices/Create':  'New Invoice',
+  'Invoices/Show':    'Invoice',
   'Pipeline':         'Pipeline',
   'Import':           'Import',
   'Tags/Index':       'Tags',
@@ -115,35 +119,9 @@ export default function Sidebar({ open, onToggle }) {
 
       <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
 
-        {/* ── Quick actions ────────────────────── */}
-        {open && (
-          <div className="px-3 pt-4 pb-1">
-            <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 px-1 mb-1.5">Quick add</p>
-            <div className="flex gap-1.5">
-              {quickActions.map(({ label, href, icon: Icon }) => (
-                <Link key={href} href={href}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/50 hover:text-white transition-all text-[11px] font-semibold">
-                  <Plus size={10} strokeWidth={2.5} />
-                  {label.replace('New ', '')}
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* collapsed: show + icon for new lead */}
-        {!open && (
-          <div className="flex flex-col items-center gap-1 px-2 pt-3 pb-1">
-            <Link href="/leads/create" title="New Lead"
-              className="p-[9px] rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/40 hover:text-white transition-all">
-              <Plus size={13} strokeWidth={2.5} />
-            </Link>
-          </div>
-        )}
-
         {/* ── Navigation ────────────────────────── */}
         {open && (
-          <p className="px-4 pt-3 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Navigation</p>
+          <p className="px-4 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Navigation</p>
         )}
 
         <nav className={cn('px-2 space-y-0.5', open ? 'py-1' : 'py-2')}>
@@ -176,6 +154,32 @@ export default function Sidebar({ open, onToggle }) {
             )
           })}
         </nav>
+
+        {/* ── Quick actions ────────────────────── */}
+        {open && (
+          <div className="px-3 pt-3 pb-1">
+            <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 px-1 mb-1.5">Quick add</p>
+            <div className="flex gap-1.5">
+              {quickActions.map(({ label, href, icon: Icon }) => (
+                <Link key={href} href={href}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/50 hover:text-white transition-all text-[11px] font-semibold">
+                  <Plus size={10} strokeWidth={2.5} />
+                  {label.replace('New ', '')}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* collapsed: show + icon for new lead */}
+        {!open && (
+          <div className="flex flex-col items-center gap-1 px-2 pt-2 pb-1">
+            <Link href="/leads/create" title="New Lead"
+              className="p-[9px] rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/40 hover:text-white transition-all">
+              <Plus size={13} strokeWidth={2.5} />
+            </Link>
+          </div>
+        )}
 
         {/* ── Recent pages ─────────────────────── */}
         {open && recentPages.length > 0 && (

@@ -160,7 +160,11 @@ class LeadController extends Controller
         ]);
 
         $oldStatus = $lead->status;
-        $lead->update($validated);
+        $lead->update(array_merge($validated, [
+            'currency' => $validated['currency'] ?? 'USD',
+            'status'   => $validated['status']   ?? $lead->status,
+            'priority' => $validated['priority'] ?? $lead->priority,
+        ]));
 
         if ($oldStatus !== $lead->status) {
             Activity::create([

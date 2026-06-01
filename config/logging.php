@@ -123,6 +123,12 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        'import' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/import.log'),
+            'level'  => 'debug',
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

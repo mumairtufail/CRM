@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo', 'mail_batch_size', 'mail_batch_delay'])]
+#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo', 'mail_batch_size', 'mail_batch_delay', 'active_template_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -20,10 +20,11 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'mail_batch_size'   => 'integer',
-            'mail_batch_delay'  => 'integer',
+            'email_verified_at'  => 'datetime',
+            'password'           => 'hashed',
+            'mail_batch_size'    => 'integer',
+            'mail_batch_delay'   => 'integer',
+            'active_template_id' => 'integer',
         ];
     }
 
@@ -35,5 +36,15 @@ class User extends Authenticatable
     public function activeSmtpCredential()
     {
         return $this->hasOne(SmtpCredential::class)->where('is_active', true);
+    }
+
+    public function emailTemplates()
+    {
+        return $this->hasMany(EmailTemplate::class);
+    }
+
+    public function activeEmailTemplate()
+    {
+        return $this->belongsTo(EmailTemplate::class, 'active_template_id');
     }
 }

@@ -207,31 +207,40 @@ export default function Import({ importJob }) {
     setGsManualInput(false)
 
     try {
-      const res  = await fetch('/import/sheets/fetch', {
+      const res = await fetch('/import/sheets/fetch', {
         method:  'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-CSRF-TOKEN':  document.querySelector('meta[name=csrf-token]').content,
+          'X-CSRF-TOKEN':  document.querySelector('meta[name=csrf-token]')?.content ?? '',
           'Accept':        'application/json',
         },
         body: JSON.stringify({ url: gsUrl }),
       })
-      const json = await res.json()
+
+      // Parse body — may fail if server returned an HTML error page
+      let json
+      const text = await res.text()
+      try {
+        json = JSON.parse(text)
+      } catch {
+        // Server returned HTML (e.g. 500 page) — show the HTTP status
+        setGsUrlError(`Server error (HTTP ${res.status}). Check storage/logs/laravel.log for details.`)
+        return
+      }
 
       if (!res.ok) {
-        setGsUrlError(json.message || json.error || 'Invalid Google Sheets URL')
+        setGsUrlError(json.message || json.error || `Request failed (HTTP ${res.status})`)
         return
       }
 
       setGsId(json.spreadsheet_id)
       setGsSheets(json.sheets)
-      setGsSheet(json.sheets[0] || '')
-      if (json.warning) {
-        setGsWarning(json.warning)
-        setGsManualInput(true)
-      }
-    } catch {
-      setGsUrlError('Connection failed. Please try again.')
+      setGsSheet(json.sheets[0] || 'Sheet1')
+      // Always use manual input — Google's sheet-listing API is deprecated
+      setGsManualInput(true)
+      if (json.warning) setGsWarning(json.warning)
+    } catch (err) {
+      setGsUrlError(`Connection error: ${err.message}`)
     } finally {
       setGsFetching(false)
     }
@@ -482,52 +491,32 @@ export default function Import({ importJob }) {
                   {gsSheets !== null && (
                     <div className="form-card">
                       <div className="px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Select Sheet</p>
+                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Sheet / Tab Name</p>
                       </div>
                       <div className="px-4 py-3 space-y-3">
 
-                        {gsWarning && (
-                          <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2.5">
-                            <AlertCircle size={13} className="text-amber-500 mt-0.5 shrink-0" />
-                            <p className="text-[11.5px] text-amber-700">{gsWarning}</p>
-                          </div>
-                        )}
+                        {/* Verified banner */}
+                        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5">
+                          <CheckCircle size={13} className="text-emerald-600 shrink-0" />
+                          <p className="text-[12px] text-emerald-700 font-medium">
+                            Spreadsheet verified — enter the sheet tab name below and import.
+                          </p>
+                        </div>
 
-                        {gsManualInput ? (
-                          <div className="space-y-1">
-                            <p className="text-[11px] text-slate-500">Sheet / tab name</p>
-                            <Input
-                              value={gsSheet}
-                              onChange={e => setGsSheet(e.target.value)}
-                              placeholder="Sheet1"
-                              className="h-9 text-[13px]"
-                            />
-                          </div>
-                        ) : (
-                          <div className="space-y-1">
-                            <p className="text-[11px] text-slate-500">{gsSheets.length} sheet{gsSheets.length !== 1 ? 's' : ''} found</p>
-                            <Select value={gsSheet} onValueChange={setGsSheet}>
-                              <SelectTrigger className="h-9 text-[13px]">
-                                <SelectValue placeholder="Select a sheet…" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {gsSheets.map(s => (
-                                  <SelectItem key={s} value={s} className="text-[13px]">{s}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
+                        <div className="space-y-1">
+                          <p className="text-[11px] text-slate-500">
+                            Tab name exactly as shown at the bottom of your Google Sheet (e.g. <span className="font-mono">Sheet1</span>)
+                          </p>
+                          <Input
+                            value={gsSheet}
+                            onChange={e => setGsSheet(e.target.value)}
+                            placeholder="Sheet1"
+                            className="h-9 text-[13px]"
+                            autoFocus
+                          />
+                        </div>
 
-                        <div className="flex items-center justify-between pt-1">
-                          <button
-                            type="button"
-                            className="text-[11px] text-slate-400 hover:text-violet-600 underline underline-offset-2 transition-colors"
-                            onClick={() => setGsManualInput(v => !v)}
-                          >
-                            {gsManualInput ? 'Show sheet picker' : 'Type name manually'}
-                          </button>
-
+                        <div className="flex justify-end pt-1">
                           <button
                             type="button"
                             disabled={!gsSheet.trim() || gsImporting}
@@ -536,7 +525,7 @@ export default function Import({ importJob }) {
                             style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
                           >
                             {gsImporting ? (
-                              <><Loader2 size={13} className="animate-spin" /> Loading…</>
+                              <><Loader2 size={13} className="animate-spin" /> Importing…</>
                             ) : (
                               <><ExternalLink size={13} /> Import "{gsSheet}"</>
                             )}

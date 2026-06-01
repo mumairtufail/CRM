@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import DataTable from '@/Components/Common/DataTable'
@@ -17,7 +17,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
-import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter } from 'lucide-react'
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X } from 'lucide-react'
 import { toast } from 'sonner'
 
 const STATUS_OPTIONS = [
@@ -33,7 +33,6 @@ const STATUS_OPTIONS = [
 
 const LEAD_STATUSES = STATUS_OPTIONS.filter(s => s.value !== 'all')
 
-// Map platform names to short labels + colors
 const PLATFORM_META = {
   linkedin:  { label: 'in',  bg: '#0A66C2', title: 'LinkedIn' },
   twitter:   { label: 'X',   bg: '#000000', title: 'X / Twitter' },
@@ -106,10 +105,31 @@ function InlineStatusSelect({ lead }) {
   )
 }
 
+// Standalone checkbox that supports indeterminate
+function Checkbox({ checked, indeterminate, onChange, onClick }) {
+  const ref = useRef(null)
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = !!indeterminate
+  }, [indeterminate])
+  return (
+    <input
+      ref={ref}
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      onClick={onClick}
+      className="w-[15px] h-[15px] rounded cursor-pointer accent-violet-600"
+    />
+  )
+}
+
 export default function LeadsIndex({ leads, filters }) {
-  const [deleteId, setDeleteId] = useState(null)
-  const [deleting, setDeleting] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [deleteId, setDeleteId]           = useState(null)
+  const [deleting, setDeleting]           = useState(false)
+  const [loading, setLoading]             = useState(false)
+  const [selectedIds, setSelectedIds]     = useState(new Set())
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting]   = useState(false)
 
   useEffect(() => {
     const start = router.on('start', () => setLoading(true))
@@ -118,6 +138,9 @@ export default function LeadsIndex({ leads, filters }) {
   }, [])
 
   const { data: rows, ...pagination } = leads
+
+  // Clear selection whenever the page data changes (filter / page change)
+  useEffect(() => { setSelectedIds(new Set()) }, [leads])
 
   const handleSearch = useCallback(search => {
     router.get('/leads', { ...filters, search, page: 1 }, { preserveState: true, replace: true })
@@ -131,6 +154,7 @@ export default function LeadsIndex({ leads, filters }) {
     router.get('/leads', { ...filters, page }, { preserveState: true })
   }, [filters])
 
+  // Single delete
   const handleDelete = () => {
     if (!deleteId) return
     setDeleting(true)
@@ -142,7 +166,69 @@ export default function LeadsIndex({ leads, filters }) {
     })
   }
 
+  // Toggle one row
+  const toggleRow = useCallback((id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }, [])
+
+  // Toggle all rows on current page
+  const toggleAll = useCallback((rowIds) => {
+    setSelectedIds(prev => {
+      const allSelected = rowIds.length > 0 && rowIds.every(id => prev.has(id))
+      if (allSelected) {
+        const next = new Set(prev)
+        rowIds.forEach(id => next.delete(id))
+        return next
+      }
+      return new Set([...prev, ...rowIds])
+    })
+  }, [])
+
+  // Bulk delete
+  const handleBulkDelete = () => {
+    setBulkDeleting(true)
+    const ids = [...selectedIds]
+    router.post('/leads/bulk-destroy', { ids }, {
+      preserveState: false,
+      onSuccess: () => {
+        toast.success(`${ids.length} lead${ids.length !== 1 ? 's' : ''} deleted`)
+        setSelectedIds(new Set())
+      },
+      onError: () => toast.error('Failed to delete leads'),
+      onFinish: () => { setBulkDeleting(false); setBulkDeleteOpen(false) },
+    })
+  }
+
   const columns = [
+    // ── Checkbox column ──
+    {
+      id: 'select',
+      enableSorting: false,
+      size: 44,
+      header: ({ table }) => {
+        const rowIds = table.getRowModel().rows.map(r => r.original.id)
+        const allChecked = rowIds.length > 0 && rowIds.every(id => selectedIds.has(id))
+        const someChecked = rowIds.some(id => selectedIds.has(id)) && !allChecked
+        return (
+          <Checkbox
+            checked={allChecked}
+            indeterminate={someChecked}
+            onChange={() => toggleAll(rowIds)}
+          />
+        )
+      },
+      cell: ({ row }) => (
+        <Checkbox
+          checked={selectedIds.has(row.original.id)}
+          onChange={() => toggleRow(row.original.id)}
+          onClick={e => e.stopPropagation()}
+        />
+      ),
+    },
     {
       id: 'lead',
       header: 'Lead',
@@ -231,6 +317,8 @@ export default function LeadsIndex({ leads, filters }) {
     },
   ]
 
+  const selectionCount = selectedIds.size
+
   return (
     <>
       <Head title="Leads" />
@@ -278,6 +366,7 @@ export default function LeadsIndex({ leads, filters }) {
           loading={loading}
         />
 
+        {/* ── Single delete dialog ── */}
         <ConfirmDialog
           open={!!deleteId}
           onOpenChange={open => !open && setDeleteId(null)}
@@ -286,7 +375,74 @@ export default function LeadsIndex({ leads, filters }) {
           onConfirm={handleDelete}
           loading={deleting}
         />
+
+        {/* ── Bulk delete dialog ── */}
+        <ConfirmDialog
+          open={bulkDeleteOpen}
+          onOpenChange={open => !open && setBulkDeleteOpen(false)}
+          title={`Delete ${selectionCount} lead${selectionCount !== 1 ? 's' : ''}?`}
+          description="All selected leads and their associated data will be permanently deleted. This cannot be undone."
+          onConfirm={handleBulkDelete}
+          loading={bulkDeleting}
+        />
       </AppLayout>
+
+      {/* ── Bulk action bar ── */}
+      {selectionCount > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: 28,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: '#0f172a',
+          borderRadius: 12,
+          padding: '10px 14px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06)',
+          whiteSpace: 'nowrap',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'white' }}>
+            {selectionCount} lead{selectionCount !== 1 ? 's' : ''} selected
+          </span>
+
+          <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)' }} />
+
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 7, padding: '4px 10px',
+              color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 500,
+              cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.13)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+          >
+            <X size={12} /> Clear
+          </button>
+
+          <button
+            onClick={() => setBulkDeleteOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: '#ef4444',
+              border: 'none',
+              borderRadius: 7, padding: '4px 12px',
+              color: 'white', fontSize: 12.5, fontWeight: 600,
+              cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+            onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+          >
+            <Trash2 size={12} /> Delete
+          </button>
+        </div>
+      )}
     </>
   )
 }

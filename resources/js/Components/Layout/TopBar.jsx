@@ -1,6 +1,7 @@
 import { Menu, Bell, Search, ChevronDown, User, LogOut } from 'lucide-react'
 import { usePage, Link, router } from '@inertiajs/react'
 import { useState, useRef, useEffect } from 'react'
+import Logo from '@/Components/Common/Logo'
 
 export default function TopBar({ title, onMenuClick }) {
   const { auth } = usePage().props
@@ -39,6 +40,11 @@ export default function TopBar({ title, onMenuClick }) {
         >
           <Menu size={16} className="text-slate-500" />
         </button>
+
+        {/* Brand logo */}
+        <Link href="/" className="flex items-center" aria-label="Home">
+          <Logo size={26} text="CRM" textClassName="text-[14.5px] text-slate-800" />
+        </Link>
 
         {title && (
           <div className="flex items-center gap-2">

@@ -7,6 +7,10 @@
 
         <title inertia>{{ config('app.name', 'CRM') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="alternate icon" href="/favicon.ico" sizes="any">
+
         <!-- Fonts preconnect -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

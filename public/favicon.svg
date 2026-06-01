@@ -1,0 +1,19 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="crmGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#crmGrad)"/>
+  <g stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.9">
+    <line x1="16" y1="11.5" x2="10" y2="20.5"/>
+    <line x1="16" y1="11.5" x2="22" y2="20.5"/>
+    <line x1="10" y1="20.5" x2="22" y2="20.5"/>
+  </g>
+  <g fill="#ffffff">
+    <circle cx="16" cy="11.5" r="3"/>
+    <circle cx="10" cy="20.5" r="2.6"/>
+    <circle cx="22" cy="20.5" r="2.6"/>
+  </g>
+</svg>

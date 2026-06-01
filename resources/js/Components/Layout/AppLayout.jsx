@@ -1,15 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { Toaster } from 'sonner'
 
-export default function AppLayout({ children, title }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+// Compute the initial state synchronously so the sidebar never animates
+// from closed → open on mount (which caused a "collapse then open" flash
+// on every page navigation, since each page mounts its own AppLayout).
+function getInitialSidebar() {
+  if (typeof window === 'undefined') return true
+  if (window.innerWidth < 768) return false // mobile: always start closed
+  const stored = localStorage.getItem('crm_sidebar_open')
+  return stored === null ? true : stored === 'true'
+}
 
-  // Open by default on desktop, closed on mobile
-  useEffect(() => {
-    setSidebarOpen(window.innerWidth >= 768)
-  }, [])
+export default function AppLayout({ children, title }) {
+  const [sidebarOpen, setSidebarOpen] = useState(getInitialSidebar)
+
+  const toggleSidebar = () => setSidebarOpen(v => {
+    const next = !v
+    try { localStorage.setItem('crm_sidebar_open', String(next)) } catch {}
+    return next
+  })
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#F4F2FF' }}>
@@ -21,10 +32,10 @@ export default function AppLayout({ children, title }) {
         />
       )}
 
-      <Sidebar open={sidebarOpen} onToggle={() => setSidebarOpen(v => !v)} />
+      <Sidebar open={sidebarOpen} onToggle={toggleSidebar} />
 
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        <TopBar title={title} onMenuClick={() => setSidebarOpen(v => !v)} />
+        <TopBar title={title} onMenuClick={toggleSidebar} />
         <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
           {children}
         </main>

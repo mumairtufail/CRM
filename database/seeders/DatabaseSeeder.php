@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             'email'    => 'mumairtufail786@gmail.com',
             'password' => bcrypt('password'),
         ]);
+        
 
         $tagData = [
             ['name' => 'Hot Lead',   'color' => '#ef4444'],

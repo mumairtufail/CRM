@@ -1,6 +1,5 @@
 import { useForm, Head } from '@inertiajs/react'
 import { Input } from '@/Components/ui/input'
-import { Label } from '@/Components/ui/label'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
 
@@ -19,142 +18,192 @@ export default function Login({ status }) {
   return (
     <>
       <Head title="Sign in" />
-      <div className="min-h-screen flex">
 
-        {/* Left brand panel */}
-        <div
-          className="hidden lg:flex lg:w-[44%] flex-col justify-between p-12 select-none"
-          style={{ background: '#111827' }}
-        >
-          {/* Wordmark */}
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center shrink-0">
-              <span className="text-white text-[10px] font-black tracking-wide">CRM</span>
+      {/* Full-page dark background with purple glow orbs */}
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #0b0b18 0%, #110824 50%, #0b1320 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '24px 16px',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+
+        {/* Ambient glow — top-left */}
+        <div style={{
+          position: 'absolute', width: 700, height: 700,
+          background: 'radial-gradient(circle, rgba(124,58,237,0.18) 0%, transparent 65%)',
+          top: -180, left: -180, pointerEvents: 'none',
+        }} />
+        {/* Ambient glow — bottom-right */}
+        <div style={{
+          position: 'absolute', width: 600, height: 600,
+          background: 'radial-gradient(circle, rgba(79,70,229,0.12) 0%, transparent 65%)',
+          bottom: -160, right: -160, pointerEvents: 'none',
+        }} />
+        {/* Subtle dot grid */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }} />
+
+        {/* Card */}
+        <div style={{
+          position: 'relative', zIndex: 1,
+          background: 'white',
+          borderRadius: 20,
+          width: '100%', maxWidth: 400,
+          padding: '40px 36px 36px',
+          boxShadow: '0 32px 72px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.06)',
+        }}>
+
+          {/* Top gradient accent bar */}
+          <div style={{
+            position: 'absolute', top: 0, left: 0, right: 0, height: 4,
+            background: 'linear-gradient(90deg, #7c3aed 0%, #6366f1 50%, #4f46e5 100%)',
+            borderRadius: '20px 20px 0 0',
+          }} />
+
+          {/* Logo mark */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 10,
+              background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(124,58,237,0.4)',
+              flexShrink: 0,
+            }}>
+              <span style={{ color: 'white', fontSize: 10, fontWeight: 800, letterSpacing: '0.05em' }}>CRM</span>
             </div>
-            <span className="text-white font-semibold text-sm tracking-tight">CRM</span>
+            <span style={{ fontWeight: 700, fontSize: 16, color: '#111827', letterSpacing: '-0.3px' }}>CRM</span>
           </div>
 
-          {/* Headline + bullets */}
-          <div>
-            <p className="text-white/40 text-xs font-medium uppercase tracking-widest mb-4">
-              Sales workspace
-            </p>
-            <h2 className="text-white text-[28px] font-bold leading-tight mb-6">
-              Everything your<br />team needs to close.
-            </h2>
-            <ul className="space-y-3">
-              {[
-                'Track leads through your pipeline',
-                'Manage contacts and companies',
-                'Import and export data in bulk',
-              ].map(item => (
-                <li key={item} className="flex items-center gap-3">
-                  <span className="w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
-                  <span className="text-white/50 text-sm">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Heading */}
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#0f172a', marginBottom: 4, letterSpacing: '-0.4px' }}>
+            Welcome back
+          </h1>
+          <p style={{ fontSize: 13.5, color: '#94a3b8', marginBottom: 28 }}>
+            Sign in to your workspace
+          </p>
 
-          <p className="text-white/20 text-xs">Internal tool — authorised access only</p>
-        </div>
+          {/* Status message */}
+          {status && (
+            <div style={{
+              marginBottom: 20, fontSize: 13, color: '#065f46',
+              background: '#ecfdf5', borderRadius: 10, padding: '10px 14px',
+              border: '1px solid #a7f3d0',
+            }}>
+              {status}
+            </div>
+          )}
 
-        {/* Right form panel */}
-        <div className="flex-1 flex items-center justify-center bg-white p-8">
-          <div className="w-full max-w-[360px]">
+          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
 
-            {/* Mobile-only logo */}
-            <div className="flex items-center gap-2 mb-10 lg:hidden">
-              <div className="w-7 h-7 rounded bg-violet-600 flex items-center justify-center">
-                <span className="text-white text-[10px] font-black">CRM</span>
-              </div>
-              <span className="font-semibold text-sm text-gray-900">CRM</span>
+            {/* Email */}
+            <div>
+              <label htmlFor="email" style={{
+                display: 'block', fontSize: 12, fontWeight: 600,
+                color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em',
+              }}>
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                autoFocus
+                value={data.email}
+                onChange={e => setData('email', e.target.value)}
+                placeholder="you@company.com"
+                className="h-10 text-[13.5px]"
+                style={errors.email ? { borderColor: '#f87171' } : {}}
+              />
+              {errors.email && (
+                <p style={{ color: '#ef4444', fontSize: 11.5, marginTop: 5 }}>{errors.email}</p>
+              )}
             </div>
 
-            <h1 className="text-[22px] font-bold text-gray-900 mb-1">Sign in</h1>
-            <p className="text-gray-400 text-sm mb-8">Enter your credentials to continue.</p>
-
-            {status && (
-              <div className="mb-6 text-sm text-emerald-700 bg-emerald-50 rounded-lg py-2.5 px-4 border border-emerald-200">
-                {status}
-              </div>
-            )}
-
-            <form onSubmit={submit} className="space-y-5">
-              <div>
-                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-                  Email address
-                </Label>
+            {/* Password */}
+            <div>
+              <label htmlFor="password" style={{
+                display: 'block', fontSize: 12, fontWeight: 600,
+                color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em',
+              }}>
+                Password
+              </label>
+              <div style={{ position: 'relative' }}>
                 <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  autoFocus
-                  value={data.email}
-                  onChange={e => setData('email', e.target.value)}
-                  placeholder="you@company.com"
-                  className={[
-                    'mt-1.5 h-10 text-sm text-gray-900',
-                    errors.email ? 'border-red-400 focus-visible:ring-red-400' : '',
-                  ].join(' ')}
+                  id="password"
+                  type={showPass ? 'text' : 'password'}
+                  autoComplete="current-password"
+                  value={data.password}
+                  onChange={e => setData('password', e.target.value)}
+                  placeholder="••••••••"
+                  className="h-10 text-[13.5px] pr-10"
+                  style={errors.password ? { borderColor: '#f87171' } : {}}
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPass(v => !v)}
+                  style={{
+                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                    color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                    display: 'flex', alignItems: 'center',
+                  }}
+                >
+                  {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
               </div>
+              {errors.password && (
+                <p style={{ color: '#ef4444', fontSize: 11.5, marginTop: 5 }}>{errors.password}</p>
+              )}
+            </div>
 
-              <div>
-                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-                  Password
-                </Label>
-                <div className="relative mt-1.5">
-                  <Input
-                    id="password"
-                    type={showPass ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    value={data.password}
-                    onChange={e => setData('password', e.target.value)}
-                    placeholder="••••••••"
-                    className={[
-                      'h-10 text-sm pr-10 text-gray-900',
-                      errors.password ? 'border-red-400 focus-visible:ring-red-400' : '',
-                    ].join(' ')}
-                  />
-                  <button
-                    type="button"
-                    tabIndex={-1}
-                    onClick={() => setShowPass(v => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                  >
-                    {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-red-500 text-xs mt-1">{errors.password}</p>
-                )}
-              </div>
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={processing}
+              style={{
+                marginTop: 4,
+                height: 42, borderRadius: 10, border: 'none', cursor: processing ? 'not-allowed' : 'pointer',
+                background: processing ? '#c4b5fd' : 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+                color: 'white', fontWeight: 600, fontSize: 14,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: processing ? 'none' : '0 4px 16px rgba(124,58,237,0.35)',
+                transition: 'all 0.15s ease',
+                letterSpacing: '-0.1px',
+              }}
+            >
+              {processing ? (
+                <>
+                  <span style={{
+                    width: 15, height: 15, border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: 'white', borderRadius: '50%',
+                    animation: 'spin 0.7s linear infinite', display: 'inline-block',
+                  }} />
+                  Signing in…
+                </>
+              ) : 'Sign in →'}
+            </button>
+          </form>
 
-              <button
-                type="submit"
-                disabled={processing}
-                className="w-full h-10 rounded-md text-sm font-semibold text-white bg-violet-600 hover:bg-violet-700 active:bg-violet-800 transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
-              >
-                {processing ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Signing in…
-                  </>
-                ) : 'Sign in'}
-              </button>
-            </form>
-
-            <p className="text-center text-xs text-gray-300 mt-8 lg:hidden">
-              Internal tool — authorised access only
-            </p>
-          </div>
+          {/* Footer */}
+          <p style={{
+            textAlign: 'center', fontSize: 11.5, color: '#cbd5e1', marginTop: 24,
+            paddingTop: 20, borderTop: '1px solid #f1f5f9',
+          }}>
+            Internal tool — authorised access only
+          </p>
         </div>
-
       </div>
+
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+      `}</style>
     </>
   )
 }

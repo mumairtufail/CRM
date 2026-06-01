@@ -7,7 +7,7 @@ import { Button } from '@/Components/ui/button'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter
 } from '@/Components/ui/dialog'
-import { ChevronLeft, Send, Eye, Users, CheckCircle, Mail, BarChart2 } from 'lucide-react'
+import { ChevronLeft, Send, Eye, Users, CheckCircle, Mail, BarChart2, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
 
@@ -35,6 +35,8 @@ export default function CampaignShow({ campaign }) {
   const [previewOpen, setPreviewOpen] = useState(false)
   const [confirmSend, setConfirmSend] = useState(false)
   const [sending, setSending] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handleSend = () => {
     setSending(true)
@@ -42,6 +44,15 @@ export default function CampaignShow({ campaign }) {
       onSuccess: () => { toast.success('Campaign sent!'); setConfirmSend(false) },
       onError: () => { toast.error('Send failed'); setSending(false); setConfirmSend(false) },
       onFinish: () => setSending(false),
+    })
+  }
+
+  const handleDelete = () => {
+    setDeleting(true)
+    router.delete(`/campaigns/${campaign.id}`, {
+      onSuccess: () => toast.success('Campaign deleted'),
+      onError: () => { toast.error('Delete failed'); setDeleting(false); setConfirmDelete(false) },
+      onFinish: () => setDeleting(false),
     })
   }
 
@@ -84,6 +95,21 @@ export default function CampaignShow({ campaign }) {
                 onClick={() => setPreviewOpen(true)}
               >
                 <Eye size={13} /> Preview
+              </Button>
+              {campaign.status !== 'sent' && (
+                <Link href={`/campaigns/${campaign.id}/edit`}>
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-200">
+                    <Pencil size={13} /> Edit
+                  </Button>
+                </Link>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={() => setConfirmDelete(true)}
+              >
+                <Trash2 size={13} /> Delete
               </Button>
               {campaign.status !== 'sent' && (
                 <Button
@@ -218,6 +244,32 @@ export default function CampaignShow({ campaign }) {
                 onClick={handleSend}
               >
                 <Send size={13} /> {sending ? 'Sending…' : 'Confirm & Send'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete confirmation */}
+        <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">Delete campaign?</DialogTitle>
+              <DialogDescription className="text-xs">
+                <span className="font-semibold text-foreground">{campaign.name}</span> will be removed.
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" size="sm" className="h-8 text-xs border-slate-200" onClick={() => setConfirmDelete(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={deleting}
+                className="h-8 text-xs gap-1.5 bg-red-600 hover:bg-red-700 text-white border-0"
+                onClick={handleDelete}
+              >
+                <Trash2 size={13} /> {deleting ? 'Deleting…' : 'Delete'}
               </Button>
             </DialogFooter>
           </DialogContent>

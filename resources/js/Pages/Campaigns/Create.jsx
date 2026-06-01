@@ -103,14 +103,18 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
   )
 }
 
-export default function CampaignCreate({ statuses, leadCount }) {
+export default function CampaignCreate({ statuses, leadCount, campaign = null }) {
+  const isEdit = !!campaign
   const [previewOpen, setPreviewOpen] = useState(false)
-  const [recipientCount, setRecipientCount] = useState(leadCount ?? 0)
+  const [recipientCount, setRecipientCount] = useState(campaign?.total_recipients ?? leadCount ?? 0)
 
-  const { data, setData, post, processing, errors } = useForm({
-    name: '', subject: '', from_name: '', from_email: '',
-    body_html: '',
-    filters: { status: '' },
+  const { data, setData, post, put, processing, errors } = useForm({
+    name:       campaign?.name       ?? '',
+    subject:    campaign?.subject    ?? '',
+    from_name:  campaign?.from_name  ?? '',
+    from_email: campaign?.from_email ?? '',
+    body_html:  campaign?.body_html  ?? '',
+    filters:    campaign?.filters    ?? { status: '' },
   })
 
   const updateFilter = async (key, val) => {
@@ -129,19 +133,21 @@ export default function CampaignCreate({ statuses, leadCount }) {
 
   const submit = e => {
     e.preventDefault()
-    post('/campaigns', { onError: () => toast.error('Please fix the errors below') })
+    const opts = { onError: () => toast.error('Please fix the errors below') }
+    if (isEdit) put(`/campaigns/${campaign.id}`, opts)
+    else post('/campaigns', opts)
   }
 
   return (
     <>
-      <Head title="New Campaign" />
-      <AppLayout title="New Campaign">
+      <Head title={isEdit ? 'Edit Campaign' : 'New Campaign'} />
+      <AppLayout title={isEdit ? 'Edit Campaign' : 'New Campaign'}>
         <div className="max-w-4xl">
 
           {/* Page header */}
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-[17px] font-bold text-slate-800 tracking-tight">New Campaign</h2>
+              <h2 className="text-[17px] font-bold text-slate-800 tracking-tight">{isEdit ? 'Edit Campaign' : 'New Campaign'}</h2>
               <p className="text-[12.5px] text-slate-500 mt-0.5">Configure and compose your email campaign</p>
             </div>
             <Link href="/campaigns">
@@ -255,7 +261,7 @@ export default function CampaignCreate({ statuses, leadCount }) {
                 className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 3px 12px rgba(124,58,237,0.3)' }}
               >
-                {processing ? 'Saving…' : 'Save Campaign'}
+                {processing ? 'Saving…' : (isEdit ? 'Update Campaign' : 'Save Campaign')}
               </button>
             </div>
           </form>

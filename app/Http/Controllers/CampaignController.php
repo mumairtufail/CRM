@@ -64,6 +64,64 @@ class CampaignController extends Controller
         return redirect()->route('campaigns.show', $campaign);
     }
 
+    public function edit(EmailCampaign $campaign)
+    {
+        if ($campaign->status === 'sent') {
+            return redirect()->route('campaigns.show', $campaign)
+                ->withErrors(['error' => 'Sent campaigns cannot be edited.']);
+        }
+
+        $statuses  = Lead::distinct()->pluck('status')->filter()->values();
+        $leadCount = Lead::count();
+
+        return Inertia::render('Campaigns/Create', [
+            'statuses'  => $statuses,
+            'leadCount' => $leadCount,
+            'campaign'  => [
+                'id'               => $campaign->id,
+                'name'             => $campaign->name,
+                'subject'          => $campaign->subject,
+                'from_name'        => $campaign->from_name,
+                'from_email'       => $campaign->from_email,
+                'body_html'        => $campaign->body_html,
+                'filters'          => $campaign->filters ?? ['status' => ''],
+                'total_recipients' => $campaign->total_recipients,
+            ],
+        ]);
+    }
+
+    public function update(Request $request, EmailCampaign $campaign)
+    {
+        if ($campaign->status === 'sent') {
+            return back()->withErrors(['error' => 'Sent campaigns cannot be edited.']);
+        }
+
+        $validated = $request->validate([
+            'name'       => 'required|string|max:200',
+            'subject'    => 'required|string|max:500',
+            'from_name'  => 'required|string|max:100',
+            'from_email' => 'required|email|max:200',
+            'body_html'  => 'required|string',
+            'filters'    => 'nullable|array',
+        ]);
+
+        $count = $this->countRecipients($validated['filters'] ?? []);
+
+        $campaign->update([
+            ...$validated,
+            'total_recipients' => $count,
+        ]);
+
+        return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign updated');
+    }
+
+    public function destroy(EmailCampaign $campaign)
+    {
+        $campaign->delete();
+
+        return redirect()->route('campaigns.index')->with('success', 'Campaign deleted');
+    }
+
     public function show(EmailCampaign $campaign)
     {
         return Inertia::render('Campaigns/Show', [

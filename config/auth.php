@@ -4,6 +4,7 @@ use App\Models\User;
 
 return [
 
+
     /*
     |--------------------------------------------------------------------------
     | Authentication Defaults

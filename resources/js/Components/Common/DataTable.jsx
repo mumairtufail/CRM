@@ -85,14 +85,14 @@ export default function DataTable({
                 <TableRow key={i} className="border-gray-50">
                   {columns.map((_, ci) => (
                     <TableCell key={ci} className="py-3.5">
-                      <div className="h-4 skeleton rounded" />
+                      <div className="h-4 bg-slate-100 animate-pulse rounded" />
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map(row => (
-                <TableRow key={row.id} className="hover:bg-blue-50/20 transition-colors border-gray-50">
+                <TableRow key={row.id} className="hover:bg-blue-50/20 transition-colors border-gray-50 group">
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id} className="py-3.5">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

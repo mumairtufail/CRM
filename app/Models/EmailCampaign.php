@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class EmailCampaign extends Model
+{
+    use SoftDeletes;
+
+    protected $fillable = [
+        'name', 'subject', 'body_html', 'body_text', 'status',
+        'from_name', 'from_email', 'filters',
+        'total_recipients', 'sent_count', 'opened_count',
+        'clicked_count', 'bounced_count', 'unsubscribed_count',
+        'scheduled_at', 'sent_at',
+    ];
+
+    protected $casts = [
+        'filters'      => 'array',
+        'scheduled_at' => 'datetime',
+        'sent_at'      => 'datetime',
+    ];
+
+    public function sends()
+    {
+        return $this->hasMany(EmailSend::class);
+    }
+}

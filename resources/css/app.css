@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,51 +6,26 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 248 100% 98%;
+    --foreground: 251 25% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 251 25% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 251 25% 12%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 248 60% 96%;
+    --secondary-foreground: 251 25% 12%;
+    --muted: 248 40% 95%;
+    --muted-foreground: 250 10% 50%;
+    --accent: 340 60% 58%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 248 40% 92%;
+    --input: 248 40% 92%;
+    --ring: 262 83% 58%;
     --radius: 0.75rem;
-    --sidebar-bg: 222 47% 11%;
-    --sidebar-text: 210 40% 98%;
-    --sidebar-accent: 221 83% 53%;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
   }
 
   * {
@@ -59,17 +34,90 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Geist', sans-serif;
+    font-family: 'Poppins', sans-serif;
   }
 }
 
-/* Skeleton shimmer */
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.18); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.32); }
+
 @layer utilities {
   .skeleton {
-    @apply bg-gradient-to-r from-gray-100 via-gray-200 to-gray-100 bg-[length:200%_100%] animate-shimmer rounded;
+    @apply bg-gradient-to-r from-violet-50 via-purple-50 to-violet-50 bg-[length:200%_100%] animate-shimmer rounded;
   }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(124,58,237,0.04);
+  }
+
+  .sidebar-bg {
+    background: linear-gradient(180deg, #0D0B18 0%, #130F22 50%, #0F0D1C 100%);
+  }
+
+  .hover-lift {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(124,58,237,0.12);
+  }
+}
+
+/* ── Tiptap rich editor ─────────────────────────────────── */
+.tiptap-body { outline: none; }
+.tiptap-body > * + * { margin-top: 0.55em; }
+.tiptap-body p { margin: 0; line-height: 1.7; }
+.tiptap-body ul { list-style: disc; padding-left: 1.3em; }
+.tiptap-body ol { list-style: decimal; padding-left: 1.3em; }
+.tiptap-body li { margin-bottom: 0.2em; }
+.tiptap-body strong { font-weight: 700; }
+.tiptap-body em { font-style: italic; }
+.tiptap-body u { text-decoration: underline; }
+.tiptap-body p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #adb5bd;
+  pointer-events: none;
+  height: 0;
+  font-size: 13px;
+}
+
+/* Variable token highlight inside Tiptap */
+.tiptap-var {
+  background: rgba(124, 58, 237, 0.1);
+  color: #6d28d9;
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 0.88em;
+  font-weight: 600;
+}
+
+/* ── Shared form-card style ─────────────────────────────── */
+/* No backdrop-filter: it creates a stacking context that traps
+   position:fixed children (dropdowns, tooltips). */
+.form-card {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.07);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.03);
+  border-radius: 14px;
 }

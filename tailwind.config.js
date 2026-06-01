@@ -13,8 +13,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', ...defaultTheme.fontFamily.sans],
-        display: ['Geist', ...defaultTheme.fontFamily.sans],
+        sans: ['Poppins', ...defaultTheme.fontFamily.sans],
+        display: ['Poppins', ...defaultTheme.fontFamily.sans],
       },
       borderRadius: {
         lg: 'var(--radius)',

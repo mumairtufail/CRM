@@ -313,18 +313,19 @@ const ENCRYPTION_OPTS = [
 ]
 
 const PROVIDER_PRESETS = [
-  { label: 'Gmail',        host: 'smtp.gmail.com',       port: 587, encryption: 'tls',  hint: 'Use an App Password (not your regular password). Enable 2-Step Verification first, then go to Google Account → Security → App Passwords.' },
-  { label: 'Outlook/365',  host: 'smtp.office365.com',   port: 587, encryption: 'tls',  hint: 'Use your Microsoft 365 email and password. Make sure SMTP AUTH is enabled in the admin portal.' },
-  { label: 'Mailgun',      host: 'smtp.mailgun.org',     port: 587, encryption: 'tls',  hint: 'Use your Mailgun SMTP credentials from Sending → Domain Settings.' },
-  { label: 'SendGrid',     host: 'smtp.sendgrid.net',    port: 587, encryption: 'tls',  hint: 'Username is always "apikey". Password is your SendGrid API key.' },
-  { label: 'Amazon SES',   host: 'email-smtp.us-east-1.amazonaws.com', port: 587, encryption: 'tls', hint: 'Use SMTP credentials from SES console (not your AWS keys). Create SMTP credentials in SES → Account dashboard.' },
-  { label: 'Custom SMTP',  host: '',                     port: 587, encryption: 'tls',  hint: '' },
+  { label: 'Gmail',        host: 'smtp.gmail.com',                        port: 587, encryption: 'tls', imap_host: 'imap.gmail.com',          imap_port: 993, imap_encryption: 'ssl', hint: 'Use an App Password (not your regular password). Enable 2-Step Verification first, then go to Google Account → Security → App Passwords.' },
+  { label: 'Outlook/365',  host: 'smtp.office365.com',                    port: 587, encryption: 'tls', imap_host: 'outlook.office365.com',   imap_port: 993, imap_encryption: 'ssl', hint: 'Use your Microsoft 365 email and password. Make sure SMTP AUTH is enabled in the admin portal.' },
+  { label: 'Hostinger',    host: 'smtp.hostinger.com',                    port: 465, encryption: 'ssl', imap_host: 'imap.hostinger.com',       imap_port: 993, imap_encryption: 'ssl', hint: 'Use your full email address as username. IMAP host is imap.hostinger.com (NOT smtp.hostinger.com).' },
+  { label: 'Mailgun',      host: 'smtp.mailgun.org',                      port: 587, encryption: 'tls', imap_host: 'imap.mailgun.org',        imap_port: 993, imap_encryption: 'ssl', hint: 'Use your Mailgun SMTP credentials from Sending → Domain Settings.' },
+  { label: 'SendGrid',     host: 'smtp.sendgrid.net',                     port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: 'Username is always "apikey". Password is your SendGrid API key. Note: SendGrid does not support IMAP.' },
+  { label: 'Amazon SES',   host: 'email-smtp.us-east-1.amazonaws.com',    port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: 'Use SMTP credentials from SES console. Note: Amazon SES does not support IMAP inbox fetching.' },
+  { label: 'Custom SMTP',  host: '',                                       port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: '' },
 ]
 
-const BLANK_FORM = { name: '', host: '', port: 587, encryption: 'tls', username: '', password: '', from_name: '', from_email: '' }
+const BLANK_FORM = { name: '', host: '', port: 587, encryption: 'tls', username: '', password: '', from_name: '', from_email: '', imap_host: '', imap_port: 993, imap_encryption: 'ssl' }
 
 function SmtpDialog({ open, onClose, existing }) {
-  const [form, setForm]     = useState(existing ? { ...existing, password: '' } : { ...BLANK_FORM })
+  const [form, setForm]     = useState(existing ? { ...existing, password: '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' } : { ...BLANK_FORM })
   const [showPw, setShowPw] = useState(false)
   const [saving, setSaving] = useState(false)
   const [hint, setHint]     = useState('')
@@ -332,7 +333,12 @@ function SmtpDialog({ open, onClose, existing }) {
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
   const applyPreset = preset => {
-    setForm(f => ({ ...f, host: preset.host, port: preset.port, encryption: preset.encryption, name: f.name || preset.label }))
+    setForm(f => ({
+      ...f,
+      host: preset.host, port: preset.port, encryption: preset.encryption,
+      imap_host: preset.imap_host, imap_port: preset.imap_port, imap_encryption: preset.imap_encryption,
+      name: f.name || preset.label,
+    }))
     setHint(preset.hint)
   }
 
@@ -441,6 +447,42 @@ function SmtpDialog({ open, onClose, existing }) {
             </div>
           </Field>
 
+          {/* IMAP section */}
+          <div className="border-t border-slate-100 pt-3">
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
+              IMAP inbox (optional — enables email fetching)
+            </p>
+            <p className="text-[11px] text-slate-400 mb-2">Uses the same username &amp; password as SMTP above.</p>
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              <div className="col-span-2">
+                <Field label="IMAP host">
+                  <Input value={form.imap_host} onChange={e => set('imap_host', e.target.value)}
+                    className="h-8 text-[13px]" placeholder="imap.gmail.com" />
+                </Field>
+              </div>
+              <Field label="IMAP port">
+                <Input type="number" value={form.imap_port} onChange={e => set('imap_port', Number(e.target.value))}
+                  className="h-8 text-[13px]" placeholder="993" />
+              </Field>
+            </div>
+            <Field label="IMAP encryption">
+              <div className="flex gap-2">
+                {['ssl', 'tls', 'none'].map(opt => (
+                  <button key={opt} type="button"
+                    onClick={() => set('imap_encryption', opt)}
+                    className={cn(
+                      'flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
+                      form.imap_encryption === opt
+                        ? 'border-violet-500 bg-violet-50 text-violet-700'
+                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
+                    )}>
+                    {opt.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </Field>
+          </div>
+
           <DialogFooter className="gap-2 pt-1">
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
             <button type="submit" disabled={saving}
@@ -456,8 +498,9 @@ function SmtpDialog({ open, onClose, existing }) {
 }
 
 function SmtpCard({ cred, onEdit }) {
-  const [testing, setTesting] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const [testing, setTesting]         = useState(false)
+  const [testingImap, setTestingImap] = useState(false)
+  const [deleting, setDeleting]       = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const activate = () => {
@@ -474,16 +517,15 @@ function SmtpCard({ cred, onEdit }) {
     })
   }
 
+  const csrfHeaders = () => ({
+    'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+    'Accept': 'application/json',
+  })
+
   const testConnection = async () => {
     setTesting(true)
     try {
-      const res = await fetch(`/smtp/${cred.id}/test`, {
-        method: 'POST',
-        headers: {
-          'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-          'Accept': 'application/json',
-        },
-      })
+      const res  = await fetch(`/smtp/${cred.id}/test`, { method: 'POST', headers: csrfHeaders() })
       const json = await res.json()
       if (json.ok) toast.success(json.message)
       else toast.error(json.message)
@@ -491,6 +533,20 @@ function SmtpCard({ cred, onEdit }) {
       toast.error('Test failed')
     } finally {
       setTesting(false)
+    }
+  }
+
+  const testImapConnection = async () => {
+    setTestingImap(true)
+    try {
+      const res  = await fetch(`/smtp/${cred.id}/test-imap`, { method: 'POST', headers: csrfHeaders() })
+      const json = await res.json()
+      if (json.ok) toast.success(json.message)
+      else toast.error('IMAP: ' + json.message)
+    } catch {
+      toast.error('IMAP test failed')
+    } finally {
+      setTestingImap(false)
     }
   }
 
@@ -519,6 +575,10 @@ function SmtpCard({ cred, onEdit }) {
             </div>
             <p className="text-[11.5px] text-slate-500 truncate">{cred.from_name} &lt;{cred.from_email}&gt;</p>
             <p className="text-[11px] text-slate-400 mt-0.5">{cred.host}:{cred.port} · {cred.encryption.toUpperCase()}</p>
+            {cred.imap_host
+              ? <p className="text-[11px] text-emerald-600 mt-0.5">IMAP: {cred.imap_host}:{cred.imap_port}</p>
+              : <p className="text-[11px] text-slate-300 mt-0.5">IMAP not configured (inbox disabled)</p>
+            }
           </div>
         </div>
 
@@ -536,8 +596,14 @@ function SmtpCard({ cred, onEdit }) {
           )}
           <button onClick={testConnection} disabled={testing}
             className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors disabled:opacity-50">
-            {testing ? 'Sending…' : 'Test'}
+            {testing ? 'Sending…' : 'Test SMTP'}
           </button>
+          {cred.imap_host && (
+            <button onClick={testImapConnection} disabled={testingImap}
+              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-emerald-100 hover:text-emerald-700 transition-colors disabled:opacity-50">
+              {testingImap ? 'Testing…' : 'Test IMAP'}
+            </button>
+          )}
           <button onClick={() => onEdit(cred)}
             className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
             Edit

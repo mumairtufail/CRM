@@ -35,7 +35,7 @@ function getInitialSidebar() {
   return stored === null ? true : stored === 'true'
 }
 
-export default function AppLayout({ children, title }) {
+export default function AppLayout({ children, title, noPadding = false }) {
   const [sidebarOpen, setSidebarOpen] = useState(getInitialSidebar)
   const { impersonating } = usePage().props
 
@@ -62,7 +62,7 @@ export default function AppLayout({ children, title }) {
 
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <TopBar title={title} onMenuClick={toggleSidebar} />
-          <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+          <main className={noPadding ? 'flex-1 overflow-hidden flex flex-col' : 'flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5'}>
             {children}
           </main>
         </div>

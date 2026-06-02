@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
-  Plus, Clock, ChevronRight, FileText,
+  Plus, Clock, ChevronRight, FileText, Inbox,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Leads',     href: '/leads',     icon: Users },
   { label: 'Pipeline',  href: '/pipeline',  icon: Kanban },
   { label: 'Campaigns', href: '/campaigns', icon: Mail },
+  { label: 'Inbox',     href: '/inbox',     icon: Inbox },
   { label: 'Invoices',  href: '/invoices',  icon: FileText },
   { label: 'Import',    href: '/import',    icon: Upload },
   { label: 'Tags',      href: '/tags',      icon: Tag },
@@ -40,6 +41,7 @@ const COMPONENT_LABELS = {
   'Import':           'Import',
   'Tags/Index':       'Tags',
   'Profile/Edit':     'Settings',
+  'Inbox/Index':      'Inbox',
 }
 
 function useRecentPages(currentUrl, component) {

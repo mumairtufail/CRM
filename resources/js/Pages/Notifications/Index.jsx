@@ -4,11 +4,12 @@ import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import EmptyState from '@/Components/Common/EmptyState'
 import { Button } from '@/Components/ui/button'
-import { Bell, Check, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react'
+import { Bell, Check, ChevronLeft, ChevronRight, UserPlus, Mail } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 const TYPE_META = {
-  'lead.created': { icon: UserPlus, color: 'text-emerald-600 bg-emerald-50' },
+  'lead.created':        { icon: UserPlus, color: 'text-emerald-600 bg-emerald-50' },
+  'lead.email_received': { icon: Mail,     color: 'text-violet-600 bg-violet-50'   },
 }
 
 function timeAgo(iso) {

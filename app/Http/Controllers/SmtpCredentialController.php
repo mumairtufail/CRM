@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\SmtpCredential;
 use App\Services\MailService;
 use Illuminate\Http\Request;
+use Webklex\PHPIMAP\ClientManager;
 
 class SmtpCredentialController extends Controller
 {
@@ -16,14 +17,17 @@ class SmtpCredentialController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
-            'host'       => 'required|string|max:255',
-            'port'       => 'required|integer|min:1|max:65535',
-            'encryption' => 'required|in:tls,ssl,none',
-            'username'   => 'required|string|max:255',
-            'password'   => 'required|string|max:1000',
-            'from_name'  => 'required|string|max:100',
-            'from_email' => 'required|email|max:200',
+            'name'            => 'required|string|max:100',
+            'host'            => 'required|string|max:255',
+            'port'            => 'required|integer|min:1|max:65535',
+            'encryption'      => 'required|in:tls,ssl,none',
+            'username'        => 'required|string|max:255',
+            'password'        => 'required|string|max:1000',
+            'from_name'       => 'required|string|max:100',
+            'from_email'      => 'required|email|max:200',
+            'imap_host'       => 'nullable|string|max:255',
+            'imap_port'       => 'nullable|integer|min:1|max:65535',
+            'imap_encryption' => 'nullable|in:ssl,tls,none',
         ]);
 
         $request->user()->smtpCredentials()->create($data);
@@ -36,14 +40,17 @@ class SmtpCredentialController extends Controller
         $this->owned($request, $smtpCredential);
 
         $data = $request->validate([
-            'name'       => 'required|string|max:100',
-            'host'       => 'required|string|max:255',
-            'port'       => 'required|integer|min:1|max:65535',
-            'encryption' => 'required|in:tls,ssl,none',
-            'username'   => 'required|string|max:255',
-            'password'   => 'nullable|string|max:1000',
-            'from_name'  => 'required|string|max:100',
-            'from_email' => 'required|email|max:200',
+            'name'            => 'required|string|max:100',
+            'host'            => 'required|string|max:255',
+            'port'            => 'required|integer|min:1|max:65535',
+            'encryption'      => 'required|in:tls,ssl,none',
+            'username'        => 'required|string|max:255',
+            'password'        => 'nullable|string|max:1000',
+            'from_name'       => 'required|string|max:100',
+            'from_email'      => 'required|email|max:200',
+            'imap_host'       => 'nullable|string|max:255',
+            'imap_port'       => 'nullable|integer|min:1|max:65535',
+            'imap_encryption' => 'nullable|in:ssl,tls,none',
         ]);
 
         if (empty($data['password'])) {
@@ -88,6 +95,39 @@ class SmtpCredentialController extends Controller
         try {
             (new MailService($smtpCredential))->sendTest($request->user()->email);
             return response()->json(['ok' => true, 'message' => 'Test email sent to ' . $request->user()->email]);
+        } catch (\Throwable $e) {
+            return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function testImap(Request $request, SmtpCredential $smtpCredential)
+    {
+        $this->owned($request, $smtpCredential);
+
+        if (!$smtpCredential->imap_host) {
+            return response()->json(['ok' => false, 'message' => 'IMAP host not configured.'], 422);
+        }
+
+        try {
+            $cm     = new ClientManager([]);
+            $client = $cm->make([
+                'host'          => $smtpCredential->imap_host,
+                'port'          => $smtpCredential->imap_port    ?? 993,
+                'encryption'    => $smtpCredential->imap_encryption ?? 'ssl',
+                'validate_cert' => false,
+                'username'      => $smtpCredential->username,
+                'password'      => $smtpCredential->password,
+                'protocol'      => 'imap',
+            ]);
+            $client->connect();
+            $folders = $client->getFolders(false);
+            $names   = $folders->map(fn ($f) => $f->name)->implode(', ');
+            $client->disconnect();
+
+            return response()->json([
+                'ok'      => true,
+                'message' => 'IMAP connected. Folders: ' . ($names ?: 'INBOX'),
+            ]);
         } catch (\Throwable $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);
         }

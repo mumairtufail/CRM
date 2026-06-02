@@ -129,6 +129,13 @@ return [
             'level'  => 'debug',
         ],
 
+        'inbox' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/inbox.log'),
+            'level'  => 'debug',
+            'days'   => 7,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

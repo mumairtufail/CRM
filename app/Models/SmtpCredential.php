@@ -13,19 +13,32 @@ class SmtpCredential extends Model
         'organization_id',
         'user_id', 'name', 'host', 'port', 'encryption',
         'username', 'password', 'from_name', 'from_email', 'is_active',
+        'imap_host', 'imap_port', 'imap_encryption', 'last_fetched_at',
     ];
 
     protected function casts(): array
     {
         return [
-            'password'  => 'encrypted',
-            'is_active' => 'boolean',
-            'port'      => 'integer',
+            'password'        => 'encrypted',
+            'is_active'       => 'boolean',
+            'port'            => 'integer',
+            'imap_port'       => 'integer',
+            'last_fetched_at' => 'datetime',
         ];
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function fetchedEmails()
+    {
+        return $this->hasMany(FetchedEmail::class);
+    }
+
+    public function hasImap(): bool
+    {
+        return !empty($this->imap_host);
     }
 }

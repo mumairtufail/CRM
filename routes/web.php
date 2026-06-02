@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\InboxController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\EmailTemplateController;
@@ -106,13 +107,24 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/email-templates/deactivate',                  [EmailTemplateController::class, 'deactivate'])->name('email-templates.deactivate');
     Route::get('/email-templates/{emailTemplate}/preview',       [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
 
+    // Inbox (IMAP fetch)
+    Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');
+    Route::get('/inbox/{fetchedEmail}',                    [InboxController::class, 'show'])->name('inbox.show');
+    Route::post('/inbox/sync',                             [InboxController::class, 'sync'])->name('inbox.sync');
+    Route::patch('/inbox/{fetchedEmail}/read',             [InboxController::class, 'markRead'])->name('inbox.read');
+    Route::patch('/inbox/{fetchedEmail}/starred',          [InboxController::class, 'markStarred'])->name('inbox.starred');
+    Route::patch('/inbox/{fetchedEmail}/trash',            [InboxController::class, 'trash'])->name('inbox.trash');
+    Route::patch('/inbox/{fetchedEmail}/restore',          [InboxController::class, 'restore'])->name('inbox.restore');
+    Route::delete('/inbox/{fetchedEmail}',                 [InboxController::class, 'destroy'])->name('inbox.destroy');
+
     // SMTP Credentials
     Route::post('/smtp',                          [SmtpCredentialController::class, 'store'])->name('smtp.store');
     Route::put('/smtp/{smtpCredential}',          [SmtpCredentialController::class, 'update'])->name('smtp.update');
     Route::delete('/smtp/{smtpCredential}',       [SmtpCredentialController::class, 'destroy'])->name('smtp.destroy');
     Route::patch('/smtp/{smtpCredential}/activate',   [SmtpCredentialController::class, 'activate'])->name('smtp.activate');
     Route::patch('/smtp/{smtpCredential}/deactivate', [SmtpCredentialController::class, 'deactivate'])->name('smtp.deactivate');
-    Route::post('/smtp/{smtpCredential}/test',    [SmtpCredentialController::class, 'test'])->name('smtp.test');
+    Route::post('/smtp/{smtpCredential}/test',      [SmtpCredentialController::class, 'test'])->name('smtp.test');
+    Route::post('/smtp/{smtpCredential}/test-imap', [SmtpCredentialController::class, 'testImap'])->name('smtp.test-imap');
     Route::patch('/settings/mail',                [SmtpCredentialController::class, 'updateMailSettings'])->name('settings.mail');
 });
 

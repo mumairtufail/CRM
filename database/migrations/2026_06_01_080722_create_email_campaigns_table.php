@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('email_campaigns', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('subject');
             $table->longText('body_html');

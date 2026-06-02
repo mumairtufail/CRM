@@ -2,14 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmailCampaign extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
+        'organization_id',
         'name', 'subject', 'body_html', 'body_text', 'status',
         'from_name', 'from_email', 'filters',
         'total_recipients', 'sent_count', 'opened_count',

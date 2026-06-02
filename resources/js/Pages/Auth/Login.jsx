@@ -1,4 +1,4 @@
-import { useForm, Head } from '@inertiajs/react'
+import { useForm, Head, Link } from '@inertiajs/react'
 import { Input } from '@/Components/ui/input'
 import { Eye, EyeOff } from 'lucide-react'
 import { useState } from 'react'
@@ -124,6 +124,11 @@ export default function Login({ status }) {
               ) : 'Sign in'}
             </button>
           </form>
+
+          <p style={{ textAlign: 'center', fontSize: 13, color: '#94a3b8', marginTop: 22 }}>
+            Don't have an account?{' '}
+            <Link href={route('register')} style={{ color: '#0f172a', fontWeight: 600 }}>Create workspace</Link>
+          </p>
         </div>
       </div>
 

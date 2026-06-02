@@ -41,7 +41,7 @@ function SuccessView() {
   )
 }
 
-export default function PublicLeadForm() {
+export default function PublicLeadForm({ organization }) {
   const { props } = usePage()
   const submitted  = props?.flash?.submitted ?? false
 
@@ -59,7 +59,7 @@ export default function PublicLeadForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    post('/intake')
+    post(`/intake/${organization.slug}`)
   }
 
   return (
@@ -74,7 +74,9 @@ export default function PublicLeadForm() {
               style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
               <Zap size={22} className="text-white" strokeWidth={2.5} />
             </div>
-            <h1 className="text-[24px] font-bold text-slate-900 tracking-tight">Submit Your Information</h1>
+            <h1 className="text-[24px] font-bold text-slate-900 tracking-tight">
+              {organization?.name ? `Contact ${organization.name}` : 'Submit Your Information'}
+            </h1>
             <p className="text-[14px] text-slate-500 mt-1.5">
               Fill in the form below and we'll get back to you shortly.
             </p>

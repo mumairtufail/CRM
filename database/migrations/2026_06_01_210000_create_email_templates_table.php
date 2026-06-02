@@ -10,6 +10,8 @@ return new class extends Migration
     {
         Schema::create('email_templates', function (Blueprint $table) {
             $table->id();
+            // Nullable: system templates (is_system) are shared across all tenants.
+            $table->foreignId('organization_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('name');
             $table->string('description')->nullable();

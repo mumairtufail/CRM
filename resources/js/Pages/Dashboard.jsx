@@ -173,7 +173,7 @@ export default function Dashboard({
                 <Sparkles size={12} className="text-violet-300" />
                 <span className="text-violet-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
               </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''} 👋</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''}</h2>
               <p className="text-white/40 text-[12.5px] mt-0.5">Here's your pipeline snapshot for today.</p>
             </div>
             <div className="flex items-center gap-4 sm:gap-6 shrink-0">

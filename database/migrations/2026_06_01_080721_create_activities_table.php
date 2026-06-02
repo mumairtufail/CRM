@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lead_id')->constrained()->cascadeOnDelete();
             $table->string('type'); // note, email_sent, call, meeting, status_change, import, follow_up
             $table->text('description');

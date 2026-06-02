@@ -3,20 +3,29 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lead;
-use App\Models\LeadEmail;
-use App\Models\LeadPhone;
+use App\Models\Notification;
+use App\Models\Organization;
+use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PublicLeadController extends Controller
 {
-    public function show()
+    public function show(Organization $organization)
     {
-        return Inertia::render('Public/LeadForm');
+        return Inertia::render('Public/LeadForm', [
+            'organization' => [
+                'name' => $organization->name,
+                'slug' => $organization->slug,
+            ],
+        ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, Organization $organization)
     {
+        // Scope all created records to this organization for the request.
+        app(TenantContext::class)->set($organization);
+
         $validated = $request->validate([
             'first_name' => 'required|string|max:100',
             'last_name'  => 'nullable|string|max:100',
@@ -54,6 +63,13 @@ class PublicLeadController extends Controller
                 'is_primary' => true,
             ]);
         }
+
+        Notification::create([
+            'type'  => 'lead.created',
+            'title' => 'New lead from your form',
+            'body'  => "{$lead->full_name} submitted the intake form",
+            'link'  => "/leads/{$lead->id}",
+        ]);
 
         return back()->with('submitted', true);
     }

@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class EmailSend extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'organization_id',
         'email_campaign_id', 'lead_id', 'email_used', 'status',
         'message_id', 'sent_at', 'opened_at', 'clicked_at',
     ];

@@ -13,6 +13,11 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            // Nullable: the first owner row is created together with its organization,
+            // then the FK is set immediately afterwards.
+            $table->foreignId('organization_id')->nullable()->constrained()->cascadeOnDelete();
+            $table->string('role')->default('member'); // owner | member
+            $table->boolean('is_superadmin')->default(false); // platform-level super admin (no organization)
             $table->string('name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();

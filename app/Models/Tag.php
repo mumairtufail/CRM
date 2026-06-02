@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Tag extends Model
 {
-    protected $fillable = ['name', 'color'];
+    use BelongsToTenant;
+
+    protected $fillable = ['organization_id', 'name', 'color'];
 
     public function leads()
     {

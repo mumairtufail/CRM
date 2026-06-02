@@ -56,6 +56,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Domain (tenant subdomains)
+    |--------------------------------------------------------------------------
+    |
+    | The bare host the SaaS is served from. Any subdomain of this domain is
+    | treated as a tenant workspace (e.g. acme.crm.test). Leave null to disable
+    | subdomain tenant resolution and rely solely on the logged-in user's org.
+    |
+    */
+
+    'domain' => env('APP_DOMAIN'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |

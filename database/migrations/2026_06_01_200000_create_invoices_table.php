@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('invoices', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->foreignId('lead_id')->nullable()->constrained()->nullOnDelete();
             $table->string('invoice_number')->unique();
             $table->string('status')->default('draft'); // draft, sent, paid, overdue

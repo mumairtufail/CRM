@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('smtp_credentials', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('name');
             $table->string('host');

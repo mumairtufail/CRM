@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('leads', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('first_name');
             $table->string('last_name')->nullable();
             $table->string('company')->nullable();
@@ -32,6 +33,7 @@ return new class extends Migration
             $table->softDeletes();
             $table->timestamps();
 
+            $table->index('organization_id');
             $table->index(['status', 'created_at']);
             $table->index('source');
             $table->index('follow_up_at');

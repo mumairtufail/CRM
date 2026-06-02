@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('import_jobs', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
             $table->string('source'); // csv, google_sheet, claude_ai, apollo, bulk_social
             $table->string('status')->default('pending'); // pending, processing, preview, completed, failed
             $table->json('preview_data')->nullable();

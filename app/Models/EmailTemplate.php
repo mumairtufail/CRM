@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class EmailTemplate extends Model
 {
+    use BelongsToTenant;
+
+    /** System templates (organization_id null) are shared across all tenants. */
+    protected bool $tenantIncludesGlobal = true;
+
     protected $fillable = [
-        'user_id', 'name', 'description', 'html_content', 'thumbnail_color', 'is_system',
+        'organization_id', 'user_id', 'name', 'description', 'html_content', 'thumbnail_color', 'is_system',
     ];
 
     protected function casts(): array

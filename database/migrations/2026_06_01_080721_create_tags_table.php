@@ -10,9 +10,12 @@ return new class extends Migration
     {
         Schema::create('tags', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
             $table->string('color', 7)->default('#6366f1');
             $table->timestamps();
+
+            $table->unique(['organization_id', 'name']);
         });
 
         Schema::create('lead_tag', function (Blueprint $table) {

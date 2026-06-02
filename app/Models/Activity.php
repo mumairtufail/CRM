@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Activity extends Model
 {
-    protected $fillable = ['lead_id', 'type', 'description', 'meta'];
+    use BelongsToTenant;
+
+    protected $fillable = ['organization_id', 'lead_id', 'type', 'description', 'meta'];
 
     protected $casts = ['meta' => 'array'];
 

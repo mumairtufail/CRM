@@ -2,10 +2,11 @@ import { Link, usePage } from '@inertiajs/react'
 import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
-  Tag, Settings, Zap, PanelLeftClose, PanelLeftOpen,
+  Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LogoMark } from '@/Components/Common/Logo'
 
 const navItems = [
   { label: 'Dashboard', href: '/',          icon: LayoutDashboard },
@@ -62,8 +63,9 @@ function useRecentPages(currentUrl, component) {
 export default function Sidebar({ open, onToggle }) {
   const { url, component, props } = usePage()
   const user      = props?.auth?.user
+  const organization = props?.organization
   const logoUrl   = user?.company_logo ? `/storage/${user.company_logo}` : null
-  const brandName = user?.company_name || 'CRM'
+  const brandName = organization?.name || user?.company_name || 'CRM'
 
   const recentPages = useRecentPages(url, component)
 
@@ -100,13 +102,15 @@ export default function Sidebar({ open, onToggle }) {
         open ? 'justify-between' : 'justify-center'
       )}>
         <div className={cn('flex items-center gap-2.5 min-w-0', !open && 'justify-center w-full')}>
-          <div className="w-7 h-7 rounded-[9px] flex items-center justify-center shrink-0 shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
-            {logoUrl
-              ? <img src={logoUrl} alt="logo" className="w-full h-full rounded-[9px] object-contain" />
-              : <Zap size={13} className="text-white" strokeWidth={2.5} />
-            }
-          </div>
+          {logoUrl
+            ? (
+              <div className="w-7 h-7 rounded-[9px] flex items-center justify-center shrink-0 shadow-lg overflow-hidden"
+                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
+                <img src={logoUrl} alt="logo" className="w-full h-full rounded-[9px] object-contain" />
+              </div>
+            )
+            : <LogoMark size={28} radius={9} className="shrink-0 shadow-lg" />
+          }
           {open && (
             <span className="font-bold text-[13.5px] text-white truncate tracking-tight">{brandName}</span>
           )}

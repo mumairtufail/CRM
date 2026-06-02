@@ -5,12 +5,18 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\EmailSend;
 use App\Models\Lead;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
     public function index()
     {
+        // A super admin who is not impersonating belongs to the platform portal.
+        if (Auth::user()->isSuperadmin() && ! session('impersonator_id')) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $now = now();
 
         $totalClosed    = Lead::whereIn('status', ['won', 'lost'])->count();

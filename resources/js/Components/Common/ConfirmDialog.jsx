@@ -4,7 +4,13 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from '@/Components/ui/alert-dialog'
 
-export default function ConfirmDialog({ open, onOpenChange, title, description, onConfirm, loading }) {
+export default function ConfirmDialog({
+  open, onOpenChange, title, description, onConfirm, loading,
+  confirmText = 'Delete',
+  loadingText = 'Deleting...',
+  // 'destructive' (default) keeps the red button; 'default' uses the primary color.
+  variant = 'destructive',
+}) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -19,9 +25,11 @@ export default function ConfirmDialog({ open, onOpenChange, title, description, 
           <AlertDialogAction
             onClick={onConfirm}
             disabled={loading}
-            className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+            className={variant === 'destructive'
+              ? 'bg-destructive hover:bg-destructive/90 text-destructive-foreground'
+              : ''}
           >
-            {loading ? 'Deleting...' : 'Delete'}
+            {loading ? loadingText : confirmText}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,11 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicLeadController;
@@ -13,11 +18,27 @@ use App\Http\Controllers\SmtpCredentialController;
 use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
-// Public lead intake form (no auth required)
-Route::get('/intake',  [PublicLeadController::class, 'show'])->name('intake.show');
-Route::post('/intake', [PublicLeadController::class, 'store'])->name('intake.store');
+// Public lead intake form (no auth required) — scoped to a specific organization.
+Route::get('/intake/{organization:slug}',  [PublicLeadController::class, 'show'])->name('intake.show');
+Route::post('/intake/{organization:slug}', [PublicLeadController::class, 'store'])->name('intake.store');
+
+// Super admin portal
+Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/',                              [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users',                         [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('/users/{user}/impersonate',     [AdminUserController::class, 'impersonate'])->name('users.impersonate');
+    Route::get('/organizations',                 [AdminOrganizationController::class, 'index'])->name('organizations.index');
+});
 
 Route::middleware(['auth'])->group(function () {
+
+    // Stop impersonating — available to the impersonated user (not super-admin gated).
+    Route::post('/impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
+
+    // Notifications
+    Route::get('/notifications',                       [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/notifications/read-all',             [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/notifications/{notification}/read',  [NotificationController::class, 'markRead'])->name('notifications.read');
 
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');

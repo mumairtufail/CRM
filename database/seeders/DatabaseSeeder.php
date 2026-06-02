@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\Organization;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\TenantContext;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,14 +13,37 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // System (shared) email templates — no tenant context, organization_id stays null.
         $this->call(EmailTemplateSeeder::class);
 
+        // Platform super admin — no organization, full cross-tenant portal access.
         User::create([
-            'name'     => 'Admin',
-            'email'    => 'mumairtufail786@gmail.com',
-            'password' => Hash::make('password'),
+            'organization_id' => null,
+            'role'            => 'superadmin',
+            'is_superadmin'   => true,
+            'name'            => 'Super Admin',
+            'email'           => 'hello@lumenialab.com',
+            'password'        => Hash::make('password'),
         ]);
-        
+
+        // Demo organization + owner.
+        $organization = Organization::create([
+            'name' => 'Demo Workspace',
+            'slug' => 'demo',
+        ]);
+
+        $admin = User::create([
+            'organization_id' => $organization->id,
+            'role'            => 'owner',
+            'name'            => 'Admin',
+            'email'           => 'mumairtufail786@gmail.com',
+            'password'        => Hash::make('password'),
+        ]);
+
+        $organization->update(['owner_id' => $admin->id]);
+
+        // Scope the rest of the seed (tags, etc.) to the demo organization.
+        app(TenantContext::class)->set($organization);
 
         $tagData = [
             ['name' => 'Hot Lead',   'color' => '#ef4444'],

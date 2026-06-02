@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Model;
 
 class Invoice extends Model
 {
+    use BelongsToTenant;
+
     protected $fillable = [
+        'organization_id',
         'lead_id', 'invoice_number', 'status',
         'issue_date', 'due_date',
         'subtotal', 'tax_rate', 'tax_amount', 'total',

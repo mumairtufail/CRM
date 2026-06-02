@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'company_name', 'company_logo', 'mail_batch_size', 'mail_batch_delay', 'active_template_id'])]
+#[Fillable(['organization_id', 'role', 'is_superadmin', 'name', 'email', 'password', 'company_name', 'company_logo', 'mail_batch_size', 'mail_batch_delay', 'active_template_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -22,10 +22,26 @@ class User extends Authenticatable
         return [
             'email_verified_at'  => 'datetime',
             'password'           => 'hashed',
+            'is_superadmin'      => 'boolean',
             'mail_batch_size'    => 'integer',
             'mail_batch_delay'   => 'integer',
             'active_template_id' => 'integer',
         ];
+    }
+
+    public function organization()
+    {
+        return $this->belongsTo(Organization::class);
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->role === 'owner';
+    }
+
+    public function isSuperadmin(): bool
+    {
+        return (bool) $this->is_superadmin;
     }
 
     public function smtpCredentials()

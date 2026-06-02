@@ -361,22 +361,24 @@ export default function LeadCreate() {
                     <button type="button" onClick={() => setData({ ...data, priority: 'high', status: 'qualified' })} className="w-full text-left px-3 py-2 rounded-md hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-indigo-600 font-medium">
                       Mark as High Priority
                     </button>
+
+                    <hr className="border-slate-200/70 !my-4" />
+
+                    {/* Primary actions */}
+                    <button type="submit" disabled={processing}
+                      className="w-full h-10 text-[13.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
+                      {processing ? 'Saving…' : (<><Plus size={15} /> Create Lead</>)}
+                    </button>
+                    <Link href="/leads" className="block">
+                      <Button type="button" variant="outline" className="w-full h-10 text-[13px] border-slate-200 font-medium">
+                        Cancel
+                      </Button>
+                    </Link>
                   </div>
                 </SectionCard>
               </div>
 
-            </div>
-
-            {/* Submit */}
-            <div className="flex items-center justify-center gap-5 pt-8 pb-4 mt-6 border-t border-slate-100">
-              <Link href="/leads">
-                <Button type="button" variant="outline" size="sm" className="h-11 text-[14px] border-slate-200 px-8 font-medium">Cancel</Button>
-              </Link>
-              <button type="submit" disabled={processing}
-                className="h-11 px-10 text-[14px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
-                {processing ? 'Saving...' : 'Create Lead'}
-              </button>
             </div>
           </form>
         </div>

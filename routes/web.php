@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\LeadGenerationController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonationController;
@@ -55,6 +56,14 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status');
     Route::delete('/leads/{lead}',     [LeadController::class, 'destroy'])->name('leads.destroy');
 
+    // AI Lead Generation
+    Route::prefix('lead-generation')->name('lead-generation.')->group(function () {
+        Route::get('/',             [LeadGenerationController::class, 'index'])->name('index');
+        Route::post('/parse-prompt',[LeadGenerationController::class, 'parsePrompt'])->name('parse-prompt');
+        Route::post('/search',      [LeadGenerationController::class, 'search'])->name('search');
+        Route::post('/import',      [LeadGenerationController::class, 'import'])->name('import');
+    });
+
     // Pipeline
     Route::get('/pipeline', [PipelineController::class, 'index'])->name('pipeline');
 
@@ -98,6 +107,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/workspace',    [ProfileController::class, 'updateWorkspace'])->name('profile.workspace');
     Route::delete('/profile/logo',       [ProfileController::class, 'removeLogo'])->name('profile.logo.remove');
     Route::delete('/profile',            [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Lead generation provider settings
+    Route::post('/settings/lead-provider/save', [ProfileController::class, 'saveLeadProvider'])->name('settings.lead-provider.save');
+    Route::post('/settings/lead-provider/test', [ProfileController::class, 'testLeadProvider'])->name('settings.lead-provider.test');
 
     // Email Templates
     Route::post('/email-templates',                              [EmailTemplateController::class, 'store'])->name('email-templates.store');

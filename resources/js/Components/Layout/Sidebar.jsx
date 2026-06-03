@@ -3,15 +3,16 @@ import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
-  Plus, Clock, ChevronRight, FileText, Inbox,
+  Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
 
 const navItems = [
-  { label: 'Dashboard', href: '/',          icon: LayoutDashboard },
-  { label: 'Leads',     href: '/leads',     icon: Users },
-  { label: 'Pipeline',  href: '/pipeline',  icon: Kanban },
+  { label: 'Dashboard',      href: '/',                 icon: LayoutDashboard },
+  { label: 'Leads',          href: '/leads',            icon: Users },
+  { label: 'AI Lead Search', href: '/lead-generation',  icon: Sparkles },
+  { label: 'Pipeline',       href: '/pipeline',         icon: Kanban },
   { label: 'Campaigns', href: '/campaigns', icon: Mail },
   { label: 'Inbox',     href: '/inbox',     icon: Inbox },
   { label: 'Invoices',  href: '/invoices',  icon: FileText },
@@ -27,6 +28,7 @@ const quickActions = [
 // Map Inertia component names → readable labels
 const COMPONENT_LABELS = {
   'Dashboard':        'Dashboard',
+  'LeadGeneration/Index': 'AI Lead Search',
   'Leads/Index':      'All Leads',
   'Leads/Show':       'Lead Detail',
   'Leads/Create':     'New Lead',

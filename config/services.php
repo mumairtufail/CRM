@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'apollo' => [
+        'key'      => env('LEAD_GENERATION_API_KEY'),
+        'base_url' => 'https://api.apollo.io/api/v1',
+    ],
+
 ];

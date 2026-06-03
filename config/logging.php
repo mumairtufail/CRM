@@ -136,6 +136,16 @@ return [
             'days'   => 7,
         ],
 
+        // Dedicated channel for Apollo lead-generation debugging.
+        // Tail with:  php artisan pail --filter=apollo
+        // Or open:    storage/logs/apollo.log
+        'apollo' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/apollo.log'),
+            'level'  => 'debug',
+            'days'   => 14,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

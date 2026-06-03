@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\EmailTemplate;
+use App\Services\LeadProviders\ApolloProvider;
+use App\Services\LeadProviders\PeopleDataLabsProvider;
+use App\Support\TenantContext;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -15,6 +20,11 @@ use Inertia\Response;
 
 class ProfileController extends Controller
 {
+    private function currentOrg(Request $request)
+    {
+        return app(TenantContext::class)->get() ?? $request->user()?->organization;
+    }
+
     public function edit(Request $request): Response
     {
         $user = $request->user();
@@ -30,9 +40,17 @@ class ProfileController extends Controller
             'is_system'       => $t->is_system,
         ]);
 
+        $org         = $this->currentOrg($request);
+        $orgSettings = $org?->settings ?? [];
+
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail'    => $user instanceof MustVerifyEmail,
             'status'             => session('status'),
+            'leadGenSettings'    => [
+                'provider' => $orgSettings['lead_generation_provider'] ?? null,
+                'enabled'  => $orgSettings['lead_generation_enabled'] ?? false,
+                'hasKey'   => !empty($orgSettings['lead_generation_api_key']),
+            ],
             'smtpCredentials'    => $user->smtpCredentials()->get()->map(fn ($c) => [
                 'id'              => $c->id,
                 'name'            => $c->name,
@@ -104,6 +122,67 @@ class ProfileController extends Controller
         }
 
         return Redirect::route('profile.edit');
+    }
+
+    public function saveLeadProvider(Request $request): JsonResponse
+    {
+        $request->validate([
+            'provider' => 'required|in:apollo,pdl',
+            'api_key'  => 'required|string|min:5',
+        ]);
+
+        $org = $this->currentOrg($request);
+
+        if (!$org) {
+            return response()->json(['success' => false, 'message' => 'No workspace found.'], 422);
+        }
+
+        $settings = $org->settings ?? [];
+        $settings['lead_generation_provider'] = $request->input('provider');
+        $settings['lead_generation_api_key']  = encrypt($request->input('api_key'));
+        $settings['lead_generation_enabled']  = true;
+        $org->settings = $settings;
+        $org->save();
+
+        Log::channel('apollo')->info('[SETTINGS:saved]', ['provider' => $request->input('provider')]);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Lead generation provider saved successfully.',
+            'provider' => $request->input('provider'),
+        ]);
+    }
+
+    public function testLeadProvider(Request $request): JsonResponse
+    {
+        $request->validate([
+            'provider' => 'required|in:apollo,pdl',
+            'api_key'  => 'required|string|min:5',
+        ]);
+
+        $apiKey   = $request->input('api_key');
+        $provider = $request->input('provider') === 'pdl'
+            ? new PeopleDataLabsProvider($apiKey)
+            : new ApolloProvider($apiKey);
+
+        Log::channel('apollo')->info('[SETTINGS:test]', ['provider' => $request->input('provider')]);
+
+        $ok = $provider->testConnection();
+
+        if ($ok) {
+            Log::channel('apollo')->info('[SETTINGS:test-ok]', ['provider' => $provider->getProviderName()]);
+            return response()->json([
+                'success'  => true,
+                'provider' => $provider->getProviderName(),
+                'message'  => 'Connection successful',
+            ]);
+        }
+
+        Log::channel('apollo')->warning('[SETTINGS:test-fail]', ['provider' => $provider->getProviderName()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'Invalid API key or connection failed',
+        ], 422);
     }
 
     public function destroy(Request $request): RedirectResponse

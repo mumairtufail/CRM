@@ -5,6 +5,12 @@ import PageHeader from '@/Components/Common/PageHeader'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
+import { Badge } from '@/Components/ui/badge'
+import { Alert, AlertDescription } from '@/Components/ui/alert'
+import {
+  Select, SelectTrigger, SelectValue,
+  SelectContent, SelectItem,
+} from '@/Components/ui/select'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
   DialogDescription, DialogFooter
@@ -12,7 +18,8 @@ import {
 import {
   Upload, Trash2, Building2, Plus, Check, Zap, Server,
   Mail, Settings2, User, ChevronRight, Eye, EyeOff, X,
-  LayoutTemplate, ExternalLink, Palette, CheckCircle2
+  LayoutTemplate, ExternalLink, Palette, CheckCircle2,
+  Sparkles, AlertCircle,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -61,6 +68,7 @@ const TABS = [
   { id: 'smtp',      label: 'SMTP',      icon: Server },
   { id: 'mail',      label: 'Mail',      icon: Mail },
   { id: 'templates', label: 'Templates', icon: LayoutTemplate },
+  { id: 'leadgen',   label: 'Lead Gen',  icon: Sparkles },
 ]
 
 function TabNav({ active, onChange }) {
@@ -1061,11 +1069,191 @@ function TemplatesTab({ templates, activeTemplateId }) {
   )
 }
 
+// ─── Lead Gen tab ─────────────────────────────────────────────────────────────
+
+const PROVIDER_OPTIONS = [
+  { value: 'apollo', label: 'Apollo.io' },
+  { value: 'pdl',    label: 'People Data Labs' },
+]
+
+function LeadGenTab({ leadGenSettings }) {
+  const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
+
+  const [provider,    setProvider]    = useState(leadGenSettings?.provider || 'apollo')
+  const [apiKey,      setApiKey]      = useState('')
+  const [showKey,     setShowKey]     = useState(false)
+  const [testing,     setTesting]     = useState(false)
+  const [saving,      setSaving]      = useState(false)
+  const [testResult,  setTestResult]  = useState(null)  // null | 'success' | 'error'
+  const [testMessage, setTestMessage] = useState('')
+
+  // Reset test result when provider or key changes
+  const handleProviderChange = (v) => { setProvider(v); setTestResult(null) }
+  const handleKeyChange      = (e) => { setApiKey(e.target.value); setTestResult(null) }
+
+  const isConfigured = leadGenSettings?.enabled && leadGenSettings?.hasKey
+
+  const headers = () => ({
+    'Content-Type':  'application/json',
+    'Accept':        'application/json',
+    'X-CSRF-TOKEN':  csrf(),
+  })
+
+  const handleTest = async () => {
+    if (!apiKey.trim()) { toast.error('Enter an API key first'); return }
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res  = await fetch('/settings/lead-provider/test', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ provider, api_key: apiKey }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        setTestResult('success')
+        setTestMessage(`Connected to ${json.provider} successfully`)
+      } else {
+        setTestResult('error')
+        setTestMessage(json.message || 'Connection failed')
+      }
+    } catch {
+      setTestResult('error')
+      setTestMessage('Request failed — check your network')
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!apiKey.trim()) { toast.error('Enter an API key first'); return }
+    setSaving(true)
+    try {
+      const res  = await fetch('/settings/lead-provider/save', {
+        method: 'POST', headers: headers(),
+        body: JSON.stringify({ provider, api_key: apiKey }),
+      })
+      const json = await res.json()
+      if (json.success) {
+        toast.success('Lead generation provider saved successfully')
+        setApiKey('')
+      } else {
+        toast.error(json.message || 'Save failed')
+      }
+    } catch {
+      toast.error('Request failed — check your network')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const providerLabel = PROVIDER_OPTIONS.find(o => o.value === (leadGenSettings?.provider || 'apollo'))?.label
+
+  return (
+    <div className="space-y-3 max-w-lg">
+      <Section title="Lead generation">
+        <div className="space-y-3">
+          <p className="text-[12px] text-slate-500 leading-relaxed">
+            Connect a data provider to enable AI lead search.
+            Your API key is encrypted and stored securely.
+          </p>
+
+          {isConfigured && (
+            <div className="flex items-center gap-2 py-2 px-3 bg-emerald-50 border border-emerald-100 rounded-lg">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[12px] text-emerald-700 font-medium flex-1">
+                Connected — {providerLabel}
+              </span>
+              <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">
+                Active
+              </Badge>
+            </div>
+          )}
+
+          <Field label="Data Provider">
+            <Select value={provider} onValueChange={handleProviderChange}>
+              <SelectTrigger className="h-8 text-[13px]">
+                <SelectValue placeholder="Select provider" />
+              </SelectTrigger>
+              <SelectContent>
+                {PROVIDER_OPTIONS.map(o => (
+                  <SelectItem key={o.value} value={o.value} className="text-[13px]">
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          <Field label="API Key">
+            <div className="relative">
+              <Input
+                type={showKey ? 'text' : 'password'}
+                value={apiKey}
+                onChange={handleKeyChange}
+                className="h-8 text-[13px] pr-8"
+                placeholder={isConfigured ? '••••••••••••• (enter new key to update)' : 'Paste your API key here'}
+              />
+              <button
+                type="button"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setShowKey(v => !v)}
+              >
+                {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
+              </button>
+            </div>
+          </Field>
+
+          {testResult === 'success' && (
+            <Alert className="py-2 border-emerald-200 bg-emerald-50">
+              <AlertDescription className="text-[12px] text-emerald-700 flex items-center gap-1.5">
+                <Check size={12} className="shrink-0" /> {testMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+          {testResult === 'error' && (
+            <Alert variant="destructive" className="py-2">
+              <AlertDescription className="text-[12px] flex items-center gap-1.5">
+                <AlertCircle size={12} className="shrink-0" /> {testMessage}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8 text-xs gap-1.5"
+              onClick={handleTest}
+              disabled={testing || !apiKey.trim()}
+            >
+              {testing ? 'Testing…' : 'Test Connection'}
+            </Button>
+            <button
+              type="button"
+              disabled={saving || !apiKey.trim() || testResult !== 'success'}
+              onClick={handleSave}
+              className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            >
+              {saving ? 'Saving…' : 'Save Provider'}
+            </button>
+          </div>
+
+          <p className="text-[10.5px] text-slate-400">
+            Test Connection must succeed before you can save. Apollo.io free plan only supports searching your own contacts — upgrade to Basic for full database access. People Data Labs free tier allows limited searches.
+          </p>
+        </div>
+      </Section>
+    </div>
+  )
+}
+
 // ─── Page root ────────────────────────────────────────────────────────────────
 
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, mailSettings,
-  emailTemplates, activeTemplateId, smtpSuccess,
+  emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
 }) {
   const [tab, setTab] = useState('profile')
 
@@ -1086,6 +1274,7 @@ export default function ProfileEdit({
         {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
         {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
         {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} />}
+        {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
       </AppLayout>
     </>
   )

@@ -1,23 +1,24 @@
-import { Link, usePage } from '@inertiajs/react'
+import { Link, usePage, router } from '@inertiajs/react'
 import { useState, useEffect } from 'react'
 import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
+  LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
 
 const navItems = [
-  { label: 'Dashboard',      href: '/',                 icon: LayoutDashboard },
-  { label: 'Leads',          href: '/leads',            icon: Users },
-  { label: 'AI Lead Search', href: '/lead-generation',  icon: Sparkles },
-  { label: 'Pipeline',       href: '/pipeline',         icon: Kanban },
-  { label: 'Campaigns', href: '/campaigns', icon: Mail },
-  { label: 'Inbox',     href: '/inbox',     icon: Inbox },
-  { label: 'Invoices',  href: '/invoices',  icon: FileText },
-  { label: 'Import',    href: '/import',    icon: Upload },
-  // { label: 'Tags',      href: '/tags',      icon: Tag },
+  { label: 'Dashboard',      href: '/',                icon: LayoutDashboard },
+  { label: 'Leads',          href: '/leads',           icon: Users },
+  { label: 'AI Lead Search', href: '/lead-generation', icon: Sparkles },
+  { label: 'Pipeline',       href: '/pipeline',        icon: Kanban },
+  { label: 'Campaigns',      href: '/campaigns',       icon: Mail },
+  { label: 'Inbox',          href: '/inbox',           icon: Inbox },
+  { label: 'Invoices',       href: '/invoices',        icon: FileText },
+  { label: 'Import',         href: '/import',          icon: Upload },
+  { label: 'Settings',       href: '/profile',         icon: Settings },
 ]
 
 const quickActions = [
@@ -43,6 +44,7 @@ const COMPONENT_LABELS = {
   'Import':           'Import',
   'Tags/Index':       'Tags',
   'Profile/Edit':     'Settings',
+  'Settings':         'Settings',
   'Inbox/Index':      'Inbox',
 }
 
@@ -220,26 +222,35 @@ export default function Sidebar({ open, onToggle }) {
         )}
       </div>
 
-      {/* ── Bottom — settings ──────────────────── */}
-      <div className="px-2 pb-3 border-t border-white/[0.055] pt-2">
-        {open && (
-          <div className="px-2 py-1.5 mb-1">
-            <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Account</p>
-            {user && (
-              <p className="text-[11.5px] text-white/40 mt-0.5 truncate">{user.email}</p>
-            )}
+      {/* ── Bottom — user + logout ─────────────── */}
+      <div className="px-2 pb-3 border-t border-white/[0.055] pt-2 space-y-0.5">
+        {open && user && (
+          <div className="flex items-center gap-2.5 px-3 py-2 mb-0.5">
+            <div className="w-6 h-6 rounded-full bg-violet-600/60 flex items-center justify-center shrink-0 text-[10px] font-bold text-white">
+              {user.name?.[0]?.toUpperCase() ?? '?'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[12px] font-medium text-white/60 truncate leading-none">{user.name}</p>
+              <p className="text-[10.5px] text-white/30 truncate mt-0.5">{user.email}</p>
+            </div>
           </div>
         )}
-        <Link href="/profile" title={!open ? 'Settings' : undefined}
-          onClick={closeMobile}
+
+        <button
+          title={!open ? 'Log out' : undefined}
+          onClick={() => router.post('/logout')}
           className={cn(
-            'flex items-center rounded-[10px] text-white/35 hover:text-white/65 hover:bg-white/[0.06] transition-all group/settings',
+            'w-full flex items-center rounded-[10px] transition-all duration-150 group/logout',
+            'text-white/55 bg-white/[0.05] hover:text-red-400 hover:bg-red-500/[0.14]',
             open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]'
           )}
         >
-          <Settings size={15} strokeWidth={1.8} className="shrink-0 group-hover/settings:text-white/65 transition-colors" />
-          {open && <span className="text-[13px] font-medium">Settings</span>}
-        </Link>
+          <LogOut
+            size={15} strokeWidth={1.8}
+            className="shrink-0 transition-colors group-hover/logout:text-red-400"
+          />
+          {open && <span className="text-[13px] font-medium">Log out</span>}
+        </button>
       </div>
     </aside>
   )

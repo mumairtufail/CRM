@@ -271,10 +271,11 @@ class LeadGenerationService implements LeadGenerationInterface
         ]);
 
         return [
-            'contacts'    => $contacts,
-            'total'       => $total,
-            'total_pages' => $totalPages,
-            'page'        => $result['current_page'],
+            'contacts'          => $contacts,
+            'total'             => $total,
+            'total_pages'       => $totalPages,
+            'page'              => $result['current_page'],
+            'credits_remaining' => $result['credits_remaining'] ?? null,
         ];
     }
 

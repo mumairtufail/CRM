@@ -45,12 +45,26 @@ const PLATFORM_META = {
   website:   { label: 'www', bg: '#6366f1', title: 'Website' },
 }
 
-function SocialLinks({ handles }) {
-  if (!handles?.length) return <span className="text-gray-200 text-sm">—</span>
+function normalizeUrl(url) {
+  if (!url) return null
+  return url.startsWith('http') ? url : `https://${url}`
+}
+
+function SocialLinks({ handles, linkedinUrl }) {
+  // Merge linkedin_url into the handles list if no LinkedIn handle already exists
+  const base = handles || []
+  const hasLinkedin = base.some(h => h.platform?.toLowerCase() === 'linkedin')
+  const merged = (linkedinUrl && !hasLinkedin)
+    ? [{ platform: 'linkedin', url: normalizeUrl(linkedinUrl) }, ...base]
+    : base
+
+  const visible = merged.filter(h => h.url).slice(0, 4)
+  if (!visible.length) return <span className="text-gray-200 text-sm">—</span>
+
   return (
     <div className="flex items-center gap-1 flex-wrap">
-      {handles.filter(h => h.url).slice(0, 4).map((h, i) => {
-        const key = (h.platform || '').toLowerCase()
+      {visible.map((h, i) => {
+        const key  = (h.platform || '').toLowerCase()
         const meta = PLATFORM_META[key] || { label: key.slice(0, 2) || '?', bg: '#94a3b8', title: h.platform || 'Link' }
         return (
           <a
@@ -272,7 +286,7 @@ export default function LeadsIndex({ leads, filters }) {
       id: 'social',
       header: 'Social',
       size: 110,
-      cell: ({ row }) => <SocialLinks handles={row.original.social_handles} />,
+      cell: ({ row }) => <SocialLinks handles={row.original.social_handles} linkedinUrl={row.original.linkedin_url} />,
     },
     {
       accessorKey: 'deal_value',

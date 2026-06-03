@@ -234,6 +234,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
   const [isImporting,  setIsImporting]   = useState(false)
   const [step,         setStep]          = useState('prompt') // 'prompt'|'filters'|'results'
   const [error,        setError]         = useState(null)
+  const [creditsLeft,  setCreditsLeft]   = useState(null)
 
   // ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -285,6 +286,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
       setTotalPages(data.total_pages ?? 1)
       setCurrentPage(data.page ?? page)
       setSelectedIds(new Set())
+      if (data.credits_remaining != null) setCreditsLeft(data.credits_remaining)
     } catch (e) {
       setError(e.message)
       setStep('filters')
@@ -363,17 +365,34 @@ export default function LeadGenerationIndex({ configured, providerName }) {
       <div className="p-6 max-w-5xl mx-auto space-y-5">
 
         {/* ── Header ──────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={gradientStyle}>
-            <Sparkles size={18} className="text-white" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={gradientStyle}>
+              <Sparkles size={18} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-slate-800">AI Lead Search</h1>
+              <p className="text-sm text-slate-500">
+                Describe your ideal prospect in plain English
+                {providerName && <span className="ml-1 text-slate-400">· via {providerName}</span>}
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-800">AI Lead Search</h1>
-            <p className="text-sm text-slate-500">
-              Describe your ideal prospect in plain English
-              {providerName && <span className="ml-1 text-slate-400">· via {providerName}</span>}
-            </p>
-          </div>
+
+          {creditsLeft != null && (
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[12px] font-medium ${
+              creditsLeft < 50
+                ? 'bg-red-50 border-red-200 text-red-600'
+                : creditsLeft < 200
+                ? 'bg-amber-50 border-amber-200 text-amber-700'
+                : 'bg-emerald-50 border-emerald-200 text-emerald-700'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${
+                creditsLeft < 50 ? 'bg-red-500' : creditsLeft < 200 ? 'bg-amber-500' : 'bg-emerald-500'
+              }`} />
+              <span>{creditsLeft.toLocaleString()} credits left</span>
+            </div>
+          )}
         </div>
 
         {/* ── Error banner ─────────────────────────────────────────────── */}

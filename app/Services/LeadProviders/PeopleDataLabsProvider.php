@@ -186,10 +186,17 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             ->post(self::BASE . '/person/search', $body);
         $elapsed  = round((microtime(true) - $start) * 1000) . 'ms';
 
+        $creditsRemaining = $response->header('X-RateLimit-Remaining');
+        $creditsLimit     = $response->header('X-RateLimit-Limit');
+        $creditsPeriod    = $response->header('X-Ratelimit-Period');
+
         Log::channel('apollo')->debug('[PDL:http]', [
-            'status'  => $response->status(),
-            'elapsed' => $elapsed,
-            'total'   => $response->json('total', 0),
+            'status'            => $response->status(),
+            'elapsed'           => $elapsed,
+            'total'             => $response->json('total', 0),
+            'credits_remaining' => $creditsRemaining,
+            'credits_limit'     => $creditsLimit,
+            'credits_period'    => $creditsPeriod,
         ]);
 
         if ($response->status() === 429) {
@@ -228,16 +235,18 @@ class PeopleDataLabsProvider implements LeadProviderInterface
         }
 
         Log::channel('apollo')->info('[PDL:done]', [
-            'total'       => $total,
-            'returned'    => count($rawData),
-            'elapsed'     => $elapsed,
-            'has_next_st' => !empty($nextScrollToken),
+            'total'             => $total,
+            'returned'          => count($rawData),
+            'elapsed'           => $elapsed,
+            'has_next_st'       => !empty($nextScrollToken),
+            'credits_remaining' => $creditsRemaining,
         ]);
 
         return [
-            'total'        => $total,
-            'per_page'     => 10,
-            'current_page' => $page,
+            'total'             => $total,
+            'per_page'          => 10,
+            'current_page'      => $page,
+            'credits_remaining' => $creditsRemaining ? (int) $creditsRemaining : null,
             'data'         => collect($rawData)->map(fn($p) => [
                 'first_name'   => $p['first_name'] ?? '',
                 'last_name'    => $p['last_name'] ?? '',

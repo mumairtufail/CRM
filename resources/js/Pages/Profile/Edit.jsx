@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { Head, useForm, usePage, router } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
-import PageHeader from '@/Components/Common/PageHeader'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
@@ -16,36 +15,46 @@ import {
   DialogDescription, DialogFooter
 } from '@/Components/ui/dialog'
 import {
-  Upload, Trash2, Building2, Plus, Check, Zap, Server,
-  Mail, Settings2, User, ChevronRight, Eye, EyeOff, X,
-  LayoutTemplate, ExternalLink, Palette, CheckCircle2,
-  Sparkles, AlertCircle,
+  Upload, Building2, Plus, Check, Server, Mail, User,
+  Eye, EyeOff, X, LayoutTemplate, ExternalLink,
+  CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
+  Zap, Key, Wifi,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-// ─── Shared primitives ───────────────────────────────────────────────────────
+// ─── Primitives ───────────────────────────────────────────────────────────────
 
-function Field({ label, error, children, hint }) {
+function Field({ label, error, hint, children }) {
   return (
-    <div className="space-y-1">
-      <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{label}</Label>
+    <div className="space-y-1.5">
+      <Label className="text-[12px] font-medium text-slate-600">{label}</Label>
       {children}
-      {hint  && !error && <p className="text-[10.5px] text-slate-400">{hint}</p>}
-      {error && <p className="text-red-500 text-[11px] mt-0.5">{error}</p>}
+      {hint && !error && <p className="text-[11px] text-slate-400 leading-snug">{hint}</p>}
+      {error          && <p className="text-[11px] text-red-500">{error}</p>}
     </div>
   )
 }
 
-function Section({ title, danger, children }) {
+function Card({ title, badge, danger, children }) {
   return (
-    <div className="form-card" style={danger ? { border: '1px solid rgba(239,68,68,0.18)' } : {}}>
-      <div className="px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-        <p className={`text-[11px] font-semibold uppercase tracking-wider ${danger ? 'text-red-500' : 'text-slate-500'}`}>
+    <div className={cn(
+      'rounded-xl border bg-white',
+      danger ? 'border-red-200' : 'border-slate-200'
+    )}>
+      <div className={cn(
+        'flex items-center justify-between px-5 py-3 border-b',
+        danger ? 'border-red-100' : 'border-slate-100'
+      )}>
+        <p className={cn(
+          'text-[11.5px] font-semibold uppercase tracking-wider',
+          danger ? 'text-red-500' : 'text-slate-400'
+        )}>
           {title}
         </p>
+        {badge}
       </div>
-      <div className="px-4 py-3 space-y-3">{children}</div>
+      <div className="px-5 py-4 space-y-3">{children}</div>
     </div>
   )
 }
@@ -53,43 +62,71 @@ function Section({ title, danger, children }) {
 function SaveBtn({ processing, label = 'Save changes', loadingLabel = 'Saving…' }) {
   return (
     <button type="submit" disabled={processing}
-      className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
+      className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
       style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
       {processing ? loadingLabel : label}
     </button>
   )
 }
 
-// ─── Tab nav ──────────────────────────────────────────────────────────────────
+// ─── Settings sidebar nav ─────────────────────────────────────────────────────
 
-const TABS = [
-  { id: 'profile',   label: 'Profile',   icon: User },
-  { id: 'workspace', label: 'Workspace', icon: Building2 },
-  { id: 'smtp',      label: 'SMTP',      icon: Server },
-  { id: 'mail',      label: 'Mail',      icon: Mail },
-  { id: 'templates', label: 'Templates', icon: LayoutTemplate },
-  { id: 'leadgen',   label: 'Lead Gen',  icon: Sparkles },
+const NAV = [
+  {
+    items: [
+      { id: 'profile',   label: 'Profile',        icon: User },
+      { id: 'workspace', label: 'Workspace',       icon: Building2 },
+    ],
+  },
+  {
+    group: 'Email',
+    items: [
+      { id: 'smtp',      label: 'SMTP Accounts',  icon: Server },
+      { id: 'mail',      label: 'Sending Limits', icon: Mail },
+      { id: 'templates', label: 'Templates',      icon: LayoutTemplate },
+    ],
+  },
+  {
+    group: 'Integrations',
+    items: [
+      { id: 'leadgen',   label: 'Lead Generation', icon: Sparkles },
+    ],
+  },
 ]
 
-function TabNav({ active, onChange }) {
+function SettingsNav({ active, onChange, leadGenEnabled }) {
   return (
-    <div className="flex gap-1 p-1 bg-slate-100 rounded-xl mb-5 w-fit">
-      {TABS.map(({ id, label, icon: Icon }) => (
-        <button
-          key={id}
-          onClick={() => onChange(id)}
-          className={cn(
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12.5px] font-medium transition-all',
-            active === id
-              ? 'bg-white text-slate-800 shadow-sm'
-              : 'text-slate-500 hover:text-slate-700'
+    <nav className="w-48 shrink-0">
+      {NAV.map((section, si) => (
+        <div key={si} className={si > 0 ? 'mt-5' : ''}>
+          {section.group && (
+            <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+              {section.group}
+            </p>
           )}
-        >
-          <Icon size={13} />
-          {label}
-        </button>
+          <div className="space-y-0.5">
+            {section.items.map(({ id, label, icon: Icon }) => {
+              const isActive = active === id
+              return (
+                <button key={id} onClick={() => onChange(id)}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left',
+                    isActive
+                      ? 'bg-violet-50 text-violet-700'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                  )}>
+                  <Icon size={14} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+                  <span className="flex-1">{label}</span>
+                  {id === 'leadgen' && leadGenEnabled && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       ))}
-    </div>
+    </nav>
   )
 }
 
@@ -97,9 +134,10 @@ function TabNav({ active, onChange }) {
 
 function ProfileTab({ mustVerifyEmail }) {
   const { auth } = usePage().props
+
   const { data, setData, patch, errors, processing } = useForm({
-    name:  auth.user.name,
-    email: auth.user.email,
+    name:  auth.user.name  ?? '',
+    email: auth.user.email ?? '',
   })
   const submit = e => {
     e.preventDefault()
@@ -107,8 +145,8 @@ function ProfileTab({ mustVerifyEmail }) {
   }
 
   return (
-    <div className="space-y-3 max-w-lg">
-      <Section title="Profile information">
+    <div className="space-y-3 max-w-xl">
+      <Card title="Profile information">
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Name" error={errors.name}>
@@ -121,21 +159,21 @@ function ProfileTab({ mustVerifyEmail }) {
             </Field>
           </div>
           {mustVerifyEmail && !auth.user.email_verified_at && (
-            <p className="text-[12px] text-amber-600 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
+            <p className="text-[12px] text-amber-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
               Your email address is unverified.
             </p>
           )}
           <SaveBtn processing={processing} />
         </form>
-      </Section>
+      </Card>
 
-      <Section title="Change password">
+      <Card title="Change password">
         <PasswordForm />
-      </Section>
+      </Card>
 
-      <Section title="Danger zone" danger>
+      <Card title="Danger zone" danger>
         <DeleteForm />
-      </Section>
+      </Card>
     </div>
   )
 }
@@ -187,10 +225,10 @@ function DeleteForm() {
   }
   return (
     <>
-      <p className="text-[12px] text-slate-500 mb-2.5">
+      <p className="text-[12px] text-slate-500">
         Once deleted, all data is permanently removed. This cannot be undone.
       </p>
-      <Button variant="outline" size="sm" className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50"
+      <Button variant="outline" size="sm" className="h-7 text-xs border-red-200 text-red-600 hover:bg-red-50 mt-1"
         onClick={() => setOpen(true)}>
         Delete account
       </Button>
@@ -253,7 +291,7 @@ function WorkspaceTab() {
     router.post('/profile/workspace', fd, {
       forceFormData: true,
       onSuccess: () => toast.success('Workspace updated'),
-      onError: () => toast.error('Failed to update workspace'),
+      onError:   () => toast.error('Failed to update workspace'),
     })
   }
 
@@ -261,17 +299,15 @@ function WorkspaceTab() {
     setRemovingLogo(true)
     router.delete('/profile/logo', {
       onSuccess: () => { setLogoPreview(null); toast.success('Logo removed') },
-      onFinish: () => setRemovingLogo(false),
+      onFinish:  () => setRemovingLogo(false),
     })
   }
 
   return (
-    <div className="space-y-3 max-w-lg">
-      <Section title="Workspace branding">
+    <div className="space-y-3 max-w-xl">
+      <Card title="Workspace branding">
         <form onSubmit={submit} className="space-y-3">
-          {/* Logo */}
-          <div className="space-y-1.5">
-            <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Company logo</Label>
+          <Field label="Company logo">
             <div className="flex items-center gap-3">
               {logoPreview ? (
                 <div className="relative shrink-0">
@@ -285,20 +321,19 @@ function WorkspaceTab() {
               ) : (
                 <div onClick={() => logoInputRef.current?.click()}
                   className="w-12 h-12 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:border-violet-400 hover:bg-violet-50 transition-colors shrink-0">
-                  <Building2 size={16} className="text-slate-400" />
+                  <Building2 size={16} className="text-slate-300" />
                 </div>
               )}
               <div>
                 <Button type="button" variant="outline" size="sm"
-                  className="h-7 text-xs gap-1.5 border-slate-200"
-                  onClick={() => logoInputRef.current?.click()}>
+                  className="h-7 text-xs gap-1.5" onClick={() => logoInputRef.current?.click()}>
                   <Upload size={11} /> Upload logo
                 </Button>
-                <p className="text-[10.5px] text-slate-400 mt-0.5">PNG, JPG, SVG up to 2MB</p>
+                <p className="text-[10.5px] text-slate-400 mt-0.5">PNG, JPG, SVG · max 2MB</p>
               </div>
             </div>
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
-          </div>
+          </Field>
 
           <Field label="Company name">
             <Input value={data.company_name} onChange={e => setData('company_name', e.target.value)}
@@ -307,47 +342,40 @@ function WorkspaceTab() {
 
           <SaveBtn processing={processing} label="Save workspace" />
         </form>
-      </Section>
+      </Card>
     </div>
   )
 }
 
 // ─── SMTP tab ─────────────────────────────────────────────────────────────────
 
-const ENCRYPTION_OPTS = [
-  { value: 'tls',  label: 'TLS (recommended)' },
-  { value: 'ssl',  label: 'SSL' },
-  { value: 'none', label: 'None' },
-]
+const ENCRYPTION_OPTS = ['tls', 'ssl', 'none']
 
 const PROVIDER_PRESETS = [
-  { label: 'Gmail',        host: 'smtp.gmail.com',                        port: 587, encryption: 'tls', imap_host: 'imap.gmail.com',          imap_port: 993, imap_encryption: 'ssl', hint: 'Use an App Password (not your regular password). Enable 2-Step Verification first, then go to Google Account → Security → App Passwords.' },
-  { label: 'Outlook/365',  host: 'smtp.office365.com',                    port: 587, encryption: 'tls', imap_host: 'outlook.office365.com',   imap_port: 993, imap_encryption: 'ssl', hint: 'Use your Microsoft 365 email and password. Make sure SMTP AUTH is enabled in the admin portal.' },
-  { label: 'Hostinger',    host: 'smtp.hostinger.com',                    port: 465, encryption: 'ssl', imap_host: 'imap.hostinger.com',       imap_port: 993, imap_encryption: 'ssl', hint: 'Use your full email address as username. IMAP host is imap.hostinger.com (NOT smtp.hostinger.com).' },
-  { label: 'Mailgun',      host: 'smtp.mailgun.org',                      port: 587, encryption: 'tls', imap_host: 'imap.mailgun.org',        imap_port: 993, imap_encryption: 'ssl', hint: 'Use your Mailgun SMTP credentials from Sending → Domain Settings.' },
-  { label: 'SendGrid',     host: 'smtp.sendgrid.net',                     port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: 'Username is always "apikey". Password is your SendGrid API key. Note: SendGrid does not support IMAP.' },
-  { label: 'Amazon SES',   host: 'email-smtp.us-east-1.amazonaws.com',    port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: 'Use SMTP credentials from SES console. Note: Amazon SES does not support IMAP inbox fetching.' },
-  { label: 'Custom SMTP',  host: '',                                       port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: '' },
+  { label: 'Gmail',       host: 'smtp.gmail.com',                     port: 587, encryption: 'tls', imap_host: 'imap.gmail.com',         imap_port: 993, imap_encryption: 'ssl', hint: 'Use an App Password — enable 2FA first, then Google Account → Security → App Passwords.' },
+  { label: 'Outlook/365', host: 'smtp.office365.com',                 port: 587, encryption: 'tls', imap_host: 'outlook.office365.com',  imap_port: 993, imap_encryption: 'ssl', hint: 'Use your Microsoft 365 credentials. Ensure SMTP AUTH is enabled in admin.' },
+  { label: 'Hostinger',   host: 'smtp.hostinger.com',                 port: 465, encryption: 'ssl', imap_host: 'imap.hostinger.com',      imap_port: 993, imap_encryption: 'ssl', hint: 'Use your full email as username. IMAP host is imap.hostinger.com.' },
+  { label: 'Mailgun',     host: 'smtp.mailgun.org',                   port: 587, encryption: 'tls', imap_host: 'imap.mailgun.org',        imap_port: 993, imap_encryption: 'ssl', hint: 'Use SMTP credentials from Sending → Domain Settings.' },
+  { label: 'SendGrid',    host: 'smtp.sendgrid.net',                  port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: 'Username is always "apikey". Password is your SendGrid API key.' },
+  { label: 'Amazon SES',  host: 'email-smtp.us-east-1.amazonaws.com', port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: 'Use SMTP credentials from SES console.' },
+  { label: 'Custom',      host: '',                                    port: 587, encryption: 'tls', imap_host: '',                        imap_port: 993, imap_encryption: 'ssl', hint: '' },
 ]
 
-const BLANK_FORM = { name: '', host: '', port: 587, encryption: 'tls', username: '', password: '', from_name: '', from_email: '', imap_host: '', imap_port: 993, imap_encryption: 'ssl' }
+const BLANK_SMTP = { name: '', host: '', port: 587, encryption: 'tls', username: '', password: '', from_name: '', from_email: '', imap_host: '', imap_port: 993, imap_encryption: 'ssl' }
 
 function SmtpDialog({ open, onClose, existing }) {
-  const [form, setForm]     = useState(existing ? { ...existing, password: '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' } : { ...BLANK_FORM })
+  const [form, setForm]   = useState(existing
+    ? { ...existing, password: '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' }
+    : { ...BLANK_SMTP })
   const [showPw, setShowPw] = useState(false)
   const [saving, setSaving] = useState(false)
   const [hint, setHint]     = useState('')
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 
-  const applyPreset = preset => {
-    setForm(f => ({
-      ...f,
-      host: preset.host, port: preset.port, encryption: preset.encryption,
-      imap_host: preset.imap_host, imap_port: preset.imap_port, imap_encryption: preset.imap_encryption,
-      name: f.name || preset.label,
-    }))
-    setHint(preset.hint)
+  const applyPreset = p => {
+    setForm(f => ({ ...f, host: p.host, port: p.port, encryption: p.encryption, imap_host: p.imap_host, imap_port: p.imap_port, imap_encryption: p.imap_encryption, name: f.name || p.label }))
+    setHint(p.hint)
   }
 
   const handleSubmit = e => {
@@ -356,29 +384,26 @@ function SmtpDialog({ open, onClose, existing }) {
     const url    = existing ? `/smtp/${existing.id}` : '/smtp'
     const method = existing ? 'put' : 'post'
     router[method](url, form, {
-      preserveState: true,
-      preserveScroll: true,
+      preserveState: true, preserveScroll: true,
       onSuccess: () => { toast.success(existing ? 'SMTP updated' : 'SMTP account added'); onClose() },
-      onError: errs => { toast.error(Object.values(errs)[0] || 'Validation error') },
-      onFinish: () => setSaving(false),
+      onError:   errs => toast.error(Object.values(errs)[0] || 'Validation error'),
+      onFinish:  () => setSaving(false),
     })
   }
 
   return (
     <Dialog open={open} onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-[14px]">{existing ? 'Edit SMTP account' : 'Add SMTP account'}</DialogTitle>
           <DialogDescription className="text-[12px]">Configure an outbound email account for campaigns.</DialogDescription>
         </DialogHeader>
 
-        {/* Provider presets */}
         <div>
           <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Quick presets</p>
           <div className="flex flex-wrap gap-1.5">
             {PROVIDER_PRESETS.map(p => (
-              <button key={p.label} type="button"
-                onClick={() => applyPreset(p)}
+              <button key={p.label} type="button" onClick={() => applyPreset(p)}
                 className="px-2.5 py-1 rounded-lg text-[11.5px] font-medium bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors">
                 {p.label}
               </button>
@@ -394,60 +419,44 @@ function SmtpDialog({ open, onClose, existing }) {
         <form onSubmit={handleSubmit} className="space-y-3 mt-1">
           <div className="grid grid-cols-2 gap-3">
             <Field label="Account name">
-              <Input value={form.name} onChange={e => set('name', e.target.value)}
-                className="h-8 text-[13px]" placeholder="e.g. Gmail Work" required />
+              <Input value={form.name} onChange={e => set('name', e.target.value)} className="h-8 text-[13px]" placeholder="e.g. Gmail Work" required />
             </Field>
             <Field label="From name">
-              <Input value={form.from_name} onChange={e => set('from_name', e.target.value)}
-                className="h-8 text-[13px]" placeholder="Acme CRM" required />
+              <Input value={form.from_name} onChange={e => set('from_name', e.target.value)} className="h-8 text-[13px]" placeholder="Acme CRM" required />
             </Field>
           </div>
           <Field label="From email">
-            <Input type="email" value={form.from_email} onChange={e => set('from_email', e.target.value)}
-              className="h-8 text-[13px]" placeholder="you@example.com" required />
+            <Input type="email" value={form.from_email} onChange={e => set('from_email', e.target.value)} className="h-8 text-[13px]" placeholder="you@example.com" required />
           </Field>
           <div className="grid grid-cols-3 gap-2">
             <div className="col-span-2">
               <Field label="SMTP host">
-                <Input value={form.host} onChange={e => set('host', e.target.value)}
-                  className="h-8 text-[13px]" placeholder="smtp.gmail.com" required />
+                <Input value={form.host} onChange={e => set('host', e.target.value)} className="h-8 text-[13px]" placeholder="smtp.gmail.com" required />
               </Field>
             </div>
             <Field label="Port">
-              <Input type="number" value={form.port} onChange={e => set('port', Number(e.target.value))}
-                className="h-8 text-[13px]" placeholder="587" required />
+              <Input type="number" value={form.port} onChange={e => set('port', Number(e.target.value))} className="h-8 text-[13px]" required />
             </Field>
           </div>
           <Field label="Encryption">
             <div className="flex gap-2">
               {ENCRYPTION_OPTS.map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => set('encryption', opt.value)}
-                  className={cn(
-                    'flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
-                    form.encryption === opt.value
-                      ? 'border-violet-500 bg-violet-50 text-violet-700'
-                      : 'border-slate-200 text-slate-500 hover:border-slate-300'
-                  )}>
-                  {opt.value.toUpperCase()}
+                <button key={opt} type="button" onClick={() => set('encryption', opt)}
+                  className={cn('flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
+                    form.encryption === opt ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300')}>
+                  {opt.toUpperCase()}
                 </button>
               ))}
             </div>
           </Field>
           <Field label="Username / Email">
-            <Input value={form.username} onChange={e => set('username', e.target.value)}
-              className="h-8 text-[13px]" placeholder="you@gmail.com" required />
+            <Input value={form.username} onChange={e => set('username', e.target.value)} className="h-8 text-[13px]" placeholder="you@gmail.com" required />
           </Field>
-          <Field label={existing ? 'Password (leave blank to keep)' : 'Password'} hint={existing ? undefined : undefined}>
+          <Field label={existing ? 'Password (leave blank to keep)' : 'Password'}>
             <div className="relative">
-              <Input
-                type={showPw ? 'text' : 'password'}
-                value={form.password}
-                onChange={e => set('password', e.target.value)}
-                className="h-8 text-[13px] pr-8"
-                placeholder={existing ? '••••••• (unchanged)' : 'App password / SMTP password'}
-                required={!existing}
-              />
+              <Input type={showPw ? 'text' : 'password'} value={form.password}
+                onChange={e => set('password', e.target.value)} className="h-8 text-[13px] pr-8"
+                placeholder={existing ? '••••••• (unchanged)' : 'App / SMTP password'} required={!existing} />
               <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 onClick={() => setShowPw(v => !v)}>
                 {showPw ? <EyeOff size={13} /> : <Eye size={13} />}
@@ -455,35 +464,25 @@ function SmtpDialog({ open, onClose, existing }) {
             </div>
           </Field>
 
-          {/* IMAP section */}
           <div className="border-t border-slate-100 pt-3">
-            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 mb-1">
-              IMAP inbox (optional — enables email fetching)
-            </p>
-            <p className="text-[11px] text-slate-400 mb-2">Uses the same username &amp; password as SMTP above.</p>
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400 mb-1">IMAP inbox (optional)</p>
+            <p className="text-[11px] text-slate-400 mb-2">Uses same username &amp; password as SMTP. Enables email fetching.</p>
             <div className="grid grid-cols-3 gap-2 mb-2">
               <div className="col-span-2">
                 <Field label="IMAP host">
-                  <Input value={form.imap_host} onChange={e => set('imap_host', e.target.value)}
-                    className="h-8 text-[13px]" placeholder="imap.gmail.com" />
+                  <Input value={form.imap_host} onChange={e => set('imap_host', e.target.value)} className="h-8 text-[13px]" placeholder="imap.gmail.com" />
                 </Field>
               </div>
               <Field label="IMAP port">
-                <Input type="number" value={form.imap_port} onChange={e => set('imap_port', Number(e.target.value))}
-                  className="h-8 text-[13px]" placeholder="993" />
+                <Input type="number" value={form.imap_port} onChange={e => set('imap_port', Number(e.target.value))} className="h-8 text-[13px]" />
               </Field>
             </div>
             <Field label="IMAP encryption">
               <div className="flex gap-2">
                 {['ssl', 'tls', 'none'].map(opt => (
-                  <button key={opt} type="button"
-                    onClick={() => set('imap_encryption', opt)}
-                    className={cn(
-                      'flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
-                      form.imap_encryption === opt
-                        ? 'border-violet-500 bg-violet-50 text-violet-700'
-                        : 'border-slate-200 text-slate-500 hover:border-slate-300'
-                    )}>
+                  <button key={opt} type="button" onClick={() => set('imap_encryption', opt)}
+                    className={cn('flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
+                      form.imap_encryption === opt ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300')}>
                     {opt.toUpperCase()}
                   </button>
                 ))}
@@ -494,7 +493,7 @@ function SmtpDialog({ open, onClose, existing }) {
           <DialogFooter className="gap-2 pt-1">
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
             <button type="submit" disabled={saving}
-              className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
+              className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg hover:opacity-90 disabled:opacity-60"
               style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
               {saving ? 'Saving…' : existing ? 'Update' : 'Add account'}
             </button>
@@ -511,37 +510,21 @@ function SmtpCard({ cred, onEdit }) {
   const [deleting, setDeleting]       = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const activate = () => {
-    router.patch(`/smtp/${cred.id}/activate`, {}, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => toast.success(`"${cred.name}" set as active`),
-    })
-  }
-
-  const deactivate = () => {
-    router.patch(`/smtp/${cred.id}/deactivate`, {}, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => toast.success('Deactivated'),
-    })
-  }
-
   const csrfHeaders = () => ({
     'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
     'Accept': 'application/json',
   })
+
+  const activate   = () => router.patch(`/smtp/${cred.id}/activate`,   {}, { preserveState: true, preserveScroll: true, onSuccess: () => toast.success(`"${cred.name}" set as active`) })
+  const deactivate = () => router.patch(`/smtp/${cred.id}/deactivate`, {}, { preserveState: true, preserveScroll: true, onSuccess: () => toast.success('Deactivated') })
 
   const testConnection = async () => {
     setTesting(true)
     try {
       const res  = await fetch(`/smtp/${cred.id}/test`, { method: 'POST', headers: csrfHeaders() })
       const json = await res.json()
-      if (json.ok) toast.success(json.message)
-      else toast.error(json.message)
-    } catch {
-      toast.error('Test failed')
-    } finally {
-      setTesting(false)
-    }
+      json.ok ? toast.success(json.message) : toast.error(json.message)
+    } catch { toast.error('Test failed') } finally { setTesting(false) }
   }
 
   const testImapConnection = async () => {
@@ -549,13 +532,8 @@ function SmtpCard({ cred, onEdit }) {
     try {
       const res  = await fetch(`/smtp/${cred.id}/test-imap`, { method: 'POST', headers: csrfHeaders() })
       const json = await res.json()
-      if (json.ok) toast.success(json.message)
-      else toast.error('IMAP: ' + json.message)
-    } catch {
-      toast.error('IMAP test failed')
-    } finally {
-      setTestingImap(false)
-    }
+      json.ok ? toast.success(json.message) : toast.error('IMAP: ' + json.message)
+    } catch { toast.error('IMAP test failed') } finally { setTestingImap(false) }
   }
 
   const doDelete = () => {
@@ -563,17 +541,17 @@ function SmtpCard({ cred, onEdit }) {
     router.delete(`/smtp/${cred.id}`, {
       preserveState: true, preserveScroll: true,
       onSuccess: () => toast.success('SMTP account removed'),
-      onFinish: () => { setDeleting(false); setConfirmDelete(false) },
+      onFinish:  () => { setDeleting(false); setConfirmDelete(false) },
     })
   }
 
   return (
     <>
       <div className={cn(
-        'rounded-xl border p-3.5 transition-all',
-        cred.is_active ? 'border-violet-300 bg-violet-50/60' : 'border-slate-200 bg-white'
+        'rounded-xl border p-4 transition-all',
+        cred.is_active ? 'border-violet-200 bg-violet-50/50' : 'border-slate-200 bg-white'
       )}>
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <span className="font-semibold text-[13px] text-slate-800 truncate">{cred.name}</span>
@@ -581,27 +559,20 @@ function SmtpCard({ cred, onEdit }) {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">Active</span>
               )}
             </div>
-            <p className="text-[11.5px] text-slate-500 truncate">{cred.from_name} &lt;{cred.from_email}&gt;</p>
+            <p className="text-[11.5px] text-slate-500">{cred.from_name} · {cred.from_email}</p>
             <p className="text-[11px] text-slate-400 mt-0.5">{cred.host}:{cred.port} · {cred.encryption.toUpperCase()}</p>
             {cred.imap_host
               ? <p className="text-[11px] text-emerald-600 mt-0.5">IMAP: {cred.imap_host}:{cred.imap_port}</p>
-              : <p className="text-[11px] text-slate-300 mt-0.5">IMAP not configured (inbox disabled)</p>
+              : <p className="text-[11px] text-slate-300 mt-0.5">IMAP not configured</p>
             }
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 mt-3 flex-wrap">
-          {cred.is_active ? (
-            <button onClick={deactivate}
-              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">
-              Deactivate
-            </button>
-          ) : (
-            <button onClick={activate}
-              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1">
-              <Check size={10} /> Set active
-            </button>
-          )}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {cred.is_active
+            ? <button onClick={deactivate} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Deactivate</button>
+            : <button onClick={activate}   className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1"><Check size={10} /> Set active</button>
+          }
           <button onClick={testConnection} disabled={testing}
             className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors disabled:opacity-50">
             {testing ? 'Sending…' : 'Test SMTP'}
@@ -612,25 +583,16 @@ function SmtpCard({ cred, onEdit }) {
               {testingImap ? 'Testing…' : 'Test IMAP'}
             </button>
           )}
-          <button onClick={() => onEdit(cred)}
-            className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
-            Edit
-          </button>
-          <button onClick={() => setConfirmDelete(true)}
-            className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 transition-colors">
-            Remove
-          </button>
+          <button onClick={() => onEdit(cred)} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">Edit</button>
+          <button onClick={() => setConfirmDelete(true)} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 transition-colors">Remove</button>
         </div>
       </div>
 
-      {/* Delete confirm dialog */}
       <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="text-[13px]">Remove "{cred.name}"?</DialogTitle>
-            <DialogDescription className="text-[12px]">
-              This SMTP account will be permanently removed. Any campaigns using it will need to be reconfigured.
-            </DialogDescription>
+            <DialogDescription className="text-[12px]">This SMTP account will be permanently removed.</DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
@@ -647,44 +609,46 @@ function SmtpCard({ cred, onEdit }) {
 function SmtpTab({ credentials }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing]       = useState(null)
-
-  const openAdd  = ()    => { setEditing(null); setDialogOpen(true) }
-  const openEdit = cred  => { setEditing(cred); setDialogOpen(true) }
-  const closeDialog = () => { setDialogOpen(false); setEditing(null) }
+  const openAdd    = ()   => { setEditing(null); setDialogOpen(true) }
+  const openEdit   = cred => { setEditing(cred); setDialogOpen(true) }
+  const closeDialog = ()  => { setDialogOpen(false); setEditing(null) }
 
   return (
-    <div className="space-y-4 max-w-lg">
-      {/* Info card */}
-      <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-[12px] text-blue-800 space-y-1.5">
-        <p className="font-semibold">How to set up email credentials</p>
-        <ul className="space-y-1 text-[11.5px] text-blue-700 list-disc list-inside">
-          <li><strong>Gmail:</strong> Enable 2FA → Google Account → Security → App Passwords → generate one for "Mail".</li>
-          <li><strong>Custom hosting:</strong> Use your cPanel / Plesk SMTP settings (usually port 587 TLS).</li>
-          <li>Only one account can be <em>active</em> at a time — that's what campaigns use to send.</li>
-          <li>Click <strong>Test</strong> to send a test email to your login address and verify connectivity.</li>
+    <div className="space-y-3 max-w-xl">
+      <Card
+        title="SMTP accounts"
+        badge={
+          <Button size="sm" className="h-7 text-xs gap-1.5" onClick={openAdd}>
+            <Plus size={11} /> Add account
+          </Button>
+        }
+      >
+        {credentials.length === 0 ? (
+          <div className="text-center py-8 rounded-lg border-2 border-dashed border-slate-100">
+            <Server size={20} className="mx-auto text-slate-300 mb-2" />
+            <p className="text-[13px] text-slate-500 font-medium">No SMTP accounts yet</p>
+            <p className="text-[12px] text-slate-400 mb-3">Add one to start sending campaigns</p>
+            <Button size="sm" className="gap-1.5 h-8 text-xs" onClick={openAdd}>
+              <Plus size={12} /> Add SMTP account
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {credentials.map(cred => (
+              <SmtpCard key={cred.id} cred={cred} onEdit={openEdit} />
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-[12px] text-blue-800 space-y-1">
+        <p className="font-semibold">How SMTP works</p>
+        <ul className="space-y-0.5 text-[11.5px] text-blue-700 list-disc list-inside">
+          <li>Gmail: enable 2FA → Google Account → Security → App Passwords</li>
+          <li>Only one account can be <em>active</em> at a time — used by all campaigns</li>
+          <li>Click <strong>Test SMTP</strong> to verify connectivity</li>
         </ul>
       </div>
-
-      {/* Credential cards */}
-      {credentials.length === 0 ? (
-        <div className="text-center py-10 rounded-xl border-2 border-dashed border-slate-200">
-          <Server size={24} className="mx-auto text-slate-300 mb-2" />
-          <p className="text-[13px] text-slate-500">No SMTP accounts yet</p>
-          <p className="text-[12px] text-slate-400 mb-3">Add one to start sending campaigns</p>
-          <Button size="sm" className="gap-1.5 h-8 text-xs" onClick={openAdd}>
-            <Plus size={12} /> Add SMTP account
-          </Button>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {credentials.map(cred => (
-            <SmtpCard key={cred.id} cred={cred} onEdit={openEdit} />
-          ))}
-          <Button variant="outline" size="sm" className="gap-1.5 h-8 text-xs mt-1 w-full border-dashed" onClick={openAdd}>
-            <Plus size={12} /> Add another SMTP account
-          </Button>
-        </div>
-      )}
 
       <SmtpDialog open={dialogOpen} onClose={closeDialog} existing={editing} />
     </div>
@@ -709,99 +673,72 @@ function MailTab({ mailSettings }) {
   }
 
   return (
-    <div className="space-y-3 max-w-lg">
-      <Section title="Bulk send configuration">
+    <div className="space-y-3 max-w-xl">
+      <Card title="Bulk send configuration">
         <form onSubmit={submit} className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <Field label="Batch size"
-              hint="Emails sent per batch before pausing.">
-              <Input type="number" min="1" max="500"
-                value={data.mail_batch_size}
+            <Field label="Batch size" hint="Emails sent per batch before pausing.">
+              <Input type="number" min="1" max="500" value={data.mail_batch_size}
                 onChange={e => setData('mail_batch_size', Number(e.target.value))}
                 className="h-8 text-[13px]" />
             </Field>
-            <Field label="Delay between batches (seconds)"
-              hint="Pause between batches to avoid rate-limits.">
-              <Input type="number" min="0" max="300"
-                value={data.mail_batch_delay}
+            <Field label="Delay between batches (s)" hint="Pause to avoid rate-limits.">
+              <Input type="number" min="0" max="300" value={data.mail_batch_delay}
                 onChange={e => setData('mail_batch_delay', Number(e.target.value))}
                 className="h-8 text-[13px]" />
             </Field>
           </div>
 
-          <div className="bg-slate-50 rounded-lg border border-slate-100 p-3 text-[11.5px] text-slate-500 space-y-0.5">
-            <p>With these settings campaigns will send <strong>{data.mail_batch_size} emails</strong>, pause for <strong>{data.mail_batch_delay}s</strong>, then repeat.</p>
-            <p>Most providers allow 100–500 emails/hour. Gmail App Passwords are limited to ~500/day.</p>
+          <div className="bg-slate-50 border border-slate-100 rounded-lg px-3 py-2.5 text-[11.5px] text-slate-500">
+            Sends <strong>{data.mail_batch_size} emails</strong>, pauses <strong>{data.mail_batch_delay}s</strong>, then repeats.
           </div>
 
           <SaveBtn processing={processing} label="Save mail settings" />
         </form>
-      </Section>
+      </Card>
 
-      <Section title="Provider recommendations">
-        <div className="space-y-2 text-[12px] text-slate-600">
+      <Card title="Provider limits reference">
+        <div className="divide-y divide-slate-100">
           {[
-            { name: 'Gmail',       limit: '500 / day',      batch: '10 / 5s',  note: 'Good for testing and small lists (<200 leads).' },
-            { name: 'Mailgun',     limit: '10k / month free', batch: '50 / 2s', note: 'Reliable deliverability with generous free tier.' },
-            { name: 'SendGrid',    limit: '100 / day free', batch: '50 / 2s',  note: 'Free tier works for small campaigns.' },
-            { name: 'Amazon SES',  limit: '62k / month free (EC2)', batch: '100 / 1s', note: 'Best for high volume; needs domain verification.' },
+            { name: 'Gmail',       limit: '500/day',           batch: '10 / 5s',  note: 'Good for small lists.' },
+            { name: 'Mailgun',     limit: '10k/mo free',       batch: '50 / 2s',  note: 'Best free-tier deliverability.' },
+            { name: 'SendGrid',    limit: '100/day free',      batch: '50 / 2s',  note: 'Small campaigns.' },
+            { name: 'Amazon SES',  limit: '62k/mo (on EC2)',   batch: '100 / 1s', note: 'Best for high volume.' },
           ].map(p => (
-            <div key={p.name} className="flex items-start gap-2 py-1.5 border-b border-slate-100 last:border-0">
-              <div className="w-20 font-semibold text-slate-700 shrink-0">{p.name}</div>
-              <div className="min-w-0">
-                <span className="text-slate-500">{p.limit} · suggested {p.batch}</span>
-                <span className="text-slate-400 ml-1">— {p.note}</span>
-              </div>
+            <div key={p.name} className="flex items-center gap-3 py-2 text-[12px]">
+              <span className="w-24 font-medium text-slate-700 shrink-0">{p.name}</span>
+              <span className="text-slate-500">{p.limit}</span>
+              <span className="text-slate-400 ml-auto">{p.note}</span>
             </div>
           ))}
         </div>
-      </Section>
+      </Card>
     </div>
   )
 }
 
-// ─── Email Templates tab ──────────────────────────────────────────────────────
+// ─── Templates tab ────────────────────────────────────────────────────────────
 
 const TEMPLATE_STYLES = {
-  '#7c3aed': {
-    bg: 'from-violet-500 to-indigo-600',
-    header: 'bg-gradient-to-r from-violet-500 to-indigo-600',
-    body: 'bg-white',
-    footer: 'bg-indigo-950',
-  },
-  '#6366f1': {
-    bg: 'from-indigo-400 to-indigo-600',
-    header: 'bg-white border-t-4 border-indigo-500',
-    body: 'bg-white',
-    footer: 'bg-white border-t border-slate-100',
-  },
-  '#0f172a': {
-    bg: 'from-slate-800 to-slate-900',
-    header: 'bg-slate-900',
-    body: 'bg-slate-900',
-    footer: 'bg-slate-950',
-  },
+  '#7c3aed': { header: 'bg-gradient-to-r from-violet-500 to-indigo-600', body: 'bg-white', footer: 'bg-indigo-950', textLight: true },
+  '#6366f1': { header: 'bg-white border-t-4 border-indigo-500',          body: 'bg-white', footer: 'bg-white border-t border-slate-100', textLight: false },
+  '#0f172a': { header: 'bg-slate-900',                                    body: 'bg-slate-900', footer: 'bg-slate-950', textLight: true },
 }
 
 function TemplateMiniPreview({ color }) {
   const s = TEMPLATE_STYLES[color] || TEMPLATE_STYLES['#7c3aed']
   const isDark = color === '#0f172a'
-
   return (
-    <div className="w-full rounded-lg overflow-hidden border border-slate-100 shadow-sm" style={{ aspectRatio: '4/3' }}>
-      {/* mini header */}
-      <div className={cn('px-3 py-2', s.header)} style={color === '#6366f1' ? { borderTop: '3px solid #6366f1' } : {}}>
+    <div className="w-full rounded-lg overflow-hidden border border-slate-100" style={{ aspectRatio: '4/3' }}>
+      <div className={cn('px-3 py-2', s.header)}>
         <div className={cn('h-2 rounded w-16 mb-1', isDark ? 'bg-slate-600' : color === '#6366f1' ? 'bg-slate-800' : 'bg-white/80')} />
         <div className={cn('h-1.5 rounded w-10', isDark ? 'bg-slate-700' : color === '#6366f1' ? 'bg-slate-300' : 'bg-white/50')} />
       </div>
-      {/* mini body */}
-      <div className={cn('px-3 py-2 flex-1', s.body)} style={{ minHeight: 52 }}>
+      <div className={cn('px-3 py-2', s.body)} style={{ minHeight: 48 }}>
         <div className={cn('h-2 rounded w-24 mb-1.5', isDark ? 'bg-slate-700' : 'bg-slate-200')} />
         <div className={cn('h-1.5 rounded w-full mb-1', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
-        <div className={cn('h-1.5 rounded w-4/5 mb-1', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
-        <div className={cn('h-1.5 rounded w-3/5', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
+        <div className={cn('h-1.5 rounded w-4/5', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
       </div>
-      {/* mini footer */}
       <div className={cn('px-3 py-1.5', s.footer)}>
         <div className={cn('h-1.5 rounded w-20 mx-auto', isDark ? 'bg-slate-700' : color === '#6366f1' ? 'bg-slate-200' : 'bg-white/30')} />
       </div>
@@ -809,122 +746,8 @@ function TemplateMiniPreview({ color }) {
   )
 }
 
-function TemplatePreviewModal({ template, onClose }) {
-  const previewUrl = `/email-templates/${template.id}/preview`
-
-  return (
-    <Dialog open onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-5 py-3.5 border-b border-slate-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-[13.5px] font-semibold">{template.name}</DialogTitle>
-              {template.description && (
-                <p className="text-[11.5px] text-slate-400 mt-0.5">{template.description}</p>
-              )}
-            </div>
-            <a href={previewUrl} target="_blank" rel="noreferrer"
-              className="flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-700 mr-6">
-              <ExternalLink size={11} /> Open full
-            </a>
-          </div>
-        </DialogHeader>
-        <div className="flex-1 overflow-hidden" style={{ minHeight: 500 }}>
-          <iframe
-            src={previewUrl}
-            title={`Preview: ${template.name}`}
-            className="w-full h-full border-0"
-            style={{ minHeight: 500 }}
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-function CustomTemplateDialog({ onClose }) {
-  const [form, setForm] = useState({
-    name: '', description: '', thumbnail_color: '#7c3aed', html_content: '',
-  })
-  const [saving, setSaving] = useState(false)
-
-  const COLORS = ['#7c3aed', '#6366f1', '#0f172a', '#0ea5e9', '#10b981', '#ef4444', '#f59e0b']
-
-  const handleSubmit = e => {
-    e.preventDefault()
-    setSaving(true)
-    router.post('/email-templates', form, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => { toast.success('Template created'); onClose() },
-      onError: errs => toast.error(Object.values(errs)[0] || 'Validation error'),
-      onFinish: () => setSaving(false),
-    })
-  }
-
-  return (
-    <Dialog open onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-[14px]">Create custom template</DialogTitle>
-          <DialogDescription className="text-[12px]">
-            Write a full HTML email document. Use <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{content}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{company_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{from_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{year}}'}</code> as placeholders.
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Template name">
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                className="h-8 text-[13px]" placeholder="My Template" required />
-            </Field>
-            <Field label="Description">
-              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                className="h-8 text-[13px]" placeholder="One-line description" />
-            </Field>
-          </div>
-
-          <Field label="Card color">
-            <div className="flex gap-2 mt-1">
-              {COLORS.map(c => (
-                <button key={c} type="button"
-                  onClick={() => setForm(f => ({ ...f, thumbnail_color: c }))}
-                  className="w-6 h-6 rounded-full border-2 transition-all"
-                  style={{
-                    background: c,
-                    borderColor: form.thumbnail_color === c ? '#fff' : 'transparent',
-                    boxShadow: form.thumbnail_color === c ? `0 0 0 2px ${c}` : 'none',
-                  }} />
-              ))}
-            </div>
-          </Field>
-
-          <Field label="HTML content">
-            <textarea
-              value={form.html_content}
-              onChange={e => setForm(f => ({ ...f, html_content: e.target.value }))}
-              rows={12}
-              required
-              placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  {{content}}\n</body>\n</html>'}
-              className="w-full text-[12px] font-mono rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y"
-            />
-          </Field>
-
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
-            <button type="submit" disabled={saving}
-              className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-              {saving ? 'Creating…' : 'Create template'}
-            </button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
 function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate }) {
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting]           = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const doDelete = () => {
@@ -932,57 +755,39 @@ function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate 
     router.delete(`/email-templates/${template.id}`, {
       preserveState: true, preserveScroll: true,
       onSuccess: () => toast.success('Template removed'),
-      onFinish: () => { setDeleting(false); setConfirmDelete(false) },
+      onFinish:  () => { setDeleting(false); setConfirmDelete(false) },
     })
   }
 
   return (
     <>
-      <div className={cn(
-        'rounded-xl border p-3 transition-all hover:shadow-sm',
-        isActive ? 'border-violet-300 bg-violet-50/50 shadow-sm' : 'border-slate-200 bg-white'
-      )}>
-        {/* mini visual preview */}
+      <div className={cn('rounded-xl border p-3 transition-all hover:shadow-sm',
+        isActive ? 'border-violet-300 bg-violet-50/50' : 'border-slate-200 bg-white')}>
         <div className="mb-3 relative">
           <TemplateMiniPreview color={template.thumbnail_color} />
           {isActive && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-violet-600 text-white text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow">
+            <div className="absolute top-2 right-2 flex items-center gap-1 bg-violet-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
               <CheckCircle2 size={9} /> Active
             </div>
           )}
           {template.is_system && (
-            <div className="absolute top-2 left-2 bg-slate-700/70 text-white text-[9px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+            <div className="absolute top-2 left-2 bg-slate-700/70 text-white text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full">
               Built-in
             </div>
           )}
         </div>
-
-        <p className="text-[13px] font-semibold text-slate-800 mb-0.5">{template.name}</p>
-        {template.description && (
-          <p className="text-[11.5px] text-slate-400 leading-snug mb-3">{template.description}</p>
-        )}
-
+        <p className="text-[12.5px] font-semibold text-slate-800 mb-0.5">{template.name}</p>
+        {template.description && <p className="text-[11px] text-slate-400 mb-2.5">{template.description}</p>}
         <div className="flex items-center gap-1.5 flex-wrap">
-          {isActive ? (
-            <button onClick={onDeactivate}
-              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">
-              Deactivate
-            </button>
-          ) : (
-            <button onClick={onActivate}
-              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1">
-              <Check size={10} /> Use template
-            </button>
-          )}
-          <button onClick={onPreview}
-            className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors flex items-center gap-1">
+          {isActive
+            ? <button onClick={onDeactivate} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Deactivate</button>
+            : <button onClick={onActivate}   className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1"><Check size={10} /> Use</button>
+          }
+          <button onClick={onPreview} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors flex items-center gap-1">
             <Eye size={10} /> Preview
           </button>
           {!template.is_system && (
-            <button onClick={() => setConfirmDelete(true)}
-              className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 transition-colors">
-              Remove
-            </button>
+            <button onClick={() => setConfirmDelete(true)} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 transition-colors">Remove</button>
           )}
         </div>
       </div>
@@ -1005,53 +810,101 @@ function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate 
   )
 }
 
+function CustomTemplateDialog({ onClose }) {
+  const [form, setForm] = useState({ name: '', description: '', thumbnail_color: '#7c3aed', html_content: '' })
+  const [saving, setSaving] = useState(false)
+  const COLORS = ['#7c3aed', '#6366f1', '#0f172a', '#0ea5e9', '#10b981', '#ef4444', '#f59e0b']
+
+  const handleSubmit = e => {
+    e.preventDefault()
+    setSaving(true)
+    router.post('/email-templates', form, {
+      preserveState: true, preserveScroll: true,
+      onSuccess: () => { toast.success('Template created'); onClose() },
+      onError:   errs => toast.error(Object.values(errs)[0] || 'Validation error'),
+      onFinish:  () => setSaving(false),
+    })
+  }
+
+  return (
+    <Dialog open onOpenChange={v => !v && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="text-[14px]">Create custom template</DialogTitle>
+          <DialogDescription className="text-[12px]">
+            Use <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{content}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{company_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{from_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{year}}'}</code> as placeholders.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Template name">
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-[13px]" placeholder="My Template" required />
+            </Field>
+            <Field label="Description">
+              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="h-8 text-[13px]" placeholder="One-line description" />
+            </Field>
+          </div>
+          <Field label="Card color">
+            <div className="flex gap-2 mt-1">
+              {COLORS.map(c => (
+                <button key={c} type="button" onClick={() => setForm(f => ({ ...f, thumbnail_color: c }))}
+                  className="w-6 h-6 rounded-full border-2 transition-all"
+                  style={{ background: c, borderColor: form.thumbnail_color === c ? '#fff' : 'transparent', boxShadow: form.thumbnail_color === c ? `0 0 0 2px ${c}` : 'none' }} />
+              ))}
+            </div>
+          </Field>
+          <Field label="HTML content">
+            <textarea value={form.html_content} onChange={e => setForm(f => ({ ...f, html_content: e.target.value }))}
+              rows={10} required placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  {{content}}\n</body>\n</html>'}
+              className="w-full text-[12px] font-mono rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y" />
+          </Field>
+          <DialogFooter className="gap-2">
+            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
+            <button type="submit" disabled={saving}
+              className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg hover:opacity-90 disabled:opacity-60"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              {saving ? 'Creating…' : 'Create template'}
+            </button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function TemplatesTab({ templates, activeTemplateId }) {
   const [previewTemplate, setPreviewTemplate] = useState(null)
   const [showCreate, setShowCreate]           = useState(false)
 
-  const activate = (template) => {
-    router.patch(`/email-templates/${template.id}/activate`, {}, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => toast.success(`"${template.name}" set as active template`),
-    })
-  }
-
-  const deactivate = () => {
-    router.patch('/email-templates/deactivate', {}, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => toast.success('Template deactivated — emails will send without a wrapper'),
-    })
-  }
+  const activate = template => router.patch(`/email-templates/${template.id}/activate`, {}, {
+    preserveState: true, preserveScroll: true,
+    onSuccess: () => toast.success(`"${template.name}" set as active template`),
+  })
+  const deactivate = () => router.patch('/email-templates/deactivate', {}, {
+    preserveState: true, preserveScroll: true,
+    onSuccess: () => toast.success('Template deactivated'),
+  })
 
   const activeTemplate = templates.find(t => t.id === activeTemplateId)
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      {/* Info banner */}
-      <div className="bg-violet-50 border border-violet-100 rounded-xl px-4 py-3 text-[12px] text-violet-800 space-y-1">
-        <p className="font-semibold flex items-center gap-1.5"><LayoutTemplate size={13} /> Email templates</p>
+    <div className="space-y-3 max-w-2xl">
+      <div className="bg-violet-50 border border-violet-100 rounded-xl px-4 py-3 text-[12px] text-violet-800">
+        <p className="font-semibold flex items-center gap-1.5 mb-0.5"><LayoutTemplate size={13} /> Email templates</p>
         <p className="text-[11.5px] text-violet-700">
-          The active template wraps every email you send — campaigns, test emails, everything.
-          It injects your <strong>company name</strong>, <strong>from name</strong>, and <strong>campaign content</strong> automatically.
-          {activeTemplate
-            ? <> Currently using <strong>{activeTemplate.name}</strong>.</>
-            : <> No template active — emails will send as raw HTML.</>}
+          The active template wraps every campaign email.
+          {activeTemplate ? <> Currently using <strong>{activeTemplate.name}</strong>.</> : <> No template active — raw HTML.</>}
         </p>
       </div>
 
-      {/* Template grid */}
       <div className="grid grid-cols-3 gap-3">
         {templates.map(template => (
-          <TemplateCard
-            key={template.id}
-            template={template}
+          <TemplateCard key={template.id} template={template}
             isActive={template.id === activeTemplateId}
             onActivate={() => activate(template)}
             onDeactivate={deactivate}
-            onPreview={() => setPreviewTemplate(template)}
-          />
+            onPreview={() => setPreviewTemplate(template)} />
         ))}
-        {/* Add custom card */}
         <button onClick={() => setShowCreate(true)}
           className="rounded-xl border-2 border-dashed border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 transition-all flex flex-col items-center justify-center gap-2 p-4 min-h-[180px] group">
           <div className="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-violet-100 flex items-center justify-center transition-colors">
@@ -1062,189 +915,189 @@ function TemplatesTab({ templates, activeTemplateId }) {
       </div>
 
       {previewTemplate && (
-        <TemplatePreviewModal template={previewTemplate} onClose={() => setPreviewTemplate(null)} />
+        <Dialog open onOpenChange={v => !v && setPreviewTemplate(null)}>
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+            <DialogHeader className="px-5 py-3.5 border-b border-slate-100">
+              <div className="flex items-center justify-between">
+                <DialogTitle className="text-[13.5px] font-semibold">{previewTemplate.name}</DialogTitle>
+                <a href={`/email-templates/${previewTemplate.id}/preview`} target="_blank" rel="noreferrer"
+                  className="flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-700 mr-6">
+                  <ExternalLink size={11} /> Open full
+                </a>
+              </div>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden" style={{ minHeight: 500 }}>
+              <iframe src={`/email-templates/${previewTemplate.id}/preview`} title={previewTemplate.name}
+                className="w-full h-full border-0" style={{ minHeight: 500 }} />
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
       {showCreate && <CustomTemplateDialog onClose={() => setShowCreate(false)} />}
     </div>
   )
 }
 
-// ─── Lead Gen tab ─────────────────────────────────────────────────────────────
+// ─── Lead Generation tab ──────────────────────────────────────────────────────
 
 const PROVIDER_OPTIONS = [
-  { value: 'apollo', label: 'Apollo.io' },
-  { value: 'pdl',    label: 'People Data Labs' },
+  { value: 'apollo', label: 'Apollo.io',         hint: 'Free plan: searches your own contacts only. Paid plans unlock full database.' },
+  { value: 'pdl',    label: 'People Data Labs',  hint: 'Free trial includes 1,000 credits. Each page of 10 results = 10 credits.' },
 ]
 
 function LeadGenTab({ leadGenSettings }) {
   const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
 
-  const [provider,    setProvider]    = useState(leadGenSettings?.provider || 'apollo')
+  const currentProvider = leadGenSettings?.provider || 'apollo'
+  const isConfigured    = leadGenSettings?.enabled && leadGenSettings?.hasKey
+
+  const [provider,    setProvider]    = useState(currentProvider)
   const [apiKey,      setApiKey]      = useState('')
   const [showKey,     setShowKey]     = useState(false)
   const [testing,     setTesting]     = useState(false)
   const [saving,      setSaving]      = useState(false)
-  const [testResult,  setTestResult]  = useState(null)  // null | 'success' | 'error'
+  const [testResult,  setTestResult]  = useState(null)
   const [testMessage, setTestMessage] = useState('')
 
-  // Reset test result when provider or key changes
-  const handleProviderChange = (v) => { setProvider(v); setTestResult(null) }
-  const handleKeyChange      = (e) => { setApiKey(e.target.value); setTestResult(null) }
-
-  const isConfigured = leadGenSettings?.enabled && leadGenSettings?.hasKey
+  const resetTest = () => setTestResult(null)
+  const selectedOption = PROVIDER_OPTIONS.find(o => o.value === provider)
 
   const headers = () => ({
-    'Content-Type':  'application/json',
-    'Accept':        'application/json',
-    'X-CSRF-TOKEN':  csrf(),
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'X-CSRF-TOKEN': csrf(),
   })
 
   const handleTest = async () => {
     if (!apiKey.trim()) { toast.error('Enter an API key first'); return }
-    setTesting(true)
-    setTestResult(null)
+    setTesting(true); setTestResult(null)
     try {
-      const res  = await fetch('/settings/lead-provider/test', {
-        method: 'POST', headers: headers(),
-        body: JSON.stringify({ provider, api_key: apiKey }),
-      })
+      const res  = await fetch('/settings/lead-provider/test', { method: 'POST', headers: headers(), body: JSON.stringify({ provider, api_key: apiKey }) })
       const json = await res.json()
-      if (json.success) {
-        setTestResult('success')
-        setTestMessage(`Connected to ${json.provider} successfully`)
-      } else {
-        setTestResult('error')
-        setTestMessage(json.message || 'Connection failed')
-      }
-    } catch {
-      setTestResult('error')
-      setTestMessage('Request failed — check your network')
-    } finally {
-      setTesting(false)
-    }
+      if (json.success) { setTestResult('success'); setTestMessage(`Connected to ${json.provider} successfully`) }
+      else              { setTestResult('error');   setTestMessage(json.message || 'Connection failed') }
+    } catch { setTestResult('error'); setTestMessage('Request failed — check your network') }
+    finally { setTesting(false) }
   }
 
   const handleSave = async () => {
     if (!apiKey.trim()) { toast.error('Enter an API key first'); return }
     setSaving(true)
     try {
-      const res  = await fetch('/settings/lead-provider/save', {
-        method: 'POST', headers: headers(),
-        body: JSON.stringify({ provider, api_key: apiKey }),
-      })
+      const res  = await fetch('/settings/lead-provider/save', { method: 'POST', headers: headers(), body: JSON.stringify({ provider, api_key: apiKey }) })
       const json = await res.json()
-      if (json.success) {
-        toast.success('Lead generation provider saved successfully')
-        setApiKey('')
-      } else {
-        toast.error(json.message || 'Save failed')
-      }
-    } catch {
-      toast.error('Request failed — check your network')
-    } finally {
-      setSaving(false)
-    }
+      if (json.success) { toast.success('Lead generation provider saved'); setApiKey(''); setTestResult(null) }
+      else              { toast.error(json.message || 'Save failed') }
+    } catch { toast.error('Request failed') }
+    finally { setSaving(false) }
   }
 
-  const providerLabel = PROVIDER_OPTIONS.find(o => o.value === (leadGenSettings?.provider || 'apollo'))?.label
-
   return (
-    <div className="space-y-3 max-w-lg">
-      <Section title="Lead generation">
+    <div className="space-y-3 max-w-xl">
+
+      {/* Current status card */}
+      {isConfigured && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center shrink-0">
+            <Wifi size={14} className="text-emerald-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-emerald-800">Connected</p>
+            <p className="text-[11.5px] text-emerald-600">
+              {PROVIDER_OPTIONS.find(o => o.value === currentProvider)?.label ?? currentProvider}
+            </p>
+          </div>
+          <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 shrink-0">Active</Badge>
+        </div>
+      )}
+
+      {/* Provider selection */}
+      <Card title="Data provider">
         <div className="space-y-3">
-          <p className="text-[12px] text-slate-500 leading-relaxed">
-            Connect a data provider to enable AI lead search.
-            Your API key is encrypted and stored securely.
-          </p>
-
-          {isConfigured && (
-            <div className="flex items-center gap-2 py-2 px-3 bg-emerald-50 border border-emerald-100 rounded-lg">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-              <span className="text-[12px] text-emerald-700 font-medium flex-1">
-                Connected — {providerLabel}
-              </span>
-              <Badge variant="outline" className="text-[10px] border-emerald-300 text-emerald-700 bg-emerald-50">
-                Active
-              </Badge>
-            </div>
-          )}
-
-          <Field label="Data Provider">
-            <Select value={provider} onValueChange={handleProviderChange}>
+          <Field label="Provider">
+            <Select value={provider} onValueChange={v => { setProvider(v); resetTest() }}>
               <SelectTrigger className="h-8 text-[13px]">
                 <SelectValue placeholder="Select provider" />
               </SelectTrigger>
               <SelectContent>
                 {PROVIDER_OPTIONS.map(o => (
-                  <SelectItem key={o.value} value={o.value} className="text-[13px]">
-                    {o.label}
-                  </SelectItem>
+                  <SelectItem key={o.value} value={o.value} className="text-[13px]">{o.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {selectedOption && (
+              <p className="text-[11px] text-slate-400 mt-1">{selectedOption.hint}</p>
+            )}
           </Field>
 
-          <Field label="API Key">
+          <Field label={isConfigured ? 'API key (enter new key to update)' : 'API key'}>
             <div className="relative">
               <Input
                 type={showKey ? 'text' : 'password'}
                 value={apiKey}
-                onChange={handleKeyChange}
+                onChange={e => { setApiKey(e.target.value); resetTest() }}
                 className="h-8 text-[13px] pr-8"
-                placeholder={isConfigured ? '••••••••••••• (enter new key to update)' : 'Paste your API key here'}
+                placeholder={isConfigured ? '••••••••••••• (saved)' : 'Paste your API key'}
               />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                onClick={() => setShowKey(v => !v)}
-              >
+              <button type="button" onClick={() => setShowKey(v => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                 {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
               </button>
             </div>
           </Field>
 
           {testResult === 'success' && (
-            <Alert className="py-2 border-emerald-200 bg-emerald-50">
-              <AlertDescription className="text-[12px] text-emerald-700 flex items-center gap-1.5">
-                <Check size={12} className="shrink-0" /> {testMessage}
-              </AlertDescription>
-            </Alert>
+            <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+              <Check size={13} className="text-emerald-600 shrink-0" />
+              <p className="text-[12px] text-emerald-700">{testMessage}</p>
+            </div>
           )}
           {testResult === 'error' && (
-            <Alert variant="destructive" className="py-2">
-              <AlertDescription className="text-[12px] flex items-center gap-1.5">
-                <AlertCircle size={12} className="shrink-0" /> {testMessage}
-              </AlertDescription>
-            </Alert>
+            <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle size={13} className="text-red-500 shrink-0" />
+              <p className="text-[12px] text-red-600">{testMessage}</p>
+            </div>
           )}
 
           <div className="flex gap-2 pt-1">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 text-xs gap-1.5"
-              onClick={handleTest}
-              disabled={testing || !apiKey.trim()}
-            >
+            <Button type="button" variant="outline" size="sm" className="h-8 text-xs gap-1.5"
+              onClick={handleTest} disabled={testing || !apiKey.trim()}>
+              <Zap size={12} />
               {testing ? 'Testing…' : 'Test Connection'}
             </Button>
-            <button
-              type="button"
-              disabled={saving || !apiKey.trim() || testResult !== 'success'}
+            <button type="button"
               onClick={handleSave}
-              className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
-            >
+              disabled={saving || !apiKey.trim() || testResult !== 'success'}
+              className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg hover:opacity-90 disabled:opacity-40 transition-all"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              <Key size={12} className="inline mr-1.5" />
               {saving ? 'Saving…' : 'Save Provider'}
             </button>
           </div>
-
-          <p className="text-[10.5px] text-slate-400">
-            Test Connection must succeed before you can save. Apollo.io free plan only supports searching your own contacts — upgrade to Basic for full database access. People Data Labs free tier allows limited searches.
-          </p>
+          <p className="text-[10.5px] text-slate-400">Test Connection must succeed before you can save.</p>
         </div>
-      </Section>
+      </Card>
+
+      {/* Credit reference */}
+      <Card title="Credit usage">
+        <div className="divide-y divide-slate-100 text-[12px]">
+          <div className="flex items-center justify-between py-2">
+            <span className="text-slate-600">Per search page (10 results)</span>
+            <span className="font-semibold text-slate-800">10 credits</span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-slate-600">PDL free trial balance</span>
+            <span className="font-semibold text-slate-800">1,000 credits</span>
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-slate-600">Searches available on free trial</span>
+            <span className="font-semibold text-emerald-600">~100 searches</span>
+          </div>
+        </div>
+        <p className="text-[11px] text-slate-400 mt-1">
+          Already-imported leads are filtered out automatically — credits are only spent on new results.
+        </p>
+      </Card>
     </div>
   )
 }
@@ -1265,16 +1118,36 @@ export default function ProfileEdit({
     <>
       <Head title="Settings" />
       <AppLayout title="Settings">
-        <PageHeader title="Settings" description="Manage your workspace, profile, and email configuration" />
 
-        <TabNav active={tab} onChange={setTab} />
+        {/* Page title */}
+        <div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-white">
+          <h1 className="text-[18px] font-bold text-slate-800">Settings</h1>
+          <p className="text-[13px] text-slate-500 mt-0.5">Manage your profile, workspace, email, and integrations</p>
+        </div>
 
-        {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
-        {tab === 'workspace' && <WorkspaceTab />}
-        {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
-        {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
-        {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} />}
-        {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
+        {/* Two-column layout */}
+        <div className="flex gap-0 min-h-0 flex-1">
+
+          {/* Sidebar nav */}
+          <div className="w-52 shrink-0 border-r border-slate-100 bg-white px-3 py-5">
+            <SettingsNav
+              active={tab}
+              onChange={setTab}
+              leadGenEnabled={leadGenSettings?.enabled && leadGenSettings?.hasKey}
+            />
+          </div>
+
+          {/* Content area */}
+          <div className="flex-1 min-w-0 p-6 bg-slate-50 overflow-y-auto">
+            {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
+            {tab === 'workspace' && <WorkspaceTab />}
+            {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
+            {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
+            {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} />}
+            {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
+          </div>
+        </div>
+
       </AppLayout>
     </>
   )

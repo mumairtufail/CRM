@@ -257,8 +257,7 @@ Click **New Campaign** and fill in:
 - **Body** — The HTML content of your email
 - **Recipients:**
   - Filter by **Status** (e.g. send only to leads in "Proposal" stage)
-  - Filter by **Tag** (e.g. send only to leads tagged "VIP")
-  - A live counter shows exactly how many leads match your filters before you send
+  - A live counter shows exactly how many leads match your filter before you send
 
 Click **Save** to save as a draft, or **Send** to send immediately.
 
@@ -324,7 +323,11 @@ Open an invoice and click **Send Invoice**. This marks the invoice as "Sent" and
 
 ## 7. Tags
 
-Tags are labels you create to categorise and organise your leads (e.g. "VIP", "Hot Lead", "Follow Up", "Newsletter").
+Tags are coloured labels you can create and attach to leads to visually categorise them (e.g. "VIP", "Hot Lead", "Follow Up").
+
+### Where Tags Appear
+
+Tags show as small coloured pills on a **lead's profile page**, next to the lead's name and status badge. That is their only current use — they are a visual label only.
 
 ### Managing Tags
 
@@ -344,10 +347,6 @@ Click **Edit** next to any tag to change its name or colour.
 ### Deleting a Tag
 
 Click **Delete** next to any tag. A confirmation is required. Deleting a tag removes it from all leads it was applied to.
-
-### Applying Tags to Leads
-
-When creating or editing a lead, select one or more tags from the tag picker. Tags are also shown as coloured pills on the lead's profile page and in campaign recipient filters.
 
 ---
 

@@ -16,7 +16,7 @@ const navItems = [
   { label: 'Inbox',     href: '/inbox',     icon: Inbox },
   { label: 'Invoices',  href: '/invoices',  icon: FileText },
   { label: 'Import',    href: '/import',    icon: Upload },
-  { label: 'Tags',      href: '/tags',      icon: Tag },
+  // { label: 'Tags',      href: '/tags',      icon: Tag },
 ]
 
 const quickActions = [

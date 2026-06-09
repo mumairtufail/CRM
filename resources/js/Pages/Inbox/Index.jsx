@@ -436,17 +436,13 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   const [bodyLoading, setBodyLoading] = useState(false)
   const [syncing, setSyncing]       = useState(false)
   const bodyCache = useRef(new Map())
-  const prevEmails = useRef(initialEmails)
 
-  // Sync Inertia prop updates (folder switch, pagination, sync reload) → local state
+  // Sync Inertia prop updates → local state whenever server refreshes props
   useEffect(() => {
-    if (initialEmails !== prevEmails.current) {
-      prevEmails.current = initialEmails
-      setEmails(initialEmails)
-      setCounts(initialCounts)
-      setCredential(initialCredential)
-      setSelected(null)
-    }
+    setEmails(initialEmails)
+    setCounts(initialCounts)
+    setCredential(initialCredential)
+    setSelected(null)
   }, [initialEmails, initialCounts, initialCredential])
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -540,7 +536,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
       const json = await res.json()
       if (json.ok) {
         toast.success(json.message)
-        router.reload({ only: ['emails', 'counts', 'credential'] })
+        router.visit('/inbox', { replace: true })
       } else {
         toast.error(json.error)
       }

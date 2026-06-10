@@ -12,7 +12,7 @@ class EmailSend extends Model
     protected $fillable = [
         'organization_id',
         'email_campaign_id', 'lead_id', 'email_used', 'status',
-        'message_id', 'sent_at', 'opened_at', 'clicked_at',
+        'message_id', 'tracking_token', 'sent_at', 'opened_at', 'clicked_at',
     ];
 
     protected $casts = [

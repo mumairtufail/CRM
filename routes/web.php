@@ -10,6 +10,7 @@ use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientDocumentController;
 use App\Http\Controllers\LeadGenerationController;
+use App\Http\Controllers\LeadGroupController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImpersonationController;
@@ -28,6 +29,10 @@ use Illuminate\Support\Facades\Route;
 // Public lead intake form (no auth required) — scoped to a specific organization.
 Route::get('/intake/{organization:slug}',  [PublicLeadController::class, 'show'])->name('intake.show');
 Route::post('/intake/{organization:slug}', [PublicLeadController::class, 'store'])->name('intake.store');
+
+// Email tracking — public, no auth (must be outside auth middleware)
+Route::get('/t/{token}/open.gif', [CampaignController::class, 'trackOpen'])->name('track.open');
+Route::get('/t/{token}/click',    [CampaignController::class, 'trackClick'])->name('track.click');
 
 // Super admin portal
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
@@ -83,6 +88,16 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/campaigns/{campaign}',               [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{campaign}',            [CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::post('/campaigns/{campaign}/send',         [CampaignController::class, 'send'])->name('campaigns.send');
+
+    // Lead Groups
+    Route::get('/groups',                        [LeadGroupController::class, 'index'])->name('groups.index');
+    Route::post('/groups',                       [LeadGroupController::class, 'store'])->name('groups.store');
+    Route::get('/groups/list',                   [LeadGroupController::class, 'listForSelect'])->name('groups.list');
+    Route::get('/groups/{group}',                [LeadGroupController::class, 'show'])->name('groups.show');
+    Route::patch('/groups/{group}',              [LeadGroupController::class, 'update'])->name('groups.update');
+    Route::delete('/groups/{group}',             [LeadGroupController::class, 'destroy'])->name('groups.destroy');
+    Route::post('/groups/{group}/leads',         [LeadGroupController::class, 'addLeads'])->name('groups.leads.add');
+    Route::delete('/groups/{group}/leads',       [LeadGroupController::class, 'removeLeads'])->name('groups.leads.remove');
 
     // Import
     Route::get('/import',                        [ImportController::class, 'index'])->name('import.index');

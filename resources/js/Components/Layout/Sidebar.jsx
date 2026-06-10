@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
-  LogOut, Briefcase, FolderKanban,
+  LogOut, Briefcase, FolderKanban, UsersRound,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -12,6 +12,7 @@ import { LogoMark } from '@/Components/Common/Logo'
 const navItems = [
   { label: 'Dashboard',      href: '/',                icon: LayoutDashboard },
   { label: 'Leads',          href: '/leads',           icon: Users },
+  { label: 'Groups',         href: '/groups',          icon: UsersRound },
   { label: 'AI Lead Search', href: '/lead-generation', icon: Sparkles },
   { label: 'Pipeline',       href: '/pipeline',        icon: Kanban },
   { label: 'Campaigns',      href: '/campaigns',       icon: Mail },
@@ -30,6 +31,8 @@ const quickActions = [
 
 // Map Inertia component names → readable labels
 const COMPONENT_LABELS = {
+  'Groups/Index':     'Groups',
+  'Groups/Show':      'Group',
   'Dashboard':        'Dashboard',
   'LeadGeneration/Index': 'AI Lead Search',
   'Leads/Index':      'All Leads',

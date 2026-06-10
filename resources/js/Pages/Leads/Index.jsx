@@ -17,7 +17,10 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
-import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X } from 'lucide-react'
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X, UsersRound, ChevronDown } from 'lucide-react'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/Components/ui/dialog'
 import { toast } from 'sonner'
 
 const STATUS_OPTIONS = [
@@ -138,12 +141,24 @@ function Checkbox({ checked, indeterminate, onChange, onClick }) {
 }
 
 export default function LeadsIndex({ leads, filters }) {
-  const [deleteId, setDeleteId]           = useState(null)
-  const [deleting, setDeleting]           = useState(false)
-  const [loading, setLoading]             = useState(false)
-  const [selectedIds, setSelectedIds]     = useState(new Set())
+  const [deleteId, setDeleteId]             = useState(null)
+  const [deleting, setDeleting]             = useState(false)
+  const [loading, setLoading]               = useState(false)
+  const [selectedIds, setSelectedIds]       = useState(new Set())
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
-  const [bulkDeleting, setBulkDeleting]   = useState(false)
+  const [bulkDeleting, setBulkDeleting]     = useState(false)
+  const [addGroupOpen, setAddGroupOpen]     = useState(false)
+  const [groups, setGroups]                 = useState([])
+  const [addingGroup, setAddingGroup]       = useState(false)
+  const [chosenGroupId, setChosenGroupId]   = useState(null)
+
+  const fetchGroups = async () => {
+    try {
+      const res = await fetch('/groups/list', { headers: { Accept: 'application/json' } })
+      const data = await res.json()
+      setGroups(data)
+    } catch {}
+  }
 
   useEffect(() => {
     const start = router.on('start', () => setLoading(true))
@@ -214,6 +229,29 @@ export default function LeadsIndex({ leads, filters }) {
       },
       onError: () => toast.error('Failed to delete leads'),
       onFinish: () => { setBulkDeleting(false); setBulkDeleteOpen(false) },
+    })
+  }
+
+  // Bulk add to group
+  const openAddToGroup = async () => {
+    await fetchGroups()
+    setChosenGroupId(null)
+    setAddGroupOpen(true)
+  }
+
+  const handleAddToGroup = () => {
+    if (!chosenGroupId) return
+    const ids = [...selectedIds]
+    setAddingGroup(true)
+    router.post(`/groups/${chosenGroupId}/leads`, { lead_ids: ids }, {
+      preserveState: true,
+      onSuccess: () => {
+        toast.success(`${ids.length} lead${ids.length !== 1 ? 's' : ''} added to group`)
+        setSelectedIds(new Set())
+        setAddGroupOpen(false)
+      },
+      onError: () => toast.error('Failed to add leads to group'),
+      onFinish: () => setAddingGroup(false),
     })
   }
 
@@ -399,6 +437,56 @@ export default function LeadsIndex({ leads, filters }) {
           onConfirm={handleBulkDelete}
           loading={bulkDeleting}
         />
+
+        {/* ── Add to Group dialog ── */}
+        <Dialog open={addGroupOpen} onOpenChange={open => { if (!open) setAddGroupOpen(false) }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">
+                Add {selectionCount} lead{selectionCount !== 1 ? 's' : ''} to Group
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-1.5 max-h-60 overflow-y-auto">
+              {groups.length === 0 && (
+                <p className="text-xs text-slate-400 text-center py-4">No groups yet. Create one first.</p>
+              )}
+              {groups.map(g => (
+                <button
+                  key={g.id}
+                  type="button"
+                  onClick={() => setChosenGroupId(g.id)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
+                    chosenGroupId === g.id
+                      ? 'border-violet-300 bg-violet-50'
+                      : 'border-slate-100 hover:border-slate-200'
+                  }`}
+                >
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: g.color }} />
+                  <span className="text-[13px] font-medium text-slate-700 flex-1 truncate">{g.name}</span>
+                  <span className="text-[11px] text-slate-400">{g.leads_count} leads</span>
+                  {chosenGroupId === g.id && (
+                    <div className="w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
+                      <span className="text-white text-[9px]">✓</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setAddGroupOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={!chosenGroupId || addingGroup}
+                className="h-8 text-xs"
+                onClick={handleAddToGroup}
+              >
+                {addingGroup ? 'Adding…' : 'Add to Group'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </AppLayout>
 
       {/* ── Bulk action bar ── */}
@@ -438,6 +526,22 @@ export default function LeadsIndex({ leads, filters }) {
             onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
           >
             <X size={12} /> Clear
+          </button>
+
+          <button
+            onClick={openAddToGroup}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: '#7c3aed',
+              border: 'none',
+              borderRadius: 7, padding: '4px 12px',
+              color: 'white', fontSize: 12.5, fontWeight: 600,
+              cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#6d28d9'}
+            onMouseLeave={e => e.currentTarget.style.background = '#7c3aed'}
+          >
+            <UsersRound size={12} /> Add to Group
           </button>
 
           <button

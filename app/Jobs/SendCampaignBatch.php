@@ -33,6 +33,7 @@ class SendCampaignBatch implements ShouldQueue
         $user     = User::find($this->userId);
 
         if (! $campaign || ! $user) return;
+        if ($campaign->status === 'paused') return;
 
         $mailer = MailService::forUser($user);
         if (! $mailer) return;

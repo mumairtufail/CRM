@@ -23,7 +23,8 @@ const STATUS_STYLE = {
 }
 
 const SEND_STATUS = {
-  pending:  { label: 'Pending',  bg: 'bg-slate-100 text-slate-500' },
+  queued:   { label: 'Queued',   bg: 'bg-slate-100 text-slate-400' },
+  pending:  { label: 'Pending',  bg: 'bg-amber-50 text-amber-600' },
   sent:     { label: 'Sent',     bg: 'bg-blue-50 text-blue-600' },
   opened:   { label: 'Opened',   bg: 'bg-emerald-50 text-emerald-700' },
   clicked:  { label: 'Clicked',  bg: 'bg-violet-50 text-violet-700' },
@@ -32,6 +33,7 @@ const SEND_STATUS = {
 }
 
 const LOG_STATUS = {
+  queued:   { symbol: '⧖', color: '#555d6b' },
   pending:  { symbol: '○', color: '#e3b341' },
   sent:     { symbol: '✓', color: '#3fb950' },
   opened:   { symbol: '◎', color: '#79c0ff' },
@@ -268,17 +270,36 @@ function TerminalPanel({ campaignId, initialStats }) {
           <div className="flex flex-col items-center justify-center h-full gap-3">
             <Terminal size={24} style={{ color: '#30363d' }} />
             <p className="text-[11px] font-mono" style={{ color: '#555d6b' }}>
-              $ waiting for sends...
+              {isLive ? '$ queuing recipients...' : '$ no sends yet'}
             </p>
+            {!isLive && stats.status === 'draft' && (
+              <p className="text-[10px] font-mono px-4 text-center" style={{ color: '#30363d' }}>
+                click "Send Now" to start
+              </p>
+            )}
           </div>
         ) : (
           <>
-            <div className="px-3 pb-1.5">
-              <p className="text-[10px] font-mono" style={{ color: '#555d6b' }}>
-                {'# '}campaign · {stats.total_recipients} recipients
+            <div className="px-3 pt-1 pb-2 border-b border-[#21262d] mb-1">
+              <p className="text-[10px] font-mono" style={{ color: '#3fb950' }}>
+                $ campaign init — {stats.total_recipients} recipients queued
               </p>
             </div>
             {logs.map(entry => <LogLine key={entry.id} entry={entry} />)}
+            {stats.status === 'sent' && (
+              <div className="px-3 pt-2 mt-1 border-t border-[#21262d]">
+                <p className="text-[10px] font-mono" style={{ color: '#3fb950' }}>
+                  $ campaign complete ✓
+                </p>
+              </div>
+            )}
+            {stats.status === 'paused' && (
+              <div className="px-3 pt-2 mt-1 border-t border-[#21262d]">
+                <p className="text-[10px] font-mono" style={{ color: '#ffa657' }}>
+                  $ campaign paused — click resume to continue
+                </p>
+              </div>
+            )}
           </>
         )}
         <div ref={bottomRef} />

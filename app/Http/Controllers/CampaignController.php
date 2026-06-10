@@ -274,6 +274,29 @@ class CampaignController extends Controller
             'total_recipients' => count($leadIds),
         ]);
 
+        // Pre-create EmailSend records as 'queued' for all recipients so the
+        // terminal panel shows them immediately (before the job runs).
+        $alreadySentIds = EmailSend::where('email_campaign_id', $campaign->id)
+            ->whereIn('status', ['sent', 'opened', 'clicked'])
+            ->pluck('lead_id')
+            ->all();
+
+        $unsentIds = array_diff($leadIds, $alreadySentIds);
+
+        if (! empty($unsentIds)) {
+            Lead::with('emails')
+                ->whereIn('id', $unsentIds)
+                ->get()
+                ->each(function ($lead) use ($campaign) {
+                    $email = $lead->primary_email;
+                    if (! $email) return;
+                    EmailSend::updateOrCreate(
+                        ['email_campaign_id' => $campaign->id, 'lead_id' => $lead->id],
+                        ['email_used' => $email, 'status' => 'queued']
+                    );
+                });
+        }
+
         // Dispatch queued jobs — one job per batch with incremental delay
         $batchSize  = $user->mail_batch_size  ?? 10;
         $batchDelay = $user->mail_batch_delay ?? 5;

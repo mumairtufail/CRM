@@ -53,6 +53,9 @@ class SendCampaignBatch implements ShouldQueue
         $sent  = 0;
 
         foreach ($leads as $lead) {
+            $campaign->refresh();
+            if ($campaign->status === 'paused') break;
+
             $email = $lead->primary_email;
             if (! $email) continue;
 

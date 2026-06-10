@@ -89,6 +89,8 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/campaigns/{campaign}',               [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{campaign}',            [CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::post('/campaigns/{campaign}/send',         [CampaignController::class, 'send'])->name('campaigns.send');
+    Route::post('/campaigns/{campaign}/stop',         [CampaignController::class, 'stop'])->name('campaigns.stop');
+    Route::get('/campaigns/{campaign}/log',           [CampaignController::class, 'log'])->name('campaigns.log');
 
     // Lead Groups
     Route::get('/groups',                        [LeadGroupController::class, 'index'])->name('groups.index');

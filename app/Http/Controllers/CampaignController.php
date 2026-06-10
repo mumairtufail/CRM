@@ -206,15 +206,49 @@ class CampaignController extends Controller
         ]);
     }
 
+    public function log(EmailCampaign $campaign)
+    {
+        $sends = $campaign->sends()
+            ->with('lead:id,first_name,last_name')
+            ->oldest('created_at')
+            ->get()
+            ->map(fn ($s) => [
+                'id'         => $s->id,
+                'lead_name'  => $s->lead?->full_name ?? '—',
+                'email_used' => $s->email_used,
+                'status'     => $s->status,
+                'sent_at'    => $s->sent_at?->format('H:i:s'),
+            ]);
+
+        return response()->json([
+            'status'           => $campaign->status,
+            'sent_count'       => $campaign->sent_count,
+            'total_recipients' => $campaign->total_recipients,
+            'opened_count'     => $campaign->opened_count,
+            'clicked_count'    => $campaign->clicked_count,
+            'sends'            => $sends,
+        ]);
+    }
+
+    public function stop(EmailCampaign $campaign)
+    {
+        if ($campaign->status !== 'sending') {
+            return back()->withErrors(['error' => 'Campaign is not currently sending.']);
+        }
+
+        $campaign->update(['status' => 'paused']);
+
+        return back()->with('success', 'Campaign paused.');
+    }
+
     public function send(Request $request, EmailCampaign $campaign)
     {
-        // Block re-send if already sent or currently sending
-        if (in_array($campaign->status, ['sent', 'sending'])) {
-            return back()->withErrors([
-                'error' => $campaign->status === 'sent'
-                    ? 'Campaign has already been sent.'
-                    : 'Campaign is currently sending. Please wait.',
-            ]);
+        // Block if currently sending; allow re-send from paused
+        if ($campaign->status === 'sending') {
+            return back()->withErrors(['error' => 'Campaign is currently sending. Please wait.']);
+        }
+        if ($campaign->status === 'sent') {
+            return back()->withErrors(['error' => 'Campaign has already been fully sent.']);
         }
 
         $user   = $request->user();

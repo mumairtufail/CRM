@@ -315,6 +315,15 @@ export default function CampaignShow({ campaign, sends }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting]           = useState(false)
 
+  // Keep the stats card + send log table in sync while the campaign is sending
+  useEffect(() => {
+    if (campaign.status !== 'sending') return
+    const id = setInterval(() => {
+      router.reload({ only: ['campaign', 'sends'], preserveScroll: true })
+    }, 4000)
+    return () => clearInterval(id)
+  }, [campaign.status])
+
   const handleSend = () => {
     setSending(true)
     router.post(`/campaigns/${campaign.id}/send`, {}, {

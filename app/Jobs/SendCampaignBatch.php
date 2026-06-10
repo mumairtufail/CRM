@@ -96,8 +96,14 @@ class SendCampaignBatch implements ShouldQueue
 
                 $emailSend->update(['status' => 'sent', 'sent_at' => now()]);
                 $sent++;
-            } catch (\Throwable) {
+            } catch (\Throwable $e) {
                 $emailSend->update(['status' => 'failed', 'sent_at' => now()]);
+                \Illuminate\Support\Facades\Log::error('Campaign send failed', [
+                    'campaign_id' => $this->campaignId,
+                    'lead_id'     => $lead->id,
+                    'email'       => $email,
+                    'error'       => $e->getMessage(),
+                ]);
             }
         }
 

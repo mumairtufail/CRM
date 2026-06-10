@@ -4,6 +4,9 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectTaskController;
+use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientDocumentController;
 use App\Http\Controllers\LeadGenerationController;
@@ -125,11 +128,26 @@ Route::middleware(['auth'])->group(function () {
 
     // Clients
     Route::get('/clients',                                    [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/create',                             [ClientController::class, 'create'])->name('clients.create');
+    Route::post('/clients',                                   [ClientController::class, 'store'])->name('clients.store');
     Route::get('/clients/{client}',                           [ClientController::class, 'show'])->name('clients.show');
     Route::patch('/clients/{client}',                         [ClientController::class, 'update'])->name('clients.update');
     Route::delete('/clients/{client}',                        [ClientController::class, 'destroy'])->name('clients.destroy');
     Route::post('/clients/{client}/documents',                [ClientDocumentController::class, 'store'])->name('clients.documents.store');
     Route::delete('/clients/{client}/documents/{document}',   [ClientDocumentController::class, 'destroy'])->name('clients.documents.destroy');
+
+    // Projects
+    Route::get('/projects',                                            [ProjectController::class, 'index'])->name('projects.index');
+    Route::get('/projects/create',                                     [ProjectController::class, 'create'])->name('projects.create');
+    Route::post('/projects',                                           [ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}',                                  [ProjectController::class, 'show'])->name('projects.show');
+    Route::patch('/projects/{project}',                                [ProjectController::class, 'update'])->name('projects.update');
+    Route::delete('/projects/{project}',                               [ProjectController::class, 'destroy'])->name('projects.destroy');
+    Route::post('/projects/{project}/tasks',                           [ProjectTaskController::class, 'store'])->name('projects.tasks.store');
+    Route::patch('/projects/{project}/tasks/{task}',                   [ProjectTaskController::class, 'update'])->name('projects.tasks.update');
+    Route::delete('/projects/{project}/tasks/{task}',                  [ProjectTaskController::class, 'destroy'])->name('projects.tasks.destroy');
+    Route::post('/projects/{project}/documents',                       [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
+    Route::delete('/projects/{project}/documents/{document}',          [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
 
     // Inbox (IMAP fetch)
     Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');

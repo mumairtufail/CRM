@@ -41,6 +41,33 @@ class ClientController extends Controller
         ]);
     }
 
+    public function create()
+    {
+        return Inertia::render('Clients/Create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name'      => 'required|string|max:200',
+            'email'     => 'nullable|email|max:200',
+            'phone'     => 'nullable|string|max:50',
+            'company'   => 'nullable|string|max:200',
+            'job_title' => 'nullable|string|max:200',
+            'status'    => 'nullable|string|in:onboarding,active,inactive,churned',
+            'notes'     => 'nullable|string',
+            'deal_value'=> 'nullable|numeric|min:0',
+            'currency'  => 'nullable|string|max:10',
+        ]);
+
+        $client = Client::create(array_filter($validated, fn ($v) => $v !== null) + [
+            'status'   => $validated['status'] ?? 'onboarding',
+            'currency' => $validated['currency'] ?? 'USD',
+        ]);
+
+        return redirect()->route('clients.show', $client)->with('success', 'Client created.');
+    }
+
     public function show(Client $client)
     {
         $client->load(['lead', 'documents']);

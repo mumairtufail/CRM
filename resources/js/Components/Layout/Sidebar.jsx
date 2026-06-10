@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
-  LogOut, Briefcase,
+  LogOut, Briefcase, FolderKanban,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -16,6 +16,7 @@ const navItems = [
   { label: 'Pipeline',       href: '/pipeline',        icon: Kanban },
   { label: 'Campaigns',      href: '/campaigns',       icon: Mail },
   { label: 'Clients',        href: '/clients',         icon: Briefcase },
+  { label: 'Projects',       href: '/projects',        icon: FolderKanban },
   { label: 'Inbox',          href: '/inbox',           icon: Inbox },
   { label: 'Invoices',       href: '/invoices',        icon: FileText },
   { label: 'Import',         href: '/import',          icon: Upload },
@@ -24,7 +25,7 @@ const navItems = [
 
 const quickActions = [
   { label: 'New Lead',     href: '/leads/create',     icon: Users },
-  { label: 'New Campaign', href: '/campaigns/create', icon: Mail },
+  { label: 'New Project',  href: '/projects/create',  icon: FolderKanban },
 ]
 
 // Map Inertia component names → readable labels
@@ -48,6 +49,10 @@ const COMPONENT_LABELS = {
   'Settings':         'Settings',
   'Clients/Index':    'Clients',
   'Clients/Show':     'Client',
+  'Clients/Create':   'New Client',
+  'Projects/Index':   'Projects',
+  'Projects/Show':    'Project',
+  'Projects/Create':  'New Project',
   'Inbox/Index':      'Inbox',
 }
 

@@ -17,18 +17,28 @@ class ClientDocumentController extends Controller
         ]);
 
         $file = $request->file('file');
+
         $path = $file->store("client-docs/{$client->organization_id}/{$client->id}", 'public');
 
-        $doc = ClientDocument::create([
-            'organization_id' => $client->organization_id,
-            'client_id'       => $client->id,
-            'name'            => $request->input('name'),
-            'file_path'       => $path,
-            'original_name'   => $file->getClientOriginalName(),
-            'mime_type'       => $file->getMimeType(),
-            'size'            => $file->getSize(),
-            'notes'           => $request->input('notes'),
-        ]);
+        if ($path === false) {
+            return response()->json(['ok' => false, 'message' => 'File could not be saved. Check storage permissions.'], 500);
+        }
+
+        try {
+            $doc = ClientDocument::create([
+                'organization_id' => $client->organization_id,
+                'client_id'       => $client->id,
+                'name'            => $request->input('name'),
+                'file_path'       => $path,
+                'original_name'   => $file->getClientOriginalName(),
+                'mime_type'       => $file->getMimeType(),
+                'size'            => $file->getSize(),
+                'notes'           => $request->input('notes'),
+            ]);
+        } catch (\Throwable $e) {
+            \Storage::disk('public')->delete($path);
+            return response()->json(['ok' => false, 'message' => 'Could not save document record: ' . $e->getMessage()], 500);
+        }
 
         return response()->json([
             'ok'  => true,

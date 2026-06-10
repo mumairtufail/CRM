@@ -30,6 +30,11 @@ class Client extends Model
         return $this->hasMany(ClientDocument::class)->latest();
     }
 
+    public function projects()
+    {
+        return $this->hasMany(Project::class)->latest();
+    }
+
     public function scopeByStatus($query, string $status)
     {
         return $query->where('status', $status);

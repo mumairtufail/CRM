@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
+import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
@@ -52,6 +53,10 @@ function mimeIcon(mime) {
 function EditableField({ label, value, onSave, textarea = false, icon: Icon }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft]     = useState(value ?? '')
+
+  useEffect(() => {
+    if (!editing) setDraft(value ?? '')
+  }, [value])
 
   const save = async () => {
     if (draft === (value ?? '')) { setEditing(false); return }
@@ -135,17 +140,22 @@ function UploadDocForm({ clientId, onUploaded }) {
         headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
         body: fd,
       })
-      const json = await res.json()
+      let json
+      try { json = await res.json() } catch { json = {} }
+
       if (json.ok) {
         toast.success('Document uploaded')
         onUploaded(json.doc)
         setName(''); setNotes(''); setFile(null)
         if (fileRef.current) fileRef.current.value = ''
+      } else if (res.status === 422 && json.errors) {
+        const first = Object.values(json.errors)[0]?.[0] ?? 'Validation failed'
+        toast.error(first)
       } else {
-        toast.error(json.message ?? 'Upload failed')
+        toast.error(json.message ?? `Upload failed (${res.status})`)
       }
-    } catch {
-      toast.error('Upload failed')
+    } catch (err) {
+      toast.error('Upload failed: ' + (err.message ?? 'network error'))
     } finally {
       setLoading(false)
     }
@@ -193,10 +203,10 @@ function UploadDocForm({ clientId, onUploaded }) {
 // ─── Document row ──────────────────────────────────────────────────────────────
 
 function DocRow({ doc, clientId, onDeleted }) {
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting]       = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const handleDelete = async () => {
-    if (!confirm(`Delete "${doc.name}"?`)) return
     setDeleting(true)
     try {
       await fetch(`/clients/${clientId}/documents/${doc.id}`, {
@@ -212,38 +222,60 @@ function DocRow({ doc, clientId, onDeleted }) {
   }
 
   return (
-    <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
-      <div className="text-xl shrink-0 mt-0.5">{mimeIcon(doc.mime_type)}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-slate-800 truncate">{doc.name}</p>
-        <p className="text-[11px] text-slate-400 truncate">{doc.original_name} · {doc.formatted_size}</p>
-        {doc.notes && (
-          <p className="text-[11.5px] text-slate-500 mt-1 leading-relaxed">{doc.notes}</p>
-        )}
-        <p className="text-[10.5px] text-slate-400 mt-1">
-          {format(new Date(doc.created_at), 'MMM d, yyyy')}
-        </p>
+    <>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title="Delete document?"
+        description={`"${doc.name}" will be permanently deleted and cannot be recovered.`}
+        onConfirm={handleDelete}
+        loading={deleting}
+        confirmText="Delete"
+        loadingText="Deleting…"
+        variant="destructive"
+      />
+      <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
+        <div className="text-xl shrink-0 mt-0.5">{mimeIcon(doc.mime_type)}</div>
+        <div className="flex-1 min-w-0">
+          <p className="text-[13px] font-semibold text-slate-800 truncate">{doc.name}</p>
+          <p className="text-[11px] text-slate-400 truncate">{doc.original_name} · {doc.formatted_size}</p>
+          {doc.notes && (
+            <p className="text-[11.5px] text-slate-500 mt-1 leading-relaxed">{doc.notes}</p>
+          )}
+          <p className="text-[10.5px] text-slate-400 mt-1">
+            {format(new Date(doc.created_at), 'MMM d, yyyy')}
+          </p>
+        </div>
+        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+          <a href={doc.url} download target="_blank" rel="noopener noreferrer"
+            className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-violet-300 hover:text-violet-600 transition-colors text-slate-500">
+            <Download size={13} />
+          </a>
+          <button onClick={() => setConfirmOpen(true)} disabled={deleting}
+            className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-red-300 hover:text-red-500 transition-colors text-slate-500 disabled:opacity-40">
+            <Trash2 size={13} />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-        <a href={doc.url} download target="_blank" rel="noopener noreferrer"
-          className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-violet-300 hover:text-violet-600 transition-colors text-slate-500">
-          <Download size={13} />
-        </a>
-        <button onClick={handleDelete} disabled={deleting}
-          className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-red-300 hover:text-red-500 transition-colors text-slate-500 disabled:opacity-40">
-          <Trash2 size={13} />
-        </button>
-      </div>
-    </div>
+    </>
   )
 }
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 export default function ClientShow({ client: initialClient }) {
-  const [client, setClient]     = useState(initialClient)
-  const [docs, setDocs]         = useState(initialClient.documents ?? [])
+  const [client, setClient]           = useState(initialClient)
+  const [docs, setDocs]               = useState(initialClient.documents ?? [])
   const [savingStatus, setSavingStatus] = useState(false)
+  const [deleteOpen, setDeleteOpen]   = useState(false)
+  const [deleting, setDeleting]       = useState(false)
+
+  const handleDeleteClient = () => {
+    setDeleting(true)
+    router.delete(`/clients/${client.id}`, {
+      onError: () => { setDeleting(false); toast.error('Failed to delete client') },
+    })
+  }
 
   const st = STATUS_STYLE[client.status] ?? STATUS_STYLE.active
 
@@ -274,6 +306,17 @@ export default function ClientShow({ client: initialClient }) {
 
   return (
     <>
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title="Delete client?"
+        description={`"${client.name}" and all their documents will be permanently deleted. This cannot be undone.`}
+        onConfirm={handleDeleteClient}
+        loading={deleting}
+        confirmText="Delete Client"
+        loadingText="Deleting…"
+        variant="destructive"
+      />
       <Head title={client.name} />
       <AppLayout title={client.name}>
 
@@ -325,6 +368,10 @@ export default function ClientShow({ client: initialClient }) {
                   <User size={12} /> View Lead
                 </Link>
               )}
+              <button onClick={() => setDeleteOpen(true)}
+                className="flex items-center gap-1.5 h-8 px-3 rounded-xl text-[12px] font-medium bg-red-500/20 hover:bg-red-500/35 text-red-300 border border-red-500/20 transition-colors">
+                <Trash2 size={12} /> Delete
+              </button>
             </div>
           </div>
         </div>

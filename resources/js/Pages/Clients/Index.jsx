@@ -4,7 +4,7 @@ import AppLayout from '@/Components/Layout/AppLayout'
 import { cn } from '@/lib/utils'
 import {
   Briefcase, Search, Users, TrendingUp, UserX, Clock,
-  ChevronRight, Building2, Mail, Phone, DollarSign,
+  ChevronRight, Building2, Mail, Phone, DollarSign, Plus,
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
@@ -151,6 +151,13 @@ export default function ClientsIndex({ clients, counts, filters }) {
             <h1 className="text-[20px] font-bold text-slate-900">Clients</h1>
             <p className="text-[13px] text-slate-500 mt-0.5">{counts.all} total client{counts.all !== 1 ? 's' : ''}</p>
           </div>
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+          <Link href="/clients/create"
+            className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-[13px] font-semibold text-white transition"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+            <Plus size={14} strokeWidth={2.5} /> New Client
+          </Link>
           {/* Search */}
           <form onSubmit={handleSearch} className="flex items-center gap-2">
             <div className="relative">
@@ -167,6 +174,7 @@ export default function ClientsIndex({ clients, counts, filters }) {
               Search
             </button>
           </form>
+          </div>
         </div>
 
         {/* ── Status tabs ────────────────────────────────── */}
@@ -203,13 +211,19 @@ export default function ClientsIndex({ clients, counts, filters }) {
             </div>
             <p className="text-[14px] font-medium text-slate-600 mb-1">No clients yet</p>
             <p className="text-[12.5px] text-slate-400">
-              Convert a lead to a client from their detail page.
+              Create a client directly or convert a lead from their detail page.
             </p>
-            <Link href="/leads"
-              className="mt-4 inline-flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-white rounded-xl"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-              Browse Leads
-            </Link>
+            <div className="flex items-center gap-2 mt-4">
+              <Link href="/clients/create"
+                className="inline-flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-white rounded-xl"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                <Plus size={14} /> New Client
+              </Link>
+              <Link href="/leads"
+                className="inline-flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-slate-600 rounded-xl border border-slate-200 hover:border-violet-300 hover:text-violet-600 bg-white transition">
+                Browse Leads
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

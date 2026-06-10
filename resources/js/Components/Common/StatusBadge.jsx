@@ -9,6 +9,7 @@ const statusConfig = {
   won:         { label: 'Won',         cls: 'bg-green-50 text-green-700 border-green-200' },
   lost:        { label: 'Lost',        cls: 'bg-red-50 text-red-700 border-red-200' },
   unqualified: { label: 'Unqualified', cls: 'bg-gray-100 text-gray-500 border-gray-200' },
+  client:      { label: 'Client',      cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
 }
 
 export default function StatusBadge({ status, size = 'default' }) {

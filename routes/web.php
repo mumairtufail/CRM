@@ -4,6 +4,8 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\ClientController;
+use App\Http\Controllers\ClientDocumentController;
 use App\Http\Controllers\LeadGenerationController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\DashboardController;
@@ -50,6 +52,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/leads/create',        [LeadController::class, 'create'])->name('leads.create');
     Route::post('/leads',              [LeadController::class, 'store'])->name('leads.store');
     Route::post('/leads/bulk-destroy',  [LeadController::class, 'bulkDestroy'])->name('leads.bulk-destroy');
+    Route::post('/leads/{lead}/convert', [LeadController::class, 'convert'])->name('leads.convert');
     Route::get('/leads/{lead}',        [LeadController::class, 'show'])->name('leads.show');
     Route::get('/leads/{lead}/edit',   [LeadController::class, 'edit'])->name('leads.edit');
     Route::put('/leads/{lead}',        [LeadController::class, 'update'])->name('leads.update');
@@ -119,6 +122,14 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/email-templates/{emailTemplate}/activate',    [EmailTemplateController::class, 'activate'])->name('email-templates.activate');
     Route::patch('/email-templates/deactivate',                  [EmailTemplateController::class, 'deactivate'])->name('email-templates.deactivate');
     Route::get('/email-templates/{emailTemplate}/preview',       [EmailTemplateController::class, 'preview'])->name('email-templates.preview');
+
+    // Clients
+    Route::get('/clients',                                    [ClientController::class, 'index'])->name('clients.index');
+    Route::get('/clients/{client}',                           [ClientController::class, 'show'])->name('clients.show');
+    Route::patch('/clients/{client}',                         [ClientController::class, 'update'])->name('clients.update');
+    Route::delete('/clients/{client}',                        [ClientController::class, 'destroy'])->name('clients.destroy');
+    Route::post('/clients/{client}/documents',                [ClientDocumentController::class, 'store'])->name('clients.documents.store');
+    Route::delete('/clients/{client}/documents/{document}',   [ClientDocumentController::class, 'destroy'])->name('clients.documents.destroy');
 
     // Inbox (IMAP fetch)
     Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');

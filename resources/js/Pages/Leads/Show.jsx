@@ -13,14 +13,112 @@ import {
   Building2, Globe, Link2, MapPin, Mail, Phone,
   DollarSign, Calendar, Clock, Tag, Pencil, Trash2,
   ChevronLeft, MessageSquare, PhoneCall, Send, Star,
-  ExternalLink, Activity, Briefcase, Users,
+  ExternalLink, Activity, Briefcase, Users, UserCheck,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
 const STATUSES = ['new','contacted','qualified','proposal','negotiation','won','lost','unqualified']
+
+const CLIENT_STATUSES = [
+  { value: 'onboarding', label: 'Onboarding', desc: 'Just getting started' },
+  { value: 'active',     label: 'Active',     desc: 'Current paying client' },
+  { value: 'inactive',   label: 'Inactive',   desc: 'Paused or on hold' },
+  { value: 'churned',    label: 'Churned',    desc: 'No longer a client' },
+]
+
+function ConvertModal({ lead, onClose }) {
+  const [status, setStatus] = useState('onboarding')
+  const [loading, setLoading] = useState(false)
+
+  const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
+
+  const handleConvert = async () => {
+    setLoading(true)
+    try {
+      const res = await fetch(`/leads/${lead.id}/convert`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
+        body: JSON.stringify({ client_status: status }),
+      })
+      const json = await res.json()
+      if (json.ok) {
+        toast.success(`${lead.full_name} converted to client!`)
+        router.visit(`/clients/${json.client_id}`)
+      } else {
+        toast.error(json.error ?? 'Conversion failed')
+        setLoading(false)
+      }
+    } catch {
+      toast.error('Something went wrong')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 8 }}
+        transition={{ duration: 0.2 }}
+        className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl p-6"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-start gap-3 mb-5">
+          <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg,#059669,#10b981)' }}>
+            <UserCheck size={20} className="text-white" />
+          </div>
+          <div>
+            <h3 className="text-[15px] font-bold text-slate-900">Convert to Client</h3>
+            <p className="text-[12.5px] text-slate-500 mt-0.5">
+              {lead.full_name} will be marked as a client and added to your client list.
+            </p>
+          </div>
+        </div>
+
+        {/* Status picker */}
+        <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Initial status</p>
+        <div className="grid grid-cols-2 gap-2 mb-6">
+          {CLIENT_STATUSES.map(s => (
+            <button key={s.value}
+              onClick={() => setStatus(s.value)}
+              className={cn(
+                'flex flex-col items-start px-3 py-2.5 rounded-xl border text-left transition-all',
+                status === s.value
+                  ? 'border-emerald-500 bg-emerald-50 shadow-sm'
+                  : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+              )}
+            >
+              <span className={cn('text-[12.5px] font-semibold', status === s.value ? 'text-emerald-700' : 'text-slate-700')}>
+                {s.label}
+              </span>
+              <span className="text-[11px] text-slate-400 mt-0.5">{s.desc}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <button onClick={onClose}
+            className="flex-1 h-9 rounded-xl border border-slate-200 text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+            Cancel
+          </button>
+          <button onClick={handleConvert} disabled={loading}
+            className="flex-1 h-9 rounded-xl text-[13px] font-semibold text-white transition-all disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg,#059669,#10b981)' }}>
+            {loading ? 'Converting…' : 'Convert to Client'}
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  )
+}
 
 const ACT_CFG = {
   note:          { icon: MessageSquare, cls: 'text-slate-500 bg-slate-100',   label: 'Note' },
@@ -96,9 +194,12 @@ function QuickAction({ icon: Icon, label, href, onClick, color = 'text-slate-600
 }
 
 export default function LeadShow({ lead, activities, leadStats }) {
-  const [deleting, setDeleting]     = useState(false)
+  const [deleting, setDeleting]       = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [changingStatus, setChangingStatus] = useState(false)
+  const [convertOpen, setConvertOpen] = useState(false)
+
+  const isClient = lead.status === 'client'
 
   const handleDelete = () => {
     setDeleting(true)
@@ -161,12 +262,24 @@ export default function LeadShow({ lead, activities, leadStats }) {
             </div>
 
             {/* Right — actions */}
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 flex-wrap">
               <Link href="/leads">
                 <Button variant="ghost" size="sm" className="gap-1.5 h-8 text-white/50 hover:text-white hover:bg-white/10 border-0">
                   <ChevronLeft size={14} /> Back
                 </Button>
               </Link>
+              {isClient && lead.client ? (
+                <Link href={`/clients/${lead.client.id}`}>
+                  <Button size="sm" className="gap-1.5 h-8 text-[12px] bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-300 border border-emerald-400/30">
+                    <UserCheck size={12} /> View Client
+                  </Button>
+                </Link>
+              ) : (
+                <Button size="sm" className="gap-1.5 h-8 text-[12px] bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-400/20"
+                  onClick={() => setConvertOpen(true)}>
+                  <UserCheck size={12} /> Convert to Client
+                </Button>
+              )}
               <Link href={`/leads/${lead.id}/edit`}>
                 <Button size="sm" className="gap-1.5 h-8 text-[12px] bg-white/10 hover:bg-white/20 text-white border border-white/10">
                   <Pencil size={12} /> Edit
@@ -236,7 +349,7 @@ export default function LeadShow({ lead, activities, leadStats }) {
                       <ExternalLink size={12} className="text-slate-400" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 capitalize">{h.platform}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{h.platform}</p>
                       <a href={h.url} target="_blank" rel="noopener noreferrer"
                         className="text-[13px] text-blue-600 hover:underline truncate block mt-0.5">{h.url}</a>
                     </div>
@@ -355,6 +468,10 @@ export default function LeadShow({ lead, activities, leadStats }) {
           loading={deleting}
         />
       </AppLayout>
+
+      <AnimatePresence>
+        {convertOpen && <ConvertModal lead={lead} onClose={() => setConvertOpen(false)} />}
+      </AnimatePresence>
     </>
   )
 }

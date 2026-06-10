@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
-  LogOut,
+  LogOut, Briefcase,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -15,6 +15,7 @@ const navItems = [
   { label: 'AI Lead Search', href: '/lead-generation', icon: Sparkles },
   { label: 'Pipeline',       href: '/pipeline',        icon: Kanban },
   { label: 'Campaigns',      href: '/campaigns',       icon: Mail },
+  { label: 'Clients',        href: '/clients',         icon: Briefcase },
   { label: 'Inbox',          href: '/inbox',           icon: Inbox },
   { label: 'Invoices',       href: '/invoices',        icon: FileText },
   { label: 'Import',         href: '/import',          icon: Upload },
@@ -45,6 +46,8 @@ const COMPONENT_LABELS = {
   'Tags/Index':       'Tags',
   'Profile/Edit':     'Settings',
   'Settings':         'Settings',
+  'Clients/Index':    'Clients',
+  'Clients/Show':     'Client',
   'Inbox/Index':      'Inbox',
 }
 

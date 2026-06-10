@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activity;
+use App\Models\Client;
 use App\Models\Lead;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -112,7 +113,7 @@ class LeadController extends Controller
 
     public function show(Lead $lead)
     {
-        $lead->load(['emails', 'phones', 'tags']);
+        $lead->load(['emails', 'phones', 'tags', 'client']);
         $activities = $lead->activities()->limit(30)->get();
 
         $leadStats = [
@@ -211,5 +212,47 @@ class LeadController extends Controller
         Lead::whereIn('id', $request->ids)->delete();
 
         return redirect()->route('leads.index')->with('success', count($request->ids) . ' leads deleted.');
+    }
+
+    public function convert(Request $request, Lead $lead)
+    {
+        $request->validate([
+            'client_status' => 'nullable|string|in:onboarding,active,inactive,churned',
+        ]);
+
+        // Prevent double-conversion
+        if ($lead->status === 'client' && $lead->client()->exists()) {
+            return response()->json(['ok' => false, 'error' => 'Lead is already a client.'], 422);
+        }
+
+        $lead->load(['emails', 'phones']);
+        $primaryEmail = $lead->emails->firstWhere('is_primary', true)?->email ?? $lead->emails->first()?->email;
+        $primaryPhone = $lead->phones->firstWhere('is_primary', true)?->phone ?? $lead->phones->first()?->phone;
+
+        $client = Client::create([
+            'organization_id' => $lead->organization_id,
+            'lead_id'         => $lead->id,
+            'name'            => $lead->full_name,
+            'email'           => $primaryEmail,
+            'phone'           => $primaryPhone,
+            'company'         => $lead->company,
+            'job_title'       => $lead->job_title,
+            'status'          => $request->input('client_status', 'onboarding'),
+            'deal_value'      => $lead->deal_value,
+            'currency'        => $lead->currency,
+            'notes'           => $lead->notes,
+            'converted_at'    => now(),
+        ]);
+
+        $lead->update(['status' => 'client']);
+
+        Activity::create([
+            'lead_id'     => $lead->id,
+            'type'        => 'status_change',
+            'description' => "Lead converted to client",
+            'meta'        => ['client_id' => $client->id],
+        ]);
+
+        return response()->json(['ok' => true, 'client_id' => $client->id]);
     }
 }

@@ -27,11 +27,9 @@ function AddLeadsModal({ open, onClose, groupId }) {
     if (!q || q.length < 2) { setResults([]); return }
     setSearching(true)
     try {
-      const res = await fetch(`/leads?search=${encodeURIComponent(q)}&page=1`, {
-        headers: { Accept: 'application/json', 'X-Inertia': 'true', 'X-Inertia-Version': '' },
-      })
+      const res = await fetch(`/leads/search?q=${encodeURIComponent(q)}`)
       const json = await res.json()
-      setResults(json?.props?.leads?.data ?? [])
+      setResults(Array.isArray(json) ? json : [])
     } catch {
       setResults([])
     } finally {

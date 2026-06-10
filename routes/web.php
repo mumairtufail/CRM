@@ -57,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Leads
     Route::get('/leads',               [LeadController::class, 'index'])->name('leads.index');
+    Route::get('/leads/search',        [LeadController::class, 'search'])->name('leads.search');
     Route::get('/leads/create',        [LeadController::class, 'create'])->name('leads.create');
     Route::post('/leads',              [LeadController::class, 'store'])->name('leads.store');
     Route::post('/leads/bulk-destroy',  [LeadController::class, 'bulkDestroy'])->name('leads.bulk-destroy');

@@ -39,6 +39,24 @@ class LeadController extends Controller
         ]);
     }
 
+    public function search(Request $request)
+    {
+        $q = $request->input('q', '');
+
+        $leads = Lead::with('emails')
+            ->when(strlen($q) >= 2, fn ($query) => $query->search($q))
+            ->limit(30)
+            ->get()
+            ->map(fn ($lead) => [
+                'id'            => $lead->id,
+                'full_name'     => $lead->full_name,
+                'company'       => $lead->company,
+                'primary_email' => $lead->primary_email,
+            ]);
+
+        return response()->json($leads);
+    }
+
     public function create()
     {
         return Inertia::render('Leads/Create');

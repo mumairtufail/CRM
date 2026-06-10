@@ -4,24 +4,31 @@ import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
-  LogOut, Briefcase, FolderKanban, UsersRound,
+  LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
 
 const navItems = [
-  { label: 'Dashboard',      href: '/',                icon: LayoutDashboard },
-  { label: 'Leads',          href: '/leads',           icon: Users },
-  { label: 'Groups',         href: '/groups',          icon: UsersRound },
-  { label: 'AI Lead Search', href: '/lead-generation', icon: Sparkles },
-  { label: 'Pipeline',       href: '/pipeline',        icon: Kanban },
-  { label: 'Campaigns',      href: '/campaigns',       icon: Mail },
-  { label: 'Clients',        href: '/clients',         icon: Briefcase },
-  { label: 'Projects',       href: '/projects',        icon: FolderKanban },
-  { label: 'Inbox',          href: '/inbox',           icon: Inbox },
-  { label: 'Invoices',       href: '/invoices',        icon: FileText },
-  { label: 'Import',         href: '/import',          icon: Upload },
-  { label: 'Settings',       href: '/profile',         icon: Settings },
+  { label: 'Dashboard',  href: '/',         icon: LayoutDashboard },
+  {
+    label: 'Leads',
+    icon: Users,
+    group: true,
+    children: [
+      { label: 'All Leads',      href: '/leads',           icon: Users },
+      { label: 'Groups',         href: '/groups',          icon: UsersRound },
+      { label: 'Import',         href: '/import',          icon: Upload },
+      { label: 'AI Lead Search', href: '/lead-generation', icon: Sparkles },
+    ],
+  },
+  { label: 'Pipeline',   href: '/pipeline', icon: Kanban },
+  { label: 'Campaigns',  href: '/campaigns', icon: Mail },
+  { label: 'Clients',    href: '/clients',   icon: Briefcase },
+  { label: 'Projects',   href: '/projects',  icon: FolderKanban },
+  { label: 'Inbox',      href: '/inbox',     icon: Inbox },
+  { label: 'Invoices',   href: '/invoices',  icon: FileText },
+  { label: 'Settings',   href: '/profile',   icon: Settings },
 ]
 
 const quickActions = [
@@ -85,6 +92,9 @@ export default function Sidebar({ open, onToggle }) {
   const brandName = organization?.name || user?.company_name || 'CRM'
 
   const recentPages = useRecentPages(url, component)
+
+  const isLeadsSection = url.startsWith('/leads') || url.startsWith('/groups') || url.startsWith('/import') || url.startsWith('/lead-generation')
+  const [leadsOpen, setLeadsOpen] = useState(isLeadsSection)
 
   const closeMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) onToggle()
@@ -156,7 +166,64 @@ export default function Sidebar({ open, onToggle }) {
         )}
 
         <nav className={cn('px-2 space-y-0.5', open ? 'py-1' : 'py-2')}>
-          {navItems.map(({ label, href, icon: Icon }) => {
+          {navItems.map((item) => {
+            if (item.group) {
+              const { label, icon: Icon, children } = item
+              const groupActive = children.some(c => url === c.href || url.startsWith(c.href))
+              if (!open) {
+                return (
+                  <button key={label} title={label}
+                    onClick={() => { onToggle(); setLeadsOpen(true) }}
+                    className={cn(
+                      'relative w-full flex justify-center p-[11px] rounded-[10px] transition-all duration-150 group/nav',
+                      groupActive ? 'bg-violet-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                    )}
+                  >
+                    {groupActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />}
+                    <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
+                      className={cn('shrink-0 transition-colors', groupActive ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
+                  </button>
+                )
+              }
+              return (
+                <div key={label}>
+                  <button
+                    onClick={() => setLeadsOpen(v => !v)}
+                    className={cn(
+                      'relative w-full flex items-center gap-3 px-3 py-[9px] rounded-[10px] transition-all duration-150 group/nav',
+                      groupActive ? 'text-white/80' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                    )}
+                  >
+                    <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
+                      className={cn('shrink-0 transition-colors', groupActive ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
+                    <span className="text-[13px] font-medium truncate flex-1 text-left">{label}</span>
+                    <ChevronDown size={12} className={cn('shrink-0 text-white/30 transition-transform duration-200', leadsOpen && 'rotate-180')} />
+                  </button>
+                  {leadsOpen && (
+                    <div className="ml-3 pl-3 border-l border-white/[0.07] space-y-0.5 mb-0.5">
+                      {children.map(({ label: childLabel, href, icon: CIcon }) => {
+                        const active = url === href || (href !== '/' && url.startsWith(href))
+                        return (
+                          <Link key={href} href={href} onClick={closeMobile}
+                            className={cn(
+                              'relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-[8px] transition-all duration-150 group/child',
+                              active ? 'bg-violet-600/[0.18] text-white' : 'text-white/35 hover:text-white/70 hover:bg-white/[0.05]'
+                            )}
+                          >
+                            <CIcon size={13} strokeWidth={active ? 2.2 : 1.8}
+                              className={cn('shrink-0', active ? 'text-violet-300' : 'group-hover/child:text-white/70')} />
+                            <span className="text-[12.5px] font-medium truncate">{childLabel}</span>
+                            {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400 opacity-80" />}
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
+            const { label, href, icon: Icon } = item
             const active = url === href || (href !== '/' && url.startsWith(href))
             return (
               <Link key={href} href={href} title={!open ? label : undefined}
@@ -164,18 +231,12 @@ export default function Sidebar({ open, onToggle }) {
                 className={cn(
                   'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
                   open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
-                  active
-                    ? 'bg-violet-600/[0.18] text-white'
-                    : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                  active ? 'bg-violet-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
                 )}
               >
-                {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />
-                )}
-                <Icon
-                  size={15} strokeWidth={active ? 2.2 : 1.8}
-                  className={cn('shrink-0 transition-colors', active ? 'text-violet-300' : 'group-hover/nav:text-white/75')}
-                />
+                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />}
+                <Icon size={15} strokeWidth={active ? 2.2 : 1.8}
+                  className={cn('shrink-0 transition-colors', active ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
                 {open && (
                   <>
                     <span className="text-[13px] font-medium truncate">{label}</span>

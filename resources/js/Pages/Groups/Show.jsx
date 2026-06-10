@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import LeadAvatar from '@/Components/Common/LeadAvatar'
 import StatusBadge from '@/Components/Common/StatusBadge'
@@ -16,18 +16,17 @@ import {
 import { toast } from 'sonner'
 
 function AddLeadsModal({ open, onClose, groupId }) {
-  const [search, setSearch]         = useState('')
-  const [results, setResults]       = useState([])
-  const [selected, setSelected]     = useState([])
-  const [searching, setSearching]   = useState(false)
-  const [adding, setAdding]         = useState(false)
+  const [search, setSearch]       = useState('')
+  const [results, setResults]     = useState([])
+  const [selected, setSelected]   = useState([])
+  const [searching, setSearching] = useState(false)
+  const [adding, setAdding]       = useState(false)
+  const debounceRef               = useRef(null)
 
-  const handleSearch = async (q) => {
-    setSearch(q)
-    if (!q || q.length < 2) { setResults([]); return }
+  const fetchLeads = async (q) => {
     setSearching(true)
     try {
-      const res = await fetch(`/leads/search?q=${encodeURIComponent(q)}`)
+      const res  = await fetch(`/leads/search?q=${encodeURIComponent(q)}`)
       const json = await res.json()
       setResults(Array.isArray(json) ? json : [])
     } catch {
@@ -35,6 +34,17 @@ function AddLeadsModal({ open, onClose, groupId }) {
     } finally {
       setSearching(false)
     }
+  }
+
+  useEffect(() => {
+    if (open) fetchLeads('')
+    else { setSearch(''); setResults([]); setSelected([]) }
+  }, [open])
+
+  const handleSearch = (q) => {
+    setSearch(q)
+    clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => fetchLeads(q), 300)
   }
 
   const toggleSelect = (id) => {
@@ -58,7 +68,7 @@ function AddLeadsModal({ open, onClose, groupId }) {
   }
 
   return (
-    <Dialog open={open} onOpenChange={open => { if (!open) { onClose(); setSearch(''); setResults([]); setSelected([]) } }}>
+    <Dialog open={open} onOpenChange={v => { if (!v) onClose() }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold">Add Leads to Group</DialogTitle>
@@ -87,7 +97,7 @@ function AddLeadsModal({ open, onClose, groupId }) {
           {searching && (
             <p className="text-center text-xs text-slate-400 py-4">Searching…</p>
           )}
-          {!searching && search.length >= 2 && results.length === 0 && (
+          {!searching && results.length === 0 && (
             <p className="text-center text-xs text-slate-400 py-4">No leads found.</p>
           )}
           {!searching && results.map(lead => (

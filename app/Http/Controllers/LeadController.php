@@ -41,10 +41,11 @@ class LeadController extends Controller
 
     public function search(Request $request)
     {
-        $q = $request->input('q', '');
+        $q = trim($request->input('q', ''));
 
         $leads = Lead::with('emails')
-            ->when(strlen($q) >= 2, fn ($query) => $query->search($q))
+            ->when($q !== '', fn ($query) => $query->search($q))
+            ->latest()
             ->limit(30)
             ->get()
             ->map(fn ($lead) => [

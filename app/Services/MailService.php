@@ -56,11 +56,7 @@ class MailService
             ? EmailTemplate::find($user->active_template_id)
             : null;
 
-        $templateVars = [
-            'company_name' => $user?->company_name ?: $campaign->from_name,
-            'from_name'    => $campaign->from_name,
-            'year'         => date('Y'),
-        ];
+        $templateVars = EmailTemplate::varsFor($user, $campaign->from_name);
 
         $query = Lead::with('emails');
         foreach ($campaign->filters ?? [] as $key => $value) {
@@ -137,10 +133,8 @@ class MailService
 
         if ($template) {
             $html = $template->render([
-                'content'      => $bodyHtml,
-                'company_name' => $user?->company_name ?: $this->credential->from_name,
-                'from_name'    => $this->credential->from_name,
-                'year'         => date('Y'),
+                ...EmailTemplate::varsFor($user, $this->credential->from_name),
+                'content' => $bodyHtml,
             ]);
 
             Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail) {

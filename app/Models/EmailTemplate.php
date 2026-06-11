@@ -38,4 +38,26 @@ class EmailTemplate extends Model
         }
         return $html;
     }
+
+    /**
+     * Base template variables for a sender, including the built-in
+     * signature data (website / phone / email) from workspace settings.
+     */
+    public static function varsFor(?User $user, string $fromName): array
+    {
+        $website = trim((string) ($user?->company_website ?? ''));
+        $websiteUrl = $website !== '' && !preg_match('#^https?://#i', $website)
+            ? 'https://' . $website
+            : $website;
+
+        return [
+            'company_name'        => $user?->company_name ?: $fromName,
+            'from_name'           => $fromName,
+            'year'                => date('Y'),
+            'company_website'     => preg_replace('#^https?://#i', '', $website),
+            'company_website_url' => $websiteUrl,
+            'company_phone'       => $user?->company_phone ?? '',
+            'company_email'       => $user?->company_email ?? '',
+        ];
+    }
 }

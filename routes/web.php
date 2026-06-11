@@ -136,10 +136,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/lead-provider/save', [ProfileController::class, 'saveLeadProvider'])->name('settings.lead-provider.save');
     Route::post('/settings/lead-provider/test', [ProfileController::class, 'testLeadProvider'])->name('settings.lead-provider.test');
 
-    // Email Templates
-    Route::post('/email-templates',                              [EmailTemplateController::class, 'store'])->name('email-templates.store');
-    Route::put('/email-templates/{emailTemplate}',               [EmailTemplateController::class, 'update'])->name('email-templates.update');
-    Route::delete('/email-templates/{emailTemplate}',            [EmailTemplateController::class, 'destroy'])->name('email-templates.destroy');
+    // Email Templates (built-in only — custom templates are not supported)
     Route::patch('/email-templates/{emailTemplate}/activate',    [EmailTemplateController::class, 'activate'])->name('email-templates.activate');
     Route::patch('/email-templates/deactivate',                  [EmailTemplateController::class, 'deactivate'])->name('email-templates.deactivate');
     Route::get('/email-templates/{emailTemplate}/preview',       [EmailTemplateController::class, 'preview'])->name('email-templates.preview');

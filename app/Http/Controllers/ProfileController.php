@@ -29,16 +29,15 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
-        // System templates + user's own custom templates
-        $systemTemplates = EmailTemplate::whereNull('user_id')->where('is_system', true)->get();
-        $userTemplates   = $user->emailTemplates()->get();
-        $allTemplates    = $systemTemplates->merge($userTemplates)->map(fn ($t) => [
-            'id'              => $t->id,
-            'name'            => $t->name,
-            'description'     => $t->description,
-            'thumbnail_color' => $t->thumbnail_color,
-            'is_system'       => $t->is_system,
-        ]);
+        // Built-in templates only — custom templates are not supported
+        $allTemplates = EmailTemplate::whereNull('user_id')->where('is_system', true)->get()
+            ->map(fn ($t) => [
+                'id'              => $t->id,
+                'name'            => $t->name,
+                'description'     => $t->description,
+                'thumbnail_color' => $t->thumbnail_color,
+                'is_system'       => $t->is_system,
+            ]);
 
         $org         = $this->currentOrg($request);
         $orgSettings = $org?->settings ?? [];
@@ -92,12 +91,18 @@ class ProfileController extends Controller
     public function updateWorkspace(Request $request): RedirectResponse
     {
         $request->validate([
-            'company_name' => 'nullable|string|max:150',
-            'logo'         => 'nullable|image|mimes:jpg,jpeg,png,gif,webp,svg|max:2048',
+            'company_name'    => 'nullable|string|max:150',
+            'company_website' => 'nullable|string|max:255',
+            'company_phone'   => 'nullable|string|max:50',
+            'company_email'   => 'nullable|email|max:255',
+            'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,webp,svg|max:2048',
         ]);
 
         $user = $request->user();
-        $user->company_name = $request->input('company_name', $user->company_name);
+        $user->company_name    = $request->input('company_name', $user->company_name);
+        $user->company_website = $request->input('company_website', $user->company_website);
+        $user->company_phone   = $request->input('company_phone', $user->company_phone);
+        $user->company_email   = $request->input('company_email', $user->company_email);
 
         if ($request->hasFile('logo')) {
             if ($user->company_logo) {

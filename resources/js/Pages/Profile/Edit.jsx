@@ -18,7 +18,7 @@ import {
   Upload, Building2, Plus, Check, Server, Mail, User,
   Eye, EyeOff, X, LayoutTemplate, ExternalLink,
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
-  Zap, Key, Wifi,
+  Zap, Key, Wifi, Globe, Phone, PenLine,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -270,7 +270,10 @@ function WorkspaceTab() {
   const [removingLogo, setRemovingLogo] = useState(false)
 
   const { data, setData, processing } = useForm({
-    company_name: auth.user.company_name ?? '',
+    company_name:    auth.user.company_name    ?? '',
+    company_website: auth.user.company_website ?? '',
+    company_phone:   auth.user.company_phone   ?? '',
+    company_email:   auth.user.company_email   ?? '',
     logo: null,
   })
 
@@ -286,7 +289,10 @@ function WorkspaceTab() {
   const submit = e => {
     e.preventDefault()
     const fd = new FormData()
-    fd.append('company_name', data.company_name)
+    fd.append('company_name',    data.company_name)
+    fd.append('company_website', data.company_website)
+    fd.append('company_phone',   data.company_phone)
+    fd.append('company_email',   data.company_email)
     if (data.logo) fd.append('logo', data.logo)
     router.post('/profile/workspace', fd, {
       forceFormData: true,
@@ -339,6 +345,41 @@ function WorkspaceTab() {
             <Input value={data.company_name} onChange={e => setData('company_name', e.target.value)}
               className="h-8 text-[13px]" placeholder="Acme Inc." />
           </Field>
+
+          <div className="border-t border-slate-100 pt-3">
+            <div className="flex items-center gap-1.5 mb-1">
+              <PenLine size={12} className="text-violet-500" />
+              <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">Email signature</p>
+            </div>
+            <p className="text-[11px] text-slate-400 mb-3">
+              Shown in the signature block built into every email template, along with your name and company.
+            </p>
+            <div className="space-y-3">
+              <Field label="Website">
+                <div className="relative">
+                  <Globe size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Input value={data.company_website} onChange={e => setData('company_website', e.target.value)}
+                    className="h-8 text-[13px] pl-7" placeholder="www.acme.com" />
+                </div>
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Phone number">
+                  <div className="relative">
+                    <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Input value={data.company_phone} onChange={e => setData('company_phone', e.target.value)}
+                      className="h-8 text-[13px] pl-7" placeholder="+1 (555) 000-1234" />
+                  </div>
+                </Field>
+                <Field label="Contact email">
+                  <div className="relative">
+                    <Mail size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Input type="email" value={data.company_email} onChange={e => setData('company_email', e.target.value)}
+                      className="h-8 text-[13px] pl-7" placeholder="hello@acme.com" />
+                  </div>
+                </Field>
+              </div>
+            </div>
+          </div>
 
           <SaveBtn processing={processing} label="Save workspace" />
         </form>
@@ -719,162 +760,88 @@ function MailTab({ mailSettings }) {
 
 // ─── Templates tab ────────────────────────────────────────────────────────────
 
-const TEMPLATE_STYLES = {
-  '#7c3aed': { header: 'bg-gradient-to-r from-violet-500 to-indigo-600', body: 'bg-white', footer: 'bg-indigo-950', textLight: true },
-  '#6366f1': { header: 'bg-white border-t-4 border-indigo-500',          body: 'bg-white', footer: 'bg-white border-t border-slate-100', textLight: false },
-  '#0f172a': { header: 'bg-slate-900',                                    body: 'bg-slate-900', footer: 'bg-slate-950', textLight: true },
+// Mini previews mirror the three built-in designs (header / body / signature / footer)
+const TEMPLATE_PREVIEWS = {
+  '#7c3aed': {
+    frame: 'bg-violet-50',
+    header: { wrap: 'bg-gradient-to-br from-violet-500 via-violet-600 to-violet-800', line1: 'bg-white/40 w-8', line2: 'bg-white/90 w-16' },
+    body:   { wrap: 'bg-white', title: 'bg-slate-300', text: 'bg-slate-100' },
+    sig:    { wrap: 'bg-violet-50 border-l-2 border-violet-500', name: 'bg-slate-300', link: 'bg-violet-200' },
+    footer: { wrap: 'bg-indigo-950', line: 'bg-white/25' },
+  },
+  '#6366f1': {
+    frame: 'bg-slate-100',
+    header: { wrap: 'bg-white border-t-2 border-indigo-500 border-b border-slate-100', line1: 'bg-slate-800 w-12 mx-auto', line2: 'bg-slate-200 w-8 mx-auto' },
+    body:   { wrap: 'bg-white', title: 'bg-slate-300', text: 'bg-slate-100' },
+    sig:    { wrap: 'bg-white border-t border-slate-100', name: 'bg-slate-300', link: 'bg-indigo-200' },
+    footer: { wrap: 'bg-slate-50', line: 'bg-slate-200 mx-auto' },
+  },
+  '#0f172a': {
+    frame: 'bg-slate-950',
+    header: { wrap: 'bg-slate-900 border-t-2 border-violet-500', line1: 'bg-violet-400/50 w-8', line2: 'bg-slate-400 w-16' },
+    body:   { wrap: 'bg-slate-900', title: 'bg-slate-600', text: 'bg-slate-800' },
+    sig:    { wrap: 'bg-violet-950/60 border-l-2 border-violet-400', name: 'bg-slate-500', link: 'bg-violet-700' },
+    footer: { wrap: 'bg-black/60', line: 'bg-slate-700' },
+  },
 }
 
 function TemplateMiniPreview({ color }) {
-  const s = TEMPLATE_STYLES[color] || TEMPLATE_STYLES['#7c3aed']
-  const isDark = color === '#0f172a'
+  const s = TEMPLATE_PREVIEWS[color] || TEMPLATE_PREVIEWS['#7c3aed']
   return (
-    <div className="w-full rounded-lg overflow-hidden border border-slate-100" style={{ aspectRatio: '4/3' }}>
-      <div className={cn('px-3 py-2', s.header)}>
-        <div className={cn('h-2 rounded w-16 mb-1', isDark ? 'bg-slate-600' : color === '#6366f1' ? 'bg-slate-800' : 'bg-white/80')} />
-        <div className={cn('h-1.5 rounded w-10', isDark ? 'bg-slate-700' : color === '#6366f1' ? 'bg-slate-300' : 'bg-white/50')} />
-      </div>
-      <div className={cn('px-3 py-2', s.body)} style={{ minHeight: 48 }}>
-        <div className={cn('h-2 rounded w-24 mb-1.5', isDark ? 'bg-slate-700' : 'bg-slate-200')} />
-        <div className={cn('h-1.5 rounded w-full mb-1', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
-        <div className={cn('h-1.5 rounded w-4/5', isDark ? 'bg-slate-800' : 'bg-slate-100')} />
-      </div>
-      <div className={cn('px-3 py-1.5', s.footer)}>
-        <div className={cn('h-1.5 rounded w-20 mx-auto', isDark ? 'bg-slate-700' : color === '#6366f1' ? 'bg-slate-200' : 'bg-white/30')} />
+    <div className={cn('w-full rounded-lg overflow-hidden border border-slate-200/80 p-2', s.frame)} style={{ aspectRatio: '4/3.2' }}>
+      <div className="rounded-md overflow-hidden shadow-sm h-full flex flex-col">
+        <div className={cn('px-2.5 py-2', s.header.wrap)}>
+          <div className={cn('h-1 rounded mb-1', s.header.line1)} />
+          <div className={cn('h-1.5 rounded', s.header.line2)} />
+        </div>
+        <div className={cn('px-2.5 py-2 flex-1', s.body.wrap)}>
+          <div className={cn('h-1.5 rounded w-20 mb-1.5', s.body.title)} />
+          <div className={cn('h-1 rounded w-full mb-1', s.body.text)} />
+          <div className={cn('h-1 rounded w-4/5 mb-2', s.body.text)} />
+          <div className={cn('rounded-sm px-1.5 py-1', s.sig.wrap)}>
+            <div className={cn('h-1 rounded w-10 mb-0.5', s.sig.name)} />
+            <div className={cn('h-0.5 rounded w-14 mb-0.5', s.sig.link)} />
+            <div className={cn('h-0.5 rounded w-12', s.sig.link)} />
+          </div>
+        </div>
+        <div className={cn('px-2.5 py-1.5', s.footer.wrap)}>
+          <div className={cn('h-1 rounded w-16', s.footer.line)} />
+        </div>
       </div>
     </div>
   )
 }
 
 function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate }) {
-  const [deleting, setDeleting]           = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
-
-  const doDelete = () => {
-    setDeleting(true)
-    router.delete(`/email-templates/${template.id}`, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => toast.success('Template removed'),
-      onFinish:  () => { setDeleting(false); setConfirmDelete(false) },
-    })
-  }
-
   return (
-    <>
-      <div className={cn('rounded-xl border p-3 transition-all hover:shadow-sm',
-        isActive ? 'border-violet-300 bg-violet-50/50' : 'border-slate-200 bg-white')}>
-        <div className="mb-3 relative">
-          <TemplateMiniPreview color={template.thumbnail_color} />
-          {isActive && (
-            <div className="absolute top-2 right-2 flex items-center gap-1 bg-violet-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
-              <CheckCircle2 size={9} /> Active
-            </div>
-          )}
-          {template.is_system && (
-            <div className="absolute top-2 left-2 bg-slate-700/70 text-white text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full">
-              Built-in
-            </div>
-          )}
-        </div>
-        <p className="text-[12.5px] font-semibold text-slate-800 mb-0.5">{template.name}</p>
-        {template.description && <p className="text-[11px] text-slate-400 mb-2.5">{template.description}</p>}
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {isActive
-            ? <button onClick={onDeactivate} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Deactivate</button>
-            : <button onClick={onActivate}   className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1"><Check size={10} /> Use</button>
-          }
-          <button onClick={onPreview} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors flex items-center gap-1">
-            <Eye size={10} /> Preview
-          </button>
-          {!template.is_system && (
-            <button onClick={() => setConfirmDelete(true)} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-red-500 hover:bg-red-50 transition-colors">Remove</button>
-          )}
-        </div>
-      </div>
-
-      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-[13px]">Remove "{template.name}"?</DialogTitle>
-            <DialogDescription className="text-[12px]">This template will be permanently deleted.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" size="sm" className="h-7 text-xs" onClick={() => setConfirmDelete(false)}>Cancel</Button>
-            <Button size="sm" variant="destructive" className="h-7 text-xs" disabled={deleting} onClick={doDelete}>
-              {deleting ? 'Removing…' : 'Remove'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
-  )
-}
-
-function CustomTemplateDialog({ onClose }) {
-  const [form, setForm] = useState({ name: '', description: '', thumbnail_color: '#7c3aed', html_content: '' })
-  const [saving, setSaving] = useState(false)
-  const COLORS = ['#7c3aed', '#6366f1', '#0f172a', '#0ea5e9', '#10b981', '#ef4444', '#f59e0b']
-
-  const handleSubmit = e => {
-    e.preventDefault()
-    setSaving(true)
-    router.post('/email-templates', form, {
-      preserveState: true, preserveScroll: true,
-      onSuccess: () => { toast.success('Template created'); onClose() },
-      onError:   errs => toast.error(Object.values(errs)[0] || 'Validation error'),
-      onFinish:  () => setSaving(false),
-    })
-  }
-
-  return (
-    <Dialog open onOpenChange={v => !v && onClose()}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle className="text-[14px]">Create custom template</DialogTitle>
-          <DialogDescription className="text-[12px]">
-            Use <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{content}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{company_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{from_name}}'}</code>, <code className="text-[11px] bg-slate-100 px-1 rounded">{'{{year}}'}</code> as placeholders.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Template name">
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-[13px]" placeholder="My Template" required />
-            </Field>
-            <Field label="Description">
-              <Input value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="h-8 text-[13px]" placeholder="One-line description" />
-            </Field>
+    <div className={cn('rounded-xl border p-3 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200',
+      isActive ? 'border-violet-300 bg-violet-50/50 ring-1 ring-violet-200' : 'border-slate-200 bg-white')}>
+      <div className="mb-3 relative">
+        <TemplateMiniPreview color={template.thumbnail_color} />
+        {isActive && (
+          <div className="absolute top-3 right-3 flex items-center gap-1 bg-violet-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">
+            <CheckCircle2 size={9} /> Active
           </div>
-          <Field label="Card color">
-            <div className="flex gap-2 mt-1">
-              {COLORS.map(c => (
-                <button key={c} type="button" onClick={() => setForm(f => ({ ...f, thumbnail_color: c }))}
-                  className="w-6 h-6 rounded-full border-2 transition-all"
-                  style={{ background: c, borderColor: form.thumbnail_color === c ? '#fff' : 'transparent', boxShadow: form.thumbnail_color === c ? `0 0 0 2px ${c}` : 'none' }} />
-              ))}
-            </div>
-          </Field>
-          <Field label="HTML content">
-            <textarea value={form.html_content} onChange={e => setForm(f => ({ ...f, html_content: e.target.value }))}
-              rows={10} required placeholder={'<!DOCTYPE html>\n<html>\n<body>\n  {{content}}\n</body>\n</html>'}
-              className="w-full text-[12px] font-mono rounded-lg border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-violet-500 resize-y" />
-          </Field>
-          <DialogFooter className="gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
-            <button type="submit" disabled={saving}
-              className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg hover:opacity-90 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-              {saving ? 'Creating…' : 'Create template'}
-            </button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        )}
+      </div>
+      <p className="text-[12.5px] font-semibold text-slate-800 mb-0.5">{template.name}</p>
+      {template.description && <p className="text-[11px] text-slate-400 leading-snug mb-2.5">{template.description}</p>}
+      <div className="flex items-center gap-1.5">
+        {isActive
+          ? <button onClick={onDeactivate} className="flex-1 h-7 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Deactivate</button>
+          : <button onClick={onActivate}   className="flex-1 h-7 text-[11px] font-semibold rounded-lg bg-slate-900 text-white hover:bg-violet-700 transition-colors flex items-center justify-center gap-1"><Check size={10} /> Use template</button>
+        }
+        <button onClick={onPreview} title="Preview"
+          className="h-7 w-7 shrink-0 rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors flex items-center justify-center">
+          <Eye size={12} />
+        </button>
+      </div>
+    </div>
   )
 }
 
-function TemplatesTab({ templates, activeTemplateId }) {
+function TemplatesTab({ templates, activeTemplateId, onGoToWorkspace }) {
   const [previewTemplate, setPreviewTemplate] = useState(null)
-  const [showCreate, setShowCreate]           = useState(false)
 
   const activate = template => router.patch(`/email-templates/${template.id}/activate`, {}, {
     preserveState: true, preserveScroll: true,
@@ -892,8 +859,8 @@ function TemplatesTab({ templates, activeTemplateId }) {
       <div className="bg-violet-50 border border-violet-100 rounded-xl px-4 py-3 text-[12px] text-violet-800">
         <p className="font-semibold flex items-center gap-1.5 mb-0.5"><LayoutTemplate size={13} /> Email templates</p>
         <p className="text-[11.5px] text-violet-700">
-          The active template wraps every campaign email.
-          {activeTemplate ? <> Currently using <strong>{activeTemplate.name}</strong>.</> : <> No template active — raw HTML.</>}
+          Pick one of the three built-in designs — the active template wraps every campaign email.
+          {activeTemplate ? <> Currently using <strong>{activeTemplate.name}</strong>.</> : <> No template active — emails are sent as raw HTML.</>}
         </p>
       </div>
 
@@ -905,13 +872,21 @@ function TemplatesTab({ templates, activeTemplateId }) {
             onDeactivate={deactivate}
             onPreview={() => setPreviewTemplate(template)} />
         ))}
-        <button onClick={() => setShowCreate(true)}
-          className="rounded-xl border-2 border-dashed border-slate-200 hover:border-violet-300 hover:bg-violet-50/30 transition-all flex flex-col items-center justify-center gap-2 p-4 min-h-[180px] group">
-          <div className="w-9 h-9 rounded-full bg-slate-100 group-hover:bg-violet-100 flex items-center justify-center transition-colors">
-            <Plus size={16} className="text-slate-400 group-hover:text-violet-600" />
-          </div>
-          <span className="text-[12px] font-medium text-slate-400 group-hover:text-violet-600">Add custom</span>
-        </button>
+      </div>
+
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-3">
+        <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0 mt-0.5">
+          <PenLine size={14} className="text-violet-600" />
+        </div>
+        <div className="flex-1 text-[12px]">
+          <p className="font-semibold text-slate-700 mb-0.5">Built-in signature</p>
+          <p className="text-[11.5px] text-slate-500 leading-relaxed">
+            Every template ends with a signature showing your name, company, website, phone, and email — pulled
+            automatically from your{' '}
+            <button onClick={onGoToWorkspace} className="text-violet-600 font-medium hover:underline">Workspace settings</button>.
+            Empty fields are simply left out.
+          </p>
+        </div>
       </div>
 
       {previewTemplate && (
@@ -933,7 +908,6 @@ function TemplatesTab({ templates, activeTemplateId }) {
           </DialogContent>
         </Dialog>
       )}
-      {showCreate && <CustomTemplateDialog onClose={() => setShowCreate(false)} />}
     </div>
   )
 }
@@ -1143,7 +1117,7 @@ export default function ProfileEdit({
             {tab === 'workspace' && <WorkspaceTab />}
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
             {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
-            {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} />}
+            {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
             {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
           </div>
         </div>

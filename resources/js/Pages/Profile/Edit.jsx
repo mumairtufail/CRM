@@ -406,7 +406,7 @@ const BLANK_SMTP = { name: '', host: '', port: 587, encryption: 'tls', username:
 
 function SmtpDialog({ open, onClose, existing }) {
   const [form, setForm]   = useState(existing
-    ? { ...existing, password: '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' }
+    ? { ...existing, password: existing.password ?? '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' }
     : { ...BLANK_SMTP })
   const [showPw, setShowPw] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -493,11 +493,11 @@ function SmtpDialog({ open, onClose, existing }) {
           <Field label="Username / Email">
             <Input value={form.username} onChange={e => set('username', e.target.value)} className="h-8 text-[13px]" placeholder="you@gmail.com" required />
           </Field>
-          <Field label={existing ? 'Password (leave blank to keep)' : 'Password'}>
+          <Field label="Password" hint={existing ? 'Stored password shown — clear it to keep the current one unchanged.' : undefined}>
             <div className="relative">
               <Input type={showPw ? 'text' : 'password'} value={form.password}
                 onChange={e => set('password', e.target.value)} className="h-8 text-[13px] pr-8"
-                placeholder={existing ? '••••••• (unchanged)' : 'App / SMTP password'} required={!existing} />
+                placeholder="App / SMTP password" required={!existing} />
               <button type="button" className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 onClick={() => setShowPw(v => !v)}>
                 {showPw ? <EyeOff size={13} /> : <Eye size={13} />}

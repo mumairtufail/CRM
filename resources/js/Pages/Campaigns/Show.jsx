@@ -20,6 +20,7 @@ const STATUS_STYLE = {
   sending:   'bg-amber-50 text-amber-600',
   sent:      'bg-emerald-50 text-emerald-700',
   paused:    'bg-orange-50 text-orange-600',
+  failed:    'bg-red-50 text-red-600',
 }
 
 const SEND_STATUS = {
@@ -57,22 +58,31 @@ function StatBox({ label, value, icon: Icon, color }) {
 function LogLine({ entry }) {
   const s = LOG_STATUS[entry.status] ?? LOG_STATUS.pending
   return (
-    <div className="flex items-baseline gap-2 px-3 py-[3px] hover:bg-white/[0.04] rounded-sm">
-      <span className="text-[10px] font-mono shrink-0 tabular-nums" style={{ color: '#555d6b' }}>
-        {entry.sent_at ?? '--:--:--'}
-      </span>
-      <span className="text-[12px] font-mono shrink-0 w-4 text-center" style={{ color: s.color }}>
-        {s.symbol}
-      </span>
-      <span className="text-[11px] font-mono truncate" style={{ color: '#cdd9e5', maxWidth: 110 }}>
-        {entry.lead_name}
-      </span>
-      <span className="text-[10px] font-mono truncate flex-1 min-w-0" style={{ color: '#555d6b' }}>
-        {entry.email_used}
-      </span>
-      <span className="text-[10px] font-mono shrink-0" style={{ color: s.color }}>
-        {entry.status}
-      </span>
+    <div className="px-3 py-[3px] hover:bg-white/[0.04] rounded-sm">
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-mono shrink-0 tabular-nums" style={{ color: '#555d6b' }}>
+          {entry.sent_at ?? '--:--:--'}
+        </span>
+        <span className="text-[12px] font-mono shrink-0 w-4 text-center" style={{ color: s.color }}>
+          {s.symbol}
+        </span>
+        <span className="text-[11px] font-mono truncate" style={{ color: '#cdd9e5', maxWidth: 110 }}>
+          {entry.lead_name}
+        </span>
+        <span className="text-[10px] font-mono truncate flex-1 min-w-0" style={{ color: '#555d6b' }}>
+          {entry.email_used}
+        </span>
+        <span className="text-[10px] font-mono shrink-0" style={{ color: s.color }}>
+          {entry.status}
+        </span>
+      </div>
+      {entry.status === 'failed' && entry.error_message && (
+        <div className="pl-[76px] pr-2 pb-0.5">
+          <p className="text-[10px] font-mono leading-relaxed break-words" style={{ color: 'rgba(248,81,73,0.75)' }}>
+            └ {entry.error_message}
+          </p>
+        </div>
+      )}
     </div>
   )
 }
@@ -97,11 +107,16 @@ function TerminalPanel({ campaignId, initialStats }) {
 
   useEffect(() => { fetchLog() }, [fetchLog])
 
+  // Keep polling while the campaign is sending OR any recipient is still
+  // queued/pending (covers cron-based queue workers that lag behind).
+  const hasActiveSends = logs.some(l => l.status === 'queued' || l.status === 'pending')
+  const shouldPoll     = stats.status === 'sending' || hasActiveSends
+
   useEffect(() => {
-    if (stats.status !== 'sending') return
+    if (!shouldPoll) return
     const id = setInterval(fetchLog, 2500)
     return () => clearInterval(id)
-  }, [stats.status, fetchLog])
+  }, [shouldPoll, fetchLog])
 
   useEffect(() => {
     if (pinToBottom.current) {
@@ -164,6 +179,7 @@ function TerminalPanel({ campaignId, initialStats }) {
           )}
           {isPaused && <span className="text-[10px] font-mono" style={{ color: '#ffa657' }}>PAUSED</span>}
           {stats.status === 'sent' && <span className="text-[10px] font-mono" style={{ color: '#3fb950' }}>✓ COMPLETE</span>}
+          {stats.status === 'failed' && <span className="text-[10px] font-mono" style={{ color: '#f85149' }}>✗ FAILED</span>}
           <button
             onClick={fetchLog}
             className="transition-colors"
@@ -300,6 +316,13 @@ function TerminalPanel({ campaignId, initialStats }) {
                 </p>
               </div>
             )}
+            {stats.status === 'failed' && (
+              <div className="px-3 pt-2 mt-1 border-t border-[#21262d]">
+                <p className="text-[10px] font-mono" style={{ color: '#f85149' }}>
+                  $ campaign failed — all sends failed, see errors above. Fix SMTP and retry.
+                </p>
+              </div>
+            )}
           </>
         )}
         <div ref={bottomRef} />
@@ -316,13 +339,17 @@ export default function CampaignShow({ campaign, sends }) {
   const [deleting, setDeleting]           = useState(false)
 
   // Keep the stats card + send log table in sync while the campaign is sending
+  // or any recipient is still queued/pending (queue worker may lag on cron).
+  const hasActiveRows = (sends?.data ?? []).some(s => s.status === 'queued' || s.status === 'pending')
+  const pagePolling   = campaign.status === 'sending' || hasActiveRows
+
   useEffect(() => {
-    if (campaign.status !== 'sending') return
+    if (!pagePolling) return
     const id = setInterval(() => {
       router.reload({ only: ['campaign', 'sends'], preserveScroll: true })
     }, 4000)
     return () => clearInterval(id)
-  }, [campaign.status])
+  }, [pagePolling])
 
   const handleSend = () => {
     setSending(true)
@@ -409,7 +436,7 @@ export default function CampaignShow({ campaign, sends }) {
               <Button size="sm" className="h-8 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-white border-0"
                 onClick={() => setConfirmSend(true)}>
                 <Send size={13} />
-                {campaign.status === 'paused' ? 'Resume' : 'Send Now'}
+                {campaign.status === 'paused' ? 'Resume' : campaign.status === 'failed' ? 'Retry' : 'Send Now'}
               </Button>
             )}
           </div>
@@ -422,7 +449,7 @@ export default function CampaignShow({ campaign, sends }) {
           <div className="min-w-0 space-y-3">
 
             {/* Stats row */}
-            {['sent', 'sending', 'paused'].includes(campaign.status) && (
+            {['sent', 'sending', 'paused', 'failed'].includes(campaign.status) && (
               <Card className="border-slate-200 shadow-none">
                 <div className="grid grid-cols-4 divide-x divide-[#e5ddd5]">
                   <StatBox label="Recipients"  value={campaign.total_recipients}  icon={Users}              color="text-foreground" />
@@ -531,6 +558,11 @@ export default function CampaignShow({ campaign, sends }) {
                               <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize', st.bg)}>
                                 {st.label}
                               </span>
+                              {s.status === 'failed' && s.error_message && (
+                                <p className="text-[10px] text-red-500 mt-1 max-w-[240px] leading-snug" title={s.error_message}>
+                                  {s.error_message.length > 110 ? s.error_message.slice(0, 110) + '…' : s.error_message}
+                                </p>
+                              )}
                             </td>
                             <td className="px-4 py-2.5 hidden md:table-cell text-slate-400">{s.sent_at || '—'}</td>
                             <td className="px-4 py-2.5 hidden md:table-cell text-slate-400">{s.opened_at || '—'}</td>

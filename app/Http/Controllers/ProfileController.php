@@ -50,21 +50,30 @@ class ProfileController extends Controller
                 'enabled'  => $orgSettings['lead_generation_enabled'] ?? false,
                 'hasKey'   => !empty($orgSettings['lead_generation_api_key']),
             ],
-            'smtpCredentials'    => $user->smtpCredentials()->get()->map(fn ($c) => [
-                'id'              => $c->id,
-                'name'            => $c->name,
-                'host'            => $c->host,
-                'port'            => $c->port,
-                'encryption'      => $c->encryption,
-                'username'        => $c->username,
-                'from_name'       => $c->from_name,
-                'from_email'      => $c->from_email,
-                'is_active'       => $c->is_active,
-                'imap_host'       => $c->imap_host,
-                'imap_port'       => $c->imap_port,
-                'imap_encryption' => $c->imap_encryption,
-                'last_fetched_at' => $c->last_fetched_at?->toISOString(),
-            ]),
+            'smtpCredentials'    => $user->smtpCredentials()->get()->map(function ($c) {
+                try {
+                    $password = $c->password; // decrypted by the model cast
+                } catch (\Throwable) {
+                    $password = ''; // undecryptable (e.g. APP_KEY changed)
+                }
+
+                return [
+                    'id'              => $c->id,
+                    'name'            => $c->name,
+                    'host'            => $c->host,
+                    'port'            => $c->port,
+                    'encryption'      => $c->encryption,
+                    'username'        => $c->username,
+                    'password'        => $password,
+                    'from_name'       => $c->from_name,
+                    'from_email'      => $c->from_email,
+                    'is_active'       => $c->is_active,
+                    'imap_host'       => $c->imap_host,
+                    'imap_port'       => $c->imap_port,
+                    'imap_encryption' => $c->imap_encryption,
+                    'last_fetched_at' => $c->last_fetched_at?->toISOString(),
+                ];
+            }),
             'mailSettings'          => [
                 'batch_size'  => $user->mail_batch_size  ?? 10,
                 'batch_delay' => $user->mail_batch_delay ?? 5,

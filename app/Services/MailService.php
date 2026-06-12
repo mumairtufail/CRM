@@ -11,6 +11,7 @@ use App\Models\SmtpCredential;
 use App\Models\User;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class MailService
 {
@@ -98,13 +99,13 @@ class MailService
 
                     EmailSend::updateOrCreate(
                         ['email_campaign_id' => $campaign->id, 'lead_id' => $lead->id],
-                        ['email_used' => $email, 'status' => 'sent', 'sent_at' => now()]
+                        ['email_used' => $email, 'status' => 'sent', 'sent_at' => now(), 'error_message' => null]
                     );
                     $sent++;
                 } catch (\Throwable $e) {
                     EmailSend::updateOrCreate(
                         ['email_campaign_id' => $campaign->id, 'lead_id' => $lead->id],
-                        ['email_used' => $email, 'status' => 'failed', 'sent_at' => now()]
+                        ['email_used' => $email, 'status' => 'failed', 'sent_at' => now(), 'error_message' => Str::limit($e->getMessage(), 480)]
                     );
                     $failed++;
                 }

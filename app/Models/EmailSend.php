@@ -11,7 +11,7 @@ class EmailSend extends Model
 
     protected $fillable = [
         'organization_id',
-        'email_campaign_id', 'lead_id', 'email_used', 'status',
+        'email_campaign_id', 'lead_id', 'email_used', 'status', 'error_message',
         'message_id', 'tracking_token', 'sent_at', 'opened_at', 'clicked_at',
     ];
 

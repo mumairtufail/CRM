@@ -11,6 +11,7 @@ const STATUS_STYLE = {
   sending:   'bg-violet-50 text-violet-600',
   sent:      'bg-emerald-50 text-emerald-700',
   paused:    'bg-amber-50 text-amber-600',
+  failed:    'bg-red-50 text-red-600',
 }
 
 export default function CampaignsIndex({ campaigns }) {

@@ -90,10 +90,14 @@ class SendCampaignBatch implements ShouldQueue
                     ->to($email, $lead->full_name)
                     ->send(new CampaignMail($campaign, $lead, $html));
 
-                $emailSend->update(['status' => 'sent', 'sent_at' => now()]);
+                $emailSend->update(['status' => 'sent', 'sent_at' => now(), 'error_message' => null]);
                 $sent++;
             } catch (\Throwable $e) {
-                $emailSend->update(['status' => 'failed', 'sent_at' => now()]);
+                $emailSend->update([
+                    'status'        => 'failed',
+                    'sent_at'       => now(),
+                    'error_message' => Str::limit($e->getMessage(), 480),
+                ]);
                 \Illuminate\Support\Facades\Log::error('Campaign send failed', [
                     'campaign_id' => $this->campaignId,
                     'lead_id'     => $lead->id,
@@ -107,7 +111,17 @@ class SendCampaignBatch implements ShouldQueue
         $campaign->increment('sent_count', $sent);
 
         if ($this->isLastBatch) {
-            $campaign->update(['status' => 'sent', 'sent_at' => now()]);
+            $campaign->refresh();
+            if ($campaign->status !== 'paused') {
+                // If nothing was delivered and at least one send failed,
+                // mark the campaign failed (re-sendable) instead of 'sent'.
+                $hasFailures = EmailSend::where('email_campaign_id', $campaign->id)
+                    ->where('status', 'failed')
+                    ->exists();
+
+                $finalStatus = ($campaign->sent_count === 0 && $hasFailures) ? 'failed' : 'sent';
+                $campaign->update(['status' => $finalStatus, 'sent_at' => now()]);
+            }
         }
     }
 

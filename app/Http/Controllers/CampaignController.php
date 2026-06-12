@@ -173,14 +173,15 @@ class CampaignController extends Controller
             ->latest('sent_at')
             ->paginate(25)
             ->through(fn ($s) => [
-                'id'         => $s->id,
-                'lead_name'  => $s->lead?->full_name,
-                'lead_id'    => $s->lead_id,
-                'email_used' => $s->email_used,
-                'status'     => $s->status,
-                'sent_at'    => $s->sent_at?->diffForHumans(),
-                'opened_at'  => $s->opened_at?->diffForHumans(),
-                'clicked_at' => $s->clicked_at?->diffForHumans(),
+                'id'            => $s->id,
+                'lead_name'     => $s->lead?->full_name,
+                'lead_id'       => $s->lead_id,
+                'email_used'    => $s->email_used,
+                'status'        => $s->status,
+                'error_message' => $s->error_message,
+                'sent_at'       => $s->sent_at?->diffForHumans(),
+                'opened_at'     => $s->opened_at?->diffForHumans(),
+                'clicked_at'    => $s->clicked_at?->diffForHumans(),
             ]);
 
         return Inertia::render('Campaigns/Show', [
@@ -213,11 +214,12 @@ class CampaignController extends Controller
             ->oldest('created_at')
             ->get()
             ->map(fn ($s) => [
-                'id'         => $s->id,
-                'lead_name'  => $s->lead?->full_name ?? '—',
-                'email_used' => $s->email_used,
-                'status'     => $s->status,
-                'sent_at'    => $s->sent_at?->format('H:i:s'),
+                'id'            => $s->id,
+                'lead_name'     => $s->lead?->full_name ?? '—',
+                'email_used'    => $s->email_used,
+                'status'        => $s->status,
+                'error_message' => $s->error_message,
+                'sent_at'       => $s->sent_at?->format('H:i:s'),
             ]);
 
         return response()->json([

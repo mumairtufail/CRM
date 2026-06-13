@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useRef, useState, useEffect } from 'react'
 import { Head, useForm, usePage, router } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Button } from '@/Components/ui/button'
@@ -405,12 +405,19 @@ const PROVIDER_PRESETS = [
 const BLANK_SMTP = { name: '', host: '', port: 587, encryption: 'tls', username: '', password: '', from_name: '', from_email: '', imap_host: '', imap_port: 993, imap_encryption: 'ssl' }
 
 function SmtpDialog({ open, onClose, existing }) {
-  const [form, setForm]   = useState(existing
-    ? { ...existing, password: existing.password ?? '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' }
-    : { ...BLANK_SMTP })
+  const [form, setForm]   = useState({ ...BLANK_SMTP })
   const [showPw, setShowPw] = useState(false)
   const [saving, setSaving] = useState(false)
   const [hint, setHint]     = useState('')
+
+  useEffect(() => {
+    if (open) {
+      setForm(existing
+        ? { ...existing, password: existing.password ?? '', imap_host: existing.imap_host ?? '', imap_port: existing.imap_port ?? 993, imap_encryption: existing.imap_encryption ?? 'ssl' }
+        : { ...BLANK_SMTP })
+      setHint('')
+    }
+  }, [open, existing])
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
 

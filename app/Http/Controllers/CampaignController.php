@@ -184,6 +184,8 @@ class CampaignController extends Controller
                 'clicked_at'    => $s->clicked_at?->diffForHumans(),
             ]);
 
+        $failedCount = $campaign->sends()->where('status', 'failed')->count();
+
         return Inertia::render('Campaigns/Show', [
             'campaign' => [
                 'id'               => $campaign->id,
@@ -200,6 +202,7 @@ class CampaignController extends Controller
                 'sent_count'       => $campaign->sent_count,
                 'opened_count'     => $campaign->opened_count,
                 'clicked_count'    => $campaign->clicked_count,
+                'failed_count'     => $failedCount,
                 'sent_at'          => $campaign->sent_at?->format('M d, Y H:i'),
                 'created_at'       => $campaign->created_at->format('M d, Y'),
             ],
@@ -245,12 +248,17 @@ class CampaignController extends Controller
 
     public function send(Request $request, EmailCampaign $campaign)
     {
-        // Block if currently sending; allow re-send from paused
+        // Block if currently sending
         if ($campaign->status === 'sending') {
             return back()->withErrors(['error' => 'Campaign is currently sending. Please wait.']);
         }
+
+        // Allow retry of a 'sent' campaign only if there are failed sends
         if ($campaign->status === 'sent') {
-            return back()->withErrors(['error' => 'Campaign has already been fully sent.']);
+            $hasFailures = $campaign->sends()->where('status', 'failed')->exists();
+            if (! $hasFailures) {
+                return back()->withErrors(['error' => 'Campaign has already been fully sent.']);
+            }
         }
 
         $user   = $request->user();

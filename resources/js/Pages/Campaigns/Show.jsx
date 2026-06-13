@@ -304,9 +304,15 @@ function TerminalPanel({ campaignId, initialStats }) {
             {logs.map(entry => <LogLine key={entry.id} entry={entry} />)}
             {stats.status === 'sent' && (
               <div className="px-3 pt-2 mt-1 border-t border-[#21262d]">
-                <p className="text-[10px] font-mono" style={{ color: '#3fb950' }}>
-                  $ campaign complete ✓
-                </p>
+                {failed > 0 ? (
+                  <p className="text-[10px] font-mono" style={{ color: '#ffa657' }}>
+                    $ campaign complete — {failed} failed, fix SMTP and retry
+                  </p>
+                ) : (
+                  <p className="text-[10px] font-mono" style={{ color: '#3fb950' }}>
+                    $ campaign complete ✓
+                  </p>
+                )}
               </div>
             )}
             {stats.status === 'paused' && (
@@ -384,7 +390,9 @@ export default function CampaignShow({ campaign, sends }) {
     return 'All leads'
   }
 
-  const canSend = !['sent', 'sending'].includes(campaign.status)
+  // 'sent' is retryable if there are failed sends (e.g. SMTP was broken)
+  const hasRetryableFails = campaign.status === 'sent' && (campaign.failed_count ?? 0) > 0
+  const canSend = !['sending'].includes(campaign.status) && (campaign.status !== 'sent' || hasRetryableFails)
 
   return (
     <>
@@ -436,7 +444,10 @@ export default function CampaignShow({ campaign, sends }) {
               <Button size="sm" className="h-8 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-white border-0"
                 onClick={() => setConfirmSend(true)}>
                 <Send size={13} />
-                {campaign.status === 'paused' ? 'Resume' : campaign.status === 'failed' ? 'Retry' : 'Send Now'}
+                {campaign.status === 'paused'  ? 'Resume' :
+                 campaign.status === 'failed'  ? 'Retry All' :
+                 hasRetryableFails             ? `Retry Failed (${campaign.failed_count})` :
+                 'Send Now'}
               </Button>
             )}
           </div>
@@ -677,12 +688,19 @@ export default function CampaignShow({ campaign, sends }) {
           <DialogContent className="max-w-sm">
             <DialogHeader>
               <DialogTitle className="text-sm font-semibold">
-                {campaign.status === 'paused' ? 'Resume campaign?' : 'Send campaign?'}
+                {campaign.status === 'paused'  ? 'Resume campaign?' :
+                 hasRetryableFails             ? 'Retry failed sends?' :
+                 campaign.status === 'failed'  ? 'Retry campaign?' :
+                 'Send campaign?'}
               </DialogTitle>
               <DialogDescription className="text-xs">
                 {campaign.status === 'paused'
                   ? 'This will resume sending to remaining leads.'
-                  : <>This will queue the campaign to send to <span className="font-semibold text-foreground">{campaign.total_recipients} leads</span>. Emails will be sent in batches in the background.</>
+                  : hasRetryableFails
+                    ? <><span className="font-semibold text-foreground">{campaign.failed_count} failed send{campaign.failed_count !== 1 ? 's' : ''}</span> will be retried. Recipients already delivered to will be skipped.</>
+                    : campaign.status === 'failed'
+                      ? <>All <span className="font-semibold text-foreground">{campaign.total_recipients} sends</span> will be retried. Fix your SMTP settings before proceeding.</>
+                      : <>This will queue the campaign to send to <span className="font-semibold text-foreground">{campaign.total_recipients} leads</span>. Emails will be sent in batches in the background.</>
                 }
               </DialogDescription>
             </DialogHeader>

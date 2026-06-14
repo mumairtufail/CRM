@@ -769,31 +769,31 @@ function MailTab({ mailSettings }) {
 
 // Mini previews mirror the three built-in designs (header / body / signature / footer)
 const TEMPLATE_PREVIEWS = {
-  '#7c3aed': {
-    frame: 'bg-violet-50',
-    header: { wrap: 'bg-gradient-to-br from-violet-500 via-violet-600 to-violet-800', line1: 'bg-white/40 w-8', line2: 'bg-white/90 w-16' },
-    body:   { wrap: 'bg-white', title: 'bg-slate-300', text: 'bg-slate-100' },
-    sig:    { wrap: 'bg-violet-50 border-l-2 border-violet-500', name: 'bg-slate-300', link: 'bg-violet-200' },
-    footer: { wrap: 'bg-indigo-950', line: 'bg-white/25' },
+  '#c0894e': {
+    frame: 'bg-[#efe6d6]',
+    header: { wrap: 'bg-gradient-to-br from-[#f7eedd] via-[#efe0c6] to-[#e7d3b2]', line1: 'bg-[#7a4f1f] w-8', line2: 'bg-[#3b2c1a] w-16' },
+    body:   { wrap: 'bg-[#fffdf8]', title: 'bg-[#cdb78f]', text: 'bg-[#ece0cb]' },
+    sig:    { wrap: 'bg-[#f6ead2] border-l-2 border-[#c79a55]', name: 'bg-[#b89766]', link: 'bg-[#dcc59a]' },
+    footer: { wrap: 'bg-[#2c2113]', line: 'bg-[#f3e7d2]/30' },
   },
-  '#6366f1': {
-    frame: 'bg-slate-100',
-    header: { wrap: 'bg-white border-t-2 border-indigo-500 border-b border-slate-100', line1: 'bg-slate-800 w-12 mx-auto', line2: 'bg-slate-200 w-8 mx-auto' },
-    body:   { wrap: 'bg-white', title: 'bg-slate-300', text: 'bg-slate-100' },
-    sig:    { wrap: 'bg-white border-t border-slate-100', name: 'bg-slate-300', link: 'bg-indigo-200' },
-    footer: { wrap: 'bg-slate-50', line: 'bg-slate-200 mx-auto' },
+  '#94795a': {
+    frame: 'bg-[#f4efe6]',
+    header: { wrap: 'bg-[#fffdf9] border-t-2 border-[#bf9b63] border-b border-[#efe6d4]', line1: 'bg-[#2c2418] w-12 mx-auto', line2: 'bg-[#d8c39a] w-8 mx-auto' },
+    body:   { wrap: 'bg-[#fffdf9]', title: 'bg-[#cdb78f]', text: 'bg-[#ece0cb]' },
+    sig:    { wrap: 'bg-[#fffdf9] border-t border-[#efe6d4]', name: 'bg-[#b89766]', link: 'bg-[#dcc59a]' },
+    footer: { wrap: 'bg-[#faf6ed]', line: 'bg-[#d8c39a] mx-auto' },
   },
-  '#0f172a': {
-    frame: 'bg-slate-950',
-    header: { wrap: 'bg-slate-900 border-t-2 border-violet-500', line1: 'bg-violet-400/50 w-8', line2: 'bg-slate-400 w-16' },
-    body:   { wrap: 'bg-slate-900', title: 'bg-slate-600', text: 'bg-slate-800' },
-    sig:    { wrap: 'bg-violet-950/60 border-l-2 border-violet-400', name: 'bg-slate-500', link: 'bg-violet-700' },
-    footer: { wrap: 'bg-black/60', line: 'bg-slate-700' },
+  '#1c1917': {
+    frame: 'bg-[#13100c]',
+    header: { wrap: 'bg-[#1f1a14] border-t-2 border-[#c9a86a]', line1: 'bg-[#c9a86a]/60 w-8', line2: 'bg-[#f6ecd8]/80 w-16' },
+    body:   { wrap: 'bg-[#1f1a14]', title: 'bg-[#6b5a3a]', text: 'bg-[#2e2820]' },
+    sig:    { wrap: 'bg-[#c9a86a]/10 border-l-2 border-[#c9a86a]', name: 'bg-[#8a7550]', link: 'bg-[#7a6638]' },
+    footer: { wrap: 'bg-black/40', line: 'bg-[#c9a86a]/30' },
   },
 }
 
 function TemplateMiniPreview({ color }) {
-  const s = TEMPLATE_PREVIEWS[color] || TEMPLATE_PREVIEWS['#7c3aed']
+  const s = TEMPLATE_PREVIEWS[color] || TEMPLATE_PREVIEWS['#c0894e']
   return (
     <div className={cn('w-full rounded-lg overflow-hidden border border-slate-200/80 p-2', s.frame)} style={{ aspectRatio: '4/3.2' }}>
       <div className="rounded-md overflow-hidden shadow-sm h-full flex flex-col">

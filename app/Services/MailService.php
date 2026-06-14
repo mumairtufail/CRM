@@ -91,11 +91,12 @@ class MailService
                 if ($alreadySent) { $skipped++; continue; }
 
                 try {
-                    $renderedHtml = $this->buildHtml($campaign->body_html, $lead, $template, $templateVars);
+                    $renderedHtml    = $this->buildHtml($campaign->body_html, $lead, $template, $templateVars);
+                    $renderedSubject = $this->replaceLeadTokens($campaign->subject, $lead);
 
                     Mail::mailer('dynamic')
                         ->to($email, $lead->full_name)
-                        ->send(new CampaignMail($campaign, $lead, $renderedHtml));
+                        ->send(new CampaignMail($campaign, $lead, $renderedHtml, null, null, $renderedSubject));
 
                     EmailSend::updateOrCreate(
                         ['email_campaign_id' => $campaign->id, 'lead_id' => $lead->id],

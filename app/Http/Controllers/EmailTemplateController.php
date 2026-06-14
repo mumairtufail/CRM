@@ -43,6 +43,7 @@ HTML;
         $vars['company_website_url'] = $vars['company_website_url'] ?: 'https://www.acme.com';
         $vars['company_phone']       = $vars['company_phone'] ?: '+1 (555) 000-1234';
         $vars['company_email']       = $vars['company_email'] ?: 'hello@acme.com';
+        $vars['signature_contact']   = EmailTemplate::signatureContactHtml($vars);
 
         $html = $emailTemplate->render([
             ...$vars,

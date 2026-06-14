@@ -50,14 +50,41 @@ class EmailTemplate extends Model
             ? 'https://' . $website
             : $website;
 
-        return [
+        $vars = [
             'company_name'        => $user?->company_name ?: $fromName,
             'from_name'           => $fromName,
             'year'                => date('Y'),
             'company_website'     => preg_replace('#^https?://#i', '', $website),
             'company_website_url' => $websiteUrl,
-            'company_phone'       => $user?->company_phone ?? '',
-            'company_email'       => $user?->company_email ?? '',
+            'company_phone'       => trim((string) ($user?->company_phone ?? '')),
+            'company_email'       => trim((string) ($user?->company_email ?? '')),
         ];
+
+        $vars['signature_contact'] = self::signatureContactHtml($vars);
+
+        return $vars;
+    }
+
+    /**
+     * Build the signature contact links, including only fields that are filled.
+     * Empty values are omitted entirely so the signature never shows broken
+     * (empty) links. Styling comes from each template's `.sig-contact a` rules.
+     */
+    public static function signatureContactHtml(array $vars): string
+    {
+        $rows = [];
+
+        if (!empty($vars['company_website'])) {
+            $href = $vars['company_website_url'] ?: $vars['company_website'];
+            $rows[] = '<a href="' . e($href) . '">' . e($vars['company_website']) . '</a>';
+        }
+        if (!empty($vars['company_email'])) {
+            $rows[] = '<a href="mailto:' . e($vars['company_email']) . '">' . e($vars['company_email']) . '</a>';
+        }
+        if (!empty($vars['company_phone'])) {
+            $rows[] = '<a href="tel:' . e(preg_replace('/[^\d+]/', '', $vars['company_phone'])) . '">' . e($vars['company_phone']) . '</a>';
+        }
+
+        return implode("\n", $rows);
     }
 }

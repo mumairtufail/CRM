@@ -18,6 +18,7 @@ use Illuminate\Database\Seeder;
  *   {{company_website_url}} — workspace website with https:// for href
  *   {{company_phone}}       — workspace phone number
  *   {{company_email}}       — workspace contact email
+ *   {{signature_contact}}   — pre-built signature links (omits empty fields)
  */
 class EmailTemplateSeeder extends Seeder
 {
@@ -25,22 +26,22 @@ class EmailTemplateSeeder extends Seeder
     {
         $templates = [
             [
-                'name'            => 'Modern Purple',
-                'description'     => 'Vibrant gradient header, airy white body, and a built-in signature card.',
-                'thumbnail_color' => '#7c3aed',
-                'html_content'    => self::modernPurple(),
+                'name'            => 'Warm Cream',
+                'description'     => 'Ivory canvas with a soft cream header, gold accents and a serif touch. Premium and inviting.',
+                'thumbnail_color' => '#c0894e',
+                'html_content'    => self::warmCream(),
             ],
             [
-                'name'            => 'Clean Minimal',
-                'description'     => 'Quiet editorial layout with hairline rules and a classic personal signature.',
-                'thumbnail_color' => '#6366f1',
-                'html_content'    => self::cleanMinimal(),
+                'name'            => 'Editorial Sand',
+                'description'     => 'Quiet warm-neutral layout with hairline rules and an elegant editorial signature.',
+                'thumbnail_color' => '#94795a',
+                'html_content'    => self::editorialSand(),
             ],
             [
-                'name'            => 'Dark Pro',
-                'description'     => 'Midnight theme with glowing violet accents and a sleek signature block.',
-                'thumbnail_color' => '#0f172a',
-                'html_content'    => self::darkPro(),
+                'name'            => 'Charcoal Luxe',
+                'description'     => 'Deep espresso theme with warm cream type and a glowing gold signature block.',
+                'thumbnail_color' => '#1c1917',
+                'html_content'    => self::charcoalLuxe(),
             ],
         ];
 
@@ -50,9 +51,14 @@ class EmailTemplateSeeder extends Seeder
                 [...$data, 'is_system' => true, 'user_id' => null, 'organization_id' => null]
             );
         }
+
+        // Retire the old purple-era templates so they don't linger alongside the new set.
+        EmailTemplate::where('is_system', true)
+            ->whereIn('name', ['Modern Purple', 'Clean Minimal', 'Dark Pro'])
+            ->delete();
     }
 
-    private static function modernPurple(): string
+    private static function warmCream(): string
     {
         return <<<'HTML'
 <!DOCTYPE html>
@@ -64,39 +70,39 @@ class EmailTemplateSeeder extends Seeder
 <title>{{company_name}}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f1edff;-webkit-font-smoothing:antialiased;mso-line-height-rule:exactly}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#efe6d6;-webkit-font-smoothing:antialiased;mso-line-height-rule:exactly}
 .wrapper{padding:44px 16px}
-.card{max-width:600px;margin:0 auto;background:#ffffff;border-radius:24px;overflow:hidden;box-shadow:0 12px 48px rgba(109,40,217,0.16),0 2px 6px rgba(0,0,0,0.05)}
-.header{background-color:#6d28d9;background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 45%,#5b21b6 100%);padding:44px 48px 40px;position:relative}
-.header-eyebrow{color:rgba(255,255,255,0.65);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px}
-.header-brand{color:#ffffff;font-size:26px;font-weight:800;letter-spacing:-0.6px;line-height:1.1}
-.header-rule{width:44px;height:4px;background:rgba(255,255,255,0.35);margin-top:22px;border-radius:99px}
-.body{padding:44px 48px 36px}
-.body h1{color:#1e1b4b;font-size:25px;font-weight:700;line-height:1.3;margin-bottom:18px;letter-spacing:-0.4px}
-.body h2{color:#1e1b4b;font-size:20px;font-weight:700;line-height:1.35;margin-bottom:14px;margin-top:30px}
-.body h3{color:#312e81;font-size:16px;font-weight:600;line-height:1.4;margin-bottom:10px;margin-top:24px}
-.body p{color:#3f3f56;font-size:15.5px;line-height:1.8;margin-bottom:18px}
-.body a{color:#7c3aed;font-weight:500;text-decoration:underline;text-underline-offset:3px}
-.body strong,.body b{color:#1e1b4b;font-weight:700}
-.body em,.body i{color:#52525b}
-.body ul,.body ol{color:#3f3f56;padding-left:22px;margin-bottom:18px}
+.card{max-width:600px;margin:0 auto;background:#fffdf8;border-radius:22px;overflow:hidden;box-shadow:0 18px 50px rgba(120,86,42,0.16),0 2px 6px rgba(80,60,30,0.05)}
+.header{background-color:#f3e7d2;background:linear-gradient(135deg,#f7eedd 0%,#efe0c6 55%,#e7d3b2 100%);padding:42px 48px 36px;border-bottom:1px solid #e8d8bd}
+.header-badge{display:inline-block;background:#7a4f1f;color:#fdf6e8;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;padding:5px 12px;border-radius:999px;margin-bottom:16px}
+.header-brand{color:#3b2c1a;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:700;letter-spacing:-0.4px;line-height:1.1}
+.header-rule{width:46px;height:3px;background:#c79a55;margin-top:18px;border-radius:99px}
+.body{padding:42px 48px 30px}
+.body h1{color:#2c2113;font-family:Georgia,'Times New Roman',serif;font-size:25px;font-weight:700;line-height:1.3;margin-bottom:18px;letter-spacing:-0.3px}
+.body h2{color:#2c2113;font-family:Georgia,'Times New Roman',serif;font-size:20px;font-weight:700;line-height:1.35;margin-bottom:14px;margin-top:30px}
+.body h3{color:#5a4528;font-size:16px;font-weight:600;line-height:1.4;margin-bottom:10px;margin-top:24px}
+.body p{color:#4a3f31;font-size:15.5px;line-height:1.8;margin-bottom:18px}
+.body a{color:#a9742e;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.body strong,.body b{color:#2c2113;font-weight:700}
+.body em,.body i{color:#6b5a43}
+.body ul,.body ol{color:#4a3f31;padding-left:22px;margin-bottom:18px}
 .body li{font-size:15.5px;line-height:1.8;margin-bottom:5px}
-.body blockquote{border-left:3px solid #a78bfa;background:#f8f6ff;border-radius:0 12px 12px 0;padding:14px 20px;margin:22px 0;color:#5b5b72;font-style:italic}
-.body hr{border:none;border-top:1px solid #ece9fe;margin:30px 0}
-.signature{margin:36px 48px 0;padding:22px 26px;background:linear-gradient(135deg,#faf8ff,#f4f0ff);border:1px solid #e9e3fc;border-left:4px solid #7c3aed;border-radius:16px}
-.sig-name{color:#1e1b4b;font-size:15px;font-weight:700;letter-spacing:-0.2px}
-.sig-company{color:#7c6fae;font-size:12.5px;font-weight:600;margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.body blockquote{border-left:3px solid #d7b577;background:#faf3e4;border-radius:0 12px 12px 0;padding:14px 20px;margin:22px 0;color:#6b5a43;font-style:italic}
+.body hr{border:none;border-top:1px solid #ece0cb;margin:30px 0}
+.signature{margin:34px 48px 0;padding:22px 26px;background:linear-gradient(135deg,#fbf4e6,#f6ead2);border:1px solid #ecdcbe;border-left:4px solid #c79a55;border-radius:16px}
+.sig-name{color:#2c2113;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;letter-spacing:-0.2px}
+.sig-company{color:#a9742e;font-size:12px;font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:1.2px}
 .sig-contact{margin-top:12px;font-size:12.5px;line-height:2}
-.sig-contact a{color:#6d28d9;text-decoration:none;font-weight:500;display:block}
-.footer{background:#1e1b4b;padding:30px 48px 38px;margin-top:36px}
-.footer-name{color:rgba(255,255,255,0.85);font-size:13px;font-weight:700;letter-spacing:-0.2px;margin-bottom:4px}
-.footer-tag{color:rgba(255,255,255,0.35);font-size:11.5px;margin-bottom:16px}
-.footer-legal{color:rgba(255,255,255,0.28);font-size:11px;line-height:1.8;border-top:1px solid rgba(255,255,255,0.08);padding-top:16px}
-.footer-legal a{color:rgba(255,255,255,0.45);text-decoration:underline}
+.sig-contact a{color:#7a4f1f;text-decoration:none;font-weight:500;display:block}
+.footer{background:#2c2113;padding:30px 48px 36px;margin-top:34px}
+.footer-name{color:#f3e7d2;font-family:Georgia,'Times New Roman',serif;font-size:14px;font-weight:700;margin-bottom:4px}
+.footer-tag{color:rgba(243,231,210,0.45);font-size:11.5px;margin-bottom:16px}
+.footer-legal{color:rgba(243,231,210,0.35);font-size:11px;line-height:1.8;border-top:1px solid rgba(243,231,210,0.12);padding-top:16px}
+.footer-legal a{color:rgba(243,231,210,0.55);text-decoration:underline}
 @media(max-width:600px){
   .wrapper{padding:16px 8px}
-  .header{padding:32px 26px 28px}
-  .body{padding:30px 26px 24px}
+  .header{padding:30px 26px 26px}
+  .body{padding:30px 26px 22px}
   .signature{margin:26px 26px 0;padding:18px 20px}
   .footer{padding:24px 26px 30px;margin-top:26px}
   .body h1{font-size:21px}
@@ -109,7 +115,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 <div class="wrapper">
   <div class="card">
     <div class="header">
-      <div class="header-eyebrow">A message from</div>
+      <span class="header-badge">A message from</span>
       <div class="header-brand">{{company_name}}</div>
       <div class="header-rule"></div>
     </div>
@@ -120,9 +126,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
       <div class="sig-name">{{from_name}}</div>
       <div class="sig-company">{{company_name}}</div>
       <div class="sig-contact">
-        <a href="{{company_website_url}}">{{company_website}}</a>
-        <a href="mailto:{{company_email}}">{{company_email}}</a>
-        <a href="tel:{{company_phone}}">{{company_phone}}</a>
+        {{signature_contact}}
       </div>
     </div>
     <div class="footer">
@@ -140,7 +144,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 HTML;
     }
 
-    private static function cleanMinimal(): string
+    private static function editorialSand(): string
     {
         return <<<'HTML'
 <!DOCTYPE html>
@@ -152,38 +156,38 @@ HTML;
 <title>{{company_name}}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f7f7f9;-webkit-font-smoothing:antialiased;mso-line-height-rule:exactly}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#f4efe6;-webkit-font-smoothing:antialiased;mso-line-height-rule:exactly}
 .wrapper{padding:48px 16px}
-.card{max-width:600px;margin:0 auto;background:#ffffff;border-radius:14px;border:1px solid #e8e8ee;box-shadow:0 1px 10px rgba(15,15,40,0.05);overflow:hidden}
-.accent{height:3px;background-color:#6366f1;background:linear-gradient(90deg,#6366f1,#a78bfa)}
-.header{padding:34px 52px 26px;border-bottom:1px solid #f1f1f6;text-align:center}
-.header-brand{color:#16161f;font-size:13px;font-weight:800;letter-spacing:3px;text-transform:uppercase}
-.header-from{color:#a1a1b3;font-size:11.5px;margin-top:6px;letter-spacing:0.3px}
+.card{max-width:600px;margin:0 auto;background:#fffdf9;border-radius:14px;border:1px solid #e8dfcd;box-shadow:0 1px 12px rgba(80,60,30,0.06);overflow:hidden}
+.accent{height:3px;background-color:#bf9b63;background:linear-gradient(90deg,#cdae74,#a9742e)}
+.header{padding:36px 52px 26px;border-bottom:1px solid #efe6d4;text-align:center}
+.header-brand{color:#2c2418;font-family:Georgia,'Times New Roman',serif;font-size:21px;font-weight:700;letter-spacing:0.4px}
+.header-from{color:#a99a7c;font-size:11.5px;margin-top:7px;letter-spacing:1.5px;text-transform:uppercase}
 .body{padding:44px 52px 8px}
-.body h1{color:#16161f;font-size:24px;font-weight:700;line-height:1.32;margin-bottom:18px;letter-spacing:-0.4px}
-.body h2{color:#16161f;font-size:19px;font-weight:700;line-height:1.35;margin-bottom:13px;margin-top:30px}
-.body h3{color:#3a3a4c;font-size:16px;font-weight:600;line-height:1.4;margin-bottom:10px;margin-top:24px}
-.body p{color:#494956;font-size:15.5px;line-height:1.85;margin-bottom:18px}
-.body a{color:#5558e3;text-decoration:underline;text-underline-offset:3px}
-.body strong,.body b{color:#16161f;font-weight:600}
-.body ul,.body ol{color:#494956;padding-left:22px;margin-bottom:18px}
+.body h1{color:#2c2418;font-family:Georgia,'Times New Roman',serif;font-size:24px;font-weight:700;line-height:1.32;margin-bottom:18px;letter-spacing:-0.3px}
+.body h2{color:#2c2418;font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:700;line-height:1.35;margin-bottom:13px;margin-top:30px}
+.body h3{color:#524733;font-size:16px;font-weight:600;line-height:1.4;margin-bottom:10px;margin-top:24px}
+.body p{color:#4d4434;font-size:15.5px;line-height:1.85;margin-bottom:18px}
+.body a{color:#a9742e;text-decoration:underline;text-underline-offset:3px}
+.body strong,.body b{color:#2c2418;font-weight:600}
+.body ul,.body ol{color:#4d4434;padding-left:22px;margin-bottom:18px}
 .body li{font-size:15.5px;line-height:1.85;margin-bottom:4px}
-.body blockquote{border-left:2px solid #d6d6e3;padding:4px 20px;margin:22px 0;color:#73737f;font-style:italic}
-.body hr{border:none;border-top:1px solid #f1f1f6;margin:30px 0}
-.signature{margin:30px 52px 0;padding:20px 0 32px;border-top:1px solid #f1f1f6}
-.sig-label{color:#a1a1b3;font-size:12px;margin-bottom:10px}
-.sig-name{color:#16161f;font-size:14.5px;font-weight:700;letter-spacing:-0.2px}
-.sig-company{color:#73737f;font-size:12.5px;margin-top:2px}
+.body blockquote{border-left:2px solid #d8c39a;padding:4px 20px;margin:22px 0;color:#776a52;font-style:italic}
+.body hr{border:none;border-top:1px solid #efe6d4;margin:30px 0}
+.signature{margin:30px 52px 0;padding:22px 0 32px;border-top:1px solid #efe6d4}
+.sig-label{color:#a99a7c;font-size:12px;margin-bottom:10px;font-style:italic;font-family:Georgia,'Times New Roman',serif}
+.sig-name{color:#2c2418;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;letter-spacing:-0.2px}
+.sig-company{color:#776a52;font-size:12.5px;margin-top:3px}
 .sig-contact{margin-top:10px;font-size:12px;line-height:1.9}
-.sig-contact a{color:#5558e3;text-decoration:none;display:block}
-.footer{padding:22px 52px 30px;border-top:1px solid #f1f1f6;background:#fbfbfd;text-align:center}
-.footer p{color:#a1a1b3;font-size:11px;line-height:1.8}
-.footer strong{color:#494956;font-weight:600}
+.sig-contact a{color:#a9742e;text-decoration:none;display:block}
+.footer{padding:22px 52px 30px;border-top:1px solid #efe6d4;background:#faf6ed;text-align:center}
+.footer p{color:#a99a7c;font-size:11px;line-height:1.8}
+.footer strong{color:#776a52;font-weight:600}
 @media(max-width:600px){
   .wrapper{padding:18px 8px}
-  .header{padding:24px 26px 20px}
+  .header{padding:26px 26px 20px}
   .body{padding:30px 26px 6px}
-  .signature{margin:24px 26px 0;padding:16px 0 26px}
+  .signature{margin:24px 26px 0;padding:18px 0 26px}
   .footer{padding:18px 26px 24px}
   .body h1{font-size:21px}
   .body p{font-size:15px}
@@ -206,9 +210,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
       <div class="sig-name">{{from_name}}</div>
       <div class="sig-company">{{company_name}}</div>
       <div class="sig-contact">
-        <a href="{{company_website_url}}">{{company_website}}</a>
-        <a href="mailto:{{company_email}}">{{company_email}}</a>
-        <a href="tel:{{company_phone}}">{{company_phone}}</a>
+        {{signature_contact}}
       </div>
     </div>
     <div class="footer">
@@ -222,7 +224,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
 HTML;
     }
 
-    private static function darkPro(): string
+    private static function charcoalLuxe(): string
     {
         return <<<'HTML'
 <!DOCTYPE html>
@@ -234,33 +236,33 @@ HTML;
 <title>{{company_name}}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#05060b;-webkit-font-smoothing:antialiased;mso-line-height-rule:exactly}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background-color:#13100c;-webkit-font-smoothing:antialiased;mso-line-height-rule:exactly}
 .wrapper{padding:44px 16px}
-.card{max-width:600px;margin:0 auto;background:#0c0f17;border-radius:20px;border:1px solid rgba(148,130,255,0.14);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.55)}
-.glow{height:3px;background-color:#7c3aed;background:linear-gradient(90deg,#7c3aed 0%,#a78bfa 50%,#6366f1 100%)}
-.header{padding:38px 48px 34px;border-bottom:1px solid rgba(255,255,255,0.06);background:linear-gradient(165deg,#0c0f17 30%,#161028 100%)}
-.header-eyebrow{color:rgba(167,139,250,0.7);font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;margin-bottom:10px}
-.header-brand{color:#f4f2ff;font-size:24px;font-weight:800;letter-spacing:-0.5px}
-.header-sender{color:rgba(255,255,255,0.32);font-size:12.5px;margin-top:6px}
-.body{padding:44px 48px 8px;background:#0c0f17}
-.body h1{color:#f4f2ff;font-size:23px;font-weight:700;line-height:1.32;margin-bottom:18px;letter-spacing:-0.4px}
-.body h2{color:#e7e4f7;font-size:19px;font-weight:700;line-height:1.35;margin-bottom:13px;margin-top:28px}
-.body h3{color:#cfcae6;font-size:16px;font-weight:600;line-height:1.4;margin-bottom:10px;margin-top:22px}
-.body p{color:#9b97b0;font-size:15.5px;line-height:1.85;margin-bottom:18px}
-.body a{color:#b8a6ff;text-decoration:underline;text-underline-offset:3px}
-.body strong,.body b{color:#e7e4f7;font-weight:600}
-.body ul,.body ol{color:#9b97b0;padding-left:22px;margin-bottom:18px}
+.card{max-width:600px;margin:0 auto;background:#1f1a14;border-radius:20px;border:1px solid rgba(201,168,106,0.18);overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,0.6)}
+.glow{height:3px;background-color:#c9a86a;background:linear-gradient(90deg,#8a6a30 0%,#d8b878 50%,#c9a86a 100%)}
+.header{padding:38px 48px 32px;border-bottom:1px solid rgba(201,168,106,0.12);background:linear-gradient(165deg,#1f1a14 30%,#2a2018 100%)}
+.header-eyebrow{color:#c9a86a;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;margin-bottom:12px}
+.header-brand{color:#f6ecd8;font-family:Georgia,'Times New Roman',serif;font-size:25px;font-weight:700;letter-spacing:-0.4px}
+.header-sender{color:rgba(246,236,216,0.4);font-size:12.5px;margin-top:7px}
+.body{padding:44px 48px 8px;background:#1f1a14}
+.body h1{color:#f6ecd8;font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:700;line-height:1.32;margin-bottom:18px;letter-spacing:-0.3px}
+.body h2{color:#ece0c8;font-family:Georgia,'Times New Roman',serif;font-size:19px;font-weight:700;line-height:1.35;margin-bottom:13px;margin-top:28px}
+.body h3{color:#d4c4a4;font-size:16px;font-weight:600;line-height:1.4;margin-bottom:10px;margin-top:22px}
+.body p{color:#b3a78f;font-size:15.5px;line-height:1.85;margin-bottom:18px}
+.body a{color:#dcc08a;text-decoration:underline;text-underline-offset:3px}
+.body strong,.body b{color:#ece0c8;font-weight:600}
+.body ul,.body ol{color:#b3a78f;padding-left:22px;margin-bottom:18px}
 .body li{font-size:15.5px;line-height:1.85;margin-bottom:5px}
-.body blockquote{border-left:3px solid rgba(167,139,250,0.5);background:rgba(124,58,237,0.08);border-radius:0 10px 10px 0;padding:12px 18px;margin:22px 0;color:#8d88a6;font-style:italic}
-.body hr{border:none;border-top:1px solid rgba(255,255,255,0.07);margin:28px 0}
-.signature{margin:32px 48px 0;padding:22px 26px;background:rgba(124,58,237,0.09);border:1px solid rgba(148,130,255,0.16);border-left:3px solid #a78bfa;border-radius:14px}
-.sig-name{color:#f4f2ff;font-size:14.5px;font-weight:700;letter-spacing:-0.2px}
-.sig-company{color:rgba(167,139,250,0.75);font-size:11.5px;font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:1.2px}
+.body blockquote{border-left:3px solid rgba(201,168,106,0.5);background:rgba(201,168,106,0.08);border-radius:0 10px 10px 0;padding:12px 18px;margin:22px 0;color:#a99c82;font-style:italic}
+.body hr{border:none;border-top:1px solid rgba(201,168,106,0.12);margin:28px 0}
+.signature{margin:32px 48px 0;padding:22px 26px;background:rgba(201,168,106,0.08);border:1px solid rgba(201,168,106,0.2);border-left:3px solid #c9a86a;border-radius:14px}
+.sig-name{color:#f6ecd8;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:700;letter-spacing:-0.2px}
+.sig-company{color:#c9a86a;font-size:11.5px;font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:1.4px}
 .sig-contact{margin-top:12px;font-size:12.5px;line-height:2}
-.sig-contact a{color:#b8a6ff;text-decoration:none;display:block}
-.footer{padding:26px 48px 34px;border-top:1px solid rgba(255,255,255,0.05);background:rgba(0,0,0,0.35);margin-top:32px}
-.footer-brand{color:rgba(255,255,255,0.4);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
-.footer p{color:rgba(255,255,255,0.2);font-size:11px;line-height:1.8}
+.sig-contact a{color:#dcc08a;text-decoration:none;display:block}
+.footer{padding:26px 48px 34px;border-top:1px solid rgba(201,168,106,0.1);background:rgba(0,0,0,0.3);margin-top:32px}
+.footer-brand{color:rgba(246,236,216,0.5);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.footer p{color:rgba(246,236,216,0.25);font-size:11px;line-height:1.8}
 @media(max-width:600px){
   .wrapper{padding:16px 8px}
   .header{padding:28px 26px 24px}
@@ -288,9 +290,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica N
       <div class="sig-name">{{from_name}}</div>
       <div class="sig-company">{{company_name}}</div>
       <div class="sig-contact">
-        <a href="{{company_website_url}}">{{company_website}}</a>
-        <a href="mailto:{{company_email}}">{{company_email}}</a>
-        <a href="tel:{{company_phone}}">{{company_phone}}</a>
+        {{signature_contact}}
       </div>
     </div>
     <div class="footer">

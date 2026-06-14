@@ -80,9 +80,12 @@ class SendCampaignBatch implements ShouldQueue
             );
 
             try {
+                // Personalise the subject line tokens per-lead (e.g. {{company}}).
+                $subject = $this->replaceTokens($campaign->subject, $lead);
+
                 $html = $this->buildHtml(
                     $campaign->body_html,
-                    $campaign->subject,
+                    $subject,
                     $lead,
                     $template,
                     $templateVars,
@@ -91,7 +94,7 @@ class SendCampaignBatch implements ShouldQueue
 
                 \Illuminate\Support\Facades\Mail::mailer('dynamic')
                     ->to($email, $lead->full_name)
-                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName));
+                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName, $subject));
 
                 $emailSend->update(['status' => 'sent', 'sent_at' => now(), 'error_message' => null]);
 

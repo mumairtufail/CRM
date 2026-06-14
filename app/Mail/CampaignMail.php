@@ -18,6 +18,7 @@ class CampaignMail extends Mailable
         public readonly ?string $renderedHtml = null,
         public readonly ?string $fromEmail = null,
         public readonly ?string $fromName  = null,
+        public readonly ?string $renderedSubject = null,
     ) {}
 
     public function build(): static
@@ -27,7 +28,7 @@ class CampaignMail extends Mailable
                 $this->fromEmail ?? $this->campaign->from_email,
                 $this->fromName  ?? $this->campaign->from_name,
             )
-            ->subject($this->campaign->subject)
+            ->subject($this->renderedSubject ?? $this->campaign->subject)
             ->html($this->renderedHtml ?? $this->campaign->body_html);
     }
 }

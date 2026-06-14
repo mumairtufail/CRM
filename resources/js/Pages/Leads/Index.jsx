@@ -9,6 +9,7 @@ import LeadAvatar from '@/Components/Common/LeadAvatar'
 import SearchInput from '@/Components/Common/SearchInput'
 import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 import { LeadsTableSkeleton } from '@/Components/Common/Skeletons'
+import OutreachChannels from '@/Components/Common/OutreachChannels'
 import { Button } from '@/Components/ui/button'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -325,6 +326,13 @@ export default function LeadsIndex({ leads, filters }) {
       header: 'Social',
       size: 110,
       cell: ({ row }) => <SocialLinks handles={row.original.social_handles} linkedinUrl={row.original.linkedin_url} />,
+    },
+    {
+      id: 'outreach',
+      header: 'Outreach',
+      size: 120,
+      enableSorting: false,
+      cell: ({ row }) => <OutreachChannels key={row.original.id} lead={row.original} />,
     },
     {
       accessorKey: 'deal_value',

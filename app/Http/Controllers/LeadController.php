@@ -214,6 +214,46 @@ class LeadController extends Controller
         return back();
     }
 
+    /**
+     * Channels a lead can be marked as contacted on. Keep in sync with the
+     * CONTACT_CHANNELS list in resources/js/Components/Common/OutreachChannels.jsx.
+     */
+    public const CONTACT_CHANNELS = ['mail', 'linkedin', 'instagram', 'facebook', 'whatsapp', 'reddit', 'social'];
+
+    public function updateChannels(Request $request, Lead $lead)
+    {
+        $validated = $request->validate([
+            'channel' => 'required|string|in:' . implode(',', self::CONTACT_CHANNELS),
+            'value'   => 'required|boolean',
+        ]);
+
+        $channels = $lead->contact_channels ?? [];
+
+        if ($validated['value']) {
+            $channels[$validated['channel']] = now()->toIso8601String();
+        } else {
+            unset($channels[$validated['channel']]);
+        }
+
+        $attributes = ['contact_channels' => $channels];
+
+        // Mark the lead as contacted when any channel is checked.
+        if ($validated['value']) {
+            $attributes['last_contacted_at'] = now();
+        }
+
+        $lead->update($attributes);
+
+        Activity::create([
+            'lead_id'     => $lead->id,
+            'type'        => 'note',
+            'description' => ($validated['value'] ? 'Marked contacted on ' : 'Unmarked contacted on ')
+                . ucfirst($validated['channel'] === 'mail' ? 'email' : $validated['channel']),
+        ]);
+
+        return response()->json(['ok' => true, 'contact_channels' => $channels]);
+    }
+
     public function destroy(Lead $lead)
     {
         $lead->delete();

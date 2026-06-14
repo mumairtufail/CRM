@@ -5,6 +5,7 @@ import StatusBadge from '@/Components/Common/StatusBadge'
 import PriorityBadge from '@/Components/Common/PriorityBadge'
 import LeadAvatar from '@/Components/Common/LeadAvatar'
 import ConfirmDialog from '@/Components/Common/ConfirmDialog'
+import OutreachChannels from '@/Components/Common/OutreachChannels'
 import { Button } from '@/Components/ui/button'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
@@ -412,6 +413,16 @@ export default function LeadShow({ lead, activities, leadStats }) {
               <p className="text-[10.5px] text-slate-400 mt-1.5">
                 Source: <span className="font-semibold capitalize text-slate-600">{lead.source || 'manual'}</span>
               </p>
+            </div>
+
+            {/* Outreach channels */}
+            <div className="rounded-2xl overflow-hidden" style={glass}>
+              <div className="px-4 py-3 border-b border-slate-100/80">
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">Outreach</p>
+              </div>
+              <div className="px-2 py-2">
+                <OutreachChannels lead={lead} variant="panel" />
+              </div>
             </div>
 
             {/* Activity timeline */}

@@ -16,12 +16,17 @@ class CampaignMail extends Mailable
         public readonly EmailCampaign $campaign,
         public readonly Lead $lead,
         public readonly ?string $renderedHtml = null,
+        public readonly ?string $fromEmail = null,
+        public readonly ?string $fromName  = null,
     ) {}
 
     public function build(): static
     {
         return $this
-            ->from($this->campaign->from_email, $this->campaign->from_name)
+            ->from(
+                $this->fromEmail ?? $this->campaign->from_email,
+                $this->fromName  ?? $this->campaign->from_name,
+            )
             ->subject($this->campaign->subject)
             ->html($this->renderedHtml ?? $this->campaign->body_html);
     }

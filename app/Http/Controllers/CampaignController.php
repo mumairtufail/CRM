@@ -166,6 +166,17 @@ class CampaignController extends Controller
         return redirect()->route('campaigns.index')->with('success', 'Campaign deleted');
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids', []);
+
+        EmailCampaign::whereIn('id', $ids)
+            ->where('organization_id', auth()->user()->organization_id)
+            ->delete();
+
+        return back()->with('success', count($ids) . ' campaign' . (count($ids) !== 1 ? 's' : '') . ' deleted');
+    }
+
     public function show(EmailCampaign $campaign)
     {
         $sends = $campaign->sends()
@@ -212,25 +223,36 @@ class CampaignController extends Controller
 
     public function log(EmailCampaign $campaign)
     {
-        $sends = $campaign->sends()
+        $rows = $campaign->sends()
             ->with('lead:id,first_name,last_name')
             ->oldest('created_at')
-            ->get()
-            ->map(fn ($s) => [
-                'id'            => $s->id,
-                'lead_name'     => $s->lead?->full_name ?? '—',
-                'email_used'    => $s->email_used,
-                'status'        => $s->status,
-                'error_message' => $s->error_message,
-                'sent_at'       => $s->sent_at?->format('H:i:s'),
-            ]);
+            ->get();
+
+        $sends = $rows->map(fn ($s) => [
+            'id'            => $s->id,
+            'lead_id'       => $s->lead_id,
+            'lead_name'     => $s->lead?->full_name ?? '—',
+            'email_used'    => $s->email_used,
+            'status'        => $s->status,
+            'error_message' => $s->error_message,
+            'sent_at'       => $s->sent_at?->diffForHumans(),
+            'sent_at_time'  => $s->sent_at?->format('H:i:s'),
+            'opened_at'     => $s->opened_at?->diffForHumans(),
+            'clicked_at'    => $s->clicked_at?->diffForHumans(),
+        ]);
+
+        // Compute live from the actual rows so counts are always accurate,
+        // even when the stored counter drifts after retries.
+        $sentCount    = $rows->whereIn('status', ['sent', 'opened', 'clicked'])->count();
+        $openedCount  = $rows->filter(fn ($s) => $s->opened_at !== null)->count();
+        $clickedCount = $rows->where('status', 'clicked')->count();
 
         return response()->json([
             'status'           => $campaign->status,
-            'sent_count'       => $campaign->sent_count,
+            'sent_count'       => $sentCount,
             'total_recipients' => $campaign->total_recipients,
-            'opened_count'     => $campaign->opened_count,
-            'clicked_count'    => $campaign->clicked_count,
+            'opened_count'     => $openedCount,
+            'clicked_count'    => $clickedCount,
             'sends'            => $sends,
         ]);
     }

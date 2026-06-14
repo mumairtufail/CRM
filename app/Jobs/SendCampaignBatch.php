@@ -40,6 +40,9 @@ class SendCampaignBatch implements ShouldQueue
 
         $mailer->configureMailer();
 
+        $fromEmail = $mailer->credential()->from_email;
+        $fromName  = $mailer->credential()->from_name;
+
         $template = $user->active_template_id
             ? EmailTemplate::find($user->active_template_id)
             : null;
@@ -88,9 +91,21 @@ class SendCampaignBatch implements ShouldQueue
 
                 \Illuminate\Support\Facades\Mail::mailer('dynamic')
                     ->to($email, $lead->full_name)
-                    ->send(new CampaignMail($campaign, $lead, $html));
+                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName));
 
                 $emailSend->update(['status' => 'sent', 'sent_at' => now(), 'error_message' => null]);
+
+                // Auto-mark the lead as contacted via mail so the outreach
+                // checkbox shows checked once a campaign reaches them.
+                $channels = $lead->contact_channels ?? [];
+                if (empty($channels['mail'])) {
+                    $channels['mail'] = now()->toIso8601String();
+                }
+                $lead->update([
+                    'contact_channels'  => $channels,
+                    'last_contacted_at' => now(),
+                ]);
+
                 $sent++;
             } catch (\Throwable $e) {
                 $emailSend->update([

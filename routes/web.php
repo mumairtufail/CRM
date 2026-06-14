@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/leads/{lead}/edit',   [LeadController::class, 'edit'])->name('leads.edit');
     Route::put('/leads/{lead}',        [LeadController::class, 'update'])->name('leads.update');
     Route::patch('/leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status');
+    Route::patch('/leads/{lead}/channels', [LeadController::class, 'updateChannels'])->name('leads.channels');
     Route::delete('/leads/{lead}',     [LeadController::class, 'destroy'])->name('leads.destroy');
 
     // AI Lead Generation
@@ -88,6 +89,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/campaigns/{campaign}/edit',          [CampaignController::class, 'edit'])->name('campaigns.edit');
     Route::put('/campaigns/{campaign}',               [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{campaign}',            [CampaignController::class, 'destroy'])->name('campaigns.destroy');
+    Route::post('/campaigns/bulk-delete',             [CampaignController::class, 'bulkDestroy'])->name('campaigns.bulk-destroy');
     Route::post('/campaigns/{campaign}/send',         [CampaignController::class, 'send'])->name('campaigns.send');
     Route::post('/campaigns/{campaign}/stop',         [CampaignController::class, 'stop'])->name('campaigns.stop');
     Route::get('/campaigns/{campaign}/log',           [CampaignController::class, 'log'])->name('campaigns.log');

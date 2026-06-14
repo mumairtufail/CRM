@@ -87,36 +87,10 @@ function LogLine({ entry }) {
   )
 }
 
-function TerminalPanel({ campaignId, initialStats }) {
-  const [logs, setLogs]         = useState([])
-  const [stats, setStats]       = useState(initialStats)
-  const [stopping, setStopping] = useState(false)
-  const [resuming, setResuming] = useState(false)
-  const bottomRef               = useRef(null)
-  const scrollRef               = useRef(null)
-  const pinToBottom             = useRef(true)
-
-  const fetchLog = useCallback(async () => {
-    try {
-      const res  = await fetch(`/campaigns/${campaignId}/log`)
-      const data = await res.json()
-      setLogs(data.sends ?? [])
-      setStats(data)
-    } catch {}
-  }, [campaignId])
-
-  useEffect(() => { fetchLog() }, [fetchLog])
-
-  // Keep polling while the campaign is sending OR any recipient is still
-  // queued/pending (covers cron-based queue workers that lag behind).
-  const hasActiveSends = logs.some(l => l.status === 'queued' || l.status === 'pending')
-  const shouldPoll     = stats.status === 'sending' || hasActiveSends
-
-  useEffect(() => {
-    if (!shouldPoll) return
-    const id = setInterval(fetchLog, 2500)
-    return () => clearInterval(id)
-  }, [shouldPoll, fetchLog])
+function TerminalPanel({ logs, stats, onFetch, onStop, onResume, stopping, resuming }) {
+  const bottomRef   = useRef(null)
+  const scrollRef   = useRef(null)
+  const pinToBottom = useRef(true)
 
   useEffect(() => {
     if (pinToBottom.current) {
@@ -128,24 +102,6 @@ function TerminalPanel({ campaignId, initialStats }) {
     const el = scrollRef.current
     if (!el) return
     pinToBottom.current = el.scrollTop + el.clientHeight >= el.scrollHeight - 50
-  }
-
-  const handleStop = () => {
-    setStopping(true)
-    router.post(`/campaigns/${campaignId}/stop`, {}, {
-      onSuccess: () => { toast.success('Campaign paused'); fetchLog() },
-      onError:   (e) => toast.error(Object.values(e)[0] || 'Stop failed'),
-      onFinish:  () => setStopping(false),
-    })
-  }
-
-  const handleResume = () => {
-    setResuming(true)
-    router.post(`/campaigns/${campaignId}/send`, {}, {
-      onSuccess: () => { toast.success('Campaign resumed'); fetchLog() },
-      onError:   (e) => toast.error(Object.values(e)[0] || 'Resume failed'),
-      onFinish:  () => setResuming(false),
-    })
   }
 
   const isLive   = stats.status === 'sending'
@@ -181,7 +137,7 @@ function TerminalPanel({ campaignId, initialStats }) {
           {stats.status === 'sent' && <span className="text-[10px] font-mono" style={{ color: '#3fb950' }}>✓ COMPLETE</span>}
           {stats.status === 'failed' && <span className="text-[10px] font-mono" style={{ color: '#f85149' }}>✗ FAILED</span>}
           <button
-            onClick={fetchLog}
+            onClick={onFetch}
             className="transition-colors"
             style={{ color: '#555d6b' }}
             onMouseEnter={e => e.target.style.color = '#cdd9e5'}
@@ -249,7 +205,7 @@ function TerminalPanel({ campaignId, initialStats }) {
         {isPaused && (
           <button
             disabled={resuming}
-            onClick={handleResume}
+            onClick={onResume}
             className="flex items-center gap-1.5 text-[10px] font-mono border rounded px-2 py-1 transition-colors disabled:opacity-40"
             style={{ color: '#3fb950', borderColor: 'rgba(63,185,80,0.3)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(63,185,80,0.08)'}
@@ -263,7 +219,7 @@ function TerminalPanel({ campaignId, initialStats }) {
         {isLive && (
           <button
             disabled={stopping}
-            onClick={handleStop}
+            onClick={onStop}
             className="flex items-center gap-1.5 text-[10px] font-mono border rounded px-2 py-1 transition-colors disabled:opacity-40"
             style={{ color: '#f85149', borderColor: 'rgba(248,81,73,0.3)' }}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(248,81,73,0.08)'}
@@ -343,19 +299,57 @@ export default function CampaignShow({ campaign, sends }) {
   const [sending, setSending]             = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting]           = useState(false)
+  const [stopping, setStopping]           = useState(false)
+  const [resuming, setResuming]           = useState(false)
 
-  // Keep the stats card + send log table in sync while the campaign is sending
-  // or any recipient is still queued/pending (queue worker may lag on cron).
-  const hasActiveRows = (sends?.data ?? []).some(s => s.status === 'queued' || s.status === 'pending')
-  const pagePolling   = campaign.status === 'sending' || hasActiveRows
+  // Single source of truth — fetched from /log, drives stats card, table, and terminal
+  const [liveLogs,  setLiveLogs]  = useState([])
+  const [liveStats, setLiveStats] = useState({
+    status:           campaign.status,
+    sent_count:       campaign.sent_count,
+    total_recipients: campaign.total_recipients,
+    opened_count:     campaign.opened_count,
+    clicked_count:    campaign.clicked_count,
+  })
+
+  const fetchLog = useCallback(async () => {
+    try {
+      const res  = await fetch(`/campaigns/${campaign.id}/log`)
+      const data = await res.json()
+      setLiveLogs(data.sends ?? [])
+      setLiveStats(data)
+    } catch {}
+  }, [campaign.id])
+
+  useEffect(() => { fetchLog() }, [fetchLog])
+
+  // Poll while sending or any recipient is still queued/pending
+  const hasActiveSends = liveLogs.some(l => l.status === 'queued' || l.status === 'pending')
+  const shouldPoll     = liveStats.status === 'sending' || hasActiveSends
 
   useEffect(() => {
-    if (!pagePolling) return
-    const id = setInterval(() => {
-      router.reload({ only: ['campaign', 'sends'], preserveScroll: true })
-    }, 4000)
+    if (!shouldPoll) return
+    const id = setInterval(fetchLog, 2500)
     return () => clearInterval(id)
-  }, [pagePolling])
+  }, [shouldPoll, fetchLog])
+
+  const handleStop = () => {
+    setStopping(true)
+    router.post(`/campaigns/${campaign.id}/stop`, {}, {
+      onSuccess: () => { toast.success('Campaign paused'); fetchLog() },
+      onError:   (e) => toast.error(Object.values(e)[0] || 'Stop failed'),
+      onFinish:  () => setStopping(false),
+    })
+  }
+
+  const handleResume = () => {
+    setResuming(true)
+    router.post(`/campaigns/${campaign.id}/send`, {}, {
+      onSuccess: () => { toast.success('Campaign resumed'); fetchLog() },
+      onError:   (e) => toast.error(Object.values(e)[0] || 'Resume failed'),
+      onFinish:  () => setResuming(false),
+    })
+  }
 
   const handleSend = () => {
     setSending(true)
@@ -379,10 +373,12 @@ export default function CampaignShow({ campaign, sends }) {
     router.get(`/campaigns/${campaign.id}`, { page }, { preserveState: true, preserveScroll: true })
   }
 
-  const openRate  = campaign.sent_count > 0 ? Math.round((campaign.opened_count  / campaign.sent_count) * 100) : 0
-  const clickRate = campaign.sent_count > 0 ? Math.round((campaign.clicked_count / campaign.sent_count) * 100) : 0
+  const openRate  = liveStats.sent_count > 0 ? Math.round((liveStats.opened_count  / liveStats.sent_count) * 100) : 0
+  const clickRate = liveStats.sent_count > 0 ? Math.round((liveStats.clicked_count / liveStats.sent_count) * 100) : 0
 
-  const { data: sendRows, ...pagination } = sends ?? { data: [] }
+  // Use live polled rows for the table; fall back to SSR page props on first load
+  const tableRows = liveLogs.length > 0 ? liveLogs : (sends?.data ?? [])
+  const { ...pagination } = sends ?? {}
 
   const recipientDesc = () => {
     if (campaign.recipient_mode === 'group' && campaign.group_name) return `Group: ${campaign.group_name}`
@@ -391,8 +387,8 @@ export default function CampaignShow({ campaign, sends }) {
   }
 
   // 'sent' is retryable if there are failed sends (e.g. SMTP was broken)
-  const hasRetryableFails = campaign.status === 'sent' && (campaign.failed_count ?? 0) > 0
-  const canSend = !['sending'].includes(campaign.status) && (campaign.status !== 'sent' || hasRetryableFails)
+  const hasRetryableFails = liveStats.status === 'sent' && (campaign.failed_count ?? 0) > 0
+  const canSend = !['sending'].includes(liveStats.status) && (liveStats.status !== 'sent' || hasRetryableFails)
 
   return (
     <>
@@ -410,10 +406,10 @@ export default function CampaignShow({ campaign, sends }) {
             <div>
               <h2 className="text-base font-bold text-foreground">{campaign.name}</h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize', STATUS_STYLE[campaign.status] ?? STATUS_STYLE.draft)}>
-                  {campaign.status}
+                <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize', STATUS_STYLE[liveStats.status] ?? STATUS_STYLE.draft)}>
+                  {liveStats.status}
                 </span>
-                {campaign.status === 'sending' && (
+                {liveStats.status === 'sending' && (
                   <span className="flex items-center gap-1 text-[10px] text-amber-600">
                     <Loader2 size={10} className="animate-spin" /> Sending in progress…
                   </span>
@@ -428,7 +424,7 @@ export default function CampaignShow({ campaign, sends }) {
               onClick={() => setPreviewOpen(true)}>
               <Eye size={13} /> Preview
             </Button>
-            {campaign.status !== 'sent' && campaign.status !== 'sending' && (
+            {liveStats.status !== 'sent' && liveStats.status !== 'sending' && (
               <Link href={`/campaigns/${campaign.id}/edit`}>
                 <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-200">
                   <Pencil size={13} /> Edit
@@ -444,9 +440,9 @@ export default function CampaignShow({ campaign, sends }) {
               <Button size="sm" className="h-8 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-white border-0"
                 onClick={() => setConfirmSend(true)}>
                 <Send size={13} />
-                {campaign.status === 'paused'  ? 'Resume' :
-                 campaign.status === 'failed'  ? 'Retry All' :
-                 hasRetryableFails             ? `Retry Failed (${campaign.failed_count})` :
+                {liveStats.status === 'paused'  ? 'Resume' :
+                 liveStats.status === 'failed'  ? 'Retry All' :
+                 hasRetryableFails              ? `Retry Failed (${campaign.failed_count})` :
                  'Send Now'}
               </Button>
             )}
@@ -460,29 +456,29 @@ export default function CampaignShow({ campaign, sends }) {
           <div className="min-w-0 space-y-3">
 
             {/* Stats row */}
-            {['sent', 'sending', 'paused', 'failed'].includes(campaign.status) && (
+            {['sent', 'sending', 'paused', 'failed'].includes(liveStats.status) && (
               <Card className="border-slate-200 shadow-none">
                 <div className="grid grid-cols-4 divide-x divide-[#e5ddd5]">
-                  <StatBox label="Recipients"  value={campaign.total_recipients}  icon={Users}              color="text-foreground" />
-                  <StatBox label="Sent"        value={campaign.sent_count}        icon={Send}               color="text-blue-600" />
-                  <StatBox label="Open rate"   value={`${openRate}%`}             icon={Eye}                color="text-amber-600" />
-                  <StatBox label="Click rate"  value={`${clickRate}%`}            icon={MousePointerClick}  color="text-emerald-600" />
+                  <StatBox label="Recipients"  value={liveStats.total_recipients}  icon={Users}              color="text-foreground" />
+                  <StatBox label="Sent"        value={liveStats.sent_count}        icon={Send}               color="text-blue-600" />
+                  <StatBox label="Open rate"   value={`${openRate}%`}              icon={Eye}                color="text-amber-600" />
+                  <StatBox label="Click rate"  value={`${clickRate}%`}             icon={MousePointerClick}  color="text-emerald-600" />
                 </div>
-                {campaign.status === 'sending' && (
+                {liveStats.status === 'sending' && (
                   <div className="border-t border-slate-100 px-4 py-2 bg-amber-50/50">
                     <div className="flex items-center gap-2">
                       <div className="flex-1 h-1.5 rounded-full bg-slate-200 overflow-hidden">
                         <div
                           className="h-full bg-amber-500 rounded-full transition-all"
                           style={{
-                            width: campaign.total_recipients > 0
-                              ? `${Math.round((campaign.sent_count / campaign.total_recipients) * 100)}%`
+                            width: liveStats.total_recipients > 0
+                              ? `${Math.round((liveStats.sent_count / liveStats.total_recipients) * 100)}%`
                               : '0%',
                           }}
                         />
                       </div>
                       <span className="text-[11px] text-amber-700 font-medium shrink-0">
-                        {campaign.sent_count} / {campaign.total_recipients}
+                        {liveStats.sent_count} / {liveStats.total_recipients}
                       </span>
                     </div>
                   </div>
@@ -524,7 +520,7 @@ export default function CampaignShow({ campaign, sends }) {
             </Card>
 
             {/* Per-lead send table */}
-            {sendRows.length > 0 && (
+            {tableRows.length > 0 && (
               <Card className="border-slate-200 shadow-none">
                 <CardHeader className="pb-2 pt-3.5 px-4 flex-row items-center justify-between">
                   <CardTitle className="text-xs font-semibold text-foreground uppercase tracking-wider">
@@ -547,7 +543,7 @@ export default function CampaignShow({ campaign, sends }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {sendRows.map((s, i) => {
+                      {tableRows.map((s, i) => {
                         const st = SEND_STATUS[s.status] || SEND_STATUS.pending
                         return (
                           <tr
@@ -624,14 +620,13 @@ export default function CampaignShow({ campaign, sends }) {
           {/* ── Right column: terminal ── */}
           <div className="hidden xl:block sticky top-4">
             <TerminalPanel
-              campaignId={campaign.id}
-              initialStats={{
-                status:           campaign.status,
-                sent_count:       campaign.sent_count,
-                total_recipients: campaign.total_recipients,
-                opened_count:     campaign.opened_count,
-                clicked_count:    campaign.clicked_count,
-              }}
+              logs={liveLogs}
+              stats={liveStats}
+              onFetch={fetchLog}
+              onStop={handleStop}
+              onResume={handleResume}
+              stopping={stopping}
+              resuming={resuming}
             />
           </div>
         </div>

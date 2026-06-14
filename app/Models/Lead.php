@@ -16,11 +16,12 @@ class Lead extends Model
         'first_name', 'last_name', 'company', 'job_title', 'website',
         'linkedin_url', 'notes', 'source', 'status', 'priority',
         'deal_value', 'currency', 'country', 'city', 'industry',
-        'avatar_url', 'social_handles', 'last_contacted_at', 'follow_up_at',
+        'avatar_url', 'social_handles', 'contact_channels', 'last_contacted_at', 'follow_up_at',
     ];
 
     protected $casts = [
         'social_handles'    => 'array',
+        'contact_channels'  => 'array',
         'deal_value'        => 'decimal:2',
         'last_contacted_at' => 'datetime',
         'follow_up_at'      => 'datetime',

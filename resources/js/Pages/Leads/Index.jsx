@@ -580,17 +580,16 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
             </PopoverContent>
           </Popover>
 
-          {/* ── Single clear-all ── */}
-          {hasActiveFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={clearAllFilters}
-              className="h-9 gap-1.5 text-sm text-slate-500 hover:text-slate-700"
-            >
-              <X size={13} /> Clear all
-            </Button>
-          )}
+          {/* ── Single clear-all · always visible, disabled when nothing to clear ── */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={clearAllFilters}
+            disabled={!hasActiveFilters}
+            className="h-9 gap-1.5 text-sm text-slate-500 hover:text-slate-700 disabled:opacity-40"
+          >
+            <X size={13} /> Clear all filters
+          </Button>
         </div>
 
         <DataTable

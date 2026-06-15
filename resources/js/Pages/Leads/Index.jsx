@@ -9,8 +9,9 @@ import LeadAvatar from '@/Components/Common/LeadAvatar'
 import SearchInput from '@/Components/Common/SearchInput'
 import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 import { LeadsTableSkeleton } from '@/Components/Common/Skeletons'
-import OutreachChannels from '@/Components/Common/OutreachChannels'
+import OutreachChannels, { CONTACT_CHANNELS } from '@/Components/Common/OutreachChannels'
 import { Button } from '@/Components/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/Components/ui/popover'
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger
@@ -18,7 +19,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
-import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X, UsersRound, ChevronDown } from 'lucide-react'
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X, UsersRound, ChevronDown, MapPin, Check, Send } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/Components/ui/dialog'
@@ -36,6 +37,41 @@ const STATUS_OPTIONS = [
 ]
 
 const LEAD_STATUSES = STATUS_OPTIONS.filter(s => s.value !== 'all')
+
+const PRIORITY_OPTIONS = [
+  { value: 'all',    label: 'Any priority' },
+  { value: 'high',   label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low',    label: 'Low' },
+]
+
+const CONTACTED_OPTIONS = [
+  { value: 'all', label: 'Anyone' },
+  { value: 'no',  label: 'Not contacted yet' },
+  { value: 'yes', label: 'Already contacted' },
+]
+
+// A labelled <select>-style filter that collapses to "Any …" when unset.
+function FilterSelect({ icon, label, value, options, placeholder, onChange }) {
+  return (
+    <div className="space-y-1">
+      <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+        {icon}{label}
+      </label>
+      <Select value={value || 'all'} onValueChange={v => onChange(v === 'all' ? undefined : v)}>
+        <SelectTrigger className="h-9 w-full text-sm bg-white">
+          <SelectValue placeholder={placeholder} />
+        </SelectTrigger>
+        <SelectContent className="max-h-64">
+          <SelectItem value="all">{placeholder}</SelectItem>
+          {options.map(opt => (
+            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
 
 const PLATFORM_META = {
   linkedin:  { label: 'in',  bg: '#0A66C2', title: 'LinkedIn' },
@@ -141,7 +177,7 @@ function Checkbox({ checked, indeterminate, onChange, onClick }) {
   )
 }
 
-export default function LeadsIndex({ leads, filters }) {
+export default function LeadsIndex({ leads, filters, filterOptions }) {
   const [deleteId, setDeleteId]             = useState(null)
   const [deleting, setDeleting]             = useState(false)
   const [loading, setLoading]               = useState(false)
@@ -172,13 +208,53 @@ export default function LeadsIndex({ leads, filters }) {
   // Clear selection whenever the page data changes (filter / page change)
   useEffect(() => { setSelectedIds(new Set()) }, [leads])
 
-  const handleSearch = useCallback(search => {
-    router.get('/leads', { ...filters, search, page: 1 }, { preserveState: true, replace: true })
+  // Merge a patch into the current filters, drop empty values, and navigate.
+  const applyFilters = useCallback((patch) => {
+    const next = { ...filters, ...patch, page: 1 }
+    Object.keys(next).forEach(k => {
+      const v = next[k]
+      if (v === undefined || v === null || v === '' || v === 'all' || (Array.isArray(v) && v.length === 0)) {
+        delete next[k]
+      }
+    })
+    router.get('/leads', next, { preserveState: true, replace: true, preserveScroll: true })
   }, [filters])
 
-  const handleStatusFilter = useCallback(status => {
-    router.get('/leads', { ...filters, status: status === 'all' ? undefined : status, page: 1 }, { preserveState: true, replace: true })
+  const handleSearch = useCallback(search => applyFilters({ search }), [applyFilters])
+  const handleStatusFilter = useCallback(status => applyFilters({ status }), [applyFilters])
+
+  const reached = filters?.reached ?? []
+  const toggleReached = useCallback((key) => {
+    const set = new Set(reached)
+    set.has(key) ? set.delete(key) : set.add(key)
+    applyFilters({ reached: [...set] })
+  }, [reached, applyFilters])
+
+  const clearAllFilters = useCallback(() => {
+    router.get('/leads', filters?.search ? { search: filters.search } : {}, {
+      preserveState: true, replace: true, preserveScroll: true,
+    })
   }, [filters])
+
+  // Active advanced filters (everything except search / status / sort / dir) for chips + count.
+  const activeChips = []
+  if (filters?.country)  activeChips.push({ key: 'country',  label: filters.country,  onRemove: () => applyFilters({ country: undefined }) })
+  if (filters?.city)     activeChips.push({ key: 'city',     label: filters.city,     onRemove: () => applyFilters({ city: undefined }) })
+  if (filters?.industry) activeChips.push({ key: 'industry', label: filters.industry, onRemove: () => applyFilters({ industry: undefined }) })
+  if (filters?.source)   activeChips.push({ key: 'source',   label: filters.source,   onRemove: () => applyFilters({ source: undefined }) })
+  if (filters?.priority) activeChips.push({ key: 'priority', label: `${filters.priority} priority`, onRemove: () => applyFilters({ priority: undefined }) })
+  if (filters?.contacted) {
+    activeChips.push({
+      key: 'contacted',
+      label: CONTACTED_OPTIONS.find(o => o.value === filters.contacted)?.label ?? filters.contacted,
+      onRemove: () => applyFilters({ contacted: undefined }),
+    })
+  }
+  reached.forEach(k => {
+    const ch = CONTACT_CHANNELS.find(c => c.key === k)
+    activeChips.push({ key: `reached-${k}`, label: `Reached on ${ch?.label ?? k}`, onRemove: () => toggleReached(k) })
+  })
+  const activeFilterCount = activeChips.length
 
   const handlePageChange = useCallback(page => {
     router.get('/leads', { ...filters, page }, { preserveState: true })
@@ -395,7 +471,7 @@ export default function LeadsIndex({ leads, filters }) {
           }
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
           <SearchInput
             value={filters?.search ?? ''}
             onChange={handleSearch}
@@ -416,7 +492,172 @@ export default function LeadsIndex({ leads, filters }) {
               ))}
             </SelectContent>
           </Select>
+
+          {/* ── Advanced filters ── */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm bg-white">
+                <Filter size={13} className="text-gray-400" />
+                Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[10px] font-semibold">
+                    {activeFilterCount}
+                  </span>
+                )}
+                <ChevronDown size={13} className="text-gray-400" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-80 p-0">
+              <div className="flex items-center justify-between px-4 py-3 border-b">
+                <p className="text-sm font-semibold text-slate-800">Filter leads</p>
+                {activeFilterCount > 0 && (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-xs font-medium text-violet-600 hover:text-violet-700"
+                  >
+                    Clear all
+                  </button>
+                )}
+              </div>
+
+              <div className="px-4 py-3.5 space-y-3.5 max-h-[70vh] overflow-y-auto">
+                {/* Location */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <FilterSelect
+                    icon={<MapPin size={11} />} label="Country"
+                    value={filters?.country} options={filterOptions?.countries ?? []}
+                    placeholder="Any country"
+                    onChange={v => applyFilters({ country: v })}
+                  />
+                  <FilterSelect
+                    icon={<MapPin size={11} />} label="City"
+                    value={filters?.city} options={filterOptions?.cities ?? []}
+                    placeholder="Any city"
+                    onChange={v => applyFilters({ city: v })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <FilterSelect
+                    label="Industry"
+                    value={filters?.industry} options={filterOptions?.industries ?? []}
+                    placeholder="Any industry"
+                    onChange={v => applyFilters({ industry: v })}
+                  />
+                  <FilterSelect
+                    label="Source"
+                    value={filters?.source} options={filterOptions?.sources ?? []}
+                    placeholder="Any source"
+                    onChange={v => applyFilters({ source: v })}
+                  />
+                </div>
+
+                {/* Priority */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Priority</label>
+                  <div className="flex gap-1.5">
+                    {PRIORITY_OPTIONS.map(opt => {
+                      const active = (filters?.priority ?? 'all') === opt.value
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => applyFilters({ priority: opt.value === 'all' ? undefined : opt.value })}
+                          className={`flex-1 h-8 rounded-lg border text-xs font-medium transition-colors ${
+                            active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Contact status */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Contact status</label>
+                  <div className="flex gap-1.5">
+                    {CONTACTED_OPTIONS.map(opt => {
+                      const active = (filters?.contacted ?? 'all') === opt.value
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => applyFilters({ contacted: opt.value === 'all' ? undefined : opt.value })}
+                          className={`flex-1 h-8 px-1 rounded-lg border text-[11px] font-medium leading-tight transition-colors ${
+                            active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                          }`}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Reached on channels */}
+                <div className="space-y-1.5">
+                  <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                    <Send size={11} /> Already reached on
+                  </label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {CONTACT_CHANNELS.map(ch => {
+                      const active = reached.includes(ch.key)
+                      return (
+                        <button
+                          key={ch.key}
+                          type="button"
+                          onClick={() => toggleReached(ch.key)}
+                          className={`flex items-center gap-2 h-9 px-2.5 rounded-lg border text-left transition-colors ${
+                            active ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <span
+                            className="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-white font-bold shrink-0"
+                            style={{ background: ch.bg, fontSize: '9px', letterSpacing: '-0.5px' }}
+                          >
+                            {ch.letter.toUpperCase()}
+                          </span>
+                          <span className={`text-xs flex-1 truncate ${active ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
+                            {ch.label}
+                          </span>
+                          {active && <Check size={13} className="text-violet-600 shrink-0" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
+
+        {/* ── Active filter chips ── */}
+        {activeChips.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 mb-4">
+            {activeChips.map(chip => (
+              <span
+                key={chip.key}
+                className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-medium"
+              >
+                {chip.label}
+                <button
+                  onClick={chip.onRemove}
+                  className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-violet-200 transition-colors"
+                >
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+            <button
+              onClick={clearAllFilters}
+              className="text-xs font-medium text-slate-400 hover:text-slate-600 ml-1"
+            >
+              Clear all
+            </button>
+          </div>
+        )}
 
         <DataTable
           data={rows}

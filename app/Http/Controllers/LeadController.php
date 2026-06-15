@@ -28,6 +28,34 @@ class LeadController extends Controller
             $query->where('source', $source);
         }
 
+        // Location / categorical filters.
+        foreach (['country', 'city', 'industry', 'priority'] as $field) {
+            if (($value = $request->input($field)) !== null && $value !== '') {
+                $query->where($field, $value);
+            }
+        }
+
+        // Contact status: have they been reached out to yet?
+        $contacted = $request->input('contacted');
+        if ($contacted === 'yes') {
+            $query->whereNotNull('last_contacted_at');
+        } elseif ($contacted === 'no') {
+            $query->whereNull('last_contacted_at');
+        }
+
+        // "Reached on" channels — leads contacted on ANY of the selected channels.
+        $reached = array_values(array_filter(
+            (array) $request->input('reached', []),
+            fn ($ch) => in_array($ch, self::CONTACT_CHANNELS, true)
+        ));
+        if (!empty($reached)) {
+            $query->where(function ($q) use ($reached) {
+                foreach ($reached as $channel) {
+                    $q->orWhereNotNull("contact_channels->{$channel}");
+                }
+            });
+        }
+
         $sort  = $request->input('sort', 'created_at');
         $dir   = $request->input('dir', 'desc');
         $query->orderBy($sort, $dir);
@@ -36,8 +64,31 @@ class LeadController extends Controller
 
         return Inertia::render('Leads/Index', [
             'leads'   => $leads,
-            'filters' => $request->only(['search', 'status', 'source', 'sort', 'dir']),
+            'filters' => $request->only([
+                'search', 'status', 'source', 'sort', 'dir',
+                'country', 'city', 'industry', 'priority', 'contacted', 'reached',
+            ]),
+            'filterOptions' => [
+                'countries'  => $this->distinctValues('country'),
+                'cities'     => $this->distinctValues('city'),
+                'industries' => $this->distinctValues('industry'),
+                'sources'    => $this->distinctValues('source'),
+            ],
         ]);
+    }
+
+    /**
+     * Distinct non-empty values of a column for the current tenant, for filter dropdowns.
+     */
+    private function distinctValues(string $column)
+    {
+        return Lead::query()
+            ->whereNotNull($column)
+            ->where($column, '!=', '')
+            ->distinct()
+            ->orderBy($column)
+            ->pluck($column)
+            ->values();
     }
 
     public function search(Request $request)

@@ -104,14 +104,16 @@ class ProfileController extends Controller
             'company_website' => 'nullable|string|max:255',
             'company_phone'   => 'nullable|string|max:50',
             'company_email'   => 'nullable|email|max:255',
+            'company_linkedin' => 'nullable|string|max:255',
             'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,webp,svg|max:2048',
         ]);
 
         $user = $request->user();
-        $user->company_name    = $request->input('company_name', $user->company_name);
-        $user->company_website = $request->input('company_website', $user->company_website);
-        $user->company_phone   = $request->input('company_phone', $user->company_phone);
-        $user->company_email   = $request->input('company_email', $user->company_email);
+        $user->company_name     = $request->input('company_name', $user->company_name);
+        $user->company_website  = $request->input('company_website', $user->company_website);
+        $user->company_phone    = $request->input('company_phone', $user->company_phone);
+        $user->company_email    = $request->input('company_email', $user->company_email);
+        $user->company_linkedin = $request->input('company_linkedin', $user->company_linkedin);
 
         if ($request->hasFile('logo')) {
             if ($user->company_logo) {

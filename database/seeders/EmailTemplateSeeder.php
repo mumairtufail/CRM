@@ -109,14 +109,7 @@ class EmailTemplateSeeder extends Seeder
   <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
   <table role="presentation" class="em-container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #ececec;border-radius:8px;">
     <tr>
-      <td class="em-pad" style="padding:20px 28px;border-bottom:1px solid #e0ddd8;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-          <tr>
-            <td align="left" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:-0.2px;">{{company_name}}</td>
-            <td align="right" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;color:#888888;">Automation &amp; AI</td>
-          </tr>
-        </table>
-      </td>
+      <td class="em-pad" align="left" style="padding:20px 28px;border-bottom:1px solid #e0ddd8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:-0.2px;">{{header_brand}}</td>
     </tr>
     <tr>
       <td class="em-pad em-body" style="padding:28px;">
@@ -143,9 +136,8 @@ class EmailTemplateSeeder extends Seeder
       </td>
     </tr>
     <tr>
-      <td align="center" style="padding:18px 28px 20px;background:#f9f8f6;border-top:1px solid #e0ddd8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-        <div style="font-size:11px;color:#999999;line-height:1.6;">You are receiving this because you are on our list.</div>
-        <div style="font-size:11px;line-height:1.6;margin-top:4px;"><a href="mailto:{{company_email}}?subject=Unsubscribe" style="color:#999999;text-decoration:underline;">Unsubscribe</a></div>
+      <td align="center" style="padding:16px 28px;background:#f9f8f6;border-top:1px solid #e0ddd8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <div style="font-size:11px;color:#999999;line-height:1.6;">&copy; {{year}} {{company_name}}. All rights reserved.</div>
       </td>
     </tr>
   </table>

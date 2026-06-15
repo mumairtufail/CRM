@@ -42,9 +42,12 @@ HTML;
         $vars['company_website']     = $vars['company_website'] ?: 'www.acme.com';
         $vars['company_website_url'] = $vars['company_website_url'] ?: 'https://www.acme.com';
         $vars['company_phone']       = $vars['company_phone'] ?: '+1 (555) 000-1234';
-        $vars['company_email']       = $vars['company_email'] ?: 'hello@acme.com';
+        $vars['company_email']         = $vars['company_email'] ?: 'hello@acme.com';
+        $vars['company_linkedin']      = $vars['company_linkedin'] ?: 'linkedin.com/company/acme';
+        $vars['company_linkedin_url']  = $vars['company_linkedin_url'] ?: 'https://linkedin.com/company/acme';
         $vars['signature_contact']   = EmailTemplate::signatureContactHtml($vars);
         $vars['signature_inline']    = EmailTemplate::signatureInline($vars);
+        $vars['header_brand']        = EmailTemplate::headerBrandHtml($vars);
 
         $html = $emailTemplate->render([
             ...$vars,

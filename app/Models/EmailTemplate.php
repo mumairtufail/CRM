@@ -49,22 +49,50 @@ class EmailTemplate extends Model
         $websiteUrl = $website !== '' && !preg_match('#^https?://#i', $website)
             ? 'https://' . $website
             : $website;
+        // Display form: drop the protocol and any trailing slash (e.g. "lumenialab.com").
+        $websiteDisplay = rtrim((string) preg_replace('#^https?://#i', '', $website), '/');
+
+        $linkedin = trim((string) ($user?->company_linkedin ?? ''));
+        $linkedinUrl = $linkedin !== '' && !preg_match('#^https?://#i', $linkedin)
+            ? 'https://' . $linkedin
+            : $linkedin;
+        $linkedinDisplay = rtrim((string) preg_replace('#^https?://(www\.)?#i', '', $linkedin), '/');
+
+        $logo = trim((string) ($user?->company_logo ?? ''));
 
         $vars = [
-            'company_name'        => $user?->company_name ?: $fromName,
-            'from_name'           => $fromName,
-            'year'                => date('Y'),
-            'company_website'     => preg_replace('#^https?://#i', '', $website),
-            'company_website_url' => $websiteUrl,
-            'company_phone'       => trim((string) ($user?->company_phone ?? '')),
-            'company_email'       => trim((string) ($user?->company_email ?? '')),
+            'company_name'         => $user?->company_name ?: $fromName,
+            'from_name'            => $fromName,
+            'year'                 => date('Y'),
+            'company_website'      => $websiteDisplay,
+            'company_website_url'  => $websiteUrl,
+            'company_phone'        => trim((string) ($user?->company_phone ?? '')),
+            'company_email'        => trim((string) ($user?->company_email ?? '')),
+            'company_linkedin'     => $linkedinDisplay,
+            'company_linkedin_url' => $linkedinUrl,
+            'company_logo_url'     => $logo !== '' ? url('storage/' . $logo) : '',
         ];
 
         $vars['signature_contact'] = self::signatureContactHtml($vars);
         $vars['signature_inline']  = self::signatureInline($vars);
         $vars['from_initials']     = self::initialsFrom($fromName);
+        $vars['header_brand']      = self::headerBrandHtml($vars);
 
         return $vars;
+    }
+
+    /**
+     * Header brand mark: the uploaded logo image when present, otherwise the
+     * company name as plain text (inheriting the surrounding cell's styling).
+     */
+    public static function headerBrandHtml(array $vars): string
+    {
+        if (!empty($vars['company_logo_url'])) {
+            return '<img src="' . e($vars['company_logo_url']) . '" alt="' . e($vars['company_name'] ?? '')
+                . '" height="26" style="display:block;height:26px;max-height:26px;width:auto;border:0;outline:none;text-decoration:none;">';
+        }
+
+        return e($vars['company_name'] ?? '');
     }
 
     /** Uppercase initials from a display name, e.g. "Umair Tufail" -> "UT". */
@@ -80,18 +108,27 @@ class EmailTemplate extends Model
     }
 
     /**
-     * Inline " · " separated signature line (company · website · email),
-     * omitting any empty fields. Used by minimal/single-line signatures.
+     * Inline " · " separated signature line. Company / website / email / phone
+     * render as plain text; LinkedIn renders as a clickable "LinkedIn" word.
+     * Empty fields are omitted. Used by minimal/single-line signatures.
      */
     public static function signatureInline(array $vars): string
     {
-        $parts = array_filter([
-            $vars['company_name']    ?? '',
-            $vars['company_website'] ?? '',
-            $vars['company_email']   ?? '',
-        ], fn ($v) => trim((string) $v) !== '');
+        $parts = [];
 
-        return e(implode(' · ', $parts));
+        foreach (['company_name', 'company_website', 'company_email', 'company_phone'] as $key) {
+            $value = trim((string) ($vars[$key] ?? ''));
+            if ($value !== '') {
+                $parts[] = e($value);
+            }
+        }
+
+        if (!empty($vars['company_linkedin'])) {
+            $href = $vars['company_linkedin_url'] ?: $vars['company_linkedin'];
+            $parts[] = '<a href="' . e($href) . '" style="color:#534AB7;text-decoration:underline;">LinkedIn</a>';
+        }
+
+        return implode(' · ', $parts);
     }
 
     /**
@@ -112,6 +149,10 @@ class EmailTemplate extends Model
         }
         if (!empty($vars['company_phone'])) {
             $rows[] = '<a href="tel:' . e(preg_replace('/[^\d+]/', '', $vars['company_phone'])) . '">' . e($vars['company_phone']) . '</a>';
+        }
+        if (!empty($vars['company_linkedin'])) {
+            $href = $vars['company_linkedin_url'] ?: $vars['company_linkedin'];
+            $rows[] = '<a href="' . e($href) . '">' . e($vars['company_linkedin']) . '</a>';
         }
 
         return implode("\n", $rows);

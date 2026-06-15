@@ -20,6 +20,13 @@ import {
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
   Zap, Key, Wifi, Globe, Phone, PenLine,
 } from 'lucide-react'
+
+// lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
+const LinkedinIcon = ({ size = 12, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+    <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V9h3.42v1.56h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.14 2.07 2.07 0 0 1 0 4.14zM7.12 20.45H3.56V9h3.56v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.22.79 24 1.77 24h20.45c.98 0 1.78-.78 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/>
+  </svg>
+)
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -274,6 +281,7 @@ function WorkspaceTab() {
     company_website: auth.user.company_website ?? '',
     company_phone:   auth.user.company_phone   ?? '',
     company_email:   auth.user.company_email   ?? '',
+    company_linkedin: auth.user.company_linkedin ?? '',
     logo: null,
   })
 
@@ -293,6 +301,7 @@ function WorkspaceTab() {
     fd.append('company_website', data.company_website)
     fd.append('company_phone',   data.company_phone)
     fd.append('company_email',   data.company_email)
+    fd.append('company_linkedin', data.company_linkedin)
     if (data.logo) fd.append('logo', data.logo)
     router.post('/profile/workspace', fd, {
       forceFormData: true,
@@ -378,6 +387,13 @@ function WorkspaceTab() {
                   </div>
                 </Field>
               </div>
+              <Field label="LinkedIn">
+                <div className="relative">
+                  <LinkedinIcon size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Input value={data.company_linkedin} onChange={e => setData('company_linkedin', e.target.value)}
+                    className="h-8 text-[13px] pl-7" placeholder="linkedin.com/in/yourname" />
+                </div>
+              </Field>
             </div>
           </div>
 

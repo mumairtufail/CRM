@@ -51,25 +51,33 @@ const CONTACTED_OPTIONS = [
   { value: 'yes', label: 'Already contacted' },
 ]
 
-// A labelled <select>-style filter that collapses to "Any …" when unset.
-function FilterSelect({ icon, label, value, options, placeholder, onChange }) {
+// Turn a plain string list into {value,label} options with a leading "Any …" entry.
+const toOptions = (allLabel, list) => [
+  { value: 'all', label: allLabel },
+  ...((list ?? []).map(v => ({ value: v, label: v }))),
+]
+
+// A compact inline <select>-style filter that sits in the toolbar and highlights when set.
+function InlineSelect({ icon, placeholder, value, options, onChange }) {
+  const active = !!value && value !== 'all'
   return (
-    <div className="space-y-1">
-      <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-        {icon}{label}
-      </label>
-      <Select value={value || 'all'} onValueChange={v => onChange(v === 'all' ? undefined : v)}>
-        <SelectTrigger className="h-9 w-full text-sm bg-white">
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent className="max-h-64">
-          <SelectItem value="all">{placeholder}</SelectItem>
-          {options.map(opt => (
-            <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </div>
+    <Select value={value || 'all'} onValueChange={v => onChange(v === 'all' ? undefined : v)}>
+      <SelectTrigger
+        className={`h-9 w-auto gap-1.5 text-sm transition-colors ${
+          active
+            ? 'border-violet-300 bg-violet-50 text-violet-700 font-medium'
+            : 'bg-white text-slate-600'
+        }`}
+      >
+        {icon}
+        <SelectValue placeholder={placeholder} />
+      </SelectTrigger>
+      <SelectContent className="max-h-64">
+        {options.map(opt => (
+          <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -236,25 +244,13 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
     })
   }, [filters])
 
-  // Active advanced filters (everything except search / status / sort / dir) for chips + count.
-  const activeChips = []
-  if (filters?.country)  activeChips.push({ key: 'country',  label: filters.country,  onRemove: () => applyFilters({ country: undefined }) })
-  if (filters?.city)     activeChips.push({ key: 'city',     label: filters.city,     onRemove: () => applyFilters({ city: undefined }) })
-  if (filters?.industry) activeChips.push({ key: 'industry', label: filters.industry, onRemove: () => applyFilters({ industry: undefined }) })
-  if (filters?.source)   activeChips.push({ key: 'source',   label: filters.source,   onRemove: () => applyFilters({ source: undefined }) })
-  if (filters?.priority) activeChips.push({ key: 'priority', label: `${filters.priority} priority`, onRemove: () => applyFilters({ priority: undefined }) })
-  if (filters?.contacted) {
-    activeChips.push({
-      key: 'contacted',
-      label: CONTACTED_OPTIONS.find(o => o.value === filters.contacted)?.label ?? filters.contacted,
-      onRemove: () => applyFilters({ contacted: undefined }),
-    })
-  }
-  reached.forEach(k => {
-    const ch = CONTACT_CHANNELS.find(c => c.key === k)
-    activeChips.push({ key: `reached-${k}`, label: `Reached on ${ch?.label ?? k}`, onRemove: () => toggleReached(k) })
-  })
-  const activeFilterCount = activeChips.length
+  // Whether any filter (status or advanced) is set — drives the single Clear-all button.
+  const hasActiveFilters = Boolean(
+    (filters?.status && filters.status !== 'all') ||
+    filters?.country || filters?.city || filters?.industry ||
+    filters?.source || filters?.priority || filters?.contacted ||
+    reached.length
+  )
 
   const handlePageChange = useCallback(page => {
     router.get('/leads', { ...filters, page }, { preserveState: true })
@@ -471,194 +467,131 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
           }
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
+        {/* ── Inline filter toolbar ── every filter sits next to the search bar ── */}
+        <div className="flex flex-wrap items-center gap-2 mb-4">
           <SearchInput
             value={filters?.search ?? ''}
             onChange={handleSearch}
             placeholder="Search leads…"
-            className="w-full sm:w-64"
+            className="w-full sm:w-56"
           />
-          <Select
-            value={filters?.status ?? 'all'}
-            onValueChange={handleStatusFilter}
-          >
-            <SelectTrigger className="h-9 w-full sm:w-40 text-sm bg-white">
-              <Filter size={13} className="text-gray-400 mr-1" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map(opt => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          {/* ── Advanced filters ── */}
+          <InlineSelect
+            icon={<Filter size={13} className="shrink-0 opacity-60" />}
+            placeholder="All statuses"
+            value={filters?.status}
+            options={STATUS_OPTIONS}
+            onChange={handleStatusFilter}
+          />
+          <InlineSelect
+            icon={<MapPin size={13} className="shrink-0 opacity-60" />}
+            placeholder="Any country"
+            value={filters?.country}
+            options={toOptions('Any country', filterOptions?.countries)}
+            onChange={v => applyFilters({ country: v })}
+          />
+          <InlineSelect
+            icon={<MapPin size={13} className="shrink-0 opacity-60" />}
+            placeholder="Any city"
+            value={filters?.city}
+            options={toOptions('Any city', filterOptions?.cities)}
+            onChange={v => applyFilters({ city: v })}
+          />
+          <InlineSelect
+            placeholder="Any industry"
+            value={filters?.industry}
+            options={toOptions('Any industry', filterOptions?.industries)}
+            onChange={v => applyFilters({ industry: v })}
+          />
+          <InlineSelect
+            placeholder="Any source"
+            value={filters?.source}
+            options={toOptions('Any source', filterOptions?.sources)}
+            onChange={v => applyFilters({ source: v })}
+          />
+          <InlineSelect
+            placeholder="Any priority"
+            value={filters?.priority}
+            options={PRIORITY_OPTIONS}
+            onChange={v => applyFilters({ priority: v })}
+          />
+          <InlineSelect
+            placeholder="Anyone"
+            value={filters?.contacted}
+            options={CONTACTED_OPTIONS}
+            onChange={v => applyFilters({ contacted: v })}
+          />
+
+          {/* ── Reached-on multi-select (one compact dropdown for all channels) ── */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-1.5 text-sm bg-white">
-                <Filter size={13} className="text-gray-400" />
-                Filters
-                {activeFilterCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                className={`h-9 gap-1.5 text-sm transition-colors ${
+                  reached.length
+                    ? 'border-violet-300 bg-violet-50 text-violet-700 font-medium hover:bg-violet-50'
+                    : 'bg-white text-slate-600'
+                }`}
+              >
+                <Send size={13} className="opacity-60" />
+                Reached on
+                {reached.length > 0 && (
                   <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[10px] font-semibold">
-                    {activeFilterCount}
+                    {reached.length}
                   </span>
                 )}
-                <ChevronDown size={13} className="text-gray-400" />
+                <ChevronDown size={13} className="opacity-60" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
-              align="end"
-              className="w-[760px] max-w-[94vw] p-0 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden"
+              align="start"
+              className="w-[300px] p-3 bg-white border border-slate-200 shadow-xl rounded-xl"
             >
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50">
-                <p className="text-sm font-semibold text-slate-800">Filter leads</p>
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearAllFilters}
-                    className="text-xs font-medium text-violet-600 hover:text-violet-700"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-
-              <div className="flex divide-x divide-slate-100 max-h-[72vh] overflow-y-auto bg-white">
-                {/* ── Column 1 · Location & source ── */}
-                <div className="w-[240px] shrink-0 p-3.5 space-y-2.5">
-                  <FilterSelect
-                    icon={<MapPin size={11} />} label="Country"
-                    value={filters?.country} options={filterOptions?.countries ?? []}
-                    placeholder="Any country"
-                    onChange={v => applyFilters({ country: v })}
-                  />
-                  <FilterSelect
-                    icon={<MapPin size={11} />} label="City"
-                    value={filters?.city} options={filterOptions?.cities ?? []}
-                    placeholder="Any city"
-                    onChange={v => applyFilters({ city: v })}
-                  />
-                  <FilterSelect
-                    label="Industry"
-                    value={filters?.industry} options={filterOptions?.industries ?? []}
-                    placeholder="Any industry"
-                    onChange={v => applyFilters({ industry: v })}
-                  />
-                  <FilterSelect
-                    label="Source"
-                    value={filters?.source} options={filterOptions?.sources ?? []}
-                    placeholder="Any source"
-                    onChange={v => applyFilters({ source: v })}
-                  />
-                </div>
-
-                {/* ── Column 2 · Priority & contact status ── */}
-                <div className="w-[230px] shrink-0 p-3.5 space-y-3.5">
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Priority</label>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {PRIORITY_OPTIONS.map(opt => {
-                        const active = (filters?.priority ?? 'all') === opt.value
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => applyFilters({ priority: opt.value === 'all' ? undefined : opt.value })}
-                            className={`h-8 rounded-lg border text-xs font-medium transition-colors ${
-                              active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                            }`}
-                          >
-                            {opt.value === 'all' ? 'Any' : opt.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Contact status</label>
-                    <div className="flex flex-col gap-1.5">
-                      {CONTACTED_OPTIONS.map(opt => {
-                        const active = (filters?.contacted ?? 'all') === opt.value
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            onClick={() => applyFilters({ contacted: opt.value === 'all' ? undefined : opt.value })}
-                            className={`h-8 px-2.5 rounded-lg border text-xs font-medium text-left transition-colors ${
-                              active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                            }`}
-                          >
-                            {opt.label}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── Column 3 · Already reached on ── */}
-                <div className="flex-1 min-w-[210px] p-3.5 space-y-1.5">
-                  <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                    <Send size={11} /> Already reached on
-                  </label>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {CONTACT_CHANNELS.map(ch => {
-                      const active = reached.includes(ch.key)
-                      return (
-                        <button
-                          key={ch.key}
-                          type="button"
-                          onClick={() => toggleReached(ch.key)}
-                          className={`flex items-center gap-2 h-9 px-2.5 rounded-lg border text-left transition-colors ${
-                            active ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'
-                          }`}
-                        >
-                          <span
-                            className="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-white font-bold shrink-0"
-                            style={{ background: ch.bg, fontSize: '9px', letterSpacing: '-0.5px' }}
-                          >
-                            {ch.letter.toUpperCase()}
-                          </span>
-                          <span className={`text-xs flex-1 truncate ${active ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
-                            {ch.label}
-                          </span>
-                          {active && <Check size={13} className="text-violet-600 shrink-0" />}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400 mb-2">
+                <Send size={11} /> Already reached on
+              </p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {CONTACT_CHANNELS.map(ch => {
+                  const active = reached.includes(ch.key)
+                  return (
+                    <button
+                      key={ch.key}
+                      type="button"
+                      onClick={() => toggleReached(ch.key)}
+                      className={`flex items-center gap-2 h-9 px-2.5 rounded-lg border text-left transition-colors ${
+                        active ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span
+                        className="inline-flex items-center justify-center w-[18px] h-[18px] rounded text-white font-bold shrink-0"
+                        style={{ background: ch.bg, fontSize: '9px', letterSpacing: '-0.5px' }}
+                      >
+                        {ch.letter.toUpperCase()}
+                      </span>
+                      <span className={`text-xs flex-1 truncate ${active ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
+                        {ch.label}
+                      </span>
+                      {active && <Check size={13} className="text-violet-600 shrink-0" />}
+                    </button>
+                  )
+                })}
               </div>
             </PopoverContent>
           </Popover>
-        </div>
 
-        {/* ── Active filter chips ── */}
-        {activeChips.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 mb-4">
-            {activeChips.map(chip => (
-              <span
-                key={chip.key}
-                className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-medium"
-              >
-                {chip.label}
-                <button
-                  onClick={chip.onRemove}
-                  className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-violet-200 transition-colors"
-                >
-                  <X size={11} />
-                </button>
-              </span>
-            ))}
-            <button
+          {/* ── Single clear-all ── */}
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={clearAllFilters}
-              className="text-xs font-medium text-slate-400 hover:text-slate-600 ml-1"
+              className="h-9 gap-1.5 text-sm text-slate-500 hover:text-slate-700"
             >
-              Clear all
-            </button>
-          </div>
-        )}
+              <X size={13} /> Clear all
+            </Button>
+          )}
+        </div>
 
         <DataTable
           data={rows}

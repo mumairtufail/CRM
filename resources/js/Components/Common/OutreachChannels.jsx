@@ -78,7 +78,7 @@ export default function OutreachChannels({ lead, variant = 'cell' }) {
   const activeCount = activeKeys.length
 
   const checklist = (
-    <div className="space-y-0.5">
+    <div className="space-y-px">
       {CONTACT_CHANNELS.map(ch => {
         const active = !!channels[ch.key]
         return (
@@ -86,18 +86,18 @@ export default function OutreachChannels({ lead, variant = 'cell' }) {
             key={ch.key}
             type="button"
             onClick={() => toggle(ch.key)}
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors text-left"
+            className="w-full flex items-center gap-2 px-1.5 py-1 rounded-md hover:bg-slate-100 transition-colors text-left"
           >
-            <ChannelChip ch={ch} active={active} size={18} />
-            <span className={`text-[12.5px] flex-1 ${active ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
+            <ChannelChip ch={ch} active={active} size={15} />
+            <span className={`text-[12px] leading-tight flex-1 ${active ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
               Contacted {ch.verb} {ch.label}
             </span>
             <span
-              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+              className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
                 active ? 'bg-violet-600 border-violet-600' : 'border-slate-300'
               }`}
             >
-              {active && <Check size={11} className="text-white" />}
+              {active && <Check size={10} className="text-white" />}
             </span>
           </button>
         )
@@ -125,8 +125,8 @@ export default function OutreachChannels({ lead, variant = 'cell' }) {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-56 p-1.5" onClick={e => e.stopPropagation()}>
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 pt-1 pb-1.5">
+      <PopoverContent align="start" className="w-52 p-1 bg-white border-slate-200 shadow-lg" onClick={e => e.stopPropagation()}>
+        <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400 px-1.5 pt-0.5 pb-1">
           Outreach
         </p>
         {checklist}

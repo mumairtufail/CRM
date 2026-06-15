@@ -75,6 +75,7 @@ class EmailTemplate extends Model
 
         $vars['signature_contact'] = self::signatureContactHtml($vars);
         $vars['signature_inline']  = self::signatureInline($vars);
+        $vars['signature_stack']   = self::signatureStack($vars);
         $vars['from_initials']     = self::initialsFrom($fromName);
         $vars['header_brand']      = self::headerBrandHtml($vars);
 
@@ -129,6 +130,31 @@ class EmailTemplate extends Model
         }
 
         return implode(' · ', $parts);
+    }
+
+    /**
+     * Stacked single-column signature: company / website / email / phone / LinkedIn,
+     * each on its own line. Company / website / email / phone render as plain text;
+     * LinkedIn renders as a clickable "LinkedIn" word. Empty fields are omitted.
+     */
+    public static function signatureStack(array $vars): string
+    {
+        $rows = [];
+
+        foreach (['company_name', 'company_website', 'company_email', 'company_phone'] as $key) {
+            $value = trim((string) ($vars[$key] ?? ''));
+            if ($value !== '') {
+                $rows[] = '<div style="line-height:1.7;">' . e($value) . '</div>';
+            }
+        }
+
+        if (!empty($vars['company_linkedin'])) {
+            $href = $vars['company_linkedin_url'] ?: $vars['company_linkedin'];
+            $rows[] = '<div style="line-height:1.7;"><a href="' . e($href)
+                . '" style="color:#534AB7;text-decoration:underline;">LinkedIn</a></div>';
+        }
+
+        return implode("\n", $rows);
     }
 
     /**

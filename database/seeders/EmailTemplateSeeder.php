@@ -129,7 +129,7 @@ class EmailTemplateSeeder extends Seeder
             </td>
             <td valign="middle" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
               <div style="font-size:14px;font-weight:700;color:#1a1a1a;line-height:1.3;">{{from_name}}</div>
-              <div style="font-size:11px;color:#888888;line-height:1.4;margin-top:2px;">{{signature_inline}}</div>
+              <div style="font-size:11px;color:#888888;line-height:1.7;margin-top:4px;">{{signature_stack}}</div>
             </td>
           </tr>
         </table>

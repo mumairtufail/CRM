@@ -57,7 +57,7 @@ class MailService
             ? EmailTemplate::find($user->active_template_id)
             : null;
 
-        $templateVars = EmailTemplate::varsFor($user, $campaign->from_name);
+        $templateVars = EmailTemplate::varsFor($user, $this->credential->from_name);
 
         $query = Lead::with('emails');
         foreach ($campaign->filters ?? [] as $key => $value) {
@@ -156,6 +156,33 @@ class MailService
                 }
             );
         }
+    }
+
+    /**
+     * Send a composed email from the Inbox compose dialog.
+     */
+    public function sendCompose(string $toEmail, string $subject, string $bodyHtml): void
+    {
+        $this->configureMailer();
+
+        $user     = $this->credential->user;
+        $template = $user?->active_template_id
+            ? EmailTemplate::find($user->active_template_id)
+            : null;
+
+        $html = $template
+            ? $template->render([
+                ...EmailTemplate::varsFor($user, $this->credential->from_name),
+                'content' => $bodyHtml,
+            ])
+            : $bodyHtml;
+
+        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $subject) {
+            $message
+                ->to($toEmail)
+                ->from($this->credential->from_email, $this->credential->from_name)
+                ->subject($subject);
+        });
     }
 
     /**

@@ -19,12 +19,20 @@ use Illuminate\Database\Seeder;
  *   {{company_phone}}       — workspace phone number
  *   {{company_email}}       — workspace contact email
  *   {{signature_contact}}   — pre-built signature links (omits empty fields)
+ *   {{signature_inline}}    — " · " separated company · website · email line
+ *   {{from_initials}}       — sender initials for the avatar (e.g. "UT")
  */
 class EmailTemplateSeeder extends Seeder
 {
     public function run(): void
     {
         $templates = [
+            [
+                'name'            => 'Linear Minimal',
+                'description'     => 'Ultra-clean white layout inspired by Linear, Notion and Superhuman. Plain links, avatar signature, no graphics.',
+                'thumbnail_color' => '#534ab7',
+                'html_content'    => self::linearMinimal(),
+            ],
             [
                 'name'            => 'Warm Cream',
                 'description'     => 'Ivory canvas with a soft cream header, gold accents and a serif touch. Premium and inviting.',
@@ -56,6 +64,98 @@ class EmailTemplateSeeder extends Seeder
         EmailTemplate::where('is_system', true)
             ->whereIn('name', ['Modern Purple', 'Clean Minimal', 'Dark Pro'])
             ->delete();
+    }
+
+    private static function linearMinimal(): string
+    {
+        return <<<'HTML'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<title>{{company_name}}</title>
+<style>
+  body{margin:0;padding:0;background:#ffffff;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%}
+  table{border-collapse:collapse;mso-table-lspace:0;mso-table-rspace:0}
+  img{border:0;line-height:100%;outline:none;text-decoration:none}
+  a{text-decoration:none}
+  /* campaign body (editor output) */
+  .em-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#4a4a4a}
+  .em-body p{margin:0 0 16px;font-size:14px;line-height:1.75;color:#4a4a4a}
+  .em-body p:first-child{font-size:15px;color:#1a1a1a;margin-bottom:18px}
+  .em-body a{color:#1a1a1a;text-decoration:underline;text-underline-offset:2px}
+  .em-body strong,.em-body b{color:#1a1a1a;font-weight:600}
+  .em-body em,.em-body i{color:#888888;font-style:italic}
+  .em-body h1{font-size:18px;line-height:1.4;color:#1a1a1a;font-weight:700;margin:0 0 14px}
+  .em-body h2{font-size:16px;line-height:1.4;color:#1a1a1a;font-weight:700;margin:26px 0 12px}
+  .em-body ul,.em-body ol{margin:0 0 16px;padding-left:20px;font-size:14px;line-height:1.75;color:#4a4a4a}
+  .em-body li{margin-bottom:6px}
+  .em-body blockquote{margin:18px 0;padding:2px 16px;border-left:2px solid #e0ddd8;color:#888888;font-style:italic}
+  .em-body hr{border:none;border-top:1px solid #e0ddd8;margin:24px 0}
+  @media only screen and (max-width:600px){
+    .em-container{width:100% !important}
+    .em-pad{padding-left:22px !important;padding-right:22px !important}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;">
+<tr>
+<td align="center" style="padding:24px 12px;">
+  <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+  <table role="presentation" class="em-container" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #ececec;border-radius:8px;">
+    <tr>
+      <td class="em-pad" style="padding:20px 28px;border-bottom:1px solid #e0ddd8;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="left" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:-0.2px;">{{company_name}}</td>
+            <td align="right" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;color:#888888;">Automation &amp; AI</td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td class="em-pad em-body" style="padding:28px;">
+        {{content}}
+      </td>
+    </tr>
+    <tr>
+      <td class="em-pad" style="padding:20px 28px 24px;border-top:1px solid #e0ddd8;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td valign="middle" width="32" style="padding-right:12px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td align="center" valign="middle" width="32" height="32" bgcolor="#534AB7" style="width:32px;height:32px;border-radius:16px;background:#534AB7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:12px;font-weight:700;color:#ffffff;text-align:center;line-height:32px;">{{from_initials}}</td>
+                </tr>
+              </table>
+            </td>
+            <td valign="middle" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+              <div style="font-size:14px;font-weight:700;color:#1a1a1a;line-height:1.3;">{{from_name}}</div>
+              <div style="font-size:11px;color:#888888;line-height:1.4;margin-top:2px;">{{signature_inline}}</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    <tr>
+      <td align="center" style="padding:18px 28px 20px;background:#f9f8f6;border-top:1px solid #e0ddd8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <div style="font-size:11px;color:#999999;line-height:1.6;">You are receiving this because you are on our list.</div>
+        <div style="font-size:11px;line-height:1.6;margin-top:4px;"><a href="mailto:{{company_email}}?subject=Unsubscribe" style="color:#999999;text-decoration:underline;">Unsubscribe</a></div>
+      </td>
+    </tr>
+  </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+</td>
+</tr>
+</table>
+</body>
+</html>
+HTML;
     }
 
     private static function warmCream(): string

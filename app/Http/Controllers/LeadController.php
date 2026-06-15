@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\Client;
 use App\Models\Lead;
+use App\Models\LeadGroup;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -313,5 +314,37 @@ class LeadController extends Controller
         ]);
 
         return response()->json(['ok' => true, 'client_id' => $client->id]);
+    }
+
+    public function bulkAddToGroup(Request $request)
+    {
+        $request->validate([
+            'lead_ids'   => 'required|array|min:1',
+            'lead_ids.*' => 'integer|exists:leads,id',
+            'group_id'   => 'nullable|integer|exists:lead_groups,id',
+            'group_name' => 'nullable|string|max:100',
+        ]);
+
+        if (!$request->group_id && !$request->group_name) {
+            return response()->json(['ok' => false, 'error' => 'Provide a group or a new group name.'], 422);
+        }
+
+        if ($request->group_id) {
+            $group = LeadGroup::findOrFail($request->group_id);
+        } else {
+            $group = LeadGroup::create([
+                'name'  => trim($request->group_name),
+                'color' => '#6366f1',
+            ]);
+        }
+
+        $group->leads()->syncWithoutDetaching($request->lead_ids);
+        $count = count($request->lead_ids);
+
+        return response()->json([
+            'ok'    => true,
+            'group' => ['id' => $group->id, 'name' => $group->name, 'color' => $group->color],
+            'count' => $count,
+        ]);
     }
 }

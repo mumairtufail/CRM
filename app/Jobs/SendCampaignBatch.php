@@ -47,7 +47,7 @@ class SendCampaignBatch implements ShouldQueue
             ? EmailTemplate::find($user->active_template_id)
             : null;
 
-        $templateVars = EmailTemplate::varsFor($user, $campaign->from_name);
+        $templateVars = EmailTemplate::varsFor($user, $fromName);
 
         $leads = Lead::with('emails')->whereIn('id', $this->leadIds)->get();
         $sent  = 0;

@@ -61,8 +61,37 @@ class EmailTemplate extends Model
         ];
 
         $vars['signature_contact'] = self::signatureContactHtml($vars);
+        $vars['signature_inline']  = self::signatureInline($vars);
+        $vars['from_initials']     = self::initialsFrom($fromName);
 
         return $vars;
+    }
+
+    /** Uppercase initials from a display name, e.g. "Umair Tufail" -> "UT". */
+    public static function initialsFrom(string $name): string
+    {
+        $parts = preg_split('/\s+/', trim($name), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        if (empty($parts)) {
+            return '';
+        }
+        $first  = mb_substr($parts[0], 0, 1);
+        $second = count($parts) > 1 ? mb_substr($parts[count($parts) - 1], 0, 1) : '';
+        return mb_strtoupper($first . $second);
+    }
+
+    /**
+     * Inline " · " separated signature line (company · website · email),
+     * omitting any empty fields. Used by minimal/single-line signatures.
+     */
+    public static function signatureInline(array $vars): string
+    {
+        $parts = array_filter([
+            $vars['company_name']    ?? '',
+            $vars['company_website'] ?? '',
+            $vars['company_email']   ?? '',
+        ], fn ($v) => trim((string) $v) !== '');
+
+        return e(implode(' · ', $parts));
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Jobs\FetchEmailsJob;
 use App\Models\FetchedEmail;
+use App\Services\MailService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -45,18 +46,27 @@ class InboxController extends Controller
             'trash'   => FetchedEmail::trashed()->count(),
         ];
 
+        $activeTemplate = null;
+        if ($user->active_template_id) {
+            $t = $user->activeEmailTemplate;
+            if ($t) {
+                $activeTemplate = ['id' => $t->id, 'name' => $t->name];
+            }
+        }
+
         return Inertia::render('Inbox/Index', [
-            'emails'     => $emails,
-            'folder'     => $folder,
-            'counts'     => $counts,
-            'hasSmtp'    => (bool) $cred,
-            'hasImap'    => $cred ? $cred->hasImap() : false,
-            'credential' => $cred ? [
+            'emails'         => $emails,
+            'folder'         => $folder,
+            'counts'         => $counts,
+            'hasSmtp'        => (bool) $cred,
+            'hasImap'        => $cred ? $cred->hasImap() : false,
+            'credential'     => $cred ? [
                 'id'              => $cred->id,
                 'name'            => $cred->name,
                 'from_email'      => $cred->from_email,
                 'last_fetched_at' => $cred->last_fetched_at?->toISOString(),
             ] : null,
+            'activeTemplate' => $activeTemplate,
         ]);
     }
 
@@ -147,6 +157,39 @@ class InboxController extends Controller
     public function destroy(FetchedEmail $fetchedEmail)
     {
         $fetchedEmail->delete();
+        return response()->json(['ok' => true]);
+    }
+
+    public function send(Request $request)
+    {
+        $request->validate([
+            'to_email'  => 'required|email|max:255',
+            'subject'   => 'required|string|max:500',
+            'body_html' => 'required|string',
+        ]);
+
+        $mailer = MailService::forUser($request->user());
+
+        if (!$mailer) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'No active SMTP account. Go to Settings → SMTP and activate one first.',
+            ], 422);
+        }
+
+        try {
+            $mailer->sendCompose(
+                $request->to_email,
+                $request->subject,
+                $request->body_html,
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'Send failed: ' . $e->getMessage(),
+            ], 422);
+        }
+
         return response()->json(['ok' => true]);
     }
 }

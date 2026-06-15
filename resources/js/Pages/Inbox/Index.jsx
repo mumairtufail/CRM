@@ -6,8 +6,13 @@ import { cn } from '@/lib/utils'
 import {
   Inbox, Star, Trash2, RefreshCw, Mail, MailOpen,
   StarOff, RotateCcw, Trash, AlertCircle, Settings,
-  ChevronRight, User, Clock,
+  ChevronRight, User, Clock, PenLine, X,
 } from 'lucide-react'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/Components/ui/dialog'
+import { Input } from '@/Components/ui/input'
+import { Label } from '@/Components/ui/label'
 import { formatDistanceToNow, format, isToday, isThisYear } from 'date-fns'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -77,13 +82,24 @@ const FOLDERS = [
   { key: 'trash',   label: 'Trash',   icon: Trash2, countKey: 'trash'   },
 ]
 
-function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChange }) {
+function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChange, onCompose }) {
   return (
     <div className="w-[188px] shrink-0 flex flex-col border-r border-slate-100"
       style={{ background: '#F7F6FB' }}>
 
+      {/* Compose button */}
+      <div className="px-3 pt-3 pb-1">
+        <button
+          onClick={onCompose}
+          className="w-full flex items-center justify-center gap-2 h-9 rounded-xl text-[12.5px] font-semibold text-white transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 3px 10px rgba(124,58,237,0.25)' }}
+        >
+          <PenLine size={13} /> Compose
+        </button>
+      </div>
+
       {/* Account chip */}
-      <div className="px-3 pt-4 pb-3">
+      <div className="px-3 pt-3 pb-3">
         {credential ? (
           <div className="flex items-center gap-2 px-2 py-2 rounded-xl bg-white border border-slate-100 shadow-sm">
             <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-[11px] font-bold text-white bg-gradient-to-br', avatarGradient(credential.from_email))}>
@@ -421,20 +437,137 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
   )
 }
 
+// ─── Compose dialog ───────────────────────────────────────────────────────────
+
+function ComposeDialog({ open, onClose, activeTemplate }) {
+  const [toEmail, setToEmail]   = useState('')
+  const [subject, setSubject]   = useState('')
+  const [body, setBody]         = useState('')
+  const [sending, setSending]   = useState(false)
+
+  const reset = () => { setToEmail(''); setSubject(''); setBody(''); setSending(false) }
+
+  const handleClose = () => { reset(); onClose() }
+
+  const handleSend = async () => {
+    if (!toEmail.trim() || !subject.trim() || !body.trim()) {
+      toast.error('Please fill in To, Subject, and Body.')
+      return
+    }
+    setSending(true)
+    try {
+      const res = await fetch('/inbox/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+        },
+        body: JSON.stringify({ to_email: toEmail.trim(), subject: subject.trim(), body_html: body }),
+      })
+      const json = await res.json()
+      if (json.ok) {
+        toast.success('Email sent!')
+        handleClose()
+      } else {
+        toast.error(json.error || 'Failed to send email.')
+      }
+    } catch {
+      toast.error('Send failed — check your connection.')
+    } finally {
+      setSending(false)
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={v => !v && handleClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-[14px] font-semibold flex items-center gap-2">
+            <PenLine size={14} className="text-violet-600" /> New Message
+          </DialogTitle>
+        </DialogHeader>
+
+        {activeTemplate && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11.5px] text-violet-700 font-medium"
+            style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.12)' }}>
+            <span>Template:</span>
+            <span className="font-semibold">{activeTemplate.name}</span>
+            <span className="text-violet-400 ml-0.5">will wrap this email</span>
+          </div>
+        )}
+
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">To</Label>
+            <Input
+              type="email"
+              value={toEmail}
+              onChange={e => setToEmail(e.target.value)}
+              placeholder="recipient@example.com"
+              className="h-8 text-[13px]"
+              autoFocus
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Subject</Label>
+            <Input
+              value={subject}
+              onChange={e => setSubject(e.target.value)}
+              placeholder="Subject…"
+              className="h-8 text-[13px]"
+            />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Message</Label>
+            <textarea
+              value={body}
+              onChange={e => setBody(e.target.value)}
+              placeholder="Write your message…"
+              rows={8}
+              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 resize-none"
+            />
+          </div>
+        </div>
+
+        <DialogFooter className="gap-2">
+          <button
+            type="button"
+            onClick={handleClose}
+            className="h-8 px-4 text-[12.5px] font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            disabled={sending}
+            onClick={handleSend}
+            className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+          >
+            {sending ? 'Sending…' : 'Send Email'}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
-export default function InboxIndex({ emails: initialEmails, folder, counts: initialCounts, hasSmtp, hasImap, credential: initialCredential }) {
+export default function InboxIndex({ emails: initialEmails, folder, counts: initialCounts, hasSmtp, hasImap, credential: initialCredential, activeTemplate }) {
   // Local state — updated optimistically; reset when Inertia navigates
-  const [emails, setEmails]         = useState(initialEmails)
-  const [counts, setCounts]         = useState(initialCounts)
-  const [credential, setCredential] = useState(initialCredential)
-  const [selected, setSelected]     = useState(null) // full or partial email shown in pane
+  const [emails, setEmails]           = useState(initialEmails)
+  const [counts, setCounts]           = useState(initialCounts)
+  const [credential, setCredential]   = useState(initialCredential)
+  const [selected, setSelected]       = useState(null) // full or partial email shown in pane
   const [bodyLoading, setBodyLoading] = useState(false)
-  const [syncing, setSyncing]       = useState(false)
+  const [syncing, setSyncing]         = useState(false)
+  const [composeOpen, setComposeOpen] = useState(false)
   const bodyCache = useRef(new Map())
 
   // Sync Inertia prop updates → local state whenever server refreshes props
@@ -562,6 +695,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
             syncing={syncing}
             onSync={handleSync}
             onFolderChange={handleFolderChange}
+            onCompose={() => setComposeOpen(true)}
           />
 
           <div className="w-[300px] shrink-0 flex flex-col border-r border-slate-100 bg-white">
@@ -608,6 +742,12 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
 
         </div>
       </AppLayout>
+
+      <ComposeDialog
+        open={composeOpen}
+        onClose={() => setComposeOpen(false)}
+        activeTemplate={activeTemplate}
+      />
     </>
   )
 }

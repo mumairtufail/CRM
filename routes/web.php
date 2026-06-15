@@ -60,7 +60,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/leads/search',        [LeadController::class, 'search'])->name('leads.search');
     Route::get('/leads/create',        [LeadController::class, 'create'])->name('leads.create');
     Route::post('/leads',              [LeadController::class, 'store'])->name('leads.store');
-    Route::post('/leads/bulk-destroy',  [LeadController::class, 'bulkDestroy'])->name('leads.bulk-destroy');
+    Route::post('/leads/bulk-destroy',       [LeadController::class, 'bulkDestroy'])->name('leads.bulk-destroy');
+    Route::post('/leads/bulk-add-to-group',  [LeadController::class, 'bulkAddToGroup'])->name('leads.bulk-add-to-group');
     Route::post('/leads/{lead}/convert', [LeadController::class, 'convert'])->name('leads.convert');
     Route::get('/leads/{lead}',        [LeadController::class, 'show'])->name('leads.show');
     Route::get('/leads/{lead}/edit',   [LeadController::class, 'edit'])->name('leads.edit');
@@ -170,6 +171,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');
     Route::get('/inbox/{fetchedEmail}',                    [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/sync',                             [InboxController::class, 'sync'])->name('inbox.sync');
+    Route::post('/inbox/send',                             [InboxController::class, 'send'])->name('inbox.send');
     Route::patch('/inbox/{fetchedEmail}/read',             [InboxController::class, 'markRead'])->name('inbox.read');
     Route::patch('/inbox/{fetchedEmail}/starred',          [InboxController::class, 'markStarred'])->name('inbox.starred');
     Route::patch('/inbox/{fetchedEmail}/trash',            [InboxController::class, 'trash'])->name('inbox.trash');

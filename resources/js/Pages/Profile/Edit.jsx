@@ -769,6 +769,13 @@ function MailTab({ mailSettings }) {
 
 // Mini previews mirror the three built-in designs (header / body / signature / footer)
 const TEMPLATE_PREVIEWS = {
+  '#534ab7': {
+    frame: 'bg-[#f3f2f0]',
+    header: { wrap: 'bg-white border-b border-[#e0ddd8]', line1: 'bg-[#1a1a1a] w-12', line2: 'bg-[#cfcfcf] w-8 ml-auto -mt-1' },
+    body:   { wrap: 'bg-white', title: 'bg-[#d4d4d4]', text: 'bg-[#ececec]' },
+    sig:    { wrap: 'bg-white border-t border-[#e0ddd8]', name: 'bg-[#534ab7]', link: 'bg-[#d4d4d4]' },
+    footer: { wrap: 'bg-[#f9f8f6]', line: 'bg-[#cfcfcf] mx-auto' },
+  },
   '#c0894e': {
     frame: 'bg-[#efe6d6]',
     header: { wrap: 'bg-gradient-to-br from-[#f7eedd] via-[#efe0c6] to-[#e7d3b2]', line1: 'bg-[#7a4f1f] w-8', line2: 'bg-[#3b2c1a] w-16' },

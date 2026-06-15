@@ -16,19 +16,22 @@ import { toast } from 'sonner'
 import RichEditor from '@/Components/Common/RichEditor'
 import { cn } from '@/lib/utils'
 
+// Starter bodies intentionally omit the sign-off / signature — the regards,
+// your name, and contact details are added automatically by the active email
+// template (Settings → Templates), so you never type them in the campaign.
 const TEMPLATES = {
   blank: { name: 'Blank', body: '' },
   intro: {
     name: 'Introduction',
-    body: `<p>Hi {{first_name}},</p><p>I wanted to reach out and introduce myself. I'm [Your Name] from [Your Company].</p><p>We help businesses like {{company}} achieve [outcome] through [your solution].</p><p>I'd love to schedule a quick 15-minute call to learn more about your goals. Would any of these times work for you?</p><p>Looking forward to connecting,<br>[Your Name]</p>`,
+    body: `<p>Hi {{first_name}},</p><p>I wanted to reach out and introduce myself.</p><p>We help businesses like {{company}} achieve [outcome] through [your solution].</p><p>I'd love to schedule a quick 15-minute call to learn more about your goals. Would any of these times work for you?</p>`,
   },
   followup: {
     name: 'Follow-up',
-    body: `<p>Hi {{first_name}},</p><p>I'm following up on my previous message. I know you're busy, so I'll keep this brief.</p><p>I believe we can help {{company}} with [specific value proposition]. Many companies in [industry] have seen [result] after working with us.</p><p>Would you have 15 minutes this week to connect?</p><p>Best,<br>[Your Name]</p>`,
+    body: `<p>Hi {{first_name}},</p><p>I'm following up on my previous message. I know you're busy, so I'll keep this brief.</p><p>I believe we can help {{company}} with [specific value proposition]. Many companies in [industry] have seen [result] after working with us.</p><p>Would you have 15 minutes this week to connect?</p>`,
   },
   promo: {
     name: 'Promotion',
-    body: `<p>Hi {{first_name}},</p><p>We have an exciting update we'd love to share with you.</p><p>[Describe your offer or announcement here]</p><p>This offer is available until [date]. Reply to this email or click the button below to learn more.</p><p>Best regards,<br>[Your Name]</p>`,
+    body: `<p>Hi {{first_name}},</p><p>We have an exciting update we'd love to share with you.</p><p>[Describe your offer or announcement here]</p><p>This offer is available until [date]. Reply to this email or click the button below to learn more.</p>`,
   },
 }
 
@@ -301,7 +304,7 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
             )}
           </div>
           <div className="px-5 py-2.5 text-center" style={{ background: '#f8f8f8', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
-            <p className="text-[10.5px] text-slate-400">Tokens shown with sample data · Unsubscribe</p>
+            <p className="text-[10.5px] text-slate-400">Tokens shown with sample data · Your template signature is added on send · Unsubscribe</p>
           </div>
         </div>
       </DialogContent>
@@ -309,7 +312,7 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
   )
 }
 
-export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], campaign = null }) {
+export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], sender = null, activeTemplate = null, campaign = null }) {
   const isEdit = !!campaign
   const [previewOpen, setPreviewOpen]       = useState(false)
   const [recipientCount, setRecipientCount] = useState(campaign?.total_recipients ?? leadCount ?? 0)
@@ -318,8 +321,6 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
   const { data, setData, post, put, processing, errors } = useForm({
     name:           campaign?.name           ?? '',
     subject:        campaign?.subject        ?? '',
-    from_name:      campaign?.from_name      ?? '',
-    from_email:     campaign?.from_email     ?? '',
     body_html:      campaign?.body_html      ?? '',
     recipient_mode: campaign?.recipient_mode ?? 'all',
     group_id:       campaign?.group_id       ?? null,
@@ -404,16 +405,29 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                 <Input value={data.name} onChange={e => setData('name', e.target.value)}
                   className="h-8 text-[13px]" placeholder="March Follow-up Blast" />
               </Field>
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="From name" error={errors.from_name}>
-                  <Input value={data.from_name} onChange={e => setData('from_name', e.target.value)}
-                    className="h-8 text-[13px]" placeholder="Your Name" />
-                </Field>
-                <Field label="From email" error={errors.from_email}>
-                  <Input type="email" value={data.from_email} onChange={e => setData('from_email', e.target.value)}
-                    className="h-8 text-[13px]" placeholder="you@company.com" />
-                </Field>
-              </div>
+              {/* Sender comes from the active SMTP account in Settings — not asked here */}
+              <Field label="From">
+                <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                    {sender?.from_name?.charAt(0)?.toUpperCase() ?? 'S'}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-semibold text-slate-800 truncate">
+                      {sender?.from_name || 'No sender configured'}
+                    </p>
+                    <p className="text-[11px] text-slate-500 truncate">
+                      {sender?.from_email || 'Set up an SMTP account in Settings'}
+                    </p>
+                  </div>
+                  <Link href="/profile" className="ml-auto text-[11px] text-violet-600 hover:underline shrink-0">
+                    Change
+                  </Link>
+                </div>
+                <p className="text-[10.5px] text-slate-400 mt-1">
+                  Pulled automatically from your active SMTP account in Settings.
+                </p>
+              </Field>
 
               {/* Dynamic subject with token pills */}
               <Field label="Subject line" error={errors.subject}
@@ -468,6 +482,15 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                 </div>
               </div>
               <div className="px-4 py-3">
+                {/* Signature notice — sign-off comes from the active template */}
+                <div className="flex items-start gap-1.5 mb-2.5 rounded-lg bg-violet-50 border border-violet-100 px-2.5 py-2">
+                  <Layers size={13} className="text-violet-500 mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-violet-700 leading-relaxed">
+                    {activeTemplate
+                      ? <>Your sign-off and signature (regards, name, company, website, phone &amp; email) are added automatically by the <span className="font-semibold">{activeTemplate}</span> template — just write the message itself.</>
+                      : <>No active email template. Activate one in <Link href="/profile" className="font-semibold underline">Settings → Templates</Link> to add a signature automatically, or include your sign-off in the body below.</>}
+                  </p>
+                </div>
                 {/* Token reference */}
                 <div className="flex flex-wrap gap-1 mb-2">
                   <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
@@ -520,8 +543,8 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
           open={previewOpen}
           onClose={() => setPreviewOpen(false)}
           subject={data.subject}
-          fromName={data.from_name}
-          fromEmail={data.from_email}
+          fromName={sender?.from_name}
+          fromEmail={sender?.from_email}
           body={data.body_html}
         />
       </AppLayout>

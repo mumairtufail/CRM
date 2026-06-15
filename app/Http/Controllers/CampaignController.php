@@ -35,7 +35,7 @@ class CampaignController extends Controller
         return Inertia::render('Campaigns/Index', ['campaigns' => $campaigns]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $statuses  = Lead::distinct()->pluck('status')->filter()->values();
         $leadCount = Lead::count();
@@ -52,10 +52,12 @@ class CampaignController extends Controller
         ]);
 
         return Inertia::render('Campaigns/Create', [
-            'statuses'  => $statuses,
-            'leadCount' => $leadCount,
-            'groups'    => $groups,
-            'tags'      => $tags,
+            'statuses'      => $statuses,
+            'leadCount'     => $leadCount,
+            'groups'        => $groups,
+            'tags'          => $tags,
+            'sender'        => $this->resolveSender($request->user()),
+            'activeTemplate' => $request->user()->activeEmailTemplate?->name,
         ]);
     }
 
@@ -64,8 +66,6 @@ class CampaignController extends Controller
         $validated = $request->validate([
             'name'           => 'required|string|max:200',
             'subject'        => 'required|string|max:500',
-            'from_name'      => 'required|string|max:100',
-            'from_email'     => 'required|email|max:200',
             'body_html'      => 'required|string',
             'recipient_mode' => 'required|in:all,filter,group',
             'group_id'       => 'nullable|integer|exists:lead_groups,id',
@@ -80,6 +80,7 @@ class CampaignController extends Controller
 
         $campaign = EmailCampaign::create([
             ...$validated,
+            ...$this->resolveSender($request->user()),
             'total_recipients' => $count,
             'status'           => 'draft',
         ]);
@@ -87,7 +88,7 @@ class CampaignController extends Controller
         return redirect()->route('campaigns.show', $campaign);
     }
 
-    public function edit(EmailCampaign $campaign)
+    public function edit(Request $request, EmailCampaign $campaign)
     {
         if ($campaign->status === 'sent') {
             return redirect()->route('campaigns.show', $campaign)
@@ -109,10 +110,12 @@ class CampaignController extends Controller
         ]);
 
         return Inertia::render('Campaigns/Create', [
-            'statuses'  => $statuses,
-            'leadCount' => $leadCount,
-            'groups'    => $groups,
-            'tags'      => $tags,
+            'statuses'      => $statuses,
+            'leadCount'     => $leadCount,
+            'groups'        => $groups,
+            'tags'          => $tags,
+            'sender'        => $this->resolveSender($request->user()),
+            'activeTemplate' => $request->user()->activeEmailTemplate?->name,
             'campaign'  => [
                 'id'               => $campaign->id,
                 'name'             => $campaign->name,
@@ -137,8 +140,6 @@ class CampaignController extends Controller
         $validated = $request->validate([
             'name'           => 'required|string|max:200',
             'subject'        => 'required|string|max:500',
-            'from_name'      => 'required|string|max:100',
-            'from_email'     => 'required|email|max:200',
             'body_html'      => 'required|string',
             'recipient_mode' => 'required|in:all,filter,group',
             'group_id'       => 'nullable|integer|exists:lead_groups,id',
@@ -153,6 +154,7 @@ class CampaignController extends Controller
 
         $campaign->update([
             ...$validated,
+            ...$this->resolveSender($request->user()),
             'total_recipients' => $count,
         ]);
 
@@ -412,6 +414,22 @@ class CampaignController extends Controller
     // ──────────────────────────────────────────────────
     // Private helpers
     // ──────────────────────────────────────────────────
+
+    /**
+     * The sender identity always comes from the active SMTP account in
+     * Settings → SMTP (falling back to the user's own name/email). Campaigns
+     * never ask for it, so it can never drift from the account actually used
+     * to deliver the mail.
+     */
+    private function resolveSender(\App\Models\User $user): array
+    {
+        $cred = $user->activeSmtpCredential;
+
+        return [
+            'from_name'  => $cred->from_name  ?? $user->name,
+            'from_email' => $cred->from_email ?? $user->email,
+        ];
+    }
 
     private function countRecipients(array $filters, ?int $groupId, string $mode): int
     {

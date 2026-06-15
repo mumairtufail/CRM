@@ -507,8 +507,11 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 <ChevronDown size={13} className="text-gray-400" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent align="end" className="w-80 p-0">
-              <div className="flex items-center justify-between px-4 py-3 border-b">
+            <PopoverContent
+              align="end"
+              className="w-[760px] max-w-[94vw] p-0 bg-white border border-slate-200 shadow-xl rounded-xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 bg-slate-50">
                 <p className="text-sm font-semibold text-slate-800">Filter leads</p>
                 {activeFilterCount > 0 && (
                   <button
@@ -520,9 +523,9 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 )}
               </div>
 
-              <div className="px-4 py-3.5 space-y-3.5 max-h-[70vh] overflow-y-auto">
-                {/* Location */}
-                <div className="grid grid-cols-2 gap-2.5">
+              <div className="flex divide-x divide-slate-100 max-h-[72vh] overflow-y-auto bg-white">
+                {/* ── Column 1 · Location & source ── */}
+                <div className="w-[240px] shrink-0 p-3.5 space-y-2.5">
                   <FilterSelect
                     icon={<MapPin size={11} />} label="Country"
                     value={filters?.country} options={filterOptions?.countries ?? []}
@@ -535,9 +538,6 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                     placeholder="Any city"
                     onChange={v => applyFilters({ city: v })}
                   />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
                   <FilterSelect
                     label="Industry"
                     value={filters?.industry} options={filterOptions?.industries ?? []}
@@ -552,52 +552,53 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                   />
                 </div>
 
-                {/* Priority */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Priority</label>
-                  <div className="flex gap-1.5">
-                    {PRIORITY_OPTIONS.map(opt => {
-                      const active = (filters?.priority ?? 'all') === opt.value
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => applyFilters({ priority: opt.value === 'all' ? undefined : opt.value })}
-                          className={`flex-1 h-8 rounded-lg border text-xs font-medium transition-colors ${
-                            active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      )
-                    })}
+                {/* ── Column 2 · Priority & contact status ── */}
+                <div className="w-[230px] shrink-0 p-3.5 space-y-3.5">
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Priority</label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {PRIORITY_OPTIONS.map(opt => {
+                        const active = (filters?.priority ?? 'all') === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => applyFilters({ priority: opt.value === 'all' ? undefined : opt.value })}
+                            className={`h-8 rounded-lg border text-xs font-medium transition-colors ${
+                              active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            {opt.value === 'all' ? 'Any' : opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Contact status</label>
+                    <div className="flex flex-col gap-1.5">
+                      {CONTACTED_OPTIONS.map(opt => {
+                        const active = (filters?.contacted ?? 'all') === opt.value
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => applyFilters({ contacted: opt.value === 'all' ? undefined : opt.value })}
+                            className={`h-8 px-2.5 rounded-lg border text-xs font-medium text-left transition-colors ${
+                              active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
                 </div>
 
-                {/* Contact status */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Contact status</label>
-                  <div className="flex gap-1.5">
-                    {CONTACTED_OPTIONS.map(opt => {
-                      const active = (filters?.contacted ?? 'all') === opt.value
-                      return (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => applyFilters({ contacted: opt.value === 'all' ? undefined : opt.value })}
-                          className={`flex-1 h-8 px-1 rounded-lg border text-[11px] font-medium leading-tight transition-colors ${
-                            active ? 'border-violet-300 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:bg-slate-50'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                {/* Reached on channels */}
-                <div className="space-y-1.5">
+                {/* ── Column 3 · Already reached on ── */}
+                <div className="flex-1 min-w-[210px] p-3.5 space-y-1.5">
                   <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-400">
                     <Send size={11} /> Already reached on
                   </label>

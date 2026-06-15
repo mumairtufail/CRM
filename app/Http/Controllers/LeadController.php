@@ -229,6 +229,18 @@ class LeadController extends Controller
             'social_handles'          => 'nullable|array',
             'social_handles.*.platform' => 'nullable|string|max:50',
             'social_handles.*.url'      => 'nullable|string|max:255',
+            'emails'              => 'nullable|array',
+            'emails.*.email'      => 'required_with:emails|email|max:200',
+            'emails.*.type'       => 'nullable|string|max:20',
+            'emails.*.is_primary' => 'nullable|boolean',
+            'phones'              => 'nullable|array',
+            'phones.*.phone'      => 'required_with:phones|string|max:50',
+            'phones.*.type'       => 'nullable|string|max:20',
+            'phones.*.is_primary' => 'nullable|boolean',
+        ], [
+            'emails.*.email.required_with' => 'Email address is required.',
+            'emails.*.email.email'         => 'Must be a valid email address.',
+            'phones.*.phone.required_with' => 'Phone number is required.',
         ]);
 
         $oldStatus = $lead->status;
@@ -237,6 +249,30 @@ class LeadController extends Controller
             'status'   => $validated['status']   ?? $lead->status,
             'priority' => $validated['priority'] ?? $lead->priority,
         ]));
+
+        // Sync emails — replace all existing with the submitted list
+        if (array_key_exists('emails', $validated)) {
+            $lead->emails()->delete();
+            foreach ($validated['emails'] ?? [] as $i => $em) {
+                $lead->emails()->create([
+                    'email'      => $em['email'],
+                    'type'       => $em['type'] ?? 'work',
+                    'is_primary' => !empty($em['is_primary']) || $i === 0,
+                ]);
+            }
+        }
+
+        // Sync phones — replace all existing with the submitted list
+        if (array_key_exists('phones', $validated)) {
+            $lead->phones()->delete();
+            foreach ($validated['phones'] ?? [] as $i => $ph) {
+                $lead->phones()->create([
+                    'phone'      => $ph['phone'],
+                    'type'       => $ph['type'] ?? 'mobile',
+                    'is_primary' => !empty($ph['is_primary']) || $i === 0,
+                ]);
+            }
+        }
 
         if ($oldStatus !== $lead->status) {
             Activity::create([

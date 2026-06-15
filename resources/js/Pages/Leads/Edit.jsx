@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
-import { ChevronLeft, Plus, Trash2 } from 'lucide-react'
+import { ChevronLeft, Mail, Phone, Plus, Star, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 const STATUSES   = ['new','contacted','qualified','proposal','negotiation','won','lost','unqualified']
@@ -57,11 +57,32 @@ export default function LeadEdit({ lead }) {
     city:            lead.city       ?? '',
     industry:        lead.industry   ?? '',
     social_handles:  lead.social_handles ?? [],
+    emails:          (lead.emails ?? []).map(e => ({ email: e.email, type: e.type ?? 'work', is_primary: !!e.is_primary })),
+    phones:          (lead.phones ?? []).map(p => ({ phone: p.phone, type: p.type ?? 'mobile', is_primary: !!p.is_primary })),
   })
 
   const addSocial    = ()      => setData('social_handles', [...data.social_handles, { platform: 'linkedin', url: '' }])
   const removeSocial = (i)     => setData('social_handles', data.social_handles.filter((_, idx) => idx !== i))
   const setSocial    = (i,k,v) => setData('social_handles', data.social_handles.map((h, idx) => idx === i ? { ...h, [k]: v } : h))
+
+  const addEmail       = ()      => setData('emails', [...data.emails, { email: '', type: 'work', is_primary: data.emails.length === 0 }])
+  const removeEmail    = (i)     => {
+    const updated = data.emails.filter((_, idx) => idx !== i)
+    // If we removed the primary, promote the first remaining one
+    if (data.emails[i]?.is_primary && updated.length > 0) updated[0].is_primary = true
+    setData('emails', updated)
+  }
+  const setEmail       = (i,k,v) => setData('emails', data.emails.map((e, idx) => idx === i ? { ...e, [k]: v } : e))
+  const setPrimaryEmail = (i)    => setData('emails', data.emails.map((e, idx) => ({ ...e, is_primary: idx === i })))
+
+  const addPhone       = ()      => setData('phones', [...data.phones, { phone: '', type: 'mobile', is_primary: data.phones.length === 0 }])
+  const removePhone    = (i)     => {
+    const updated = data.phones.filter((_, idx) => idx !== i)
+    if (data.phones[i]?.is_primary && updated.length > 0) updated[0].is_primary = true
+    setData('phones', updated)
+  }
+  const setPhone       = (i,k,v) => setData('phones', data.phones.map((p, idx) => idx === i ? { ...p, [k]: v } : p))
+  const setPrimaryPhone = (i)    => setData('phones', data.phones.map((p, idx) => ({ ...p, is_primary: idx === i })))
 
   const submit = e => {
     e.preventDefault()
@@ -171,8 +192,114 @@ export default function LeadEdit({ lead }) {
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-xs text-slate-500 bg-slate-50 p-2 rounded border border-slate-100">
-                    <span className="italic">Emails and Phones are managed on the Lead Details page.</span>
+                  {/* Emails */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
+                        <Mail size={12} className="text-violet-500" /> Email Addresses
+                      </Label>
+                      <button type="button" onClick={addEmail}
+                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        <Plus size={11} /> Add Email
+                      </button>
+                    </div>
+                    {data.emails.length === 0 && (
+                      <p className="text-[11.5px] text-slate-400 italic">No emails yet — click Add Email to add one.</p>
+                    )}
+                    {data.emails.map((em, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <select
+                          value={em.type}
+                          onChange={e => setEmail(i, 'type', e.target.value)}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-[11.5px] text-slate-700 w-24 shrink-0 focus:outline-none focus:ring-1 focus:ring-ring"
+                        >
+                          {['work','personal','other'].map(t => (
+                            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                          ))}
+                        </select>
+                        <Input
+                          type="email"
+                          value={em.email}
+                          onChange={e => setEmail(i, 'email', e.target.value)}
+                          className="h-8 text-xs flex-1"
+                          placeholder="email@example.com"
+                        />
+                        <button
+                          type="button"
+                          title={em.is_primary ? 'Primary email' : 'Set as primary'}
+                          onClick={() => setPrimaryEmail(i)}
+                          className={`shrink-0 transition-colors ${
+                            em.is_primary
+                              ? 'text-amber-400'
+                              : 'text-slate-300 hover:text-amber-400'
+                          }`}
+                        >
+                          <Star size={13} fill={em.is_primary ? 'currentColor' : 'none'} />
+                        </button>
+                        <button type="button" onClick={() => removeEmail(i)}
+                          className="shrink-0 text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                    {errors['emails.0.email'] && (
+                      <p className="text-red-500 text-[11px]">{errors['emails.0.email']}</p>
+                    )}
+                  </div>
+
+                  {/* Phones */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
+                        <Phone size={12} className="text-violet-500" /> Phone Numbers
+                      </Label>
+                      <button type="button" onClick={addPhone}
+                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        <Plus size={11} /> Add Phone
+                      </button>
+                    </div>
+                    {data.phones.length === 0 && (
+                      <p className="text-[11.5px] text-slate-400 italic">No phones yet — click Add Phone to add one.</p>
+                    )}
+                    {data.phones.map((ph, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <select
+                          value={ph.type}
+                          onChange={e => setPhone(i, 'type', e.target.value)}
+                          className="h-8 rounded-md border border-input bg-background px-2 text-[11.5px] text-slate-700 w-24 shrink-0 focus:outline-none focus:ring-1 focus:ring-ring"
+                        >
+                          {['mobile','work','home','other'].map(t => (
+                            <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                          ))}
+                        </select>
+                        <Input
+                          type="tel"
+                          value={ph.phone}
+                          onChange={e => setPhone(i, 'phone', e.target.value)}
+                          className="h-8 text-xs flex-1"
+                          placeholder="+1 555 000 0000"
+                        />
+                        <button
+                          type="button"
+                          title={ph.is_primary ? 'Primary phone' : 'Set as primary'}
+                          onClick={() => setPrimaryPhone(i)}
+                          className={`shrink-0 transition-colors ${
+                            ph.is_primary
+                              ? 'text-amber-400'
+                              : 'text-slate-300 hover:text-amber-400'
+                          }`}
+                        >
+                          <Star size={13} fill={ph.is_primary ? 'currentColor' : 'none'} />
+                        </button>
+                        <button type="button" onClick={() => removePhone(i)}
+                          className="shrink-0 text-slate-300 hover:text-red-500 transition-colors">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    ))}
+                    {errors['phones.0.phone'] && (
+                      <p className="text-red-500 text-[11px]">{errors['phones.0.phone']}</p>
+                    )}
                   </div>
                 </SectionCard>
               </div>

@@ -64,11 +64,11 @@ class PeopleDataLabsProvider implements LeadProviderInterface
                 ->timeout(10)
                 ->get(self::BASE . '/person/enrich', ['email' => 'test@example.com']);
 
-            Log::channel('apollo')->debug('[PDL:test]', ['status' => $response->status()]);
+            Log::channel('aileadsearch')->debug('[PDL:test]', ['status' => $response->status()]);
 
             return $response->status() !== 401;
         } catch (\Throwable $e) {
-            Log::channel('apollo')->warning('[PDL:test-failed]', ['error' => $e->getMessage()]);
+            Log::channel('aileadsearch')->warning('[PDL:test-failed]', ['error' => $e->getMessage()]);
             return false;
         }
     }
@@ -150,9 +150,13 @@ class PeopleDataLabsProvider implements LeadProviderInterface
         // ── Build request body ────────────────────────────────────────────────
         // PDL removed the 'from' parameter — use scroll_token for pagination.
         // We cache each page's token in session so page N+1 can use it.
+        //
+        // size = credits spent per search (PDL charges 1 credit per record
+        // returned). Kept low to stretch the free trial; raise it only if you
+        // want more leads per page and can afford the extra credits.
         $body = [
             'query'   => $esQuery,
-            'size'    => 10,
+            'size'    => 5,
             'dataset' => 'all',
         ];
 
@@ -165,16 +169,16 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             $scrollToken = session($scrollKey);
             if ($scrollToken) {
                 $body['scroll_token'] = $scrollToken;
-                Log::channel('apollo')->debug('[PDL:scroll-token]', ['page' => $page, 'has_token' => true]);
+                Log::channel('aileadsearch')->debug('[PDL:scroll-token]', ['page' => $page, 'has_token' => true]);
             } else {
-                Log::channel('apollo')->warning('[PDL:scroll-token-missing]', [
+                Log::channel('aileadsearch')->warning('[PDL:scroll-token-missing]', [
                     'page' => $page,
                     'note' => 'Token not cached — pagination may repeat results',
                 ]);
             }
         }
 
-        Log::channel('apollo')->debug('[PDL:request]', [
+        Log::channel('aileadsearch')->debug("[PDL:request] Calling People Data Labs /person/search (page {$page}).", [
             'page'  => $page,
             'text'  => $body['text'] ?? null,
             'query' => $esQuery,
@@ -186,27 +190,42 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             ->post(self::BASE . '/person/search', $body);
         $elapsed  = round((microtime(true) - $start) * 1000) . 'ms';
 
-        $creditsRemaining = $response->header('X-RateLimit-Remaining');
-        $creditsLimit     = $response->header('X-RateLimit-Limit');
-        $creditsPeriod    = $response->header('X-Ratelimit-Period');
+        // Account credit balance — PDL returns it in X-TotalLimit-Remaining.
+        // (X-RateLimit-Remaining is only the per-minute request budget, e.g.
+        // {"minute": 9}, NOT the plan balance — don't use it for the badge.)
+        $creditsRemaining = $response->header('X-TotalLimit-Remaining');
+        $creditsSpent     = $response->header('X-Call-Credits-Spent');
+        $rateRemaining    = $response->header('X-RateLimit-Remaining');
 
-        Log::channel('apollo')->debug('[PDL:http]', [
-            'status'            => $response->status(),
-            'elapsed'           => $elapsed,
-            'total'             => $response->json('total', 0),
-            'credits_remaining' => $creditsRemaining,
-            'credits_limit'     => $creditsLimit,
-            'credits_period'    => $creditsPeriod,
+        Log::channel('aileadsearch')->debug("[PDL:http] People Data Labs responded with HTTP {$response->status()} in {$elapsed}.", [
+            'status'             => $response->status(),
+            'elapsed'            => $elapsed,
+            'total'              => $response->json('total', 0),
+            'credits_remaining'  => $creditsRemaining,
+            'credits_spent'      => $creditsSpent,
+            'rate_remaining'     => $rateRemaining,
         ]);
 
         if ($response->status() === 429) {
-            Log::channel('apollo')->warning('[PDL:rate-limited]');
+            Log::channel('aileadsearch')->warning('[PDL:rate-limited] People Data Labs rate limit hit — too many requests in a short window.');
             throw new \RuntimeException('Too many requests — please wait a moment and try again.');
+        }
+
+        // 402 = plan/credit limit reached. Free PDL plans cap the total number
+        // of searches ("You have hit your account maximum for search").
+        if ($response->status() === 402) {
+            $providerMsg = $response->json('error.message', '');
+            Log::channel('aileadsearch')->error('[PDL:limit-reached] FAILED — People Data Labs plan search limit reached. No more searches available on this plan.', [
+                'step'             => 'PDL:limit-reached',
+                'status'           => 402,
+                'provider_message' => $providerMsg,
+            ]);
+            throw new \RuntimeException('Your People Data Labs plan has used up its search allowance. Upgrade the plan or switch providers in Settings.');
         }
 
         // PDL returns 404 when no records match — treat as empty, not an error.
         if ($response->status() === 404) {
-            Log::channel('apollo')->info('[PDL:no-results]', [
+            Log::channel('aileadsearch')->info('[PDL:no-results] No matching people found for these filters.', [
                 'page'    => $page,
                 'query'   => $esQuery,
                 'elapsed' => $elapsed,
@@ -216,7 +235,7 @@ class PeopleDataLabsProvider implements LeadProviderInterface
 
         if ($response->failed()) {
             $msg = $response->json('error.message', '');
-            Log::channel('apollo')->error('[PDL:failed]', [
+            Log::channel('aileadsearch')->error("[PDL:failed] People Data Labs search failed (HTTP {$response->status()}).", [
                 'status' => $response->status(),
                 'body'   => $response->body(),
             ]);
@@ -234,7 +253,7 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             session([$nextKey => $nextScrollToken]);
         }
 
-        Log::channel('apollo')->info('[PDL:done]', [
+        Log::channel('aileadsearch')->info("[PDL:done] People Data Labs returned " . count($rawData) . " of {$total} match(es) in {$elapsed}.", [
             'total'             => $total,
             'returned'          => count($rawData),
             'elapsed'           => $elapsed,
@@ -244,7 +263,7 @@ class PeopleDataLabsProvider implements LeadProviderInterface
 
         return [
             'total'             => $total,
-            'per_page'          => 10,
+            'per_page'          => 5,
             'current_page'      => $page,
             'credits_remaining' => $creditsRemaining ? (int) $creditsRemaining : null,
             'data'         => collect($rawData)->map(fn($p) => [
@@ -257,7 +276,7 @@ class PeopleDataLabsProvider implements LeadProviderInterface
                 'country'      => $p['location_country'] ?? '',
                 'industry'     => $p['job_company_industry'] ?? '',
                 'company_size' => $p['job_company_size'] ?? '',
-                'seniority'    => $p['job_title_levels'][0] ?? '',
+                'seniority'    => is_array($p['job_title_levels'] ?? null) ? ($p['job_title_levels'][0] ?? '') : '',
                 'email'        => self::extractEmail($p),
                 'phone'        => self::extractPhone($p),
             ])->toArray(),
@@ -273,8 +292,11 @@ class PeopleDataLabsProvider implements LeadProviderInterface
     /**
      * Pull the best available email from a PDL person record.
      * Prefers work email, then the structured emails array, then any
-     * recommended/personal address. Returns '' when none is present
-     * (e.g. the plan redacted contact info).
+     * recommended/personal address. Returns '' when none is present.
+     *
+     * On free/trial PDL plans, redacted PII fields come back as the boolean
+     * `true` ("data exists but is hidden on your plan") instead of an array,
+     * so every list field must be is_array()-guarded before iterating.
      */
     private static function extractEmail(array $p): string
     {
@@ -282,10 +304,12 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             return $p['work_email'];
         }
 
-        foreach ($p['emails'] ?? [] as $entry) {
-            $addr = is_array($entry) ? ($entry['address'] ?? null) : $entry;
-            if (!empty($addr) && is_string($addr)) {
-                return $addr;
+        if (is_array($p['emails'] ?? null)) {
+            foreach ($p['emails'] as $entry) {
+                $addr = is_array($entry) ? ($entry['address'] ?? null) : $entry;
+                if (!empty($addr) && is_string($addr)) {
+                    return $addr;
+                }
             }
         }
 
@@ -293,9 +317,11 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             return $p['recommended_personal_email'];
         }
 
-        foreach ($p['personal_emails'] ?? [] as $addr) {
-            if (!empty($addr) && is_string($addr)) {
-                return $addr;
+        if (is_array($p['personal_emails'] ?? null)) {
+            foreach ($p['personal_emails'] as $addr) {
+                if (!empty($addr) && is_string($addr)) {
+                    return $addr;
+                }
             }
         }
 
@@ -304,6 +330,7 @@ class PeopleDataLabsProvider implements LeadProviderInterface
 
     /**
      * Pull the best available phone number from a PDL person record.
+     * Guards against redacted (boolean `true`) fields like extractEmail.
      */
     private static function extractPhone(array $p): string
     {
@@ -311,9 +338,11 @@ class PeopleDataLabsProvider implements LeadProviderInterface
             return $p['mobile_phone'];
         }
 
-        foreach ($p['phone_numbers'] ?? [] as $num) {
-            if (!empty($num) && is_string($num)) {
-                return $num;
+        if (is_array($p['phone_numbers'] ?? null)) {
+            foreach ($p['phone_numbers'] as $num) {
+                if (!empty($num) && is_string($num)) {
+                    return $num;
+                }
             }
         }
 

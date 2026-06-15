@@ -62,8 +62,13 @@ class LeadGenerationController extends Controller
                 'message'        => $e->getMessage(),
             ], 403);
         } catch (\RuntimeException $e) {
-            $status = str_contains($e->getMessage(), 'Too many') ? 429 : 422;
-            return response()->json(['message' => $e->getMessage()], $status);
+            $message = $e->getMessage();
+            $status  = match (true) {
+                str_contains($message, 'Too many')                                    => 429,
+                str_contains($message, 'allowance') || str_contains($message, 'limit') => 402,
+                default                                                                => 422,
+            };
+            return response()->json(['message' => $message], $status);
         }
     }
 

@@ -131,6 +131,9 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/tags/{tag}',      [TagController::class, 'update'])->name('tags.update');
     Route::delete('/tags/{tag}',   [TagController::class, 'destroy'])->name('tags.destroy');
 
+    // Documentation / user guide (static Inertia page)
+    Route::get('/documentation', fn () => inertia('Documentation/Index'))->name('documentation');
+
     // Profile / Settings
     Route::get('/profile',               [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',             [ProfileController::class, 'update'])->name('profile.update');

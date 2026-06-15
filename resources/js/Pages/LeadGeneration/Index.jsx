@@ -15,6 +15,12 @@ import {
   Table, TableBody, TableCell, TableHead,
   TableHeader, TableRow,
 } from '@/Components/ui/table'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger,
+} from '@/Components/ui/select'
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from '@/Components/ui/tooltip'
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar'
 import { Alert, AlertDescription } from '@/Components/ui/alert'
 import {
@@ -34,6 +40,8 @@ const EXAMPLE_PROMPTS = [
 
 const SENIORITY_LABELS = {
   c_suite:  'C-Suite',
+  owner:    'Owner',
+  founder:  'Founder',
   vp:       'VP',
   director: 'Director',
   manager:  'Manager',
@@ -59,6 +67,34 @@ const FILTER_LABELS = {
   keywords:         'Keywords',
 }
 
+// Common values offered as autocomplete suggestions for the free-text filters.
+const INDUSTRY_SUGGESTIONS = [
+  'SaaS', 'Software', 'Fintech', 'Healthcare', 'E-Commerce', 'Marketing',
+  'Finance', 'Accounting', 'Real Estate', 'Education', 'Technology',
+  'Construction', 'Manufacturing', 'Logistics', 'Retail', 'Hospitality',
+  'Legal Services', 'Consulting', 'Insurance', 'Telecommunications',
+  'Field Services', 'Architecture', 'Engineering', 'Transportation',
+]
+
+const LOCATION_SUGGESTIONS = [
+  'United States', 'United Kingdom', 'Canada', 'Australia', 'New York',
+  'London', 'San Francisco', 'Los Angeles', 'Chicago', 'Houston', 'Dallas',
+  'Miami', 'Florida', 'Texas', 'California', 'Dubai',
+]
+
+const toOptions = (labelMap) => Object.entries(labelMap).map(([value, label]) => ({ value, label }))
+
+// Per-filter behaviour: dropdown (fixed options the user picks from — no
+// format guessing) vs. free-text with type-specific placeholder + suggestions.
+const FILTER_CONFIG = {
+  job_titles:       { kind: 'text',   placeholder: 'Add a job title…' },
+  seniority_levels: { kind: 'select', placeholder: 'Add seniority',     options: toOptions(SENIORITY_LABELS) },
+  industries:       { kind: 'text',   placeholder: 'Add an industry…',  suggestions: INDUSTRY_SUGGESTIONS },
+  locations:        { kind: 'text',   placeholder: 'Add a city or country…', suggestions: LOCATION_SUGGESTIONS },
+  company_sizes:    { kind: 'select', placeholder: 'Add company size',  options: toOptions(COMPANY_SIZE_LABELS) },
+  keywords:         { kind: 'text',   placeholder: 'Add a keyword…' },
+}
+
 function displayValue(filterKey, value) {
   if (filterKey === 'seniority_levels') return SENIORITY_LABELS[value] || value
   if (filterKey === 'company_sizes')   return COMPANY_SIZE_LABELS[value] || value
@@ -68,14 +104,27 @@ function displayValue(filterKey, value) {
 // ── FilterRow ────────────────────────────────────────────────────────────────
 
 function FilterRow({ filterKey, values, onRemove, onAdd }) {
+  const cfg = FILTER_CONFIG[filterKey] || { kind: 'text', placeholder: 'Add…' }
   const [adding, setAdding] = useState(false)
   const [newVal, setNewVal] = useState('')
 
-  const commit = () => {
-    const trimmed = newVal.trim()
-    if (trimmed) { onAdd(filterKey, trimmed); setNewVal('') }
+  // Add a value, skipping blanks and duplicates.
+  const addValue = (raw) => {
+    const trimmed = (raw ?? '').toString().trim()
+    if (trimmed && !values.includes(trimmed)) onAdd(filterKey, trimmed)
+  }
+
+  const commitText = () => {
+    addValue(newVal)
+    setNewVal('')
     setAdding(false)
   }
+
+  // For dropdowns, only offer options not already chosen.
+  const remainingOptions = cfg.kind === 'select'
+    ? cfg.options.filter(o => !values.includes(o.value))
+    : []
+  const listId = `suggest-${filterKey}`
 
   return (
     <div className="flex items-start gap-3 py-2 min-h-[32px]">
@@ -95,20 +144,44 @@ function FilterRow({ filterKey, values, onRemove, onAdd }) {
           </Badge>
         ))}
 
-        {adding ? (
+        {cfg.kind === 'select' ? (
+          remainingOptions.length > 0 && (
+            // Pick-from-list — the user never has to guess a format (e.g. "51–200").
+            <Select value="" onValueChange={addValue}>
+              <SelectTrigger
+                className="h-6 w-auto gap-1 border-dashed px-2 text-[11px] text-muted-foreground hover:text-violet-600"
+              >
+                <Plus size={10} /> {cfg.placeholder}
+              </SelectTrigger>
+              <SelectContent>
+                {remainingOptions.map(o => (
+                  <SelectItem key={o.value} value={o.value} className="text-xs">
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )
+        ) : adding ? (
           <div className="flex items-center gap-1">
             <Input
+              list={cfg.suggestions ? listId : undefined}
               value={newVal}
               onChange={e => setNewVal(e.target.value)}
               onKeyDown={e => {
-                if (e.key === 'Enter') { e.preventDefault(); commit() }
+                if (e.key === 'Enter') { e.preventDefault(); commitText() }
                 if (e.key === 'Escape') { setAdding(false); setNewVal('') }
               }}
-              className="h-6 w-32 text-xs px-2"
+              className="h-6 w-44 text-xs px-2"
               autoFocus
-              placeholder="Type + Enter"
+              placeholder={cfg.placeholder}
             />
-            <button onClick={commit} className="text-violet-600 hover:text-violet-800">
+            {cfg.suggestions && (
+              <datalist id={listId}>
+                {cfg.suggestions.map(s => <option key={s} value={s} />)}
+              </datalist>
+            )}
+            <button onClick={commitText} className="text-violet-600 hover:text-violet-800">
               <Plus size={12} />
             </button>
             <button onClick={() => { setAdding(false); setNewVal('') }} className="text-muted-foreground hover:text-foreground">
@@ -157,7 +230,16 @@ function ResultRow({ contact, selected, onToggle, importing }) {
       <TableCell className="text-xs">
         {contact.email
           ? <span className="text-slate-700">{contact.email}</span>
-          : <span className="text-amber-600">no email</span>}
+          : (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="text-amber-600 cursor-help underline decoration-dotted underline-offset-2">no email (free plan)</span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-[220px] text-xs">
+                This provider didn't return an email for this lead — usually a free-plan limit. The lead still imports with name, title, company, and LinkedIn.
+              </TooltipContent>
+            </Tooltip>
+          )}
       </TableCell>
       <TableCell>
         <p className="text-sm text-slate-700">{contact.title || '—'}</p>
@@ -367,6 +449,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
     <AppLayout>
       <Head title="AI Lead Search" />
 
+      <TooltipProvider delayDuration={150}>
       <div className="p-6 max-w-5xl mx-auto space-y-5">
 
         {/* ── Header ──────────────────────────────────────────────────── */}
@@ -472,11 +555,16 @@ export default function LeadGenerationIndex({ configured, providerName }) {
         {parsedFilters && (step === 'filters' || step === 'results') && (
           <Card className="glass-card">
             <CardContent className="pt-5 pb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
+              <div className="flex items-start gap-2 mb-3">
+                <span className="w-4 h-4 mt-0.5 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[9px] font-bold shrink-0">
                   ✓
                 </span>
-                <p className="text-sm font-medium text-slate-700">AI interpreted your search as:</p>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Filters detected from your prompt</p>
+                  <p className="text-xs text-muted-foreground">
+                    Adjust or add anything before searching — pick from the list for Seniority and Company Size, or type to add titles, industries, and locations.
+                  </p>
+                </div>
               </div>
 
               <div className="divide-y divide-border/50">
@@ -635,6 +723,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
           </Card>
         )}
       </div>
+      </TooltipProvider>
     </AppLayout>
   )
 }

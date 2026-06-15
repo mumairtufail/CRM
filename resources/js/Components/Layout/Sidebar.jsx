@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
-  LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown,
+  LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown, BookOpen,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -29,6 +29,7 @@ const navItems = [
   { label: 'Inbox',      href: '/inbox',     icon: Inbox },
   { label: 'Invoices',   href: '/invoices',  icon: FileText },
   { label: 'Settings',   href: '/profile',   icon: Settings },
+  { label: 'Help & Docs', href: '/documentation', icon: BookOpen },
 ]
 
 const quickActions = [
@@ -64,6 +65,7 @@ const COMPONENT_LABELS = {
   'Projects/Show':    'Project',
   'Projects/Create':  'New Project',
   'Inbox/Index':      'Inbox',
+  'Documentation/Index': 'Documentation',
 }
 
 function useRecentPages(currentUrl, component) {

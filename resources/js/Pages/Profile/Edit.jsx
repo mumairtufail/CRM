@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react'
-import { Head, useForm, usePage, router } from '@inertiajs/react'
+import { Head, useForm, usePage, router, Link } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
@@ -18,7 +18,7 @@ import {
   Upload, Building2, Plus, Check, Server, Mail, User,
   Eye, EyeOff, X, LayoutTemplate, ExternalLink,
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
-  Zap, Key, Wifi, Globe, Phone, PenLine,
+  Zap, Key, Wifi, Globe, Phone, PenLine, BookOpen, ChevronRight,
 } from 'lucide-react'
 
 // lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
@@ -133,6 +133,17 @@ function SettingsNav({ active, onChange, leadGenEnabled }) {
           </div>
         </div>
       ))}
+
+      {/* Help & resources */}
+      <div className="mt-5">
+        <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Help</p>
+        <Link href="/documentation"
+          className="group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-all text-slate-600 hover:bg-violet-50 hover:text-violet-700">
+          <BookOpen size={14} className="text-slate-400 group-hover:text-violet-500" />
+          <span className="flex-1">Documentation</span>
+          <ChevronRight size={13} className="text-slate-300 group-hover:text-violet-400" />
+        </Link>
+      </div>
     </nav>
   )
 }

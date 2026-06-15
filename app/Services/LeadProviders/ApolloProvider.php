@@ -27,11 +27,11 @@ class ApolloProvider implements LeadProviderInterface
                     'per_page' => 1,
                 ]);
 
-            Log::channel('apollo')->debug('[APOLLO:test]', ['status' => $response->status()]);
+            Log::channel('aileadsearch')->debug('[APOLLO:test]', ['status' => $response->status()]);
 
             return $response->status() !== 401 && $response->status() !== 403;
         } catch (\Throwable $e) {
-            Log::channel('apollo')->warning('[APOLLO:test-failed]', ['error' => $e->getMessage()]);
+            Log::channel('aileadsearch')->warning('[APOLLO:test-failed]', ['error' => $e->getMessage()]);
             return false;
         }
     }
@@ -66,7 +66,7 @@ class ApolloProvider implements LeadProviderInterface
             $body['q_keywords'] = implode(' ', $keywords);
         }
 
-        Log::channel('apollo')->debug('[APOLLO:request]', [
+        Log::channel('aileadsearch')->debug("[APOLLO:request] Calling Apollo.io /contacts/search (page {$page}).", [
             'endpoint' => 'contacts/search',
             'page'     => $page,
             'body'     => $body,
@@ -78,19 +78,29 @@ class ApolloProvider implements LeadProviderInterface
             ->post(self::BASE . '/contacts/search', $body);
         $elapsed  = round((microtime(true) - $start) * 1000) . 'ms';
 
-        Log::channel('apollo')->debug('[APOLLO:http]', [
+        Log::channel('aileadsearch')->debug("[APOLLO:http] Apollo.io responded with HTTP {$response->status()} in {$elapsed}.", [
             'status'  => $response->status(),
             'elapsed' => $elapsed,
         ]);
 
         if ($response->status() === 429) {
-            Log::channel('apollo')->warning('[APOLLO:rate-limited]');
+            Log::channel('aileadsearch')->warning('[APOLLO:rate-limited] Apollo.io rate limit hit — too many requests in a short window.');
             throw new \RuntimeException('Too many requests — please wait a moment and try again.');
+        }
+
+        // 402 = plan/credit limit reached.
+        if ($response->status() === 402) {
+            Log::channel('aileadsearch')->error('[APOLLO:limit-reached] FAILED — Apollo.io plan credit limit reached. No more lookups available on this plan.', [
+                'step'   => 'APOLLO:limit-reached',
+                'status' => 402,
+                'body'   => $response->body(),
+            ]);
+            throw new \RuntimeException('Your Apollo.io plan has used up its credit allowance. Upgrade the plan or switch providers in Settings.');
         }
 
         if ($response->failed()) {
             $error = $response->json('error', '');
-            Log::channel('apollo')->error('[APOLLO:failed]', [
+            Log::channel('aileadsearch')->error("[APOLLO:failed] Apollo.io search failed (HTTP {$response->status()}).", [
                 'status' => $response->status(),
                 'body'   => $response->body(),
             ]);
@@ -102,14 +112,14 @@ class ApolloProvider implements LeadProviderInterface
         $pagination = $data['pagination'] ?? [];
         $total      = $pagination['total_entries'] ?? count($rawPeople);
 
-        Log::channel('apollo')->info('[APOLLO:done]', [
+        Log::channel('aileadsearch')->info("[APOLLO:done] Apollo.io returned " . count($rawPeople) . " of {$total} match(es) in {$elapsed}.", [
             'total'    => $total,
             'returned' => count($rawPeople),
             'elapsed'  => $elapsed,
         ]);
 
         if (empty($rawPeople)) {
-            Log::channel('apollo')->debug('[APOLLO:empty-response]', [
+            Log::channel('aileadsearch')->debug('[APOLLO:empty-response]', [
                 'keys'    => array_keys($data),
                 'partial' => $data['partial_results_only'] ?? null,
             ]);

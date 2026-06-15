@@ -160,7 +160,7 @@ class ProfileController extends Controller
         $org->settings = $settings;
         $org->save();
 
-        Log::channel('apollo')->info('[SETTINGS:saved]', ['provider' => $request->input('provider')]);
+        Log::channel('aileadsearch')->info("[SETTINGS:saved] Lead provider saved: {$request->input('provider')}.", ['provider' => $request->input('provider')]);
 
         return response()->json([
             'success'  => true,
@@ -181,12 +181,12 @@ class ProfileController extends Controller
             ? new PeopleDataLabsProvider($apiKey)
             : new ApolloProvider($apiKey);
 
-        Log::channel('apollo')->info('[SETTINGS:test]', ['provider' => $request->input('provider')]);
+        Log::channel('aileadsearch')->info("[SETTINGS:test] Testing connection to {$request->input('provider')}.", ['provider' => $request->input('provider')]);
 
         $ok = $provider->testConnection();
 
         if ($ok) {
-            Log::channel('apollo')->info('[SETTINGS:test-ok]', ['provider' => $provider->getProviderName()]);
+            Log::channel('aileadsearch')->info("[SETTINGS:test-ok] Connection to {$provider->getProviderName()} succeeded.", ['provider' => $provider->getProviderName()]);
             return response()->json([
                 'success'  => true,
                 'provider' => $provider->getProviderName(),
@@ -194,7 +194,7 @@ class ProfileController extends Controller
             ]);
         }
 
-        Log::channel('apollo')->warning('[SETTINGS:test-fail]', ['provider' => $provider->getProviderName()]);
+        Log::channel('aileadsearch')->warning("[SETTINGS:test-fail] Connection to {$provider->getProviderName()} failed — invalid API key or unreachable.", ['provider' => $provider->getProviderName()]);
         return response()->json([
             'success' => false,
             'message' => 'Invalid API key or connection failed',

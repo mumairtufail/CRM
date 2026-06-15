@@ -136,9 +136,19 @@ return [
             'days'   => 7,
         ],
 
-        // Dedicated channel for Apollo lead-generation debugging.
-        // Tail with:  php artisan pail --filter=apollo
-        // Or open:    storage/logs/apollo.log
+        // AI Lead Search — prompt parsing, provider calls, results, and errors.
+        // Every step of a lead search is logged here in plain English.
+        // Tail with:  php artisan pail --filter=aileadsearch
+        // Or open:    storage/logs/aileadsearch.log
+        'aileadsearch' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/aileadsearch.log'),
+            'level'  => 'debug',
+            'days'   => 14,
+        ],
+
+        // Legacy lead-generation channel (kept for back-compat — no longer
+        // written to; use the 'aileadsearch' channel above instead).
         'apollo' => [
             'driver' => 'daily',
             'path'   => storage_path('logs/apollo.log'),

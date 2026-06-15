@@ -15,9 +15,12 @@ class LeadGenerationService implements LeadGenerationInterface
 {
     // ── Logging helper ────────────────────────────────────────────────────────
 
-    private function log(string $level, string $step, array $context = []): void
+    // Writes a plain-English sentence plus structured context to the dedicated
+    // AI Lead Search log channel (storage/logs/aileadsearch.log). The [STEP]
+    // tag is kept for grep-ability.
+    private function log(string $level, string $step, string $message, array $context = []): void
     {
-        Log::channel('apollo')->{$level}("[{$step}] " . ($context['message'] ?? $step), $context);
+        Log::channel('aileadsearch')->{$level}("[{$step}] {$message}", $context + ['step' => $step]);
     }
 
     // ── Provider resolution ───────────────────────────────────────────────────
@@ -36,18 +39,18 @@ class LeadGenerationService implements LeadGenerationInterface
         $encryptedKey = $settings['lead_generation_api_key']  ?? null;
 
         if (!$providerKey || !$encryptedKey) {
-            $this->log('warning', 'PROVIDER:not-configured');
+            $this->log('warning', 'PROVIDER:not-configured', 'No lead provider configured for this workspace — connect Apollo or People Data Labs in Settings.');
             throw new LeadGenerationNotConfiguredException();
         }
 
         try {
             $apiKey = decrypt($encryptedKey);
         } catch (\Throwable) {
-            $this->log('error', 'PROVIDER:decrypt-failed');
+            $this->log('error', 'PROVIDER:decrypt-failed', 'Stored provider API key could not be decrypted — re-save it in Settings.');
             throw new LeadGenerationNotConfiguredException();
         }
 
-        $this->log('info', 'PROVIDER:resolve', ['provider' => $providerKey]);
+        $this->log('info', 'PROVIDER:resolve', "Using lead provider: {$providerKey}", ['provider' => $providerKey]);
 
         return match ($providerKey) {
             'pdl'   => new PeopleDataLabsProvider($apiKey),
@@ -55,12 +58,43 @@ class LeadGenerationService implements LeadGenerationInterface
         };
     }
 
-    // ── Filter parsing (rule-based, no external API) ──────────────────────────
+    // ── Filter parsing ─────────────────────────────────────────────────────────
 
+    // Tries the configured AI engine first (smart, understands any phrasing),
+    // then falls back to the built-in keyword parser so the page always works
+    // even when the AI endpoint is unset, slow, or returns junk.
     public function parsePromptToFilters(string $prompt): array
     {
-        $this->log('info', 'PARSE:start', ['prompt' => $prompt]);
+        $parser = app(AiPromptParser::class);
+        $engine = $parser->isConfigured() ? $parser->modelName() : 'rule-based';
 
+        $this->log('info', 'PARSE:start', "Parsing prompt into filters: \"{$prompt}\"", [
+            'prompt' => $prompt,
+            'engine' => $engine,
+        ]);
+
+        if ($parser->isConfigured()) {
+            $aiFilters = $parser->parse($prompt);
+            if ($aiFilters !== null) {
+                // AiPromptParser already logs "[PARSE] AI returned filters".
+                return $aiFilters;
+            }
+            $this->log('info', 'PARSE:fallback', 'AI parsing was unavailable — using the built-in keyword parser instead.');
+        }
+
+        $result = $this->parsePromptToFiltersRuleBased($prompt);
+        $this->log('info', 'PARSE:done', 'Keyword parser produced filters.', [
+            'filters' => $result,
+            'engine'  => 'rule-based',
+        ]);
+
+        return $result;
+    }
+
+    // ── Filter parsing (rule-based fallback, no external API) ──────────────────
+
+    private function parsePromptToFiltersRuleBased(string $prompt): array
+    {
         $lower = strtolower($prompt);
 
         // Job titles — longer phrases first to avoid partial matches
@@ -224,7 +258,7 @@ class LeadGenerationService implements LeadGenerationInterface
             }
         }
 
-        $result = [
+        return [
             'job_titles'       => array_values(array_unique($jobTitles)),
             'seniority_levels' => array_values(array_unique($seniority)),
             'company_sizes'    => array_values(array_unique($companySizes)),
@@ -232,20 +266,16 @@ class LeadGenerationService implements LeadGenerationInterface
             'industries'       => $industries,
             'keywords'         => [],
         ];
-
-        $this->log('info', 'PARSE:done', ['filters' => $result]);
-
-        return $result;
     }
 
     // ── People search — delegates to the configured provider ──────────────────
 
     public function searchContacts(array $filters, int $page = 1): array
     {
-        $this->log('info', 'SEARCH:start', ['page' => $page, 'filters' => $filters]);
+        $this->log('info', 'SEARCH:start', "Lead search requested (page {$page}).", ['page' => $page, 'filters' => $filters]);
 
         $provider = $this->getProvider();
-        $this->log('info', 'SEARCH:provider', ['name' => $provider->getProviderName()]);
+        $this->log('info', 'SEARCH:provider', "Searching via {$provider->getProviderName()}.", ['name' => $provider->getProviderName()]);
 
         $result = $provider->searchPeople($filters, $page);
 
@@ -264,7 +294,7 @@ class LeadGenerationService implements LeadGenerationInterface
         $total      = $result['total'];
         $totalPages = $perPage > 0 ? (int) ceil($total / $perPage) : 1;
 
-        $this->log('info', 'SEARCH:done', [
+        $this->log('info', 'SEARCH:done', "Search finished — {$total} total match(es), returning " . count($contacts) . " on page {$result['current_page']}.", [
             'total'       => $total,
             'total_pages' => $totalPages,
             'returned'    => count($contacts),
@@ -283,7 +313,7 @@ class LeadGenerationService implements LeadGenerationInterface
 
     public function searchAccounts(array $filters): array
     {
-        $this->log('info', 'ACCOUNTS:start');
+        $this->log('info', 'ACCOUNTS:start', 'Account search is not used by the current UI.');
         return [];
     }
 
@@ -326,7 +356,7 @@ class LeadGenerationService implements LeadGenerationInterface
 
         $hidden = $before - count($filtered);
         if ($hidden > 0) {
-            $this->log('info', 'SEARCH:dedup', [
+            $this->log('info', 'SEARCH:dedup', "Hid {$hidden} contact(s) already imported into this workspace; " . count($filtered) . ' remain.', [
                 'hidden'    => $hidden,
                 'remaining' => count($filtered),
             ]);

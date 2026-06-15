@@ -304,7 +304,7 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
             )}
           </div>
           <div className="px-5 py-2.5 text-center" style={{ background: '#f8f8f8', borderTop: '1px solid rgba(0,0,0,0.07)' }}>
-            <p className="text-[10.5px] text-slate-400">Tokens shown with sample data · Your template signature is added on send · Unsubscribe</p>
+            <p className="text-[10.5px] text-slate-400">Tokens shown with sample data · Your template signature is added on send ·</p>
           </div>
         </div>
       </DialogContent>

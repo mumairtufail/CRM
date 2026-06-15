@@ -671,7 +671,7 @@ export default function CampaignShow({ campaign, sends }) {
               </div>
               <div className="bg-[#faf8f5] border-t border-slate-200 px-6 py-3">
                 <p className="text-[10px] text-muted-foreground text-center">
-                  You're receiving this because you're a contact. · Unsubscribe
+                  You're receiving this because you're a contact.
                 </p>
               </div>
             </div>

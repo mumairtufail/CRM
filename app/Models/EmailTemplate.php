@@ -133,25 +133,54 @@ class EmailTemplate extends Model
     }
 
     /**
-     * Stacked single-column signature: company / website / email / phone / LinkedIn,
-     * each on its own line. Company / website / email / phone render as plain text;
-     * LinkedIn renders as a clickable "LinkedIn" word. Empty fields are omitted.
+     * Compact stacked signature, grouped for breathing room rather than one line
+     * per field: an identity line (company), a web line (website · LinkedIn) and a
+     * contact line (email · phone). Every value is an explicitly styled link so it
+     * never falls back to the client's default blue auto-linkification. Empty
+     * fields — and empty groups — are omitted entirely.
      */
     public static function signatureStack(array $vars): string
     {
-        $rows = [];
+        $sep    = ' <span style="color:#cfcfcf;">&middot;</span> ';
+        $muted  = 'color:#888888;text-decoration:none;';
+        $rows   = [];
 
-        foreach (['company_name', 'company_website', 'company_email', 'company_phone'] as $key) {
-            $value = trim((string) ($vars[$key] ?? ''));
-            if ($value !== '') {
-                $rows[] = '<div style="line-height:1.7;">' . e($value) . '</div>';
-            }
+        $company = trim((string) ($vars['company_name'] ?? ''));
+        $website = trim((string) ($vars['company_website'] ?? ''));
+        $email   = trim((string) ($vars['company_email'] ?? ''));
+        $phone   = trim((string) ($vars['company_phone'] ?? ''));
+
+        // Identity — company name, a shade stronger than the rest.
+        if ($company !== '') {
+            $rows[] = '<div style="font-size:12px;font-weight:600;color:#555555;line-height:1.5;">'
+                . e($company) . '</div>';
         }
 
+        // Web presence — website · LinkedIn.
+        $web = [];
+        if ($website !== '') {
+            $href  = $vars['company_website_url'] ?: $website;
+            $web[] = '<a href="' . e($href) . '" style="' . $muted . '">' . e($website) . '</a>';
+        }
         if (!empty($vars['company_linkedin'])) {
-            $href = $vars['company_linkedin_url'] ?: $vars['company_linkedin'];
-            $rows[] = '<div style="line-height:1.7;"><a href="' . e($href)
-                . '" style="color:#534AB7;text-decoration:underline;">LinkedIn</a></div>';
+            $href  = $vars['company_linkedin_url'] ?: $vars['company_linkedin'];
+            $web[] = '<a href="' . e($href) . '" style="color:#534AB7;text-decoration:none;">LinkedIn</a>';
+        }
+        if ($web) {
+            $rows[] = '<div style="line-height:1.6;margin-top:3px;">' . implode($sep, $web) . '</div>';
+        }
+
+        // Direct contact — email · phone.
+        $contact = [];
+        if ($email !== '') {
+            $contact[] = '<a href="mailto:' . e($email) . '" style="' . $muted . '">' . e($email) . '</a>';
+        }
+        if ($phone !== '') {
+            $tel = preg_replace('/[^\d+]/', '', $phone);
+            $contact[] = '<a href="tel:' . e($tel) . '" style="' . $muted . '">' . e($phone) . '</a>';
+        }
+        if ($contact) {
+            $rows[] = '<div style="line-height:1.6;">' . implode($sep, $contact) . '</div>';
         }
 
         return implode("\n", $rows);

@@ -12,6 +12,7 @@ class FetchedEmail extends Model
     protected $fillable = [
         'organization_id',
         'smtp_credential_id',
+        'folder',
         'message_uid',
         'message_id',
         'from_name',
@@ -46,7 +47,12 @@ class FetchedEmail extends Model
 
     public function scopeInbox($query)
     {
-        return $query->where('is_trashed', false);
+        return $query->where('folder', 'inbox')->where('is_trashed', false);
+    }
+
+    public function scopeSent($query)
+    {
+        return $query->where('folder', 'sent')->where('is_trashed', false);
     }
 
     public function scopeStarred($query)

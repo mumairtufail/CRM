@@ -131,6 +131,11 @@ class ApolloProvider implements LeadProviderInterface
                 'industry'     => $p['organization_industry_tag_values'][0] ?? ($p['organization']['industry'] ?? ($p['industry'] ?? '')),
                 'company_size' => (string) ($p['organization_num_employees'] ?? ($p['organization']['estimated_num_employees'] ?? '')),
                 'seniority'    => $p['seniority'] ?? '',
+                // Apollo masks emails as "email_not_unlocked@domain.com" until
+                // enriched/unlocked — pass through anyway; the importer filters
+                // out the masked placeholder so it never gets saved.
+                'email'        => is_string($p['email'] ?? null) ? $p['email'] : '',
+                'phone'        => $p['phone_numbers'][0]['sanitized_number'] ?? ($p['organization']['phone'] ?? ''),
             ])->toArray(),
         ];
     }

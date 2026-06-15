@@ -299,7 +299,7 @@ class CampaignController extends Controller
 
         if (empty($leadIds)) {
             return back()->withErrors([
-                'error' => 'No leads match the selected recipient criteria.',
+                'error' => 'No recipients with an email address. The selected leads have no email on file (leads added via AI Search may not include emails), so there is nothing to send.',
             ]);
         }
 
@@ -363,11 +363,19 @@ class CampaignController extends Controller
      */
     public function trackOpen(string $token)
     {
-        $send = EmailSend::where('tracking_token', $token)->first();
+        $send = EmailSend::with('lead', 'campaign')->where('tracking_token', $token)->first();
 
         if ($send && ! $send->opened_at) {
             $send->update(['status' => 'opened', 'opened_at' => now()]);
             EmailCampaign::where('id', $send->email_campaign_id)->increment('opened_count');
+
+            \Log::channel('tracking')->info('Email opened', [
+                'token'   => $token,
+                'lead_id' => $send->lead_id,
+                'campaign_id' => $send->email_campaign_id,
+            ]);
+
+            $this->notifyEngagement($send, 'opened');
         }
 
         // 1×1 transparent GIF
@@ -387,12 +395,21 @@ class CampaignController extends Controller
      */
     public function trackClick(string $token, Request $request)
     {
-        $send = EmailSend::where('tracking_token', $token)->first();
+        $send = EmailSend::with('lead', 'campaign')->where('tracking_token', $token)->first();
 
         if ($send) {
             if (! $send->clicked_at) {
                 $send->update(['status' => 'clicked', 'clicked_at' => now()]);
                 EmailCampaign::where('id', $send->email_campaign_id)->increment('clicked_count');
+
+                \Log::channel('tracking')->info('Email link clicked', [
+                    'token'       => $token,
+                    'lead_id'     => $send->lead_id,
+                    'campaign_id' => $send->email_campaign_id,
+                    'url'         => $request->query('url'),
+                ]);
+
+                $this->notifyEngagement($send, 'clicked');
             }
             // Also mark as opened if not already
             if (! $send->opened_at) {
@@ -416,6 +433,46 @@ class CampaignController extends Controller
     // ──────────────────────────────────────────────────
 
     /**
+     * Raise a notification when a lead first engages with a campaign email.
+     * $event is 'opened' or 'clicked'. Runs on the public tracking routes where
+     * no tenant is bound, so organization_id is taken from the EmailSend.
+     */
+    private function notifyEngagement(EmailSend $send, string $event): void
+    {
+        $lead = $send->lead;
+        if (! $lead) {
+            return;
+        }
+
+        $campaignName = $send->campaign?->name;
+        $who          = $lead->full_name ?: $send->email_used;
+
+        $config = [
+            'opened'  => [
+                'type'  => 'lead.email_opened',
+                'title' => "{$who} opened your email",
+            ],
+            'clicked' => [
+                'type'  => 'lead.email_clicked',
+                'title' => "{$who} clicked a link in your email",
+            ],
+        ][$event];
+
+        \App\Models\Notification::push([
+            'organization_id' => $send->organization_id,
+            'type'            => $config['type'],
+            'title'           => $config['title'],
+            'body'            => $campaignName ? "Campaign: {$campaignName}" : null,
+            'link'            => '/leads/' . $lead->id,
+            'data'            => [
+                'lead_id'     => $lead->id,
+                'campaign_id' => $send->email_campaign_id,
+                'send_id'     => $send->id,
+            ],
+        ]);
+    }
+
+    /**
      * The sender identity always comes from the active SMTP account in
      * Settings → SMTP (falling back to the user's own name/email). Campaigns
      * never ask for it, so it can never drift from the account actually used
@@ -433,16 +490,18 @@ class CampaignController extends Controller
 
     private function countRecipients(array $filters, ?int $groupId, string $mode): int
     {
+        // Only leads with at least one email address are reachable, so the
+        // recipient count must reflect sendable leads — not raw lead totals.
         if ($mode === 'all') {
-            return Lead::count();
+            return Lead::has('emails')->count();
         }
 
         if ($mode === 'group' && $groupId) {
-            return LeadGroup::find($groupId)?->leads()->count() ?? 0;
+            return LeadGroup::find($groupId)?->leads()->has('emails')->count() ?? 0;
         }
 
         // 'filter' mode
-        $query = Lead::query();
+        $query = Lead::query()->has('emails');
 
         if (! empty($filters['statuses'])) {
             $query->whereIn('status', (array) $filters['statuses']);
@@ -461,10 +520,10 @@ class CampaignController extends Controller
 
         if ($mode === 'group' && $campaign->group_id) {
             return LeadGroup::find($campaign->group_id)
-                ?->leads()->pluck('leads.id')->toArray() ?? [];
+                ?->leads()->has('emails')->pluck('leads.id')->toArray() ?? [];
         }
 
-        $query = Lead::query();
+        $query = Lead::query()->has('emails');
 
         if ($mode === 'filter') {
             $filters = $campaign->filters ?? [];

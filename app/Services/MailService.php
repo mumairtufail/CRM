@@ -2,10 +2,12 @@
 
 namespace App\Services;
 
+use App\Jobs\FetchEmailsJob;
 use App\Mail\CampaignMail;
 use App\Models\EmailCampaign;
 use App\Models\EmailSend;
 use App\Models\EmailTemplate;
+use App\Models\FetchedEmail;
 use App\Models\Lead;
 use App\Models\SmtpCredential;
 use App\Models\User;
@@ -177,12 +179,65 @@ class MailService
             ])
             : $bodyHtml;
 
-        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $subject) {
+        // Pin an explicit Message-ID so the locally-recorded "sent" row can be
+        // matched (and de-duped) against the same message once it shows up in the
+        // provider's Sent folder during the next IMAP sync.
+        $domain    = Str::after($this->credential->from_email, '@') ?: 'localhost';
+        $messageId = (string) Str::uuid() . '@' . $domain;
+
+        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $subject, $messageId) {
             $message
                 ->to($toEmail)
                 ->from($this->credential->from_email, $this->credential->from_name)
                 ->subject($subject);
+
+            $headers = $message->getSymfonyMessage()->getHeaders();
+            $headers->remove('Message-ID');
+            $headers->addIdHeader('Message-ID', $messageId);
         });
+
+        $this->recordSent($toEmail, $subject, $html, $messageId);
+    }
+
+    /**
+     * Persist a copy of an outgoing email into the Sent folder so it's visible in
+     * the inbox immediately, without waiting for an IMAP sync — and regardless of
+     * whether IMAP is even configured. Best-effort: a failure here must not
+     * surface as a send failure. The shared Message-ID lets the next IMAP Sent
+     * sync de-dupe against this row instead of creating a duplicate.
+     */
+    public function recordSent(string $toEmail, string $subject, string $html, string $messageId, string $toName = ''): void
+    {
+        try {
+            FetchedEmail::create([
+                'organization_id'    => $this->credential->organization_id,
+                'smtp_credential_id' => $this->credential->id,
+                'folder'             => 'sent',
+                'message_uid'        => null,
+                'message_id'         => FetchEmailsJob::normalizeMessageId($messageId),
+                'from_name'          => $this->credential->from_name,
+                'from_email'         => $this->credential->from_email,
+                'to_addresses'       => [['name' => $toName, 'email' => $toEmail]],
+                'cc_addresses'       => [],
+                'subject'            => mb_substr($subject, 0, 255),
+                'body_html'          => $html,
+                'body_text'          => trim(strip_tags($html)),
+                'is_read'            => true,
+                'sent_at'            => now(),
+            ]);
+
+            \Log::channel('mail')->info('Recorded sent email', [
+                'org'        => $this->credential->organization_id,
+                'to'         => $toEmail,
+                'subject'    => mb_substr($subject, 0, 80),
+                'message_id' => $messageId,
+            ]);
+        } catch (\Throwable $e) {
+            \Log::channel('mail')->warning('Failed to record sent email', [
+                'to'    => $toEmail,
+                'error' => $e->getMessage(),
+            ]);
+        }
     }
 
     /**

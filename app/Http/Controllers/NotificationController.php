@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Notification;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class NotificationController extends Controller
@@ -37,6 +38,31 @@ class NotificationController extends Controller
     public function markAllRead(): RedirectResponse
     {
         Notification::unread()->update(['read_at' => now()]);
+
+        return back();
+    }
+
+    /**
+     * Delete a single notification — works whether read or unread.
+     */
+    public function destroy(Notification $notification): RedirectResponse
+    {
+        $id = $notification->id;
+        $notification->delete();
+
+        Log::channel('notifications')->info('Notification deleted', ['id' => $id]);
+
+        return back();
+    }
+
+    /**
+     * Clear every notification for the current workspace (read and unread).
+     */
+    public function destroyAll(): RedirectResponse
+    {
+        $count = Notification::query()->delete();
+
+        Log::channel('notifications')->info('All notifications cleared', ['count' => $count]);
 
         return back();
     }

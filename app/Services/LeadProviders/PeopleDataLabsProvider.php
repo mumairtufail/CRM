@@ -258,6 +258,8 @@ class PeopleDataLabsProvider implements LeadProviderInterface
                 'industry'     => $p['job_company_industry'] ?? '',
                 'company_size' => $p['job_company_size'] ?? '',
                 'seniority'    => $p['job_title_levels'][0] ?? '',
+                'email'        => self::extractEmail($p),
+                'phone'        => self::extractPhone($p),
             ])->toArray(),
         ];
     }
@@ -266,6 +268,56 @@ class PeopleDataLabsProvider implements LeadProviderInterface
     {
         if (empty($url)) return null;
         return str_starts_with($url, 'http') ? $url : 'https://' . $url;
+    }
+
+    /**
+     * Pull the best available email from a PDL person record.
+     * Prefers work email, then the structured emails array, then any
+     * recommended/personal address. Returns '' when none is present
+     * (e.g. the plan redacted contact info).
+     */
+    private static function extractEmail(array $p): string
+    {
+        if (!empty($p['work_email']) && is_string($p['work_email'])) {
+            return $p['work_email'];
+        }
+
+        foreach ($p['emails'] ?? [] as $entry) {
+            $addr = is_array($entry) ? ($entry['address'] ?? null) : $entry;
+            if (!empty($addr) && is_string($addr)) {
+                return $addr;
+            }
+        }
+
+        if (!empty($p['recommended_personal_email']) && is_string($p['recommended_personal_email'])) {
+            return $p['recommended_personal_email'];
+        }
+
+        foreach ($p['personal_emails'] ?? [] as $addr) {
+            if (!empty($addr) && is_string($addr)) {
+                return $addr;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Pull the best available phone number from a PDL person record.
+     */
+    private static function extractPhone(array $p): string
+    {
+        if (!empty($p['mobile_phone']) && is_string($p['mobile_phone'])) {
+            return $p['mobile_phone'];
+        }
+
+        foreach ($p['phone_numbers'] ?? [] as $num) {
+            if (!empty($num) && is_string($num)) {
+                return $num;
+            }
+        }
+
+        return '';
     }
 
     private function headers(): array

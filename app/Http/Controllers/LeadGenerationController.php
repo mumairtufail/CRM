@@ -97,7 +97,7 @@ class LeadGenerationController extends Controller
                 continue;
             }
 
-            Lead::create([
+            $lead = Lead::create([
                 'first_name'   => $firstName,
                 'last_name'    => $lastName,
                 'job_title'    => $contact['title'] ?? null,
@@ -109,6 +109,17 @@ class LeadGenerationController extends Controller
                 'source'       => 'AI Search',
                 'status'       => 'new',
             ]);
+
+            $email = trim($contact['email'] ?? '');
+            // Skip Apollo's masked placeholder addresses — they are not real.
+            if ($email && !str_contains($email, 'email_not_unlocked') && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $lead->emails()->create(['email' => $email, 'type' => 'work', 'is_primary' => true]);
+            }
+
+            $phone = trim($contact['phone'] ?? '');
+            if ($phone) {
+                $lead->phones()->create(['phone' => $phone, 'type' => 'mobile', 'is_primary' => true]);
+            }
 
             $imported++;
         }

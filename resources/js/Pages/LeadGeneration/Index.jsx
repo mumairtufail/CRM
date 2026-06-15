@@ -154,6 +154,11 @@ function ResultRow({ contact, selected, onToggle, importing }) {
           </div>
         </div>
       </TableCell>
+      <TableCell className="text-xs">
+        {contact.email
+          ? <span className="text-slate-700">{contact.email}</span>
+          : <span className="text-amber-600">no email</span>}
+      </TableCell>
       <TableCell>
         <p className="text-sm text-slate-700">{contact.title || '—'}</p>
         {contact.seniority && (
@@ -580,6 +585,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="w-10"></TableHead>
                     <TableHead>Name</TableHead>
+                    <TableHead>Email</TableHead>
                     <TableHead>Title / Seniority</TableHead>
                     <TableHead>Industry</TableHead>
                     <TableHead>Location</TableHead>

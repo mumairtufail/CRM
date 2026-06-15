@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import {
   Inbox, Star, Trash2, RefreshCw, Mail, MailOpen,
   StarOff, RotateCcw, Trash, AlertCircle, Settings,
-  ChevronRight, User, Clock, PenLine, X,
+  ChevronRight, User, Clock, PenLine, X, Send,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -78,6 +78,7 @@ function SetupBanner({ hasSmtp }) {
 
 const FOLDERS = [
   { key: 'inbox',   label: 'Inbox',   icon: Inbox,  countKey: 'inbox'   },
+  { key: 'sent',    label: 'Sent',    icon: Send,   countKey: 'sent'    },
   { key: 'starred', label: 'Starred', icon: Star,   countKey: 'starred' },
   { key: 'trash',   label: 'Trash',   icon: Trash2, countKey: 'trash'   },
 ]
@@ -178,8 +179,12 @@ function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChan
 // ─── Email list ───────────────────────────────────────────────────────────────
 
 const EmailListItem = memo(function EmailListItem({ email, active, onSelect }) {
-  const letter  = avatarLetter(email.from_name, email.from_email)
-  const gradient = avatarGradient(email.from_email)
+  // In the Sent folder the meaningful party is the recipient, not the sender (you).
+  const isSent    = email.folder === 'sent'
+  const partyName = isSent ? (email.to?.name || email.to?.email || '') : email.from_name
+  const partyMail = isSent ? (email.to?.email || '') : email.from_email
+  const letter    = avatarLetter(partyName, partyMail)
+  const gradient  = avatarGradient(partyMail)
 
   return (
     <button
@@ -208,7 +213,8 @@ const EmailListItem = memo(function EmailListItem({ email, active, onSelect }) {
               'text-[12.5px] truncate',
               email.is_read ? 'font-medium text-slate-600' : 'font-bold text-slate-900'
             )}>
-              {email.from_name || email.from_email}
+              {isSent && <span className="text-slate-400 font-normal">To: </span>}
+              {partyName || partyMail}
             </span>
             <span className="text-[10.5px] text-slate-400 shrink-0 ml-1">{formatEmailDate(email.sent_at)}</span>
           </div>
@@ -273,11 +279,13 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
           style={{ background: 'rgba(124,58,237,0.07)' }}>
           {folder === 'starred' ? <Star size={22} className="text-violet-400" />
             : folder === 'trash' ? <Trash2 size={22} className="text-violet-400" />
+            : folder === 'sent' ? <Send size={22} className="text-violet-400" />
             : <Inbox size={22} className="text-violet-400" />}
         </div>
         <p className="text-[13px] font-medium text-slate-600 mb-1">
           {folder === 'starred' ? 'No starred emails'
             : folder === 'trash' ? 'Trash is empty'
+            : folder === 'sent' ? 'No sent emails yet'
             : 'Inbox is empty'}
         </p>
         <p className="text-[11.5px] text-slate-400">
@@ -302,14 +310,14 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
         <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100">
           <button
             disabled={emails.current_page <= 1}
-            onClick={() => router.get('/inbox', { page: emails.current_page - 1 }, { preserveState: true })}
+            onClick={() => router.get('/inbox', { folder, page: emails.current_page - 1 }, { preserveState: true })}
             className="text-[11.5px] text-slate-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed">
             ← Prev
           </button>
           <span className="text-[11px] text-slate-400">{emails.current_page} / {emails.last_page}</span>
           <button
             disabled={emails.current_page >= emails.last_page}
-            onClick={() => router.get('/inbox', { page: emails.current_page + 1 }, { preserveState: true })}
+            onClick={() => router.get('/inbox', { folder, page: emails.current_page + 1 }, { preserveState: true })}
             className="text-[11.5px] text-slate-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed">
             Next →
           </button>

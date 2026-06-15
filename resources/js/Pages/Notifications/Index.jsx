@@ -4,12 +4,15 @@ import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import EmptyState from '@/Components/Common/EmptyState'
 import { Button } from '@/Components/ui/button'
-import { Bell, Check, ChevronLeft, ChevronRight, UserPlus, Mail } from 'lucide-react'
+import { Bell, Check, ChevronLeft, ChevronRight, UserPlus, Mail, MailOpen, MousePointerClick, Reply, Trash2, X } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 
 const TYPE_META = {
-  'lead.created':        { icon: UserPlus, color: 'text-emerald-600 bg-emerald-50' },
-  'lead.email_received': { icon: Mail,     color: 'text-violet-600 bg-violet-50'   },
+  'lead.created':        { icon: UserPlus,           color: 'text-emerald-600 bg-emerald-50' },
+  'lead.email_received': { icon: Mail,               color: 'text-violet-600 bg-violet-50'   },
+  'lead.email_replied':  { icon: Reply,              color: 'text-blue-600 bg-blue-50'       },
+  'lead.email_opened':   { icon: MailOpen,           color: 'text-amber-600 bg-amber-50'     },
+  'lead.email_clicked':  { icon: MousePointerClick,  color: 'text-pink-600 bg-pink-50'       },
 }
 
 function timeAgo(iso) {
@@ -31,6 +34,17 @@ export default function NotificationsIndex({ notifications, unread }) {
     })
   }
 
+  const deleteOne = (e, n) => {
+    e.stopPropagation()
+    router.delete(`/notifications/${n.id}`, { preserveScroll: true, preserveState: true })
+  }
+
+  const clearAll = () => {
+    if (!rows.length) return
+    if (!window.confirm('Delete all notifications? This cannot be undone.')) return
+    router.delete('/notifications/clear', { preserveScroll: true })
+  }
+
   const goPage = useCallback((page) => {
     router.get('/notifications', { page }, { preserveState: true })
   }, [])
@@ -42,10 +56,19 @@ export default function NotificationsIndex({ notifications, unread }) {
         <PageHeader
           title="Notifications"
           description={`${pagination.total ?? 0} total · ${unread} unread`}
-          action={unread > 0 && (
-            <Button size="sm" variant="outline" className="gap-1.5 h-9" onClick={markAllRead}>
-              <Check size={14} /> Mark all read
-            </Button>
+          action={(
+            <div className="flex items-center gap-2">
+              {unread > 0 && (
+                <Button size="sm" variant="outline" className="gap-1.5 h-9" onClick={markAllRead}>
+                  <Check size={14} /> Mark all read
+                </Button>
+              )}
+              {rows.length > 0 && (
+                <Button size="sm" variant="outline" className="gap-1.5 h-9 text-red-600 hover:text-red-700" onClick={clearAll}>
+                  <Trash2 size={14} /> Clear all
+                </Button>
+              )}
+            </div>
           )}
         />
 
@@ -57,25 +80,34 @@ export default function NotificationsIndex({ notifications, unread }) {
               const meta = TYPE_META[n.type] || { icon: Bell, color: 'text-slate-500 bg-slate-100' }
               const Icon = meta.icon
               return (
-                <button
+                <div
                   key={n.id}
-                  onClick={() => openNotification(n)}
-                  className={`flex items-start gap-3 w-full px-4 sm:px-5 py-3.5 text-left border-b border-gray-50 last:border-0 transition-colors hover:bg-slate-50 ${
+                  className={`group flex items-start gap-3 w-full px-4 sm:px-5 py-3.5 border-b border-gray-50 last:border-0 transition-colors hover:bg-slate-50 ${
                     n.read_at ? '' : 'bg-violet-50/40'
                   }`}
                 >
-                  <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${meta.color}`}>
-                    <Icon size={16} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="text-[13.5px] font-semibold text-slate-800 truncate">{n.title}</p>
-                      {!n.read_at && <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />}
+                  <button onClick={() => openNotification(n)} className="flex items-start gap-3 min-w-0 flex-1 text-left">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${meta.color}`}>
+                      <Icon size={16} />
                     </div>
-                    {n.body && <p className="text-[12.5px] text-slate-500 truncate mt-0.5">{n.body}</p>}
-                    <p className="text-[11px] text-slate-400 mt-1">{timeAgo(n.created_at)}</p>
-                  </div>
-                </button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[13.5px] font-semibold text-slate-800 truncate">{n.title}</p>
+                        {!n.read_at && <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />}
+                      </div>
+                      {n.body && <p className="text-[12.5px] text-slate-500 truncate mt-0.5">{n.body}</p>}
+                      <p className="text-[11px] text-slate-400 mt-1">{timeAgo(n.created_at)}</p>
+                    </div>
+                  </button>
+                  <button
+                    onClick={(e) => deleteOne(e, n)}
+                    aria-label="Delete notification"
+                    title="Delete"
+                    className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <X size={15} />
+                  </button>
+                </div>
               )
             })
           )}

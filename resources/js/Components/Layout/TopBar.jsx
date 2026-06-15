@@ -111,6 +111,11 @@ export default function TopBar({ title, onMenuClick }) {
     })
   }
 
+  const deleteNotification = (e, n) => {
+    e.stopPropagation()
+    router.delete(`/notifications/${n.id}`, { preserveScroll: true, preserveState: true })
+  }
+
   const formUrl = organization ? `/intake/${organization.slug}` : null
   const copyFormLink = () => {
     if (!formUrl) return
@@ -314,20 +319,29 @@ export default function TopBar({ title, onMenuClick }) {
                   </div>
                 ) : (
                   items.map(n => (
-                    <button
+                    <div
                       key={n.id}
-                      onClick={() => openNotification(n)}
-                      className={`flex items-start gap-2.5 w-full px-4 py-3 text-left border-b border-slate-50 transition-colors hover:bg-slate-50 ${
+                      className={`group flex items-start gap-2.5 w-full px-4 py-3 border-b border-slate-50 transition-colors hover:bg-slate-50 ${
                         n.read_at ? '' : 'bg-violet-50/40'
                       }`}
                     >
-                      <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${n.read_at ? 'bg-transparent' : 'bg-violet-500'}`} />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[12.5px] font-semibold text-slate-700 truncate">{n.title}</p>
-                        {n.body && <p className="text-[11.5px] text-slate-500 truncate">{n.body}</p>}
-                        <p className="text-[10.5px] text-slate-400 mt-0.5">{timeAgo(n.created_at)}</p>
-                      </div>
-                    </button>
+                      <button onClick={() => openNotification(n)} className="flex items-start gap-2.5 min-w-0 flex-1 text-left">
+                        <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${n.read_at ? 'bg-transparent' : 'bg-violet-500'}`} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[12.5px] font-semibold text-slate-700 truncate">{n.title}</p>
+                          {n.body && <p className="text-[11.5px] text-slate-500 truncate">{n.body}</p>}
+                          <p className="text-[10.5px] text-slate-400 mt-0.5">{timeAgo(n.created_at)}</p>
+                        </div>
+                      </button>
+                      <button
+                        onClick={(e) => deleteNotification(e, n)}
+                        aria-label="Delete notification"
+                        title="Delete"
+                        className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                      >
+                        <X size={13} />
+                      </button>
+                    </div>
                   ))
                 )}
               </div>

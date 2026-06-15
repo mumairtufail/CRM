@@ -146,6 +146,39 @@ return [
             'days'   => 14,
         ],
 
+        // Campaign sending (SendCampaignBatch): per-lead send results, failures.
+        // storage/logs/campaigns.log
+        'campaigns' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/campaigns.log'),
+            'level'  => 'debug',
+            'days'   => 14,
+        ],
+
+        // Open/click pixel + redirect hits. storage/logs/tracking.log
+        'tracking' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/tracking.log'),
+            'level'  => 'debug',
+            'days'   => 14,
+        ],
+
+        // Notification creation/lifecycle. storage/logs/notifications.log
+        'notifications' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/notifications.log'),
+            'level'  => 'debug',
+            'days'   => 14,
+        ],
+
+        // Outbound compose/sent recording. storage/logs/mail.log
+        'mail' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/mail.log'),
+            'level'  => 'debug',
+            'days'   => 14,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],

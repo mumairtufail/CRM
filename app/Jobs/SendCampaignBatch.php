@@ -57,7 +57,13 @@ class SendCampaignBatch implements ShouldQueue
             if ($campaign->status === 'paused') break;
 
             $email = $lead->primary_email;
-            if (! $email) continue;
+            if (! $email) {
+                \Illuminate\Support\Facades\Log::channel('campaigns')->warning('Campaign send skipped — lead has no email', [
+                    'campaign_id' => $this->campaignId,
+                    'lead_id'     => $lead->id,
+                ]);
+                continue;
+            }
 
             $alreadySent = EmailSend::where('email_campaign_id', $campaign->id)
                 ->where('lead_id', $lead->id)
@@ -68,6 +74,11 @@ class SendCampaignBatch implements ShouldQueue
             // Generate a unique tracking token for this send
             $token = Str::random(64);
 
+            // Explicit Message-ID — links replies (In-Reply-To) and the Sent copy
+            // back to this send. Stored on the EmailSend so inbound replies resolve.
+            $domain    = Str::after($fromEmail, '@') ?: 'localhost';
+            $messageId = (string) Str::uuid() . '@' . $domain;
+
             // Pre-create the EmailSend record so the token is in DB
             // before the email could potentially trigger the pixel
             $emailSend = EmailSend::updateOrCreate(
@@ -76,6 +87,7 @@ class SendCampaignBatch implements ShouldQueue
                     'email_used'      => $email,
                     'status'          => 'pending',
                     'tracking_token'  => $token,
+                    'message_id'      => FetchEmailsJob::normalizeMessageId($messageId),
                 ]
             );
 
@@ -94,9 +106,19 @@ class SendCampaignBatch implements ShouldQueue
 
                 \Illuminate\Support\Facades\Mail::mailer('dynamic')
                     ->to($email, $lead->full_name)
-                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName, $subject));
+                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName, $subject, $messageId));
 
                 $emailSend->update(['status' => 'sent', 'sent_at' => now(), 'error_message' => null]);
+
+                // Record the send into the Sent folder immediately — works even
+                // for SMTP-only accounts with no IMAP configured.
+                $mailer->recordSent($email, $subject, $html, $messageId, $lead->full_name);
+
+                \Illuminate\Support\Facades\Log::channel('campaigns')->info('Campaign email sent', [
+                    'campaign_id' => $campaign->id,
+                    'lead_id'     => $lead->id,
+                    'email'       => $email,
+                ]);
 
                 // Auto-mark the lead as contacted via mail so the outreach
                 // checkbox shows checked once a campaign reaches them.
@@ -131,13 +153,11 @@ class SendCampaignBatch implements ShouldQueue
         if ($this->isLastBatch) {
             $campaign->refresh();
             if ($campaign->status !== 'paused') {
-                // If nothing was delivered and at least one send failed,
-                // mark the campaign failed (re-sendable) instead of 'sent'.
-                $hasFailures = EmailSend::where('email_campaign_id', $campaign->id)
-                    ->where('status', 'failed')
-                    ->exists();
-
-                $finalStatus = ($campaign->sent_count === 0 && $hasFailures) ? 'failed' : 'sent';
+                // If nothing was ever delivered, the campaign did not succeed —
+                // mark it 'failed' (re-sendable) rather than falsely 'sent'.
+                // This covers both real SMTP failures and recipients skipped
+                // for having no email address.
+                $finalStatus = $campaign->sent_count === 0 ? 'failed' : 'sent';
                 $campaign->update(['status' => $finalStatus, 'sent_at' => now()]);
             }
         }

@@ -19,16 +19,29 @@ class CampaignMail extends Mailable
         public readonly ?string $fromEmail = null,
         public readonly ?string $fromName  = null,
         public readonly ?string $renderedSubject = null,
+        public readonly ?string $messageId = null,
     ) {}
 
     public function build(): static
     {
-        return $this
+        $mail = $this
             ->from(
                 $this->fromEmail ?? $this->campaign->from_email,
                 $this->fromName  ?? $this->campaign->from_name,
             )
             ->subject($this->renderedSubject ?? $this->campaign->subject)
             ->html($this->renderedHtml ?? $this->campaign->body_html);
+
+        // Pin an explicit Message-ID so replies (In-Reply-To) and the Sent-folder
+        // copy can be tied back to this exact send.
+        if ($this->messageId) {
+            $mail->withSymfonyMessage(function ($message) {
+                $headers = $message->getHeaders();
+                $headers->remove('Message-ID');
+                $headers->addIdHeader('Message-ID', $this->messageId);
+            });
+        }
+
+        return $mail;
     }
 }

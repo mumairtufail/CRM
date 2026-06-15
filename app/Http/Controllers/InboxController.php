@@ -19,18 +19,21 @@ class InboxController extends Controller
         $query = FetchedEmail::orderBy('sent_at', 'desc');
 
         match ($folder) {
+            'sent'    => $query->sent(),
             'starred' => $query->starred(),
             'trash'   => $query->trashed(),
             default   => $query->inbox(),
         };
 
         $emails = $query->select([
-            'id', 'from_name', 'from_email', 'subject',
+            'id', 'folder', 'from_name', 'from_email', 'to_addresses', 'subject',
             'body_text', 'is_read', 'is_starred', 'is_trashed', 'sent_at',
         ])->paginate(30)->through(fn ($e) => [
             'id'         => $e->id,
+            'folder'     => $e->folder,
             'from_name'  => $e->from_name,
             'from_email' => $e->from_email,
+            'to'         => $e->to_addresses[0] ?? null,
             'subject'    => $e->subject,
             'snippet'    => $e->body_text ? mb_substr(strip_tags($e->body_text), 0, 120) : '',
             'is_read'    => $e->is_read,
@@ -42,6 +45,7 @@ class InboxController extends Controller
         $counts = [
             'inbox'   => FetchedEmail::inbox()->count(),
             'unread'  => FetchedEmail::inbox()->unread()->count(),
+            'sent'    => FetchedEmail::sent()->count(),
             'starred' => FetchedEmail::starred()->count(),
             'trash'   => FetchedEmail::trashed()->count(),
         ];

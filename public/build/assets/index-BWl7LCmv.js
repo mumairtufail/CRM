@@ -1,1 +1,0 @@
-import{a as t}from"./app-mEu7I9J_.js";var f=globalThis!=null&&globalThis.document?t.useLayoutEffect:()=>{};function a(u){const e=t.useRef(u);return t.useEffect(()=>{e.current=u}),t.useMemo(()=>(...s)=>{var r;return(r=e.current)==null?void 0:r.call(e,...s)},[])}export{f as a,a as u};

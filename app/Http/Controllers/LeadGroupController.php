@@ -89,6 +89,19 @@ class LeadGroupController extends Controller
             ->with('success', "Group \"{$group->name}\" deleted.");
     }
 
+    public function bulkDestroy(Request $request)
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer|exists:lead_groups,id',
+        ]);
+
+        $count = LeadGroup::whereIn('id', $validated['ids'])->delete();
+
+        return redirect()->route('groups.index')
+            ->with('success', "{$count} group" . ($count !== 1 ? 's' : '') . ' deleted.');
+    }
+
     public function addLeads(Request $request, LeadGroup $group)
     {
         $validated = $request->validate([

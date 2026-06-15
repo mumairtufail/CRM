@@ -12,7 +12,7 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/Components/ui/dropdown-menu'
-import { UsersRound, Plus, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { UsersRound, Plus, MoreHorizontal, Pencil, Trash2, X, Check } from 'lucide-react'
 import { toast } from 'sonner'
 
 const PRESET_COLORS = [
@@ -118,6 +118,20 @@ export default function GroupsIndex({ groups }) {
   const [editGroup, setEditGroup]           = useState(null)
   const [deleteTarget, setDeleteTarget]     = useState(null)
   const [deleting, setDeleting]             = useState(false)
+  const [selectedIds, setSelectedIds]       = useState(new Set())
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
+  const [bulkDeleting, setBulkDeleting]     = useState(false)
+
+  const selectionCount = selectedIds.size
+  const selectionActive = selectionCount > 0
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      next.has(id) ? next.delete(id) : next.add(id)
+      return next
+    })
+  }
 
   const handleDelete = () => {
     if (!deleteTarget) return
@@ -126,6 +140,20 @@ export default function GroupsIndex({ groups }) {
       onSuccess: () => toast.success(`"${deleteTarget.name}" deleted`),
       onError:   () => toast.error('Failed to delete group'),
       onFinish:  () => { setDeleting(false); setDeleteTarget(null) },
+    })
+  }
+
+  const handleBulkDelete = () => {
+    setBulkDeleting(true)
+    const ids = [...selectedIds]
+    router.post('/groups/bulk-destroy', { ids }, {
+      preserveScroll: true,
+      onSuccess: () => {
+        toast.success(`${ids.length} group${ids.length !== 1 ? 's' : ''} deleted`)
+        setSelectedIds(new Set())
+      },
+      onError:  () => toast.error('Failed to delete groups'),
+      onFinish: () => { setBulkDeleting(false); setBulkDeleteOpen(false) },
     })
   }
 
@@ -145,9 +173,32 @@ export default function GroupsIndex({ groups }) {
 
         {groups?.length ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-5xl">
-            {groups.map(g => (
-              <Link key={g.id} href={`/groups/${g.id}`} className="block group">
-                <div className="form-card px-4 py-3.5 hover:shadow-md transition-all cursor-pointer border border-transparent hover:border-slate-200">
+            {groups.map(g => {
+              const selected = selectedIds.has(g.id)
+              return (
+              <Link
+                key={g.id}
+                href={`/groups/${g.id}`}
+                className="block group"
+                onClick={e => { if (selectionActive) { e.preventDefault(); toggleSelect(g.id) } }}
+              >
+                <div className={`form-card relative px-4 py-3.5 transition-all cursor-pointer border ${
+                  selected
+                    ? 'border-violet-300 ring-1 ring-violet-200 bg-violet-50/40'
+                    : 'border-transparent hover:border-slate-200 hover:shadow-md'
+                }`}>
+                  {/* Selection checkbox */}
+                  <button
+                    type="button"
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); toggleSelect(g.id) }}
+                    className={`absolute top-2 left-2 z-10 w-[18px] h-[18px] rounded-md border flex items-center justify-center shadow-sm transition-all ${
+                      selected ? 'border-violet-600 bg-violet-600' : 'border-slate-300 bg-white'
+                    } ${(selected || selectionActive) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    title={selected ? 'Deselect' : 'Select'}
+                  >
+                    {selected && <Check size={12} className="text-white" />}
+                  </button>
+
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
                       <div
@@ -165,7 +216,7 @@ export default function GroupsIndex({ groups }) {
                     </div>
 
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild onClick={e => e.preventDefault()}>
+                      <DropdownMenuTrigger asChild onClick={e => { e.preventDefault(); e.stopPropagation() }}>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -177,14 +228,14 @@ export default function GroupsIndex({ groups }) {
                       <DropdownMenuContent align="end" className="w-36">
                         <DropdownMenuItem
                           className="flex items-center gap-2 text-xs"
-                          onClick={e => { e.preventDefault(); setEditGroup(g) }}
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setEditGroup(g) }}
                         >
                           <Pencil size={12} /> Edit
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           className="flex items-center gap-2 text-xs text-red-600 focus:text-red-600"
-                          onClick={e => { e.preventDefault(); setDeleteTarget(g) }}
+                          onClick={e => { e.preventDefault(); e.stopPropagation(); setDeleteTarget(g) }}
                         >
                           <Trash2 size={12} /> Delete
                         </DropdownMenuItem>
@@ -203,7 +254,7 @@ export default function GroupsIndex({ groups }) {
                   />
                 </div>
               </Link>
-            ))}
+            )})}
           </div>
         ) : (
           <EmptyState
@@ -260,7 +311,92 @@ export default function GroupsIndex({ groups }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Bulk delete confirm */}
+        <Dialog open={bulkDeleteOpen} onOpenChange={open => !open && setBulkDeleteOpen(false)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">
+                Delete {selectionCount} group{selectionCount !== 1 ? 's' : ''}?
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-xs text-muted-foreground">
+              The selected group{selectionCount !== 1 ? 's' : ''} will be deleted. Leads inside them won't be deleted.
+            </p>
+            <DialogFooter className="gap-2">
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setBulkDeleteOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                disabled={bulkDeleting}
+                className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white border-0"
+                onClick={handleBulkDelete}
+              >
+                <Trash2 size={12} className="mr-1" />
+                {bulkDeleting ? 'Deleting…' : 'Delete'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </AppLayout>
+
+      {/* ── Bulk action bar ── */}
+      {selectionCount > 0 && (
+        <div style={{
+          position: 'fixed',
+          bottom: 28,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          background: '#0f172a',
+          borderRadius: 12,
+          padding: '10px 14px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06)',
+          whiteSpace: 'nowrap',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 500, color: 'white' }}>
+            {selectionCount} group{selectionCount !== 1 ? 's' : ''} selected
+          </span>
+
+          <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)' }} />
+
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 7, padding: '4px 10px',
+              color: 'rgba(255,255,255,0.7)', fontSize: 12.5, fontWeight: 500,
+              cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.13)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+          >
+            <X size={12} /> Clear
+          </button>
+
+          <button
+            onClick={() => setBulkDeleteOpen(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 5,
+              background: '#ef4444',
+              border: 'none',
+              borderRadius: 7, padding: '4px 12px',
+              color: 'white', fontSize: 12.5, fontWeight: 600,
+              cursor: 'pointer', transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#dc2626'}
+            onMouseLeave={e => e.currentTarget.style.background = '#ef4444'}
+          >
+            <Trash2 size={12} /> Delete
+          </button>
+        </div>
+      )}
     </>
   )
 }

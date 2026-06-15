@@ -98,6 +98,7 @@ Route::middleware(['auth'])->group(function () {
     // Lead Groups
     Route::get('/groups',                        [LeadGroupController::class, 'index'])->name('groups.index');
     Route::post('/groups',                       [LeadGroupController::class, 'store'])->name('groups.store');
+    Route::post('/groups/bulk-destroy',          [LeadGroupController::class, 'bulkDestroy'])->name('groups.bulk-destroy');
     Route::get('/groups/list',                   [LeadGroupController::class, 'listForSelect'])->name('groups.list');
     Route::get('/groups/{group}',                [LeadGroupController::class, 'show'])->name('groups.show');
     Route::patch('/groups/{group}',              [LeadGroupController::class, 'update'])->name('groups.update');

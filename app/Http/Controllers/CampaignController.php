@@ -458,7 +458,7 @@ class CampaignController extends Controller
             ],
         ][$event];
 
-        \App\Models\Notification::push([
+        \App\Models\Notification::record([
             'organization_id' => $send->organization_id,
             'type'            => $config['type'],
             'title'           => $config['title'],

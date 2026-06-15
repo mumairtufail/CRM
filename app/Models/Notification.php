@@ -30,7 +30,7 @@ class Notification extends Model
      * background jobs and public tracking routes where no tenant is bound, so
      * organization_id must always be passed explicitly by the caller.
      */
-    public static function push(array $attrs): self
+    public static function record(array $attrs): self
     {
         $notification = static::create($attrs);
 

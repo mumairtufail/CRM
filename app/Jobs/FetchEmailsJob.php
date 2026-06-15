@@ -288,7 +288,7 @@ class FetchEmailsJob implements ShouldQueue
 
         $who = $fromName ?: ($lead?->name ?: $fromEmail);
 
-        Notification::push([
+        Notification::record([
             'organization_id' => $this->organizationId,
             'type'            => $isReply ? 'lead.email_replied' : 'lead.email_received',
             'title'           => $isReply ? "{$who} replied to your email" : "{$who} sent you an email",

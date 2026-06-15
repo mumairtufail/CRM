@@ -1,613 +1,586 @@
-# CRM Portal — User Guide
+# Your CRM — Complete User Guide
 
-## What Is This Portal?
+Welcome! This guide explains **everything your CRM can do and exactly how to use it**, written in plain language for everyday users. No technical knowledge needed. Read it top to bottom, or jump to the section you need.
 
-This is a **Customer Relationship Management (CRM)** platform designed to help your team manage leads, track deals, send emails, and stay organised — all in one place. Every workspace is completely private to your organisation.
+> 💡 You can also read this guide **inside the app** — go to **Settings → Documentation**, or click **Help & Docs** in the sidebar.
 
 ---
 
 ## Table of Contents
 
-1. [Getting Started](#1-getting-started)
-2. [Dashboard](#2-dashboard)
-3. [Leads](#3-leads)
-4. [Pipeline](#4-pipeline)
-5. [Email Campaigns](#5-email-campaigns)
-6. [Invoices](#6-invoices)
-7. [Tags](#7-tags)
+1. [Welcome & What This CRM Does](#1-welcome--what-this-crm-does)
+2. [Getting Started](#2-getting-started)
+3. [The Dashboard](#3-the-dashboard)
+4. [Leads](#4-leads)
+5. [Lead Groups](#5-lead-groups)
+6. [Tags](#6-tags)
+7. [Pipeline (Kanban Board)](#7-pipeline-kanban-board)
 8. [Importing Leads](#8-importing-leads)
-9. [Email Inbox](#9-email-inbox)
-10. [Settings & Profile](#10-settings--profile)
-11. [Notifications](#11-notifications)
-12. [Public Intake Form](#12-public-intake-form)
-13. [Admin Portal (Superadmin Only)](#13-admin-portal)
+9. [AI Lead Search](#9-ai-lead-search)
+10. [Email Campaigns](#10-email-campaigns)
+11. [Understanding Email Tracking](#11-understanding-email-tracking)
+12. [Inbox (Connected Email)](#12-inbox-connected-email)
+13. [Clients](#13-clients)
+14. [Projects](#14-projects)
+15. [Invoices](#15-invoices)
+16. [Notifications](#16-notifications)
+17. [Settings](#17-settings)
+18. [Your Public Lead Form](#18-your-public-lead-form)
+19. [Admin Portal (Super Admins Only)](#19-admin-portal-super-admins-only)
+20. [Quick Reference / Cheat Sheet](#20-quick-reference--cheat-sheet)
 
 ---
 
-## 1. Getting Started
+## 1. Welcome & What This CRM Does
 
-### Creating an Account
+This CRM (Customer Relationship Management tool) is your single place to find new customers, talk to them, win their business, deliver the work, and get paid. It follows the natural journey of a customer relationship:
 
-1. Go to the portal and click **Register**.
-2. Enter your name, email address, and a password.
-3. Registering automatically creates a new private workspace for you.
-4. Verify your email address by clicking the link sent to your inbox.
+> **Find leads → Reach out → Win the deal → Turn them into a client → Deliver projects → Send invoices**
 
-### Logging In
+Along the way, you can run email campaigns (and see who opens and clicks them), read and reply to email inside the app, import contacts from spreadsheets, and even let an AI find new prospects for you.
 
-- Enter your email and password on the **Login** page.
-- Use **Forgot Password** if you need to reset your password.
+### Key words explained
 
-### Your Workspace
+| Word | What it means |
+|------|---------------|
+| **Lead** | A person you might do business with — a prospect. Most of your work starts here. |
+| **Client** | A lead who became an actual customer. You "convert" a lead into a client. |
+| **Pipeline** | A visual board showing where every lead sits in your sales process. |
+| **Campaign** | A bulk email you send to many leads at once. |
+| **Group** | A saved list of leads you bundle together (e.g. "Trade show contacts"). |
+| **Tag** | A small colored label you stick on leads to categorize them (e.g. "VIP", "Hot"). |
+| **Project** | A piece of work you deliver for a client, with tasks and files. |
+| **Invoice** | A bill you send to a client for money owed. |
+| **Workspace** | Your private company space inside the CRM. Your data is only visible to you and your team. |
 
-When you register, a workspace is created just for you and your team. All your leads, campaigns, invoices, and settings belong to this workspace and are not visible to anyone outside of it.
-
----
-
-## 2. Dashboard
-
-The dashboard is the first thing you see after logging in. It gives you a real-time overview of your entire CRM.
-
-### What You See
-
-| Section | What It Shows |
-|---|---|
-| **Total Leads** | How many leads you have, with a percentage change vs. last month |
-| **Won This Month** | Number of deals marked as Won this month |
-| **Emails Sent** | Total campaign emails sent this month |
-| **Open Deals** | Deals that are still active (not Won or Lost) |
-| **Conversion Rate** | Percentage of leads converted to Won |
-
-### Charts & Widgets
-
-- **New Leads Chart** — A line/area chart showing how many new leads were added over the last 30 days.
-- **Pipeline Funnel** — A visual bar chart showing how many leads sit at each stage (New → Won/Lost).
-- **Lead Sources** — A bar chart showing where your leads came from (manually added, CSV import, intake form, etc.).
-- **Top Open Deals** — The 6 highest-value deals still in progress, with deal values.
-- **Recent Leads** — The 6 most recently added leads with their current status.
-- **Recent Activity** — A live feed of the last 8 actions taken across all leads (status changes, emails sent, notes added, etc.).
-- **Follow-ups Due** — Up to 5 leads that have an upcoming or overdue follow-up date (within the next 7 days). Overdue items are highlighted in red.
-
-Clicking any item in these widgets takes you directly to that lead or section.
+Everything you create — leads, emails, invoices — stays inside **your own workspace**. Other companies using the system can never see your data.
 
 ---
 
-## 3. Leads
+## 2. Getting Started
 
-Leads are the heart of the CRM. A lead represents a person or company you are selling to or have a relationship with.
+### Creating your account and workspace
 
-### Viewing All Leads
+1. Open the app and click **Register**.
+2. Enter your **name**, **email address**, and a **password**.
+3. Submit the form. A verification email is sent to your inbox.
+4. Open that email and click the verification link to confirm your address.
+5. That's it — your own private **workspace** is created automatically, and you are its **owner**.
 
-Go to **Leads** in the navigation. You will see a table with:
+### Logging in
 
-- Lead name and primary email (with avatar)
-- Company
-- Status (you can change it directly from this table)
-- Priority (High / Medium / Low)
-- Social media links (clickable icons)
-- Deal value
-- Actions menu (View, Edit, Delete)
+1. Go to the login page.
+2. Enter your email and password, then click **Log in**.
+3. Forgot your password? Click **Forgot your password?**, enter your email, and follow the reset link.
 
-**Sorting:** Click any column header to sort the list.
+### First-time setup checklist
 
-**Searching:** Type in the search bar to find leads by name, company, or email address.
+1. **Connect your email** — Go to **Settings → SMTP Accounts** and add the email address you'll send from. You need this before you can send campaigns.
+2. **Add your company details** — In **Settings → Workspace**, add your company name, logo, website, and phone. These appear in your email signatures and on your public lead form.
+3. **Bring in your leads** — Use **Import** to upload a spreadsheet of contacts, or add them by hand.
+4. **Send your first campaign** — Once you have leads and a connected email, create a campaign and reach out.
 
-**Filtering by Status:** Use the status dropdown to show only leads in a specific stage (e.g. only "Proposal" leads).
+### Tour of the screen
 
-**Pagination:** 20 leads are shown per page. Use the Previous / Next buttons to navigate.
-
-### Selecting Multiple Leads
-
-Tick the checkboxes on the left side of any rows to select multiple leads. A bar will appear at the bottom of the screen showing how many are selected, with a **Delete** button to remove them all at once. A confirmation is required before deletion.
-
----
-
-### Adding a New Lead
-
-Click **New Lead** (or go to Leads → Create). Fill in the form:
-
-**Basic Information**
-- First Name (required)
-- Last Name
-- Company
-- Job Title
-
-**Contact Details**
-- Email addresses — you can add multiple. The first one is marked as primary.
-- Phone numbers — you can add multiple. The first one is marked as primary.
-
-**Professional Details**
-- Website URL
-- LinkedIn URL
-- Industry
-- City and Country
-
-**Sales Information**
-- **Status** — Where is this lead in your pipeline? (New, Contacted, Qualified, Proposal, Negotiation, Won, Lost, Unqualified)
-- **Priority** — High, Medium, or Low
-- **Deal Value** — The monetary value of this potential deal
-- **Currency** — Defaults to USD
-- **Source** — How did you get this lead? (Manual entry, CSV import, intake form, etc.)
-
-**Social Media**
-Add links to the lead's social profiles: Twitter, Instagram, Facebook, TikTok, YouTube, GitHub.
-
-**Notes**
-A free-text area for any additional information about this lead.
-
-Click **Create Lead** to save.
+- **Sidebar (left)** — Your main menu: **Dashboard, Leads** (with sub-items: All Leads, Groups, Import, AI Lead Search), **Pipeline, Campaigns, Clients, Projects, Inbox, Invoices,** and **Settings**.
+- **Collapse button** — Shrinks the sidebar for more room. On a phone, the sidebar slides out over a dark overlay.
+- **Quick Add buttons** — Shortcuts to create a **New Lead** or **New Project**.
+- **Recent Pages** — The sidebar remembers your last few pages so you can jump back quickly.
+- **Top bar** — Shows the page title and the **notifications bell** (with a number badge for unread alerts).
+- **Your profile card** — At the bottom of the sidebar: your avatar, name, email, and **Log out**.
 
 ---
 
-### Viewing a Lead's Profile
+## 3. The Dashboard
 
-Click a lead's name anywhere in the system to open their full profile page. This page is divided into several sections:
+The Dashboard is your home screen and gives a one-glance summary of your business. It greets you based on the time of day.
 
-**Header**
-- Name, job title, company, status badge, priority badge, and any tags applied to the lead.
+### Stat cards
+Each card shows a number and a small up/down trend. **Click any card to jump to the related page.** You'll see totals such as **Total Leads, Won This Month, Emails Sent, Open Deals / Pipeline Value,** and **Conversion Rate** (the percentage of leads that turn into wins).
 
-**Mini Stats**
-- Deal value, number of emails sent, number of activities logged, and days since the lead was added.
+### Charts
+- **Lead Sources** — Where your leads came from (entered by hand, imported, found by AI, your public form, etc.).
+- **Lead Status / Pipeline Funnel** — How many leads sit at each stage.
+- **Leads Over Time** — New leads over the last 30 days.
 
-**Contact Card**
-- All email addresses and phone numbers on file, each clickable to open your email client or phone dialler.
+### Lists
+- **Recent Activity** — A live feed of the latest events (notes, emails sent, calls, status changes, imports), each with a colored badge.
+- **Recent Leads / Top Deals** — Your newest or highest-value leads.
+- **Follow-ups Due** — Leads to contact in the next 7 days. Overdue ones are shown in **red**.
 
-**Company & Location**
-- Company name, website (clickable link), LinkedIn profile, city/country, and industry.
-
-**Social Media**
-- Links to all social profiles added for this lead.
-
-**Pipeline Details**
-- Deal value and currency, last contacted date, and next follow-up date.
-
-**Notes**
-- Any notes saved for this lead.
-
-**Quick Actions (right panel)**
-- Send Email (opens your email client)
-- Call (opens phone dialler)
-- Edit Lead
-- View Pipeline
-
-**Status Selector (right panel)**
-- Change the lead's status directly from their profile page.
-
-**Activity Timeline (right panel)**
-- A chronological log of everything that has happened with this lead: when they were created, every time their status changed, every email sent to them, calls logged, and notes added.
+Clicking any item takes you straight to that lead or section.
 
 ---
 
-### Editing a Lead
+## 4. Leads
 
-Click **Edit** from the lead table or the lead's profile page. The edit form is identical to the create form — change any fields and click **Update Lead**.
+A **lead** is anyone you might do business with. This is the heart of the CRM.
 
-### Deleting a Lead
+### Viewing your leads list
+Go to **Leads → All Leads**.
 
-Click **Delete** from the actions menu on the leads table, or from the lead's profile page. A confirmation dialog will appear before the lead is permanently removed.
+- **Search** — Type a name, email, or company to filter instantly.
+- **Filter by Status** — Show only one stage (New, Contacted, Qualified, Proposal, Negotiation, Won, Lost, Unqualified).
+- **Filter by Priority** — Low, Medium, or High. Combine filters, and click **Clear** to reset.
+- **Sorting** — Click a column header to sort.
+- **Pagination** — 20 leads per page; use Previous / Next.
 
----
+**Columns:** Name (with avatar), Email & Phone, Company & Job Title, clickable **social links**, **Status** (a dropdown you can change right in the row), **Priority** badge, **Contact Channels** icons, and **Last Activity**.
 
-## 4. Pipeline
+### Bulk actions
+1. Tick the **checkbox** beside each lead — or the header box to select the whole page.
+2. A bar appears with actions for all selected leads: **Delete**, or **Add to Group**.
 
-The Pipeline view gives you a visual map of where all your deals stand.
+### Creating a lead
+1. Click **New Lead**.
+2. Fill in the form — only **First Name** is required:
+   - **Basic Information** — First/last name.
+   - **Company Information** — Company, job title, industry, website.
+   - **Contact Details** — One or more **emails** (work / personal / other, one marked *primary*) and **phone numbers**, using the **+ / –** buttons.
+   - **Online Presence** — LinkedIn URL and any number of social profiles (pick the platform, paste the link).
+   - **Pipeline Information** — **Source**, **Status**, **Priority**, **Deal Value**, **Currency**.
+   - **Additional Information** — Country, city, and **Notes**.
+3. Click **Save**. Missing required fields are highlighted.
 
-### Pipeline Stats (at the top)
+### Editing a lead
+Open a lead and click **Edit** (or use its row menu). The form matches the create form, pre-filled. Make changes and **Save**.
 
-| Stat | Description |
-|---|---|
-| Total Leads | Total number of leads in the pipeline |
-| Pipeline Value | Sum of all deal values across all stages |
-| Won Value | Total value of all deals marked as Won |
-| Win Rate | Percentage of closed deals that were Won |
+### The lead detail page
+- **Header** — Name, avatar, status (changeable here), priority, **Edit** / **Delete**.
+- **Mini stats** — Deal value, emails sent, activities logged, days known.
+- **Contact information** — All emails and phones, social links, company, job title, website. Emails/phones are clickable.
+- **Pipeline information** — Status, priority, deal value & currency, last-contacted and follow-up dates, and **tags** (add/remove here).
+- **Activity timeline** — A complete history with timestamps: notes, emails, calls, status changes, imports.
+- **Marking contact channels** — Record that you've contacted this person by email, LinkedIn, or another channel; this updates their "last contacted" date.
+- **Convert to Client** — When a lead becomes a customer, click **Convert to Client**, pick their starting client status (Onboarding, Active, Inactive, Churned), and confirm. You're taken to their new client page.
+- **Delete** — Removes the lead after a confirmation prompt.
 
-### Kanban View (default)
+### Lead statuses
+| Status | Meaning |
+|--------|---------|
+| **New** | Just added; not contacted yet. |
+| **Contacted** | You've reached out at least once. |
+| **Qualified** | Confirmed as a genuine fit. |
+| **Proposal** | You've sent a quote or proposal. |
+| **Negotiation** | Actively discussing terms. |
+| **Won** | The deal closed successfully. 🎉 |
+| **Lost** | The deal didn't happen. |
+| **Unqualified** | Not a suitable prospect. |
 
-Leads are displayed as cards in columns, one column per stage:
-
-**New → Contacted → Qualified → Proposal → Negotiation → Won → Lost → Unqualified**
-
-Each card shows:
-- Lead avatar, name, company
-- Primary email
-- Deal value (if set)
-- Follow-up date (shown in red if overdue)
-- A coloured left border indicating priority (red = High, yellow = Medium, blue = Low)
-
-**Moving a Lead:** Drag a card from one column and drop it into another column to change the lead's status instantly.
-
-Each column header shows: stage name · number of leads · total deal value · percentage of overall pipeline.
-
-### Table View
-
-Click the **Table** toggle to switch to a flat table view. This shows the same leads in a spreadsheet format with a status dropdown per row. Use this if you prefer a more compact overview.
-
-### Filters
-
-- **Search** — Find leads by name or company
-- **Priority** — Filter by High, Medium, or Low priority
-- **Source** — Filter by where the lead came from
-- **Clear Filters** — Reset all filters at once
-
-The view preference (Kanban or Table) is remembered in your browser.
-
----
-
-## 5. Email Campaigns
-
-Send bulk emails to groups of your leads.
-
-### Viewing Campaigns
-
-Go to **Campaigns** to see all your campaigns. Each campaign card shows:
-- Campaign name and current status (Draft, Sending, Sent, Paused)
-- Subject line
-- Sender name and email
-- Total recipient count
-- If already sent: number of emails sent, opened, and clicked
-
-### Creating a Campaign
-
-Click **New Campaign** and fill in:
-
-- **Campaign Name** — An internal name (not shown to recipients)
-- **From Name** — The sender name recipients will see
-- **From Email** — The sender email address
-- **Subject** — The email subject line
-- **Body** — The HTML content of your email
-- **Recipients:**
-  - Filter by **Status** (e.g. send only to leads in "Proposal" stage)
-  - A live counter shows exactly how many leads match your filter before you send
-
-Click **Save** to save as a draft, or **Send** to send immediately.
-
-> **Note:** Sending requires an active SMTP account configured in Settings.
-
-### Campaign Performance
-
-After a campaign is sent, open it to see detailed stats:
-- Total recipients
-- Emails sent, opened (with percentage), clicked (with percentage)
-- Bounce count
-- Unsubscribe count
-- The date and time it was sent
+### Priorities
+- **High** (red) — Focus here first.
+- **Medium** (amber) — Normal attention.
+- **Low** (gray) — Back burner.
 
 ---
 
-## 6. Invoices
+## 5. Lead Groups
 
-Create and manage invoices linked to your leads.
+A **group** is a saved bundle of leads — handy for organizing and for sending a campaign to a specific audience. Go to **Leads → Groups**.
 
-### Viewing Invoices
+### Creating or editing a group
+1. Click **New Group**.
+2. Enter a **name**, optional **description**, and pick a **color**.
+3. Click **Save**. Groups appear as colored cards showing the name, member count, and last-updated date. Use the card buttons to **edit** or **delete**.
 
-Go to **Invoices** to see all invoices. Use the status filter pills to view:
-- **All** — Every invoice
-- **Draft** — Not yet sent
-- **Sent** — Delivered to the client
-- **Paid** — Payment received
-- **Overdue** — Past the due date and unpaid
+### Adding and removing leads
+- **From the group page** — Open a group, click **Add Leads**, search and select, then confirm. Remove a lead with its remove button.
+- **From the leads list** — Select leads and choose **Add to Group**.
 
-The table shows invoice number, linked lead/company, total amount, status, issue date, and due date.
-
-### Creating an Invoice
-
-Click **New Invoice** and fill in:
-
-**Invoice Details**
-- **Invoice Number** — Auto-generated (e.g. INV-2026-001), but editable
-- **Link to Lead** — Optionally attach this invoice to a lead in your CRM
-- **Status** — Draft, Sent, Paid, or Overdue
-- **Issue Date** — Defaults to today
-- **Due Date** — Defaults to 30 days from today
-- **Tax Rate** — Optional percentage (e.g. 10 for 10%)
-- **Notes** — Any additional information for the recipient
-
-**Line Items**
-Add one or more line items, each with:
-- Description
-- Quantity
-- Rate (price per unit)
-- Amount (automatically calculated)
-
-The **Subtotal**, **Tax Amount**, and **Total** are all calculated automatically as you type.
-
-Click the **+ Add Item** button to add more line items.
-
-Click **Save** to save the invoice.
-
-### Sending an Invoice
-
-Open an invoice and click **Send Invoice**. This marks the invoice as "Sent" and records the email address it was sent to.
+### Using a group for a campaign
+When creating a campaign, choose **a group** as the recipients — everyone in it gets the email.
 
 ---
 
-## 7. Tags
+## 6. Tags
 
-Tags are coloured labels you can create and attach to leads to visually categorise them (e.g. "VIP", "Hot Lead", "Follow Up").
+**Tags** are small colored labels you attach to leads to categorize them ("VIP", "Hot lead", "Newsletter", etc.). Go to **Tags**.
 
-### Where Tags Appear
+### Managing tags
+1. Click **New Tag**.
+2. Enter a **name** and pick a **color**, then **Save**.
 
-Tags show as small coloured pills on a **lead's profile page**, next to the lead's name and status badge. That is their only current use — they are a visual label only.
+Each tag card shows how many leads use it. Use the card buttons to **edit** or **delete** (deleting removes the tag from every lead).
 
-### Managing Tags
+### Where tags are used
+- You add or remove tags on a lead's detail page.
+- When building a campaign with the **Filter** audience option, you can target leads that have certain tags — a powerful way to reach the right people.
 
-Go to **Tags** to see all tags in your workspace. Each tag shows:
-- A coloured swatch
-- Tag name
-- How many leads are using this tag
+---
 
-### Creating a Tag
+## 7. Pipeline (Kanban Board)
 
-Click **New Tag**, enter a name, choose a colour, and save.
+The **Pipeline** is a visual board where each column is a sales stage and each lead is a card you can drag between stages. Go to **Pipeline**.
 
-### Editing a Tag
+### Stats at the top
+Total leads, total pipeline value, won value, and win rate.
 
-Click **Edit** next to any tag to change its name or colour.
+### Using the board
+- One **column per status**: New, Contacted, Qualified, Proposal, Negotiation, Won, Lost, Unqualified. Each header shows a colored dot, the count, total value, and share of the pipeline.
+- **Cards** show name, company, primary email, deal value, and a colored left border for priority (red = High, amber/yellow = Medium, blue/gray = Low). A follow-up date appears as a badge — **red if overdue**.
+- **Drag and drop** a card into another column to change that lead's status instantly.
+- A card menu lets you **Edit**, **View**, or **Delete** the lead.
 
-### Deleting a Tag
-
-Click **Delete** next to any tag. A confirmation is required. Deleting a tag removes it from all leads it was applied to.
+### View options and filters
+- **Kanban view** vs **Table view** — Toggle between the visual board and a compact table with a status dropdown per row. Your choice is remembered.
+- **Filters** — Search by name/company, filter by priority or source, and **Clear** to reset.
 
 ---
 
 ## 8. Importing Leads
 
-Import large numbers of leads from a CSV file or directly from a Google Sheet.
+Bring in many leads at once. Go to **Leads → Import**.
 
-### Importing from a CSV File
+### Option A: Upload a CSV file
+1. Choose **Upload CSV**.
+2. **Drag and drop** your `.csv` (or `.txt`) file, or click to browse. Max 10 MB.
+3. The app shows a **preview** of the first rows (up to 500).
+4. Review, then click **Confirm Import**.
 
-1. Go to **Import**.
-2. Click **Upload CSV** and select your file (must be `.csv` or `.txt`, max 10MB).
-3. The system will show you a preview table of the first 500 rows.
-4. Review the preview to make sure the data looks correct.
-5. Click **Confirm Import** to create all the leads.
+A summary shows how many leads were added and how many rows were skipped.
 
-A summary will show how many leads were imported and how many rows were skipped (e.g. duplicates or missing required fields).
+### Option B: Import from Google Sheets
+1. In Google Sheets, click **Share** and set it to **"Anyone with the link can view."**
+2. Copy the sheet's web address (URL).
+3. In the CRM, choose **Google Sheets** and paste the URL.
+4. Click **Fetch** to verify access and preview.
+5. Review and click **Confirm Import**.
 
-### Importing from Google Sheets
+### Supported column names (flexible matching)
+"First Name", "first_name", and "firstname" all work. Recognized columns include: **First Name** (required), Last Name, Company, Job Title, Email, Phone, Website, LinkedIn, Country, City, Industry, Notes, Deal Value, Status, Priority, and social columns (Twitter, Instagram, Facebook, TikTok, YouTube).
 
-1. Go to **Import**.
-2. Paste your Google Sheet URL into the Google Sheets field.
-3. Make sure the sheet is set to **Anyone with the link can view**.
-4. Click **Fetch** to preview the data.
-5. Review the preview and click **Confirm Import**.
-
-### Supported Column Names
-
-Your spreadsheet can use any of these column names (the system recognises common variations):
-
-| Data | Accepted Column Names |
-|---|---|
-| First Name | `first_name`, `First Name`, `firstname` |
-| Last Name | `last_name`, `Last Name`, `lastname` |
-| Company | `company`, `Company` |
-| Job Title | `job_title`, `Job Title`, `title` |
-| Email | `email`, `Email`, `email_address` |
-| Phone | `phone`, `Phone`, `phone_number` |
-| Website | `website`, `Website` |
-| LinkedIn | `linkedin_url`, `linkedin`, `LinkedIn` |
-| Country | `country`, `Country` |
-| City | `city`, `City` |
-| Industry | `industry`, `Industry` |
-| Notes | `notes`, `Notes` |
-| Deal Value | `deal_value`, `Deal Value` |
-| Status | `status`, `Status` |
-| Priority | `priority`, `Priority` |
-| Twitter | `twitter` |
-| Instagram | `instagram` |
-| Facebook | `facebook` |
-
-> **First Name is required.** Rows without a first name will be skipped.
-
-All imported leads are automatically given the source label matching their import method (CSV or Google Sheets) and a status of "New" unless your file includes a status column.
+> **First Name is required** — rows without it are skipped. Imported leads get a source label matching the import method (CSV / Google Sheets) and start as "New" unless your file includes a status column.
 
 ---
 
-## 9. Email Inbox
+## 9. AI Lead Search
 
-Connect your email account to view and manage incoming emails directly inside the CRM.
+Let an AI find brand-new prospects from a plain-English description, using an external database (Apollo.io or People Data Labs). Go to **Leads → AI Lead Search**.
 
-> **Setup required:** You must have an SMTP account with IMAP settings configured in Settings before using the inbox. See [Settings & Profile](#10-settings--profile).
+### One-time setup
+In **Settings → Lead Generation**: choose your **provider**, paste your **API key**, click **Test Connection**, and **Save**. (Test Connection must succeed before you can save.)
 
-### Inbox Layout
+### Running a search
+1. Describe your ideal prospect in everyday language — e.g. *"CTOs at SaaS companies in the US with 50–200 employees."*
+2. The AI turns your sentence into **filters** (job titles, seniority, industries, locations, company sizes, keywords). Fine-tune any of them.
+3. Click **Run Search**.
+4. Results show name, email, company, title, LinkedIn, industry, and location. Page through with **Previous / Next**.
 
-The inbox has three folders:
-- **Inbox** — All emails received (excluding trashed)
-- **Starred** — Emails you have bookmarked
-- **Trash** — Emails moved to trash
+### Importing results
+1. Tick the **checkboxes** next to the prospects you want.
+2. Click **Import Selected** and confirm.
+3. They're added with the source "AI Search". Anyone already in your CRM is **skipped** (no duplicates). Credits are only spent on new results.
 
-Each email in the list shows the sender name and address, subject line, a short preview of the message body, and the received date. Unread emails are displayed in bold.
-
-### Actions per Email
-
-| Action | What It Does |
-|---|---|
-| Click the email | Opens the full email with all content |
-| Mark as Read / Unread | Toggles the read status |
-| Star / Unstar | Adds or removes from your Starred folder |
-| Move to Trash | Moves the email to your Trash folder |
-| Restore | Moves a trashed email back to Inbox |
-| Delete Permanently | Removes the email forever |
-
-### Syncing Your Inbox
-
-Click the **Sync** button to fetch the latest emails from your email server. The last synced time is displayed so you know when emails were last refreshed.
+> ℹ️ If the provider replies "too many requests," wait a moment and try again.
 
 ---
 
-## 10. Settings & Profile
+## 10. Email Campaigns
 
-Access your settings by clicking your name or avatar in the top navigation, then choosing **Profile / Settings**.
+A **campaign** sends one email to many leads at once and tracks who opens and clicks it. Go to **Campaigns**.
 
-### Account Settings
+> **Before you start:** Connect a sending account in **Settings → SMTP Accounts** and make one **active**. Without an active account you can't send.
 
-- **Name** — Update your display name
-- **Email** — Update your login email (you will need to re-verify your email if changed)
-- **Change Password** — Update your login password
-- **Delete Account** — Permanently delete your account and all its data (requires password confirmation)
+### Viewing campaigns
+The list shows each campaign's name, status, recipient count, and — once sent — open and click rates. Select multiple with checkboxes to **bulk delete**.
 
-### Workspace Settings
+### Creating a campaign
+1. Click **New Campaign**.
+2. **Name** — Internal only; recipients never see it.
+3. **From** — Choose which connected account it sends from.
+4. **Subject** — Supports personalization tokens (below).
+5. **Body** — Write in the rich-text editor (bold, links, lists). Starter templates (Introduction, Follow-up, Promotion) can pre-fill the body.
+6. **Personalization tokens** — Drop these into the subject or body; they're swapped for each person's real details:
+   - `{{first_name}}`, `{{last_name}}`, `{{name}}`, `{{company}}`, `{{email}}`, `{{status}}`
+7. **Recipients** — **All leads**, **Filter** (by status and/or tags), or a **Group**. A **live recipient count** updates as you change the audience.
+8. **Template** *(optional)* — Wrap the email in a branded design/signature (set in Settings → Templates).
+9. **Save as draft** or **Send**. You can preview before sending.
 
-- **Workspace Name** — The name of your organisation as it appears in the portal
-- **Logo** — Upload a logo image (JPG, PNG, GIF, WebP, or SVG, max 2MB). A preview is shown. Click **Remove** to delete the current logo.
+### The campaign detail page
+- **Stat cards** — Total recipients, sent, opened (with rate), clicked (with rate), bounced, failed.
+- **Live send log** — A terminal-style list that updates as each email is processed, with the recipient, email, time, and status. Use **Refresh** for the latest.
+- **Status symbols:**
 
-### SMTP Accounts (Email Configuration)
+  | Symbol | Meaning |
+  |--------|---------|
+  | ⧖ | Queued |
+  | ○ | Pending |
+  | ✓ | Sent |
+  | ◎ | Opened |
+  | ◈ | Clicked |
+  | ✗ | Failed (error shown) |
+  | ⚠ | Bounced |
 
-This is where you connect your email account so the CRM can send campaigns and sync your inbox.
+- **Stop / Resume** — Pause a campaign mid-send and resume later.
 
-**Adding an SMTP Account:**
-Fill in the form with your email provider's settings:
+### Campaign statuses
+**Draft** (editable) · **Sending** · **Sent** · **Paused** · **Failed**.
 
-| Field | Description |
-|---|---|
-| Account Name | A label for this account (e.g. "My Gmail") |
-| SMTP Host | Your email server (e.g. `smtp.gmail.com`) |
-| SMTP Port | Usually 587 (TLS) or 465 (SSL) |
-| Encryption | TLS, SSL, or None |
-| Username | Your email address |
-| Password | Your email password or app password |
-| From Name | The name recipients see (e.g. "John from Acme") |
-| From Email | The email address you are sending from |
-| IMAP Host | (Optional) For inbox sync (e.g. `imap.gmail.com`) |
-| IMAP Port | (Optional) Usually 993 |
-| IMAP Encryption | (Optional) Usually SSL |
-
-**Managing Accounts:**
-- **Activate** — Set an account as your active sending account (only one can be active at a time)
-- **Test SMTP** — Sends a test email to verify the connection works
-- **Test IMAP** — Verifies that inbox sync is configured correctly
-- **Edit** — Update any settings
-- **Delete** — Remove the account
-
-### Mail Sending Settings
-
-Control how bulk campaign emails are sent to avoid hitting rate limits:
-
-- **Batch Size** — How many emails to send per batch (1–500, default 10)
-- **Batch Delay** — How many seconds to wait between batches (0–300, default 5 seconds)
-
-### Email Templates
-
-Email templates control the visual wrapper around your campaign emails (header, footer, branding).
-
-**System Templates** are pre-built templates provided by the platform. You can activate one as your default but cannot edit or delete them.
-
-**Custom Templates** are templates you create yourself:
-- **Create New Template** — Enter a name, description, and paste in your HTML. Use the placeholder tokens below to make it dynamic.
-- **Edit** — Modify an existing custom template
-- **Preview** — See how the template renders in a browser
-- **Activate / Deactivate** — Set one template as your default for all campaigns
-- **Delete** — Remove a custom template
-
-**Available Placeholder Tokens for Templates:**
-
-| Token | Replaced With |
-|---|---|
-| `{{content}}` | The campaign email body |
-| `{{first_name}}` | Recipient's first name |
-| `{{from_name}}` | Your sender name |
-| `{{company_name}}` | Your workspace name |
-| `{{year}}` | The current year |
+### How sending and retrying work
+- Emails go out in **batches** with a short pause between each, so your provider isn't overwhelmed. Control the batch size and delay in **Settings → Sending Limits**.
+- **Retry is safe.** Sending again only **re-attempts the failures** — people who already received it are skipped, so no one is emailed twice.
 
 ---
 
-## 11. Notifications
+## 11. Understanding Email Tracking
 
-Click the **bell icon** in the top navigation to see your notifications. A red badge shows how many unread notifications you have.
+When you send a campaign, the CRM automatically measures **opens** and **clicks**.
 
-### Notification Centre
+### How opens are measured
+A tiny, invisible image sits at the bottom of every campaign email. When the recipient opens it and their email app loads images, that records an **open**.
 
-The notifications page shows a list of recent notifications, each with:
-- A title and description of the event
-- How long ago it happened
-- A link to navigate to the related item
+### How clicks are measured
+Every link is routed through the CRM. When someone clicks, the click is recorded and they're sent straight to the real destination — they notice nothing. Each recipient has a unique tag, so clicks are tied to the specific person.
 
-**Mark as Read:** Click any notification to mark it as read and go to the related item.
+### Where to see results
+On the **campaign detail page**: the open-rate and click-rate cards, and the per-person send log (the ◎ "opened" and ◈ "clicked" symbols with timestamps). Open rate = opened ÷ sent; click rate = clicked ÷ sent.
 
-**Mark All as Read:** Click the **Mark All Read** button to clear all unread notifications at once.
-
-### When You Get Notified
-
-- A new lead submits your public intake form
-- (More notification types may be added over time)
-
----
-
-## 12. Public Intake Form
-
-Every workspace has a unique public URL that you can share with website visitors, in email signatures, or on landing pages. Anyone who fills it in becomes a new lead in your CRM automatically.
-
-### How It Works
-
-1. Share your intake form URL with potential leads. The URL looks like:
-   `https://yourportal.com/intake/your-workspace-slug`
-2. The visitor fills in the form — no account needed.
-3. On submit, a new lead is created in your workspace with status "New" and source "Intake Form".
-4. You receive an in-app notification about the new lead.
-
-### Fields on the Intake Form
-
-- First Name (required)
-- Last Name
-- Email (required)
-- Company
-- Job Title
-- Phone
-- Website
-- Industry
-- Notes / Message
+### Honest limitations
+- Some email apps **block images by default**, so those opens aren't counted — real opens may be a little higher.
+- Special links (`mailto:`, `tel:`, page anchors, unsubscribe) are **not** tracked.
+- Multiple clicks by one person count as **one** click (so numbers aren't inflated).
+- Forwarded emails credit any opens/clicks to the original recipient.
 
 ---
 
-## 13. Admin Portal
+## 12. Inbox (Connected Email)
 
-> **This section is only accessible to Superadmin accounts.**
+The **Inbox** lets you read and reply to real email inside the CRM, and links incoming mail to the matching lead. Go to **Inbox**.
 
-The Admin Portal gives platform administrators a system-wide view of all organisations and users.
+> **Requirement:** Connect an email account **with IMAP settings** in **Settings → SMTP Accounts**. Without it, the Inbox shows a banner pointing you there.
 
-### Admin Dashboard
+### Folders
+- **Inbox** — Received emails (unread count shown).
+- **Starred** — Bookmarked emails.
+- **Trash** — Deleted emails.
 
-Shows global statistics:
-- Total number of organisations on the platform
-- Total number of users
-- Total leads across all workspaces
-- Total invoices across all workspaces
+Unread emails appear in bold. Each shows the sender, subject, a preview, and the date.
 
-Also shows recent organisations and recent users in table format.
+### Reading and managing mail
+Click an email to read it (attachments are downloadable). For each you can: **mark read/unread**, **star/unstar**, **move to Trash**, **restore**, or **delete permanently**.
 
-### Managing Users
+### Composing and replying
+1. Click **Compose** (or **Reply** on an open email).
+2. Fill in the recipient, subject, and message; attach files if needed.
+3. Click **Send** — it goes out through your active account.
 
-Go to **Admin → Users** to see all users on the platform. You can **Impersonate** any user — this logs you in as that user so you can see their workspace and troubleshoot issues on their behalf.
-
-A banner is always shown when you are impersonating someone. Click **Stop Impersonating** in the banner to return to your own admin account.
-
-### Managing Organisations
-
-Go to **Admin → Organisations** to see all workspaces on the platform, including owner details, number of users, and number of leads per workspace.
-
----
-
-## Quick Reference — Lead Statuses
-
-| Status | Meaning |
-|---|---|
-| **New** | Just added, no contact made yet |
-| **Contacted** | You have reached out at least once |
-| **Qualified** | Confirmed as a good fit |
-| **Proposal** | A proposal or quote has been sent |
-| **Negotiation** | Actively discussing terms |
-| **Won** | Deal closed successfully |
-| **Lost** | Deal did not close |
-| **Unqualified** | Not a suitable prospect |
-
-## Quick Reference — Lead Priorities
-
-| Priority | Meaning |
-|---|---|
-| **High** | Needs immediate attention |
-| **Medium** | Normal follow-up cadence |
-| **Low** | Low urgency, follow up when available |
+### Syncing
+- Click **Sync** to fetch new mail now. The page shows the last-synced time.
+- The CRM also checks **automatically every 10 minutes**.
+- When new mail arrives **from a known lead**, you get a notification linking to that lead.
 
 ---
 
-*For technical setup issues, contact your system administrator.*
+## 13. Clients
+
+A **client** is a lead who became a real customer (create one by **converting** a lead). Go to **Clients**.
+
+### The clients list
+- **Status tabs** — All, Onboarding, Active, Inactive, Churned (each with a count).
+- **Search** — By name or company.
+- Cards show a colored status stripe, avatar, name, company, contact count, and last activity. Click to open.
+
+### Client statuses
+**Onboarding** (amber) · **Active** (green) · **Inactive** (gray) · **Churned** (red).
+
+### Creating a client directly
+Click **New Client**, enter name, company, email, phone, website, status, and notes, then **Save**.
+
+### The client detail page
+- **Header** — Name, avatar, status (changeable), **Edit** / **Delete**.
+- **Contact information** — Email, phone, website, company, industry. Many fields are **inline-editable** (click, type, save, cancel).
+- **Relationships** — Linked projects, invoices, and the original lead.
+- **Documents** — **Upload** files (PDFs, images, spreadsheets, Word docs, and more). Each shows an icon, name, date, and size, with **Download** and **Delete**.
+- **Activity timeline** — A history of interactions.
+- **Delete** — Removes the client (and its files) after confirmation.
+
+---
+
+## 14. Projects
+
+A **project** is work you deliver for a client, with its own tasks and files. Go to **Projects** (or use **New Project** in the sidebar).
+
+### The projects list
+- **Status tabs** — All, Planning, Active, On Hold, Completed, Cancelled (each with a count).
+- **Search** — By project name.
+- Cards show a status stripe, the client, dates, and status. Click to open.
+
+### Project statuses
+**Planning** (blue) · **Active** (green) · **On Hold** (amber) · **Completed** (violet) · **Cancelled** (red).
+
+### Creating a project
+Click **New Project**, then set a **name**, the **client**, **status**, **start** and **end dates**, a **budget**, a **priority** (Low/Medium/High), and a **description**. Click **Save**.
+
+### The project detail page
+- **Header** — Name, status (changeable), priority, **Edit** / **Delete**.
+- **Information** — Client, dates, budget, inline-editable description.
+- **Tasks:**
+  - **Add a task** with a title, priority, and due date.
+  - **Change status** by clicking through Todo → In Progress → Done (✓ done, ⊙ in progress, ☐ to-do).
+  - **Edit**, **reorder**, or **delete** any task.
+- **Documents** — Upload, download, and delete project files.
+- **Activity timeline** — Task changes, document uploads, and status changes.
+
+---
+
+## 15. Invoices
+
+Create and send bills, and track which are paid. Go to **Invoices**.
+
+### The invoices list
+- **Status tabs** — All, Draft, Sent, Paid, Overdue.
+- **Search** — By invoice number or recipient.
+- Each row shows the number, recipient, amount, status, issue date, and due date, with a menu to View, Edit, Send, or Delete.
+
+### Invoice statuses
+**Draft** (gray) · **Sent** (blue) · **Paid** (green) · **Overdue** (red).
+
+### Creating an invoice
+1. Click **New Invoice**.
+2. **Number** — Generated automatically (e.g. INV-2026-001); editable.
+3. **Bill to** — Pick an existing lead/client, or type details manually.
+4. **Dates** — Issue date (defaults to today) and due date (defaults to +30 days).
+5. **Tax rate** — Optional percentage.
+6. **Line items** — Click **+ Add item** for each charge: **description**, **quantity**, **rate**. The **amount** is calculated, and **subtotal**, **tax**, and **total** update automatically.
+7. **Notes** — Optional message or terms.
+8. A **live preview** shows the finished invoice as you work.
+9. **Save as draft**, or **Send** when ready. You can also print or download.
+
+### Sending and marking paid
+Open an invoice and click **Send Invoice** to email it (status becomes "Sent", and the recipient email is recorded). Mark it **Paid** when payment arrives. You can also **download as PDF**, **print**, or **delete**.
+
+---
+
+## 16. Notifications
+
+The **bell icon** in the top bar keeps you informed. A badge shows unread alerts. Click it (or go to **Notifications**) for the full list.
+
+- **Types:** a **new lead** from your public form, and a **new email** from someone who's already a lead.
+- **Click a notification** to mark it read and jump to the related item.
+- **Mark all read** clears the badge in one click.
+
+---
+
+## 17. Settings
+
+Go to **Settings** to manage your account, workspace, and email. The page has a left menu with these sections.
+
+### Profile
+- **Name**, **Email** (changing may require re-verification), **Change password**, **Avatar**.
+- **Delete account** — Permanently removes your account and data; requires password confirmation.
+
+### Workspace
+- **Company name** — Shown across the app and on your public form.
+- **Logo** — Upload (PNG, JPG, GIF, WebP, SVG; max 2 MB) or remove. Appears on your public form and in branded emails.
+- **Email signature** — Website, phone, contact email, and LinkedIn. These automatically fill the signature built into every email template.
+
+### SMTP Accounts (sending & inbox)
+1. Click **Add account**. Optionally pick a **Quick preset** (Gmail, Outlook/365, Hostinger, Mailgun, SendGrid, Amazon SES) to auto-fill the technical fields.
+2. Fill in: **Account name**, **From name**, **From email**, **SMTP host**, **Port**, **Encryption** (TLS/SSL/None), **Username**, **Password**.
+3. *(Optional, for the Inbox)* Fill in **IMAP host**, **port**, and **encryption** (e.g. imap.gmail.com, 993, SSL).
+4. **Test SMTP** sends a test email; **Test IMAP** checks inbox reading.
+5. Click **Add account**.
+
+**Managing accounts:** Only **one can be active** at a time (used by campaigns and replies) — toggle it with **Set active** / **Deactivate**. **Edit** or **Remove** any account.
+
+> Gmail tip: enable 2-Factor Authentication, then create an **App Password** (Google Account → Security → App Passwords) and use that as the password.
+
+### Sending Limits
+Control how fast bulk campaign emails go out:
+- **Batch size** — Emails per batch (default 10).
+- **Delay between batches** — Seconds to pause (default 5).
+
+> **Example:** Batch size 50 with a 5-second delay sends 50, waits 5 seconds, sends the next 50, and so on. Smaller batches with longer delays are gentler on strict providers. A reference table of common provider limits (Gmail, Mailgun, SendGrid, Amazon SES) is shown here too.
+
+### Templates
+Your campaigns can be wrapped in one of **three built-in designs** (header, body, signature, footer).
+
+- **Use template** activates a design; **Deactivate** sends plain HTML instead. Only one is active at a time.
+- **Preview** (the eye icon) opens a live preview filled with your workspace details.
+- The **signature** at the bottom of every template pulls your name, company, website, phone, and email from **Workspace** settings; empty fields are left out.
+
+> **Note:** Templates are the three built-in designs — there is no custom-template builder. To change your branding, update your **Workspace** details and they flow into the signature automatically.
+
+### Lead Generation
+Connect an AI lead provider (Apollo.io or People Data Labs): choose the **provider**, paste your **API key**, **Test Connection**, then **Save**. This powers [AI Lead Search](#9-ai-lead-search). A credit-usage reference is shown to help you budget.
+
+### Documentation
+A link to this very guide, available right inside the app so help is always one click away.
+
+---
+
+## 18. Your Public Lead Form
+
+Every workspace gets a **public web page** where anyone can submit their details — great for your website, email signature, or social bio. No login is required for visitors.
+
+- **The link** looks like: `https://yourportal.com/intake/your-workspace-name`
+- **It's branded** with your company name and logo (set in **Settings → Workspace**).
+- **Visitors fill in:** First name (required), last name, email (required), phone, company, job title, website, industry, and a message.
+- **On submit:**
+  1. A new **lead** is created (source "Intake Form", status "New").
+  2. **You get a notification.**
+  3. The lead appears instantly in your Leads list and Dashboard.
+  4. The visitor sees a friendly "Thank you!" confirmation.
+
+> 💡 Share it on your website's "Contact us" button, your email signature, social profiles, or a QR code on printed materials.
+
+---
+
+## 19. Admin Portal (Super Admins Only)
+
+> Only visible to **platform administrators** who run the whole system. Regular users and clients won't see it. Go to **Admin**.
+
+- **Admin Dashboard** — Platform-wide totals: organizations (workspaces), users, leads across everyone, and invoices, plus recent organizations and users.
+- **Users** — Search all users; **Impersonate** one (log in as them) to troubleshoot. A banner reads "Viewing as [Name]" with **Stop Impersonating** to return.
+- **Organizations** — Search all workspaces with owner, user count, and lead count.
+
+---
+
+## 20. Quick Reference / Cheat Sheet
+
+### Lead statuses
+New → Contacted → Qualified → Proposal → Negotiation → **Won** / **Lost** / **Unqualified**
+
+### Priority colors
+🔴 High · 🟠 Medium · ⚪ Low
+
+### Client statuses
+Onboarding (amber) · Active (green) · Inactive (gray) · Churned (red)
+
+### Project statuses
+Planning (blue) · Active (green) · On Hold (amber) · Completed (violet) · Cancelled (red)
+
+### Invoice statuses
+Draft (gray) · Sent (blue) · Paid (green) · Overdue (red)
+
+### Campaign statuses
+Draft · Sending · Sent · Paused · Failed
+
+### Campaign log symbols
+⧖ Queued · ○ Pending · ✓ Sent · ◎ Opened · ◈ Clicked · ✗ Failed · ⚠ Bounced
+
+### Personalization tokens (campaign subject & body)
+`{{first_name}}` · `{{last_name}}` · `{{name}}` · `{{company}}` · `{{email}}` · `{{status}}`
+
+### Common tasks → where to go
+
+| I want to… | Go to |
+|------------|-------|
+| Add a single contact | **Leads → New Lead** |
+| Import many contacts | **Leads → Import** |
+| Find new prospects with AI | **Leads → AI Lead Search** |
+| See my whole sales process | **Pipeline** |
+| Group contacts for a campaign | **Leads → Groups** |
+| Label contacts | **Tags** |
+| Send a bulk email | **Campaigns → New Campaign** |
+| Read/reply to email | **Inbox** |
+| Turn a lead into a customer | Open the lead → **Convert to Client** |
+| Track delivery work | **Projects** |
+| Bill a client | **Invoices → New Invoice** |
+| Connect my sending email | **Settings → SMTP Accounts** |
+| Brand my emails & form | **Settings → Workspace** |
+| Get a shareable contact form | **Settings → Workspace** (your `/intake` link) |
+
+---
+
+*This guide reflects the system as it works today. If a screen looks slightly different, the underlying steps remain the same. Happy selling!* 🚀

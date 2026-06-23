@@ -1,361 +1,990 @@
-import { Head, Link } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Link } from '@inertiajs/react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    Users, Mail, FileText, Zap, Briefcase,
+    Check, ChevronDown, Star, Target,
+    TrendingUp, Menu, X, Building2,
+    Cpu, LayoutDashboard, CheckCircle2,
+    Upload, ArrowRight, Bell,
+} from 'lucide-react';
 
-export default function Welcome({ auth, laravelVersion, phpVersion }) {
-    const handleImageError = () => {
-        document
-            .getElementById('screenshot-container')
-            ?.classList.add('!hidden');
-        document.getElementById('docs-card')?.classList.add('!row-span-1');
-        document
-            .getElementById('docs-card-content')
-            ?.classList.add('!flex-row');
-        document.getElementById('background')?.classList.add('!hidden');
-    };
+// ─── Variants ─────────────────────────────────────────────────────────────────
 
+const fadeUp = {
+    hidden: { opacity: 0, y: 28 },
+    show:   { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+const stagger = {
+    hidden: {},
+    show:   { transition: { staggerChildren: 0.1 } },
+};
+const scaleIn = {
+    hidden: { opacity: 0, scale: 0.88 },
+    show:   { opacity: 1, scale: 1, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
+};
+
+// ─── Data ─────────────────────────────────────────────────────────────────────
+
+const FEATURES = [
+    { icon: Users,     title: 'Lead Management',   description: 'Add leads manually, import from CSV, or pull via AI. Every lead gets its own timeline, tags, and activity log.', accent: '#7C3AED' },
+    { icon: Mail,      title: 'Email Campaigns',    description: 'Write once, send to thousands. Track who opened, clicked, and replied — per contact, not just in aggregate.', accent: '#3B82F6' },
+    { icon: Target,    title: 'Sales Pipeline',     description: 'A Kanban board for your deals. Drag cards between stages, filter by tag or status, see what\'s stuck.', accent: '#10B981' },
+    { icon: FileText,  title: 'Invoicing',          description: 'Create an invoice in 30 seconds. Mark it sent, track payment. No separate tool, no copy-pasting client details.', accent: '#F59E0B' },
+    { icon: Cpu,       title: 'AI Prospecting',     description: 'Describe your ideal customer and let AI find and import matching leads directly into your workspace.', accent: '#8B5CF6' },
+    { icon: Briefcase, title: 'Clients & Projects', description: 'Flip a lead to client in one click. Manage their projects, files, and tasks in the same place.', accent: '#14B8A6' },
+];
+
+const CHIPS = [
+    { icon: Bell,         label: 'New lead',     sub: 'Apex Digital · just now', iconBg: 'rgba(124,58,237,0.18)', iconColor: '#C4B5FD', dotBg: '#7C3AED', pos: '-right-10 top-8',    floatY: -7, dur: 3.2, delay: 0.9  },
+    { icon: Mail,         label: 'Email opened', sub: 'Ahmed K. · 2 min ago',    iconBg: 'rgba(59,130,246,0.18)', iconColor: '#93C5FD', dotBg: '#3B82F6', pos: '-right-12 bottom-24', floatY: -5, dur: 2.8, delay: 1.05 },
+    { icon: CheckCircle2, label: 'Invoice paid', sub: '#041 · PKR 85,000',       iconBg: 'rgba(16,185,129,0.18)', iconColor: '#6EE7B7', dotBg: '#10B981', pos: '-left-8 bottom-10',  floatY: -6, dur: 3.6, delay: 1.2  },
+];
+
+const TESTIMONIALS = [
+    { name: 'Bilal Akhtar',   role: 'Head of Sales, Nexara Pvt Ltd',   avatar: 'BA', rating: 5, text: "We had leads in five WhatsApp groups and a shared spreadsheet nobody could agree on. Now everything's in one place and our follow-up rate actually went up." },
+    { name: 'Sarah Mitchell', role: 'Founder, Clearpath Consulting',    avatar: 'SM', rating: 5, text: "The email tracking sold me. Ahmed opened my proposal email three times yesterday — so I called him this morning. Closed the deal before lunch." },
+    { name: 'Kamran Yousaf',  role: 'CEO, Byte Republic',               avatar: 'KY', rating: 5, text: "We run three client accounts from one platform using different workspaces. Each team only sees their own data. It just works the way you'd expect it to." },
+];
+
+const PRICING = [
+    {
+        name: 'Free', price: 'PKR 0', period: 'forever',
+        description: 'Good for solo founders or freelancers starting out.',
+        features: ['1 workspace', 'Up to 250 leads', 'Basic pipeline board', '100 emails / month', 'Public lead capture form'],
+        cta: 'Create Free Account', ctaHref: '/register', highlight: false,
+    },
+    {
+        name: 'Pro', price: 'PKR 7,900', period: 'per seat / month',
+        description: 'For small teams that need the full toolkit.',
+        features: ['Unlimited workspaces', 'Unlimited leads', 'Full pipeline & Kanban', '10,000 emails / month', 'AI prospecting', 'Invoicing', 'CSV + Sheets import', 'Priority support'],
+        cta: 'Start 14-Day Trial', ctaHref: '/register', highlight: true,
+    },
+    {
+        name: 'Business', price: 'PKR 19,900', period: 'per seat / month',
+        description: 'For agencies or larger teams with heavier requirements.',
+        features: ['Everything in Pro', 'Client & project management', 'IMAP inbox', 'Custom email templates', 'Admin portal + impersonation', 'API access', 'Onboarding call', 'SLA-backed support'],
+        cta: 'Talk to Us', ctaHref: '#', highlight: false,
+    },
+];
+
+const FAQS = [
+    { q: 'Do I need a credit card to sign up?', a: 'No. The free plan stays free forever and trial plans need no payment details upfront. You only enter billing info when you decide to upgrade.' },
+    { q: 'Can I bring in my existing leads?', a: 'Yes — upload a CSV or connect a Google Sheet. The importer maps your columns, previews the import, and lets you confirm before anything is saved.' },
+    { q: 'How are workspaces separated?', a: 'Each workspace is completely isolated at the database level. Users in workspace A cannot see or access anything in workspace B, even if they are the same person running both.' },
+    { q: 'Which email providers work for campaigns?', a: 'Anything with SMTP credentials — Gmail, Outlook 365, SendGrid, Mailgun, Brevo, Postmark, and your own mail server.' },
+    { q: 'Is the data stored securely?', a: 'Yes. All connections are TLS-encrypted, data is isolated by workspace. Backups run daily.' },
+    { q: 'Can I convert a lead into a client and invoice them?', a: 'One click converts the lead record into a client. From there create a project and send an invoice — without re-entering any details.' },
+];
+
+const STEPS = [
+    { num: '01', icon: Building2,  title: 'Create your workspace', description: 'Sign up, pick a name, and you\'re in. The whole setup takes under two minutes.' },
+    { num: '02', icon: Upload,     title: 'Add your leads',         description: 'Import a spreadsheet, type them in, or describe who you\'re targeting and let AI find them.' },
+    { num: '03', icon: TrendingUp, title: 'Work your pipeline',     description: 'Send emails, log calls, move deals through stages, create invoices. Everything in one tab.' },
+];
+
+// ─── Mock UI ──────────────────────────────────────────────────────────────────
+
+function MockSidebar() {
+    const items = [
+        { icon: LayoutDashboard, label: 'Dashboard', active: true  },
+        { icon: Users,           label: 'Leads',     active: false },
+        { icon: Target,          label: 'Pipeline',  active: false },
+        { icon: Mail,            label: 'Campaigns', active: false },
+        { icon: FileText,        label: 'Invoices',  active: false },
+        { icon: Briefcase,       label: 'Projects',  active: false },
+    ];
     return (
-        <>
-            <Head title="Welcome" />
-            <div className="bg-gray-50 text-black/50 dark:bg-black dark:text-white/50">
-                <img
-                    id="background"
-                    className="absolute -left-20 top-0 max-w-[877px]"
-                    src="https://laravel.com/assets/img/welcome/background.svg"
-                />
-                <div className="relative flex min-h-screen flex-col items-center justify-center selection:bg-[#FF2D20] selection:text-white">
-                    <div className="relative w-full max-w-2xl px-6 lg:max-w-7xl">
-                        <header className="grid grid-cols-2 items-center gap-2 py-10 lg:grid-cols-3">
-                            <div className="flex lg:col-start-2 lg:justify-center">
-                                <svg
-                                    className="h-12 w-auto text-white lg:h-16 lg:text-[#FF2D20]"
-                                    viewBox="0 0 62 65"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path
-                                        d="M61.8548 14.6253C61.8778 14.7102 61.8895 14.7978 61.8897 14.8858V28.5615C61.8898 28.737 61.8434 28.9095 61.7554 29.0614C61.6675 29.2132 61.5409 29.3392 61.3887 29.4265L49.9104 36.0351V49.1337C49.9104 49.4902 49.7209 49.8192 49.4118 49.9987L25.4519 63.7916C25.3971 63.8227 25.3372 63.8427 25.2774 63.8639C25.255 63.8714 25.2338 63.8851 25.2101 63.8913C25.0426 63.9354 24.8666 63.9354 24.6991 63.8913C24.6716 63.8838 24.6467 63.8689 24.6205 63.8589C24.5657 63.8389 24.5084 63.8215 24.456 63.7916L0.501061 49.9987C0.348882 49.9113 0.222437 49.7853 0.134469 49.6334C0.0465019 49.4816 0.000120578 49.3092 0 49.1337L0 8.10652C0 8.01678 0.0124642 7.92953 0.0348998 7.84477C0.0423783 7.8161 0.0598282 7.78993 0.0697995 7.76126C0.0884958 7.70891 0.105946 7.65531 0.133367 7.6067C0.152063 7.5743 0.179485 7.54812 0.20192 7.51821C0.230588 7.47832 0.256763 7.43719 0.290416 7.40229C0.319084 7.37362 0.356476 7.35243 0.388883 7.32751C0.425029 7.29759 0.457436 7.26518 0.498568 7.2415L12.4779 0.345059C12.6296 0.257786 12.8015 0.211853 12.9765 0.211853C13.1515 0.211853 13.3234 0.257786 13.475 0.345059L25.4531 7.2415H25.4556C25.4955 7.26643 25.5292 7.29759 25.5653 7.32626C25.5977 7.35119 25.6339 7.37362 25.6625 7.40104C25.6974 7.43719 25.7224 7.47832 25.7523 7.51821C25.7735 7.54812 25.8021 7.5743 25.8196 7.6067C25.8483 7.65656 25.8645 7.70891 25.8844 7.76126C25.8944 7.78993 25.9118 7.8161 25.9193 7.84602C25.9423 7.93096 25.954 8.01853 25.9542 8.10652V33.7317L35.9355 27.9844V14.8846C35.9355 14.7973 35.948 14.7088 35.9704 14.6253C35.9792 14.5954 35.9954 14.5692 36.0053 14.5405C36.0253 14.4882 36.0427 14.4346 36.0702 14.386C36.0888 14.3536 36.1163 14.3274 36.1375 14.2975C36.1674 14.2576 36.1923 14.2165 36.2272 14.1816C36.2559 14.1529 36.292 14.1317 36.3244 14.1068C36.3618 14.0769 36.3942 14.0445 36.4341 14.0208L48.4147 7.12434C48.5663 7.03694 48.7383 6.99094 48.9133 6.99094C49.0883 6.99094 49.2602 7.03694 49.4118 7.12434L61.3899 14.0208C61.4323 14.0457 61.4647 14.0769 61.5021 14.1055C61.5333 14.1305 61.5694 14.1529 61.5981 14.1803C61.633 14.2165 61.6579 14.2576 61.6878 14.2975C61.7103 14.3274 61.7377 14.3536 61.7551 14.386C61.7838 14.4346 61.8 14.4882 61.8199 14.5405C61.8312 14.5692 61.8474 14.5954 61.8548 14.6253ZM59.893 27.9844V16.6121L55.7013 19.0252L49.9104 22.3593V33.7317L59.8942 27.9844H59.893ZM47.9149 48.5566V37.1768L42.2187 40.4299L25.953 49.7133V61.2003L47.9149 48.5566ZM1.99677 9.83281V48.5566L23.9562 61.199V49.7145L12.4841 43.2219L12.4804 43.2194L12.4754 43.2169C12.4368 43.1945 12.4044 43.1621 12.3682 43.1347C12.3371 43.1097 12.3009 43.0898 12.2735 43.0624L12.271 43.0586C12.2386 43.0275 12.2162 42.9888 12.1887 42.9539C12.1638 42.9203 12.1339 42.8916 12.114 42.8567L12.1127 42.853C12.0903 42.8156 12.0766 42.7707 12.0604 42.7283C12.0442 42.6909 12.023 42.656 12.013 42.6161C12.0005 42.5688 11.998 42.5177 11.9931 42.4691C11.9881 42.4317 11.9781 42.3943 11.9781 42.3569V15.5801L6.18848 12.2446L1.99677 9.83281ZM12.9777 2.36177L2.99764 8.10652L12.9752 13.8513L22.9541 8.10527L12.9752 2.36177H12.9777ZM18.1678 38.2138L23.9574 34.8809V9.83281L19.7657 12.2459L13.9749 15.5801V40.6281L18.1678 38.2138ZM48.9133 9.14105L38.9344 14.8858L48.9133 20.6305L58.8909 14.8846L48.9133 9.14105ZM47.9149 22.3593L42.124 19.0252L37.9323 16.6121V27.9844L43.7219 31.3174L47.9149 33.7317V22.3593ZM24.9533 47.987L39.59 39.631L46.9065 35.4555L36.9352 29.7145L25.4544 36.3242L14.9907 42.3482L24.9533 47.987Z"
-                                        fill="currentColor"
-                                    />
-                                </svg>
-                            </div>
-                            <nav className="-mx-3 flex flex-1 justify-end">
-                                {auth.user ? (
-                                    <Link
-                                        href={route('dashboard')}
-                                        className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                    >
-                                        Dashboard
-                                    </Link>
-                                ) : (
-                                    <>
-                                        <Link
-                                            href={route('login')}
-                                            className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                        >
-                                            Log in
-                                        </Link>
-                                        <Link
-                                            href={route('register')}
-                                            className="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
-                                        >
-                                            Register
-                                        </Link>
-                                    </>
-                                )}
-                            </nav>
-                        </header>
+        <div className="hidden sm:flex w-44 flex-shrink-0 flex-col border-r border-white/5 p-3"
+             style={{ background: 'linear-gradient(180deg,#0D0B18,#130F22)' }}>
+            <div className="flex items-center gap-1.5 mb-4 px-2">
+                <div className="w-5 h-5 rounded flex-shrink-0 flex items-center justify-center"
+                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                    <Zap className="w-3 h-3 text-white" />
+                </div>
+                <span className="text-white text-xs font-semibold truncate">My Workspace</span>
+            </div>
+            {items.map(({ icon: Icon, label, active }) => (
+                <div key={label}
+                     className={`flex items-center gap-2 px-2 py-1.5 rounded-md mb-0.5 text-[11px] ${
+                         active ? 'bg-violet-600/20 text-violet-300' : 'text-white/40'
+                     }`}>
+                    <Icon className="w-3 h-3 flex-shrink-0" />{label}
+                </div>
+            ))}
+        </div>
+    );
+}
 
-                        <main className="mt-6">
-                            <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
-                                <a
-                                    href="https://laravel.com/docs"
-                                    id="docs-card"
-                                    className="flex flex-col items-start gap-6 overflow-hidden rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] md:row-span-3 lg:p-10 lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                                >
-                                    <div
-                                        id="screenshot-container"
-                                        className="relative flex w-full flex-1 items-stretch"
-                                    >
-                                        <img
-                                            src="https://laravel.com/assets/img/welcome/docs-light.svg"
-                                            alt="Laravel documentation screenshot"
-                                            className="aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.06)] dark:hidden"
-                                            onError={handleImageError}
-                                        />
-                                        <img
-                                            src="https://laravel.com/assets/img/welcome/docs-dark.svg"
-                                            alt="Laravel documentation screenshot"
-                                            className="hidden aspect-video h-full w-full flex-1 rounded-[10px] object-cover object-top drop-shadow-[0px_4px_34px_rgba(0,0,0,0.25)] dark:block"
-                                        />
-                                        <div className="absolute -bottom-16 -left-16 h-40 w-[calc(100%+8rem)] bg-gradient-to-b from-transparent via-white to-white dark:via-zinc-900 dark:to-zinc-900"></div>
-                                    </div>
-
-                                    <div className="relative flex items-center gap-6 lg:items-end">
-                                        <div
-                                            id="docs-card-content"
-                                            className="flex items-start gap-6 lg:flex-col"
-                                        >
-                                            <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16">
-                                                <svg
-                                                    className="size-5 sm:size-6"
-                                                    xmlns="http://www.w3.org/2000/svg"
-                                                    fill="none"
-                                                    viewBox="0 0 24 24"
-                                                >
-                                                    <path
-                                                        fill="#FF2D20"
-                                                        d="M23 4a1 1 0 0 0-1.447-.894L12.224 7.77a.5.5 0 0 1-.448 0L2.447 3.106A1 1 0 0 0 1 4v13.382a1.99 1.99 0 0 0 1.105 1.79l9.448 4.728c.14.065.293.1.447.1.154-.005.306-.04.447-.105l9.453-4.724a1.99 1.99 0 0 0 1.1-1.789V4ZM3 6.023a.25.25 0 0 1 .362-.223l7.5 3.75a.251.251 0 0 1 .138.223v11.2a.25.25 0 0 1-.362.224l-7.5-3.75a.25.25 0 0 1-.138-.22V6.023Zm18 11.2a.25.25 0 0 1-.138.224l-7.5 3.75a.249.249 0 0 1-.329-.099.249.249 0 0 1-.033-.12V9.772a.251.251 0 0 1 .138-.224l7.5-3.75a.25.25 0 0 1 .362.224v11.2Z"
-                                                    />
-                                                    <path
-                                                        fill="#FF2D20"
-                                                        d="m3.55 1.893 8 4.048a1.008 1.008 0 0 0 .9 0l8-4.048a1 1 0 0 0-.9-1.785l-7.322 3.706a.506.506 0 0 1-.452 0L4.454.108a1 1 0 0 0-.9 1.785H3.55Z"
-                                                    />
-                                                </svg>
-                                            </div>
-
-                                            <div className="pt-3 sm:pt-5 lg:pt-0">
-                                                <h2 className="text-xl font-semibold text-black dark:text-white">
-                                                    Documentation
-                                                </h2>
-
-                                                <p className="mt-4 text-sm/relaxed">
-                                                    Laravel has wonderful
-                                                    documentation covering every
-                                                    aspect of the framework.
-                                                    Whether you are a newcomer
-                                                    or have prior experience
-                                                    with Laravel, we recommend
-                                                    reading our documentation
-                                                    from beginning to end.
-                                                </p>
-                                            </div>
-                                        </div>
-
-                                        <svg
-                                            className="size-6 shrink-0 stroke-[#FF2D20]"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            strokeWidth="1.5"
-                                        >
-                                            <path
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                            />
-                                        </svg>
-                                    </div>
-                                </a>
-
-                                <a
-                                    href="https://laracasts.com"
-                                    className="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                                >
-                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16">
-                                        <svg
-                                            className="size-5 sm:size-6"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <g fill="#FF2D20">
-                                                <path d="M24 8.25a.5.5 0 0 0-.5-.5H.5a.5.5 0 0 0-.5.5v12a2.5 2.5 0 0 0 2.5 2.5h19a2.5 2.5 0 0 0 2.5-2.5v-12Zm-7.765 5.868a1.221 1.221 0 0 1 0 2.264l-6.626 2.776A1.153 1.153 0 0 1 8 18.123v-5.746a1.151 1.151 0 0 1 1.609-1.035l6.626 2.776ZM19.564 1.677a.25.25 0 0 0-.177-.427H15.6a.106.106 0 0 0-.072.03l-4.54 4.543a.25.25 0 0 0 .177.427h3.783c.027 0 .054-.01.073-.03l4.543-4.543ZM22.071 1.318a.047.047 0 0 0-.045.013l-4.492 4.492a.249.249 0 0 0 .038.385.25.25 0 0 0 .14.042h5.784a.5.5 0 0 0 .5-.5v-2a2.5 2.5 0 0 0-1.925-2.432ZM13.014 1.677a.25.25 0 0 0-.178-.427H9.101a.106.106 0 0 0-.073.03l-4.54 4.543a.25.25 0 0 0 .177.427H8.4a.106.106 0 0 0 .073-.03l4.54-4.543ZM6.513 1.677a.25.25 0 0 0-.177-.427H2.5A2.5 2.5 0 0 0 0 3.75v2a.5.5 0 0 0 .5.5h1.4a.106.106 0 0 0 .073-.03l4.54-4.543Z" />
-                                            </g>
-                                        </svg>
-                                    </div>
-
-                                    <div className="pt-3 sm:pt-5">
-                                        <h2 className="text-xl font-semibold text-black dark:text-white">
-                                            Laracasts
-                                        </h2>
-
-                                        <p className="mt-4 text-sm/relaxed">
-                                            Laracasts offers thousands of video
-                                            tutorials on Laravel, PHP, and
-                                            JavaScript development. Check them
-                                            out, see for yourself, and massively
-                                            level up your development skills in
-                                            the process.
-                                        </p>
-                                    </div>
-
-                                    <svg
-                                        className="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth="1.5"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                        />
-                                    </svg>
-                                </a>
-
-                                <a
-                                    href="https://laravel-news.com"
-                                    className="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] transition duration-300 hover:text-black/70 hover:ring-black/20 focus:outline-none focus-visible:ring-[#FF2D20] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800 dark:hover:text-white/70 dark:hover:ring-zinc-700 dark:focus-visible:ring-[#FF2D20]"
-                                >
-                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16">
-                                        <svg
-                                            className="size-5 sm:size-6"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <g fill="#FF2D20">
-                                                <path d="M8.75 4.5H5.5c-.69 0-1.25.56-1.25 1.25v4.75c0 .69.56 1.25 1.25 1.25h3.25c.69 0 1.25-.56 1.25-1.25V5.75c0-.69-.56-1.25-1.25-1.25Z" />
-                                                <path d="M24 10a3 3 0 0 0-3-3h-2V2.5a2 2 0 0 0-2-2H2a2 2 0 0 0-2 2V20a3.5 3.5 0 0 0 3.5 3.5h17A3.5 3.5 0 0 0 24 20V10ZM3.5 21.5A1.5 1.5 0 0 1 2 20V3a.5.5 0 0 1 .5-.5h14a.5.5 0 0 1 .5.5v17c0 .295.037.588.11.874a.5.5 0 0 1-.484.625L3.5 21.5ZM22 20a1.5 1.5 0 1 1-3 0V9.5a.5.5 0 0 1 .5-.5H21a1 1 0 0 1 1 1v10Z" />
-                                                <path d="M12.751 6.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 7.3v-.5a.75.75 0 0 1 .751-.753ZM12.751 10.047h2a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-2A.75.75 0 0 1 12 11.3v-.5a.75.75 0 0 1 .751-.753ZM4.751 14.047h10a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-10A.75.75 0 0 1 4 15.3v-.5a.75.75 0 0 1 .751-.753ZM4.75 18.047h7.5a.75.75 0 0 1 .75.75v.5a.75.75 0 0 1-.75.75h-7.5A.75.75 0 0 1 4 19.3v-.5a.75.75 0 0 1 .75-.753Z" />
-                                            </g>
-                                        </svg>
-                                    </div>
-
-                                    <div className="pt-3 sm:pt-5">
-                                        <h2 className="text-xl font-semibold text-black dark:text-white">
-                                            Laravel News
-                                        </h2>
-
-                                        <p className="mt-4 text-sm/relaxed">
-                                            Laravel News is a community driven
-                                            portal and newsletter aggregating
-                                            all of the latest and most important
-                                            news in the Laravel ecosystem,
-                                            including new package releases and
-                                            tutorials.
-                                        </p>
-                                    </div>
-
-                                    <svg
-                                        className="size-6 shrink-0 self-center stroke-[#FF2D20]"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        fill="none"
-                                        viewBox="0 0 24 24"
-                                        strokeWidth="1.5"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            d="M4.5 12h15m0 0l-6.75-6.75M19.5 12l-6.75 6.75"
-                                        />
-                                    </svg>
-                                </a>
-
-                                <div className="flex items-start gap-4 rounded-lg bg-white p-6 shadow-[0px_14px_34px_0px_rgba(0,0,0,0.08)] ring-1 ring-white/[0.05] lg:pb-10 dark:bg-zinc-900 dark:ring-zinc-800">
-                                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-[#FF2D20]/10 sm:size-16">
-                                        <svg
-                                            className="size-5 sm:size-6"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <g fill="#FF2D20">
-                                                <path d="M16.597 12.635a.247.247 0 0 0-.08-.237 2.234 2.234 0 0 1-.769-1.68c.001-.195.03-.39.084-.578a.25.25 0 0 0-.09-.267 8.8 8.8 0 0 0-4.826-1.66.25.25 0 0 0-.268.181 2.5 2.5 0 0 1-2.4 1.824.045.045 0 0 0-.045.037 12.255 12.255 0 0 0-.093 3.86.251.251 0 0 0 .208.214c2.22.366 4.367 1.08 6.362 2.118a.252.252 0 0 0 .32-.079 10.09 10.09 0 0 0 1.597-3.733ZM13.616 17.968a.25.25 0 0 0-.063-.407A19.697 19.697 0 0 0 8.91 15.98a.25.25 0 0 0-.287.325c.151.455.334.898.548 1.328.437.827.981 1.594 1.619 2.28a.249.249 0 0 0 .32.044 29.13 29.13 0 0 0 2.506-1.99ZM6.303 14.105a.25.25 0 0 0 .265-.274 13.048 13.048 0 0 1 .205-4.045.062.062 0 0 0-.022-.07 2.5 2.5 0 0 1-.777-.982.25.25 0 0 0-.271-.149 11 11 0 0 0-5.6 2.815.255.255 0 0 0-.075.163c-.008.135-.02.27-.02.406.002.8.084 1.598.246 2.381a.25.25 0 0 0 .303.193 19.924 19.924 0 0 1 5.746-.438ZM9.228 20.914a.25.25 0 0 0 .1-.393 11.53 11.53 0 0 1-1.5-2.22 12.238 12.238 0 0 1-.91-2.465.248.248 0 0 0-.22-.187 18.876 18.876 0 0 0-5.69.33.249.249 0 0 0-.179.336c.838 2.142 2.272 4 4.132 5.353a.254.254 0 0 0 .15.048c1.41-.01 2.807-.282 4.117-.802ZM18.93 12.957l-.005-.008a.25.25 0 0 0-.268-.082 2.21 2.21 0 0 1-.41.081.25.25 0 0 0-.217.2c-.582 2.66-2.127 5.35-5.75 7.843a.248.248 0 0 0-.09.299.25.25 0 0 0 .065.091 28.703 28.703 0 0 0 2.662 2.12.246.246 0 0 0 .209.037c2.579-.701 4.85-2.242 6.456-4.378a.25.25 0 0 0 .048-.189 13.51 13.51 0 0 0-2.7-6.014ZM5.702 7.058a.254.254 0 0 0 .2-.165A2.488 2.488 0 0 1 7.98 5.245a.093.093 0 0 0 .078-.062 19.734 19.734 0 0 1 3.055-4.74.25.25 0 0 0-.21-.41 12.009 12.009 0 0 0-10.4 8.558.25.25 0 0 0 .373.281 12.912 12.912 0 0 1 4.826-1.814ZM10.773 22.052a.25.25 0 0 0-.28-.046c-.758.356-1.55.635-2.365.833a.25.25 0 0 0-.022.48c1.252.43 2.568.65 3.893.65.1 0 .2 0 .3-.008a.25.25 0 0 0 .147-.444c-.526-.424-1.1-.917-1.673-1.465ZM18.744 8.436a.249.249 0 0 0 .15.228 2.246 2.246 0 0 1 1.352 2.054c0 .337-.08.67-.23.972a.25.25 0 0 0 .042.28l.007.009a15.016 15.016 0 0 1 2.52 4.6.25.25 0 0 0 .37.132.25.25 0 0 0 .096-.114c.623-1.464.944-3.039.945-4.63a12.005 12.005 0 0 0-5.78-10.258.25.25 0 0 0-.373.274c.547 2.109.85 4.274.901 6.453ZM9.61 5.38a.25.25 0 0 0 .08.31c.34.24.616.561.8.935a.25.25 0 0 0 .3.127.631.631 0 0 1 .206-.034c2.054.078 4.036.772 5.69 1.991a.251.251 0 0 0 .267.024c.046-.024.093-.047.141-.067a.25.25 0 0 0 .151-.23A29.98 29.98 0 0 0 15.957.764a.25.25 0 0 0-.16-.164 11.924 11.924 0 0 0-2.21-.518.252.252 0 0 0-.215.076A22.456 22.456 0 0 0 9.61 5.38Z" />
-                                            </g>
-                                        </svg>
-                                    </div>
-
-                                    <div className="pt-3 sm:pt-5">
-                                        <h2 className="text-xl font-semibold text-black dark:text-white">
-                                            Vibrant Ecosystem
-                                        </h2>
-
-                                        <p className="mt-4 text-sm/relaxed">
-                                            Laravel's robust library of
-                                            first-party tools and libraries,
-                                            such as{' '}
-                                            <a
-                                                href="https://forge.laravel.com"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white dark:focus-visible:ring-[#FF2D20]"
-                                            >
-                                                Forge
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://vapor.laravel.com"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Vapor
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://nova.laravel.com"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Nova
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://envoyer.io"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Envoyer
-                                            </a>
-                                            , and{' '}
-                                            <a
-                                                href="https://herd.laravel.com"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Herd
-                                            </a>{' '}
-                                            help you take your projects to the
-                                            next level. Pair them with powerful
-                                            open source libraries like{' '}
-                                            <a
-                                                href="https://laravel.com/docs/billing"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Cashier
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://laravel.com/docs/dusk"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Dusk
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://laravel.com/docs/broadcasting"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Echo
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://laravel.com/docs/horizon"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Horizon
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://laravel.com/docs/sanctum"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Sanctum
-                                            </a>
-                                            ,{' '}
-                                            <a
-                                                href="https://laravel.com/docs/telescope"
-                                                className="rounded-sm underline hover:text-black focus:outline-none focus-visible:ring-1 focus-visible:ring-[#FF2D20] dark:hover:text-white"
-                                            >
-                                                Telescope
-                                            </a>
-                                            , and more.
-                                        </p>
-                                    </div>
+function MockDashboard() {
+    const stats = [
+        { label: 'Total Leads',  value: '2,847',  color: 'text-blue-300',   bg: 'bg-blue-500/10'   },
+        { label: 'Active Deals', value: '143',    color: 'text-green-300',  bg: 'bg-green-500/10'  },
+        { label: 'Revenue MTD',  value: '$48.2k', color: 'text-violet-300', bg: 'bg-violet-500/10' },
+        { label: 'Emails Sent',  value: '12,400', color: 'text-amber-300',  bg: 'bg-amber-500/10'  },
+    ];
+    const bars     = [40,65,50,80,60,90,75,95,70,88,65,100];
+    const pipeline = [
+        { label: 'New',       pct: 85, color: 'bg-blue-500'   },
+        { label: 'Qualified', pct: 62, color: 'bg-violet-500' },
+        { label: 'Proposal',  pct: 40, color: 'bg-amber-500'  },
+        { label: 'Won',       pct: 24, color: 'bg-green-500'  },
+    ];
+    return (
+        <div className="flex-1 p-3 overflow-hidden">
+            <div className="text-white/70 text-xs font-semibold mb-2">Dashboard</div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
+                {stats.map(({ label, value, color, bg }) => (
+                    <div key={label} className={`rounded-lg p-2 border border-white/5 ${bg}`}>
+                        <div className="text-white/40 text-[9px] mb-0.5">{label}</div>
+                        <div className={`text-sm font-bold ${color}`}>{value}</div>
+                    </div>
+                ))}
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
+                <div className="col-span-3 rounded-lg bg-white/[0.03] border border-white/5 p-2">
+                    <div className="text-white/40 text-[9px] mb-1.5">New leads (30 days)</div>
+                    <div className="flex items-end gap-0.5" style={{ height: '52px' }}>
+                        {bars.map((h, i) => (
+                            <div key={i} className="flex-1 rounded-sm"
+                                 style={{ height: `${h}%`, background: 'linear-gradient(180deg,#7C3AED,#4F46E5)', opacity: 0.85 }} />
+                        ))}
+                    </div>
+                </div>
+                <div className="col-span-2 rounded-lg bg-white/[0.03] border border-white/5 p-2">
+                    <div className="text-white/40 text-[9px] mb-2">Pipeline</div>
+                    <div className="space-y-1.5">
+                        {pipeline.map(({ label, pct, color }) => (
+                            <div key={label}>
+                                <div className="flex justify-between text-[8px] text-white/40 mb-0.5">
+                                    <span>{label}</span><span>{pct}%</span>
+                                </div>
+                                <div className="h-1 bg-white/10 rounded-full">
+                                    <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
                                 </div>
                             </div>
-                        </main>
-
-                        <footer className="py-16 text-center text-sm text-black dark:text-white/70">
-                            Laravel v{laravelVersion} (PHP v{phpVersion})
-                        </footer>
+                        ))}
                     </div>
                 </div>
             </div>
-        </>
+        </div>
+    );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+export default function Welcome() {
+    const [mobileOpen, setMobileOpen] = useState(false);
+    const [openFaq,    setOpenFaq]    = useState(null);
+    const [scrolled,   setScrolled]   = useState(false);
+
+    useEffect(() => {
+        const fn = () => setScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', fn);
+        return () => window.removeEventListener('scroll', fn);
+    }, []);
+
+    const navLinks = [
+        { label: 'Features',     href: '#features'     },
+        { label: 'How it works', href: '#how-it-works' },
+        { label: 'Pricing',      href: '#pricing'      },
+        { label: 'FAQ',          href: '#faq'          },
+    ];
+
+    return (
+        <div className="min-h-screen bg-white font-sans antialiased">
+
+            {/* ── Nav ──────────────────────────────────────────────────────── */}
+            <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
+                scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100' : 'bg-transparent'
+            }`}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex items-center justify-between h-16">
+                        <Link href="/" className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                 style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                <Zap className="w-4 h-4 text-white" />
+                            </div>
+                            <span className={`font-bold text-[17px] tracking-tight ${scrolled ? 'text-slate-900' : 'text-white'}`}>
+                                LeadFlow
+                            </span>
+                        </Link>
+
+                        <div className="hidden md:flex items-center gap-8">
+                            {navLinks.map(({ label, href }) => (
+                                <a key={label} href={href}
+                                   className={`text-sm font-medium transition-colors hover:text-violet-500 ${
+                                       scrolled ? 'text-slate-600' : 'text-white/75'
+                                   }`}>{label}</a>
+                            ))}
+                        </div>
+
+                        <div className="hidden md:flex items-center gap-2">
+                            <Link href="/login"
+                                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                                      scrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-white/75 hover:text-white hover:bg-white/10'
+                                  }`}>
+                                Sign In
+                            </Link>
+                            <Link href="/register"
+                                  className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                Get Started
+                            </Link>
+                        </div>
+
+                        <button className={`md:hidden p-1.5 ${scrolled ? 'text-slate-700' : 'text-white'}`}
+                                onClick={() => setMobileOpen(v => !v)}>
+                            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                        </button>
+                    </div>
+                </div>
+
+                {mobileOpen && (
+                    <div className="md:hidden border-t border-white/10 px-4 py-4 space-y-1"
+                         style={{ background: 'rgba(10,8,18,0.97)' }}>
+                        {navLinks.map(({ label, href }) => (
+                            <a key={label} href={href} onClick={() => setMobileOpen(false)}
+                               className="block py-2.5 text-white/75 hover:text-white text-sm font-medium">{label}</a>
+                        ))}
+                        <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+                            <Link href="/login"
+                                  className="block py-3 rounded-xl text-center text-sm font-medium text-white/75 border border-white/15 hover:bg-white/5">
+                                Sign In
+                            </Link>
+                            <Link href="/register"
+                                  className="block py-3 rounded-xl text-center text-sm font-semibold text-white"
+                                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                Get Started
+                            </Link>
+                        </div>
+                    </div>
+                )}
+            </nav>
+
+            {/* ── Hero ─────────────────────────────────────────────────────── */}
+            <section className="relative min-h-screen flex items-center overflow-hidden pt-16"
+                     style={{ background: 'linear-gradient(155deg, #08060F 0%, #0F0C1E 50%, #130F24 100%)' }}>
+
+                <div className="absolute top-0 right-0 w-[800px] h-[700px] pointer-events-none"
+                     style={{ background: 'radial-gradient(ellipse at 70% 30%, rgba(124,58,237,0.16) 0%, transparent 60%)', filter: 'blur(60px)' }} />
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] pointer-events-none"
+                     style={{ background: 'radial-gradient(ellipse at 30% 70%, rgba(79,70,229,0.1) 0%, transparent 60%)', filter: 'blur(80px)' }} />
+
+                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+                    <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
+
+                        {/* Left: Copy */}
+                        <motion.div variants={stagger} initial="hidden" animate="show">
+                            <motion.div variants={fadeUp} className="mb-7">
+                                <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full
+                                                 text-xs font-semibold text-violet-300
+                                                 bg-violet-500/10 border border-violet-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse flex-shrink-0" />
+                                    AI lead prospecting is live
+                                </span>
+                            </motion.div>
+
+                            <motion.h1 variants={fadeUp}
+                                       className="text-5xl sm:text-6xl lg:text-7xl font-black text-white
+                                                  leading-[0.93] tracking-tight mb-7">
+                                Stop losing<br />deals to<br />
+                                <span className="bg-clip-text text-transparent"
+                                      style={{ backgroundImage: 'linear-gradient(130deg, #C4B5FD 20%, #818CF8 80%)' }}>
+                                    spreadsheets.
+                                </span>
+                            </motion.h1>
+
+                            <motion.p variants={fadeUp}
+                                      className="text-white/45 text-lg sm:text-xl leading-relaxed mb-10 max-w-[420px]">
+                                LeadFlow puts your leads, emails, pipeline, and invoices
+                                in one workspace your whole team can use — starting free.
+                            </motion.p>
+
+                            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-start gap-3 mb-10">
+                                <Link href="/register"
+                                      className="group inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-base
+                                                 font-semibold text-white transition-all
+                                                 hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-px"
+                                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                    Create Free Account
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                </Link>
+                                <Link href="/login"
+                                      className="inline-flex items-center gap-1.5 px-7 py-3.5 rounded-xl text-base font-medium
+                                                 text-white/50 hover:text-white/90 transition-colors">
+                                    Sign in <ArrowRight className="w-3.5 h-3.5 opacity-50" />
+                                </Link>
+                            </motion.div>
+
+                            <motion.div variants={fadeUp}
+                                        className="flex flex-wrap items-center gap-x-5 gap-y-2 text-white/30 text-sm">
+                                {['Free plan — no card needed', '14-day trial on paid plans', 'Under 2 min to set up'].map(t => (
+                                    <span key={t} className="flex items-center gap-1.5">
+                                        <Check className="w-3.5 h-3.5 text-green-400/70 flex-shrink-0" />{t}
+                                    </span>
+                                ))}
+                            </motion.div>
+                        </motion.div>
+
+                        {/* Right: App mockup + floating chips */}
+                        <div className="relative hidden lg:block">
+                            <div className="absolute -inset-8 rounded-3xl pointer-events-none"
+                                 style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.2) 0%, transparent 65%)', filter: 'blur(40px)' }} />
+
+                            <motion.div
+                                initial={{ opacity: 0, y: 44 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.85, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                                className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
+                                style={{ background: '#0F0D1C' }}>
+                                <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
+                                    <div className="flex gap-1.5">
+                                        <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                                        <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                                        <div className="w-3 h-3 rounded-full bg-green-500/70" />
+                                    </div>
+                                    <div className="flex-1 flex justify-center">
+                                        <div className="bg-white/5 rounded-md px-10 py-1 text-white/20 text-xs">
+                                            app.leadflow.io/dashboard
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex" style={{ minHeight: '280px' }}>
+                                    <MockSidebar />
+                                    <MockDashboard />
+                                </div>
+                            </motion.div>
+
+                            {CHIPS.map(({ icon: Icon, label, sub, iconBg, iconColor, dotBg, pos, floatY, dur, delay }) => (
+                                <motion.div
+                                    key={label}
+                                    initial={{ opacity: 0, scale: 0.85 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                                    className={`absolute ${pos}`}>
+                                    <motion.div
+                                        animate={{ y: [0, floatY, 0] }}
+                                        transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay: delay + 0.3 }}
+                                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 shadow-xl border border-white/10"
+                                        style={{ background: 'rgba(15,13,28,0.92)', backdropFilter: 'blur(12px)' }}>
+                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                                             style={{ background: iconBg }}>
+                                            <Icon className="w-3.5 h-3.5" style={{ color: iconColor }} />
+                                        </div>
+                                        <div>
+                                            <div className="text-white text-xs font-semibold leading-tight">{label}</div>
+                                            <div className="text-white/35 text-[10px]">{sub}</div>
+                                        </div>
+                                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotBg }} />
+                                    </motion.div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+
+                <div className="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
+                     style={{ background: 'linear-gradient(to bottom, transparent, #08060F)' }} />
+            </section>
+
+            {/* ── Integration strip ────────────────────────────────────────── */}
+            <section className="py-8 border-b border-white/5" style={{ background: '#06050D' }}>
+                <div className="max-w-5xl mx-auto px-4">
+                    <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-10">
+                        <span className="text-white/20 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                            Works with
+                        </span>
+                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+                            {['Gmail', 'Outlook', 'SendGrid', 'Mailgun', 'Brevo', 'Google Sheets', 'CSV Import'].map(name => (
+                                <span key={name}
+                                      className="text-white/25 text-sm font-medium hover:text-white/50 transition-colors cursor-default">
+                                    {name}
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Stats ────────────────────────────────────────────────────── */}
+            <section className="py-20" style={{ background: '#06050D' }}>
+                <div className="max-w-5xl mx-auto px-4">
+                    <motion.div
+                        variants={stagger}
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true }}
+                        className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                        {[
+                            { value: '500+',  label: 'Active workspaces', color: '#A78BFA' },
+                            { value: '50k+',  label: 'Leads tracked',     color: '#60A5FA' },
+                            { value: '99.9%', label: 'Uptime SLA',        color: '#34D399' },
+                            { value: '4.9★',  label: 'Average rating',    color: '#FCD34D' },
+                        ].map(({ value, label, color }) => (
+                            <motion.div key={label} variants={scaleIn}>
+                                <div className="text-4xl font-black mb-2" style={{ color }}>{value}</div>
+                                <div className="text-white/30 text-sm">{label}</div>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ── Features ─────────────────────────────────────────────────── */}
+            <section id="features" className="py-28 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-16">
+                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
+                            <div className="h-px w-10 bg-violet-400" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">What's included</span>
+                        </motion.div>
+                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">
+                            Six tools. One tab.
+                        </motion.h2>
+                        <motion.p variants={fadeUp} className="text-slate-400 text-lg mt-3 max-w-md">
+                            No switching between apps. No copy-pasting between tools.
+                        </motion.p>
+                    </motion.div>
+
+                    <motion.div
+                        variants={stagger}
+                        initial="hidden"
+                        whileInView="show"
+                        viewport={{ once: true }}
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 rounded-2xl overflow-hidden border border-slate-100">
+                        {FEATURES.map(({ icon: Icon, title, description, accent }, idx) => (
+                            <motion.div
+                                key={title}
+                                variants={fadeUp}
+                                className="group bg-white p-8 border-r border-b border-slate-100
+                                           hover:bg-slate-50/60 transition-colors duration-200 cursor-default
+                                           [&:nth-child(3n)]:border-r-0 [&:nth-last-child(-n+3)]:border-b-0">
+                                <div className="flex items-start justify-between mb-5">
+                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center
+                                                    group-hover:scale-110 transition-transform duration-200"
+                                         style={{ background: `${accent}18` }}>
+                                        <Icon style={{ color: accent, width: '18px', height: '18px' }} />
+                                    </div>
+                                    <span className="text-xs font-bold text-slate-200 tabular-nums">
+                                        {String(idx + 1).padStart(2, '0')}
+                                    </span>
+                                </div>
+                                <h3 className="text-[15px] font-bold text-slate-900 mb-2">{title}</h3>
+                                <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
+                                <div className="mt-5 h-0.5 w-0 group-hover:w-8 transition-all duration-300 rounded-full"
+                                     style={{ background: accent }} />
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ── Pipeline highlight ───────────────────────────────────────── */}
+            <section className="py-28" style={{ background: '#0A0812' }}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -32 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                            className="rounded-2xl p-5 border border-white/8"
+                            style={{ background: 'rgba(15,13,28,0.9)' }}>
+                            <div className="text-white/25 text-[10px] font-bold uppercase tracking-widest mb-4">
+                                Pipeline Board
+                            </div>
+                            <div className="grid grid-cols-3 gap-3">
+                                {[
+                                    { stage: 'New',      color: '#60A5FA', leads: [{ name: 'Apex Digital', val: 'PKR 240k' }, { name: 'TechNova', val: 'PKR 85k' }, { name: 'BlueByte', val: 'PKR 190k' }] },
+                                    { stage: 'In Talk',  color: '#A78BFA', leads: [{ name: 'Orion Labs',   val: 'PKR 320k' }, { name: 'Qlink Corp', val: 'PKR 155k' }] },
+                                    { stage: 'Proposal', color: '#FCD34D', leads: [{ name: 'Fivestar Co',  val: 'PKR 90k'  }, { name: 'Cloudify',  val: 'PKR 440k' }] },
+                                ].map(({ stage, color, leads }) => (
+                                    <div key={stage}>
+                                        <div className="text-xs font-bold mb-2" style={{ color }}>
+                                            {stage} <span className="text-white/20 font-normal">({leads.length})</span>
+                                        </div>
+                                        <div className="space-y-2">
+                                            {leads.map(({ name, val }) => (
+                                                <div key={name}
+                                                     className="bg-white/[0.04] rounded-xl p-2.5 border border-white/5">
+                                                    <div className="flex items-center gap-1.5 mb-1">
+                                                        <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold"
+                                                             style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                                            {name[0]}
+                                                        </div>
+                                                        <span className="text-white/65 text-[11px] font-medium truncate">{name}</span>
+                                                    </div>
+                                                    <div className="text-[11px] font-bold text-green-400">{val}</div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 32 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="h-px w-10 bg-violet-500" />
+                                <span className="text-violet-400 text-xs font-bold uppercase tracking-widest">Pipeline</span>
+                            </div>
+                            <h2 className="text-4xl font-black text-white mb-5 leading-tight">
+                                Know exactly what<br />needs attention today.
+                            </h2>
+                            <p className="text-white/40 text-lg mb-8 leading-relaxed">
+                                The Kanban board shows every deal in your pipeline. Drag a card to update its stage.
+                                Click it to see the full history — calls, emails, notes — without opening a separate screen.
+                            </p>
+                            <ul className="space-y-3">
+                                {[
+                                    'Custom stages that match your sales process',
+                                    'Priority and score per lead',
+                                    'Bulk moves across stages',
+                                    'Full activity log on every card',
+                                    'Filter by tag, owner, or status in seconds',
+                                ].map(item => (
+                                    <li key={item} className="flex items-center gap-3 text-white/50 text-sm">
+                                        <CheckCircle2 className="w-4 h-4 text-violet-400 flex-shrink-0" />{item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Campaign highlight ───────────────────────────────────────── */}
+            <section className="py-28 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -32 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}>
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="h-px w-10 bg-blue-400" />
+                                <span className="text-blue-600 text-xs font-bold uppercase tracking-widest">Email Campaigns</span>
+                            </div>
+                            <h2 className="text-4xl font-black text-slate-900 mb-5 leading-tight">
+                                See who read your email<br />before you follow up.
+                            </h2>
+                            <p className="text-slate-500 text-lg mb-8 leading-relaxed">
+                                Send a campaign to a segment of your leads and track opens and clicks per person.
+                                Know exactly who's warm so you reach out at the right moment.
+                            </p>
+                            <ul className="space-y-3">
+                                {[
+                                    'Works with Gmail, Outlook, SendGrid, any SMTP',
+                                    'Open & click tracking per contact',
+                                    'Personalise with name, company, custom fields',
+                                    'Schedule sends or throttle by hour',
+                                    'Per-contact delivery log',
+                                ].map(item => (
+                                    <li key={item} className="flex items-center gap-3 text-slate-600 text-sm">
+                                        <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0" />{item}
+                                    </li>
+                                ))}
+                            </ul>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 32 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+                            className="rounded-2xl overflow-hidden border border-slate-100 shadow-lg">
+                            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
+                                <div className="text-slate-800 font-semibold text-sm">Q4 Outreach — Batch 1</div>
+                                <div className="text-slate-400 text-xs mt-0.5">847 recipients · running for 2 days</div>
+                            </div>
+                            <div className="bg-white p-4">
+                                <div className="grid grid-cols-2 gap-3 mb-4">
+                                    {[
+                                        { label: 'Delivered', value: '847', sub: '100%',  color: '#059669', bg: '#ECFDF5' },
+                                        { label: 'Opened',    value: '412', sub: '48.7%', color: '#2563EB', bg: '#EFF6FF' },
+                                        { label: 'Clicked',   value: '89',  sub: '10.5%', color: '#7C3AED', bg: '#F5F3FF' },
+                                        { label: 'Replied',   value: '24',  sub: '2.8%',  color: '#D97706', bg: '#FFFBEB' },
+                                    ].map(({ label, value, sub, color, bg }) => (
+                                        <div key={label} className="rounded-xl p-3 border border-slate-100" style={{ background: bg }}>
+                                            <div className="text-slate-500 text-xs mb-1">{label}</div>
+                                            <div className="text-2xl font-bold" style={{ color }}>{value}</div>
+                                            <div className="text-xs opacity-70" style={{ color }}>{sub}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="text-slate-400 text-[10px] mb-2">Sends per hour (last 48 h)</div>
+                                <div className="flex items-end gap-1" style={{ height: '44px' }}>
+                                    {[20,80,100,60,40,75,90,50,30,85,70,95].map((h, i) => (
+                                        <div key={i} className="flex-1 rounded-sm"
+                                             style={{ height: `${h}%`, background: 'linear-gradient(180deg,#3B82F6,#6366F1)', opacity: 0.65 }} />
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── How it works ─────────────────────────────────────────────── */}
+            <section id="how-it-works" className="py-28" style={{ background: '#F7F6FE' }}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-16">
+                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
+                            <div className="h-px w-10 bg-violet-400" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Getting started</span>
+                        </motion.div>
+                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">
+                            Three steps.<br />
+                            <span className="text-slate-400 font-normal text-4xl sm:text-4xl">You're working.</span>
+                        </motion.h2>
+                        <motion.p variants={fadeUp} className="text-slate-500 text-lg mt-3 max-w-md">
+                            No demo calls, no lengthy onboarding. Sign up and you're running in minutes.
+                        </motion.p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {STEPS.map(({ num, icon: Icon, title, description }, i) => (
+                            <motion.div
+                                key={title}
+                                initial={{ opacity: 0, y: 32 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
+                                className="relative bg-white rounded-2xl p-8 border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="absolute top-4 right-5 text-[56px] font-black text-slate-100 leading-none select-none">
+                                    {num}
+                                </div>
+                                <div className="relative">
+                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
+                                         style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                        <Icon className="w-6 h-6 text-white" />
+                                    </div>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-3">{title}</h3>
+                                    <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Testimonials ─────────────────────────────────────────────── */}
+            <section className="py-28 bg-white">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-16">
+                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
+                            <div className="h-px w-10 bg-violet-400" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">What people say</span>
+                        </motion.div>
+                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">
+                            From teams that<br />actually use it.
+                        </motion.h2>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <motion.div
+                            initial={{ opacity: 0, y: 28 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                            className="rounded-2xl p-8 lg:p-10 flex flex-col justify-between"
+                            style={{ background: 'linear-gradient(150deg,#0D0B18,#1A1232)' }}>
+                            <div>
+                                <div className="flex gap-1 mb-6">
+                                    {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                                </div>
+                                <blockquote className="text-white/75 text-xl leading-relaxed font-light">
+                                    "{TESTIMONIALS[1].text}"
+                                </blockquote>
+                            </div>
+                            <div className="flex items-center gap-3 pt-8 mt-8 border-t border-white/10">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                    {TESTIMONIALS[1].avatar}
+                                </div>
+                                <div>
+                                    <div className="text-white font-semibold text-sm">{TESTIMONIALS[1].name}</div>
+                                    <div className="text-white/35 text-xs">{TESTIMONIALS[1].role}</div>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        <div className="flex flex-col gap-5">
+                            {[TESTIMONIALS[0], TESTIMONIALS[2]].map(({ name, role, avatar, text, rating }, i) => (
+                                <motion.div
+                                    key={name}
+                                    initial={{ opacity: 0, y: 28 }}
+                                    whileInView={{ opacity: 1, y: 0 }}
+                                    viewport={{ once: true }}
+                                    transition={{ duration: 0.55, delay: 0.1 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                                    className="flex-1 rounded-2xl p-7 bg-slate-50 border border-slate-100">
+                                    <div className="flex gap-1 mb-4">
+                                        {Array.from({ length: rating }).map((_, j) => (
+                                            <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                                        ))}
+                                    </div>
+                                    <blockquote className="text-slate-700 leading-relaxed mb-5 text-sm">"{text}"</blockquote>
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                                             style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                            {avatar}
+                                        </div>
+                                        <div>
+                                            <div className="text-slate-900 font-semibold text-sm">{name}</div>
+                                            <div className="text-slate-400 text-xs">{role}</div>
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+
+                    <div className="mt-10 flex items-center justify-center gap-3">
+                        <div className="flex gap-0.5">
+                            {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
+                        </div>
+                        <span className="text-slate-700 font-semibold text-sm">4.9 out of 5</span>
+                        <span className="text-slate-400 text-sm">· 200+ reviews</span>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Pricing ──────────────────────────────────────────────────── */}
+            <section id="pricing" className="py-28" style={{ background: '#0A0812' }}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-16">
+                        <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-5">
+                            <div className="h-px w-10 bg-violet-500" />
+                            <span className="text-violet-400 text-xs font-bold uppercase tracking-widest">Pricing</span>
+                            <div className="h-px w-10 bg-violet-500" />
+                        </motion.div>
+                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-white mb-4 leading-tight">
+                            Simple, honest pricing.
+                        </motion.h2>
+                        <motion.p variants={fadeUp} className="text-white/35 text-lg max-w-md mx-auto">
+                            Start free. Upgrade when it makes sense. No long contracts.
+                        </motion.p>
+                    </motion.div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl mx-auto">
+                        {PRICING.map(({ name, price, period, description, features, cta, ctaHref, highlight }, i) => (
+                            <motion.div
+                                key={name}
+                                initial={{ opacity: 0, y: 32 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.55, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                                className={`rounded-2xl p-7 flex flex-col relative ${
+                                    highlight ? 'border-2 border-violet-500' : 'border border-white/8'
+                                }`}
+                                style={highlight
+                                    ? { background: 'linear-gradient(135deg,rgba(124,58,237,0.1),rgba(79,70,229,0.08))' }
+                                    : { background: 'rgba(255,255,255,0.025)' }}>
+
+                                {highlight && (
+                                    <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full
+                                                    text-xs font-bold text-white whitespace-nowrap"
+                                         style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                        Most Popular
+                                    </div>
+                                )}
+
+                                <div className="mb-6">
+                                    <div className="text-white font-bold text-xl mb-2">{name}</div>
+                                    <div className="text-3xl font-extrabold text-white mb-0.5">{price}</div>
+                                    {period && <div className="text-white/25 text-xs mb-3">{period}</div>}
+                                    <p className="text-white/35 text-sm">{description}</p>
+                                </div>
+
+                                <ul className="space-y-2.5 mb-8 flex-1">
+                                    {features.map(f => (
+                                        <li key={f} className="flex items-start gap-2.5 text-white/50 text-sm">
+                                            <Check className="w-4 h-4 text-violet-400 flex-shrink-0 mt-0.5" />{f}
+                                        </li>
+                                    ))}
+                                </ul>
+
+                                <Link href={ctaHref}
+                                      className={`w-full py-3 rounded-xl text-center text-sm font-semibold transition-all ${
+                                          highlight
+                                              ? 'text-white hover:opacity-90'
+                                              : 'text-white/50 border border-white/12 hover:bg-white/5 hover:text-white'
+                                      }`}
+                                      style={highlight ? { background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' } : {}}>
+                                    {cta}
+                                </Link>
+                            </motion.div>
+                        ))}
+                    </div>
+                    <p className="text-center text-white/20 text-sm mt-8">
+                        Prices in PKR. All paid plans include a 14-day trial — no card needed.
+                    </p>
+                </div>
+            </section>
+
+            {/* ── FAQ ──────────────────────────────────────────────────────── */}
+            <section id="faq" className="py-28 bg-white">
+                <div className="max-w-3xl mx-auto px-4 sm:px-6">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
+                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
+                            <div className="h-px w-10 bg-violet-400" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">FAQ</span>
+                        </motion.div>
+                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 mb-4">
+                            Questions.
+                        </motion.h2>
+                        <motion.p variants={fadeUp} className="text-slate-500 text-lg">
+                            Still unsure?{' '}
+                            <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline font-medium">
+                                Email us directly.
+                            </a>
+                        </motion.p>
+                    </motion.div>
+
+                    <div className="space-y-2">
+                        {FAQS.map(({ q, a }, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, y: 16 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.4, delay: idx * 0.04 }}
+                                className="border border-slate-100 rounded-2xl overflow-hidden bg-white">
+                                <button
+                                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                                    className="w-full flex items-center justify-between px-6 py-5 text-left gap-4
+                                               hover:bg-slate-50 transition-colors">
+                                    <span className="text-slate-900 font-semibold text-sm sm:text-base">{q}</span>
+                                    <motion.span
+                                        animate={{ rotate: openFaq === idx ? 180 : 0 }}
+                                        transition={{ duration: 0.22 }}
+                                        className="flex-shrink-0">
+                                        <ChevronDown className="w-5 h-5 text-violet-500" />
+                                    </motion.span>
+                                </button>
+                                <AnimatePresence initial={false}>
+                                    {openFaq === idx && (
+                                        <motion.div
+                                            key="body"
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: 'auto', opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.24, ease: 'easeInOut' }}>
+                                            <div className="px-6 pb-6 border-t border-slate-50">
+                                                <p className="pt-4 text-slate-500 leading-relaxed text-sm">{a}</p>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── Final CTA ────────────────────────────────────────────────── */}
+            <section className="py-32 relative overflow-hidden"
+                     style={{ background: 'linear-gradient(155deg,#08060F 0%,#130F24 100%)' }}>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-[700px] h-[500px] rounded-full"
+                         style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.2) 0%, transparent 65%)', filter: 'blur(60px)' }} />
+                </div>
+
+                <motion.div
+                    variants={stagger}
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true }}
+                    className="relative z-10 max-w-2xl mx-auto px-4 text-center">
+                    <motion.h2 variants={fadeUp}
+                               className="text-4xl sm:text-6xl font-black text-white mb-5 leading-tight">
+                        Give it a try.<br />
+                        <span className="text-white/30 font-light text-3xl sm:text-5xl">It's free to start.</span>
+                    </motion.h2>
+                    <motion.p variants={fadeUp} className="text-white/40 text-lg mb-10">
+                        Create your workspace in two minutes and see if it fits how you work.
+                        No card, no contract.
+                    </motion.p>
+                    <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <Link href="/register"
+                              className="group flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-base
+                                         font-semibold text-white transition-all hover:opacity-90
+                                         hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5"
+                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                            Create Free Account
+                            <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                        <Link href="/login"
+                              className="px-10 py-4 rounded-xl text-base font-semibold text-white/45
+                                         border border-white/12 hover:bg-white/5 hover:text-white transition-all">
+                            Sign In
+                        </Link>
+                    </motion.div>
+                </motion.div>
+            </section>
+
+            {/* ── Footer ───────────────────────────────────────────────────── */}
+            <footer style={{ background: '#030208' }} className="border-t border-white/5">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+                        <div className="col-span-2 md:col-span-1">
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                    <Zap className="w-4 h-4 text-white" />
+                                </div>
+                                <span className="font-bold text-white text-[17px]">LeadFlow</span>
+                            </div>
+                            <p className="text-slate-600 text-sm leading-relaxed">
+                                A CRM for sales teams that actually want to use their CRM. By Lumenia Lab.
+                            </p>
+                        </div>
+
+                        {[
+                            { heading: 'Product', links: [{ label: 'Features', href: '#features' }, { label: 'Pricing', href: '#pricing' }, { label: 'FAQ', href: '#faq' }, { label: 'Changelog', href: '#' }] },
+                            { heading: 'Account', links: [{ label: 'Sign In', href: '/login', internal: true }, { label: 'Register', href: '/register', internal: true }, { label: 'Support', href: '#' }, { label: 'Contact', href: '#' }] },
+                            { heading: 'Legal',   links: [{ label: 'Privacy Policy', href: '#' }, { label: 'Terms of Service', href: '#' }, { label: 'Security', href: '#' }] },
+                        ].map(({ heading, links }) => (
+                            <div key={heading}>
+                                <div className="text-white font-semibold text-sm mb-4">{heading}</div>
+                                <ul className="space-y-2.5">
+                                    {links.map(({ label, href, internal }) => (
+                                        <li key={label}>
+                                            {internal ? (
+                                                <Link href={href} className="text-slate-600 hover:text-white text-sm transition-colors">{label}</Link>
+                                            ) : (
+                                                <a href={href} className="text-slate-600 hover:text-white text-sm transition-colors">{label}</a>
+                                            )}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <p className="text-slate-700 text-sm">
+                            © {new Date().getFullYear()} Lumenia Lab. All rights reserved.
+                        </p>
+                        <div className="flex items-center gap-6">
+                            <a href="#" className="text-slate-700 hover:text-white text-sm transition-colors">Twitter / X</a>
+                            <a href="#" className="text-slate-700 hover:text-white text-sm transition-colors">LinkedIn</a>
+                            <a href="mailto:hello@lumenialab.com"
+                               className="text-slate-700 hover:text-white text-sm transition-colors">
+                                hello@lumenialab.com
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </div>
     );
 }

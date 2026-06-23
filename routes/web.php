@@ -26,6 +26,9 @@ use App\Http\Controllers\SmtpCredentialController;
 use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
+// Landing page — default public route
+Route::get('/', fn () => inertia('Welcome'))->name('home');
+
 // Public lead intake form (no auth required) — scoped to a specific organization.
 Route::get('/intake/{organization:slug}',  [PublicLeadController::class, 'show'])->name('intake.show');
 Route::post('/intake/{organization:slug}', [PublicLeadController::class, 'store'])->name('intake.store');
@@ -55,7 +58,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/notifications/{notification}',     [NotificationController::class, 'destroy'])->name('notifications.destroy');
 
     // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Leads
     Route::get('/leads',               [LeadController::class, 'index'])->name('leads.index');

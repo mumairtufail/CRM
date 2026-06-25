@@ -41,7 +41,7 @@ const FEATURES = [
 const CHIPS = [
     { icon: Bell,         label: 'New lead',     sub: 'Apex Digital · just now', iconBg: 'rgba(124,58,237,0.18)', iconColor: '#C4B5FD', dotBg: '#7C3AED', pos: '-right-10 top-8',    floatY: -7, dur: 3.2, delay: 0.9  },
     { icon: Mail,         label: 'Email opened', sub: 'Ahmed K. · 2 min ago',    iconBg: 'rgba(59,130,246,0.18)', iconColor: '#93C5FD', dotBg: '#3B82F6', pos: '-right-12 bottom-24', floatY: -5, dur: 2.8, delay: 1.05 },
-    { icon: CheckCircle2, label: 'Invoice paid', sub: '#041 · PKR 85,000',       iconBg: 'rgba(16,185,129,0.18)', iconColor: '#6EE7B7', dotBg: '#10B981', pos: '-left-8 bottom-10',  floatY: -6, dur: 3.6, delay: 1.2  },
+    { icon: CheckCircle2, label: 'Invoice paid', sub: '#041 · $500',              iconBg: 'rgba(16,185,129,0.18)', iconColor: '#6EE7B7', dotBg: '#10B981', pos: '-left-8 bottom-10',  floatY: -6, dur: 3.6, delay: 1.2  },
 ];
 
 const TESTIMONIALS = [
@@ -73,8 +73,8 @@ const TIMELINE_EVENTS = [
     { icon: MailOpen,     color: '#60A5FA', title: 'Email opened ×3 — pricing link clicked', sub: 'High-intent signal → moved to stage: Interested',                          time: '12d ago', hot: true },
     { icon: Send,         color: '#8B5CF6', title: 'Auto follow-up sent',                   sub: 'Triggered: no reply in 48 h · Sequence Rule #2',                            time: '10d ago' },
     { icon: Phone,        color: '#10B981', title: 'Call logged · Bilal Akhtar',            sub: '"Very interested — wants a live demo next week"',                           time: '9d ago'  },
-    { icon: FileText,     color: '#F59E0B', title: 'Proposal sent · PKR 240,000 / mo',      sub: '3 seats · Pro plan · PDF generated via LeadFlow',                          time: '7d ago'  },
-    { icon: CheckCircle2, color: '#10B981', title: 'Invoice paid — Deal Won ✓',             sub: 'INV-041 · PKR 240,000 · Received in full',                                  time: '2d ago', won: true },
+    { icon: FileText,     color: '#F59E0B', title: 'Proposal sent · $1,500 / mo',           sub: '3 seats · Pro plan · PDF generated via LeadFlow',                          time: '7d ago'  },
+    { icon: CheckCircle2, color: '#10B981', title: 'Invoice paid — Deal Won ✓',             sub: 'INV-041 · $1,500 · Received in full',                                       time: '2d ago', won: true },
 ];
 
 const AUTO_RULES = [
@@ -204,7 +204,7 @@ function MockDashboard() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Welcome() {
+export default function Welcome({ appUrl }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openFaq,    setOpenFaq]    = useState(null);
     const [scrolled,   setScrolled]   = useState(false);
@@ -388,7 +388,7 @@ export default function Welcome() {
                                     </div>
                                     <div className="flex-1 flex justify-center">
                                         <div className="bg-white/5 rounded-md px-10 py-1 text-white/20 text-xs">
-                                            app.lumeniacrm.com/dashboard
+                                            {appUrl}/dashboard
                                         </div>
                                     </div>
                                 </div>
@@ -754,9 +754,9 @@ export default function Welcome() {
                             </div>
                             <div className="grid grid-cols-3 gap-3">
                                 {[
-                                    { stage: 'New',      color: '#60A5FA', leads: [{ name: 'Apex Digital', val: 'PKR 240k' }, { name: 'TechNova', val: 'PKR 85k' }, { name: 'BlueByte', val: 'PKR 190k' }] },
-                                    { stage: 'In Talk',  color: '#A78BFA', leads: [{ name: 'Orion Labs',   val: 'PKR 320k' }, { name: 'Qlink Corp', val: 'PKR 155k' }] },
-                                    { stage: 'Proposal', color: '#FCD34D', leads: [{ name: 'Fivestar Co',  val: 'PKR 90k'  }, { name: 'Cloudify',  val: 'PKR 440k' }] },
+                                    { stage: 'New',      color: '#60A5FA', leads: [{ name: 'Apex Digital', val: '$1,500' }, { name: 'TechNova', val: '$500' }, { name: 'BlueByte', val: '$1,200' }] },
+                                    { stage: 'In Talk',  color: '#A78BFA', leads: [{ name: 'Orion Labs',   val: '$2,000' }, { name: 'Qlink Corp', val: '$950' }] },
+                                    { stage: 'Proposal', color: '#FCD34D', leads: [{ name: 'Fivestar Co',  val: '$550'   }, { name: 'Cloudify',  val: '$2,800' }] },
                                 ].map(({ stage, color, leads }) => (
                                     <div key={stage}>
                                         <div className="text-xs font-bold mb-2" style={{ color }}>

@@ -31,7 +31,9 @@ use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 // Landing page — default public route
-Route::get('/', fn () => inertia('Welcome'))->name('home');
+Route::get('/', fn () => inertia('Welcome', [
+    'appUrl' => preg_replace('#^https?://#', '', rtrim(config('app.url'), '/')),
+]))->name('home');
 
 // Public contact form submission (no auth required)
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');

@@ -44,6 +44,8 @@ class SmtpSettingsController extends Controller
 
     public function test(Request $request)
     {
+        $request->validate(['to' => 'required|email|max:200']);
+
         $smtp = SystemSetting::getSmtp();
 
         if (empty($smtp['host']) || empty($smtp['username'])) {
@@ -71,14 +73,14 @@ class SmtpSettingsController extends Controller
                     function ($message) use ($smtp, $request) {
                         $message
                             ->from($smtp['from_email'], $smtp['from_name'] ?? 'Platform')
-                            ->to($request->user()->email)
+                            ->to($request->input('to'))
                             ->subject('Platform SMTP Test');
                     }
                 );
 
             return response()->json([
                 'ok'      => true,
-                'message' => 'Test email sent to ' . $request->user()->email,
+                'message' => 'Test email sent to ' . $request->input('to'),
             ]);
         } catch (\Throwable $e) {
             return response()->json(['ok' => false, 'message' => $e->getMessage()], 422);

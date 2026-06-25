@@ -8,11 +8,14 @@ import {
   Select, SelectTrigger, SelectValue,
   SelectContent, SelectItem,
 } from '@/Components/ui/select'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/Components/ui/dialog'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import {
   Mail, Server, Lock, User, CheckCircle2, AlertCircle,
-  Eye, EyeOff, Send, Loader2, ChevronRight, Zap,
+  Eye, EyeOff, Send, Loader2, Zap,
 } from 'lucide-react'
 
 // ─── Provider presets ─────────────────────────────────────────────────────────
@@ -169,10 +172,12 @@ function SectionTitle({ icon: Icon, label, description }) {
 
 export default function SmtpSettings({ smtp, configured }) {
   const { flash } = usePage().props
-  const [showPassword, setShowPassword] = useState(false)
-  const [testLoading, setTestLoading]   = useState(false)
-  const [activePreset, setActivePreset] = useState(null)
-  const [currentHint, setCurrentHint]  = useState(null)
+  const [showPassword, setShowPassword]   = useState(false)
+  const [testLoading, setTestLoading]     = useState(false)
+  const [activePreset, setActivePreset]   = useState(null)
+  const [currentHint, setCurrentHint]     = useState(null)
+  const [testDialog, setTestDialog]       = useState(false)
+  const [testTo, setTestTo]               = useState('')
 
   const { data, setData, post, processing, errors, reset } = useForm({
     host:       smtp?.host       ?? '',
@@ -204,8 +209,15 @@ export default function SmtpSettings({ smtp, configured }) {
     })
   }
 
+  const openTestDialog = () => {
+    setTestTo('')
+    setTestDialog(true)
+  }
+
   const sendTest = async () => {
+    if (!testTo) return
     setTestLoading(true)
+    setTestDialog(false)
     try {
       const res = await fetch(route('admin.smtp.test'), {
         method:  'POST',
@@ -214,6 +226,7 @@ export default function SmtpSettings({ smtp, configured }) {
           'X-CSRF-TOKEN':  document.querySelector('meta[name="csrf-token"]')?.content ?? '',
           'Accept':        'application/json',
         },
+        body: JSON.stringify({ to: testTo }),
       })
       const json = await res.json()
       if (json.ok) toast.success(json.message)
@@ -264,7 +277,7 @@ export default function SmtpSettings({ smtp, configured }) {
           </div>
           {configured && (
             <button
-              onClick={sendTest}
+              onClick={openTestDialog}
               disabled={testLoading}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-semibold bg-emerald-100 hover:bg-emerald-200 text-emerald-700 transition-colors disabled:opacity-50 shrink-0"
             >
@@ -486,7 +499,7 @@ export default function SmtpSettings({ smtp, configured }) {
                 {configured && (
                   <button
                     type="button"
-                    onClick={sendTest}
+                    onClick={openTestDialog}
                     disabled={testLoading}
                     className="flex items-center gap-2 h-9 px-4 text-[13px] font-semibold text-violet-700 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-50"
                   >
@@ -560,6 +573,51 @@ export default function SmtpSettings({ smtp, configured }) {
           </div>
         </form>
       </AdminLayout>
+
+      {/* ── Test email dialog ──────────────────────────────────────────── */}
+      <Dialog open={testDialog} onOpenChange={setTestDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[15px]">Send test email</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-1.5">
+            <Label className="text-[12px] font-medium text-slate-600">
+              Recipient email <span className="text-red-400">*</span>
+            </Label>
+            <Input
+              type="email"
+              placeholder="you@example.com"
+              value={testTo}
+              onChange={e => setTestTo(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && sendTest()}
+              className="h-9 text-[13px]"
+              autoFocus
+            />
+            <p className="text-[11.5px] text-slate-400">
+              We'll send a test message to this address using the SMTP settings above.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setTestDialog(false)}
+              className="h-8 px-4 text-[12.5px] font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={sendTest}
+              disabled={!testTo || testLoading}
+              className="flex items-center gap-1.5 h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-40"
+              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            >
+              {testLoading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+              Send test
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

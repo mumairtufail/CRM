@@ -104,6 +104,22 @@ const PRESETS = [
     hint: 'Use SMTP credentials (not access keys) from the SES console.',
   },
   {
+    id: 'hostinger',
+    label: 'Hostinger',
+    color: '#673DE6',
+    logo: (
+      <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+        <rect width="48" height="48" rx="6" fill="#673DE6"/>
+        <text x="50%" y="54%" dominantBaseline="middle" textAnchor="middle"
+          fill="#fff" fontSize="26" fontWeight="bold" fontFamily="Arial,sans-serif">H</text>
+      </svg>
+    ),
+    host: 'smtp.hostinger.com',
+    port: 587,
+    encryption: 'tls',
+    hint: 'Use your Hostinger email address and its password as SMTP credentials.',
+  },
+  {
     id: 'custom',
     label: 'Custom',
     color: '#7C3AED',
@@ -274,7 +290,7 @@ export default function SmtpSettings({ smtp, configured }) {
                   label="Quick Setup"
                   description="Choose your email provider to auto-fill connection details"
                 />
-                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-7 gap-2">
                   {PRESETS.map(preset => (
                     <button
                       key={preset.id}

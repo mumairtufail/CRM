@@ -45,7 +45,7 @@ const CHIPS = [
 ];
 
 const TESTIMONIALS = [
-    { name: 'Bilal Akhtar',   role: 'Head of Sales',   avatar: 'BA', rating: 5, text: "We had leads in five WhatsApp groups and a shared spreadsheet nobody could agree on. Now everything's in one place and our follow-up rate actually went up." },
+    { name: 'Bilal Akhtar',   role: 'Head of Sales',   avatar: 'BA', rating: 5, text: "I typed 'SaaS founders in Lahore, under 50 employees' and had 40 verified leads in my pipeline within two minutes. Our previous prospecting process took a full day for that many names." },
     { name: 'Sarah Mitchell', role: 'Founder',          avatar: 'SM', rating: 5, text: "The email tracking sold me. Ahmed opened my proposal email three times yesterday — so I called him this morning. Closed the deal before lunch." },
     { name: 'Kamran Yousaf',  role: 'CEO',              avatar: 'KY', rating: 5, text: "We run three client accounts from one platform using different workspaces. Each team only sees their own data. It just works the way you'd expect it to." },
 ];
@@ -53,6 +53,7 @@ const TESTIMONIALS = [
 
 const FAQS = [
     { q: 'Do I need a credit card to sign up?', a: 'No. The free plan stays free forever and trial plans need no payment details upfront. You only enter billing info when you decide to upgrade.' },
+    { q: 'How does the AI Lead Search work?', a: 'Describe your ideal customer in plain English — industry, job title, company size, location — and our AI finds matching prospects from a database of millions of verified contacts. One click imports them straight into your workspace with name, email, company, and LinkedIn profile already filled in. No manual research, no spreadsheet gymnastics.' },
     { q: 'Can I bring in my existing leads?', a: 'Yes — upload a CSV or connect a Google Sheet. The importer maps your columns, previews the import, and lets you confirm before anything is saved.' },
     { q: 'How are workspaces separated?', a: 'Each workspace is completely isolated at the database level. Users in workspace A cannot see or access anything in workspace B, even if they are the same person running both.' },
     { q: 'Which email providers work for campaigns?', a: 'Anything with SMTP credentials — Gmail, Outlook 365, SendGrid, Mailgun, Brevo, Postmark, and your own mail server.' },
@@ -1352,18 +1353,10 @@ export default function Welcome() {
                                     bg: '#F5F3FF',
                                 },
                                 {
-                                    icon: MessageSquare,
-                                    title: 'Live chat',
-                                    value: 'Available in-app',
-                                    sub: 'Mon–Fri, 9 am – 6 pm PKT',
-                                    color: '#2563EB',
-                                    bg: '#EFF6FF',
-                                },
-                                {
                                     icon: Phone,
                                     title: 'Call us',
-                                    value: '+92 300 000 0000',
-                                    sub: 'Business hours only',
+                                    value: '+92 335 445 5494',
+                                    sub: 'Available 24 hours',
                                     color: '#059669',
                                     bg: '#ECFDF5',
                                 },
@@ -1471,7 +1464,7 @@ export default function Welcome() {
                                             </label>
                                             <input
                                                 type="tel"
-                                                placeholder="+92 300 000 0000"
+                                                placeholder="+92 335 445 5494"
                                                 value={contact.data.phone}
                                                 onChange={e => contact.setData('phone', e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
+use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\Admin\SmtpSettingsController as AdminSmtpSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
@@ -52,6 +53,11 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users',                         [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/impersonate',     [AdminUserController::class, 'impersonate'])->name('users.impersonate');
     Route::get('/organizations',                 [AdminOrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('/settings',                      fn () => inertia('Admin/Settings'))->name('settings');
+    Route::get('/settings/account',             [AdminAccountController::class, 'edit'])->name('settings.account');
+    Route::patch('/settings/account',           [AdminAccountController::class, 'update'])->name('settings.account.update');
+    Route::patch('/settings/account/password',  [AdminAccountController::class, 'updatePassword'])->name('settings.account.password');
+
     Route::get('/smtp-settings',                 [AdminSmtpSettingsController::class, 'edit'])->name('smtp.edit');
     Route::post('/smtp-settings',                [AdminSmtpSettingsController::class, 'update'])->name('smtp.update');
     Route::post('/smtp-settings/test',           [AdminSmtpSettingsController::class, 'test'])->name('smtp.test');

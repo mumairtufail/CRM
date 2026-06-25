@@ -5,12 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
-use Symfony\Component\Mailer\Transport\Smtp\EsmtpTransport;
-use Symfony\Component\Mailer\Mailer as SymfonyMailer;
-use Symfony\Component\Mime\Email;
 
 class SmtpSettingsController extends Controller
 {
@@ -56,33 +52,29 @@ class SmtpSettingsController extends Controller
 
         try {
             $encryption = $smtp['encryption'] ?? 'tls';
-            $port       = (int) ($smtp['port'] ?? 587);
 
-            $transport = new EsmtpTransport(
-                $smtp['host'],
-                $port,
-                $encryption === 'ssl'
-            );
+            config([
+                'mail.mailers.smtp_test' => [
+                    'transport'  => 'smtp',
+                    'host'       => $smtp['host'],
+                    'port'       => (int) ($smtp['port'] ?? 587),
+                    'encryption' => $encryption === 'none' ? null : $encryption,
+                    'username'   => $smtp['username'],
+                    'password'   => $smtp['password'] ?? '',
+                    'timeout'    => 15,
+                ],
+            ]);
 
-            if ($encryption === 'tls') {
-                $transport->setTlsOptions([
-                    'verify_peer'      => false,
-                    'verify_peer_name' => false,
-                ]);
-            }
-
-            $transport->setUsername($smtp['username']);
-            $transport->setPassword($smtp['password'] ?? '');
-
-            $mailer = new SymfonyMailer($transport);
-
-            $email = (new Email())
-                ->from(sprintf('%s <%s>', $smtp['from_name'] ?? 'Platform', $smtp['from_email']))
-                ->to($request->user()->email)
-                ->subject('Platform SMTP Test')
-                ->text('This is a test email from your CRM platform SMTP configuration. If you received this, the settings are working correctly.');
-
-            $mailer->send($email);
+            Mail::mailer('smtp_test')
+                ->raw(
+                    'This is a test email from your CRM platform SMTP configuration. If you received this, your settings are working correctly.',
+                    function ($message) use ($smtp, $request) {
+                        $message
+                            ->from($smtp['from_email'], $smtp['from_name'] ?? 'Platform')
+                            ->to($request->user()->email)
+                            ->subject('Platform SMTP Test');
+                    }
+                );
 
             return response()->json([
                 'ok'      => true,

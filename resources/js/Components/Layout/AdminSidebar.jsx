@@ -120,14 +120,24 @@ export default function AdminSidebar({ open, onToggle }) {
             )}
           </div>
         )}
-        <Link href="/profile" title={!open ? 'Settings' : undefined}
+        <Link href="/admin/settings" title={!open ? 'Settings' : undefined}
           onClick={closeMobile}
           className={cn(
-            'flex items-center rounded-[10px] text-white/35 hover:text-white/65 hover:bg-white/[0.06] transition-all group/settings',
-            open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]'
+            'relative flex items-center rounded-[10px] transition-all group/settings',
+            open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
+            url.startsWith('/admin/settings')
+              ? 'bg-violet-600/[0.18] text-white'
+              : 'text-white/35 hover:text-white/65 hover:bg-white/[0.06]'
           )}
         >
-          <Settings size={15} strokeWidth={1.8} className="shrink-0 group-hover/settings:text-white/65 transition-colors" />
+          {url.startsWith('/admin/settings') && (
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />
+          )}
+          <Settings
+            size={15}
+            strokeWidth={url.startsWith('/admin/settings') ? 2.2 : 1.8}
+            className={cn('shrink-0 transition-colors', url.startsWith('/admin/settings') ? 'text-violet-300' : 'group-hover/settings:text-white/65')}
+          />
           {open && <span className="text-[13px] font-medium">Settings</span>}
         </Link>
       </div>

@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Head, useForm, usePage, router, Link } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
-import AdminLayout from '@/Components/Layout/AdminLayout'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
@@ -1184,10 +1183,6 @@ export default function ProfileEdit({
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
   orgFollowupEnabled,
 }) {
-  const { props } = usePage()
-  const isSuperadmin = props?.auth?.user?.is_superadmin
-  const Layout = isSuperadmin ? AdminLayout : AppLayout
-
   const [tab, setTab] = useState('profile')
 
   React.useEffect(() => {
@@ -1197,7 +1192,7 @@ export default function ProfileEdit({
   return (
     <>
       <Head title="Settings" />
-      <Layout title="Settings">
+      <AppLayout title="Settings">
 
         {/* Page title */}
         <div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-white">
@@ -1228,7 +1223,7 @@ export default function ProfileEdit({
           </div>
         </div>
 
-      </Layout>
+      </AppLayout>
     </>
   )
 }

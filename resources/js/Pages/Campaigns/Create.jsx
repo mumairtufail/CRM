@@ -11,7 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/Components/ui/dialog'
-import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers } from 'lucide-react'
+import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import RichEditor from '@/Components/Common/RichEditor'
 import { cn } from '@/lib/utils'
@@ -312,19 +312,31 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
   )
 }
 
-export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], sender = null, activeTemplate = null, campaign = null }) {
+const DELAY_OPTIONS = [
+  { value: 24,  label: '24 hours' },
+  { value: 48,  label: '48 hours (default)' },
+  { value: 72,  label: '72 hours' },
+  { value: 168, label: '1 week' },
+]
+
+export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false }) {
   const isEdit = !!campaign
-  const [previewOpen, setPreviewOpen]       = useState(false)
-  const [recipientCount, setRecipientCount] = useState(campaign?.total_recipients ?? leadCount ?? 0)
-  const [subjectRef, setSubjectRef]         = useState(null)
+  const [previewOpen, setPreviewOpen]             = useState(false)
+  const [followupPreviewOpen, setFollowupPreviewOpen] = useState(false)
+  const [recipientCount, setRecipientCount]       = useState(campaign?.total_recipients ?? leadCount ?? 0)
+  const [subjectRef, setSubjectRef]               = useState(null)
 
   const { data, setData, post, put, processing, errors } = useForm({
-    name:           campaign?.name           ?? '',
-    subject:        campaign?.subject        ?? '',
-    body_html:      campaign?.body_html      ?? '',
-    recipient_mode: campaign?.recipient_mode ?? 'all',
-    group_id:       campaign?.group_id       ?? null,
-    filters:        campaign?.filters        ?? { statuses: [], tag_ids: [] },
+    name:                 campaign?.name                 ?? '',
+    subject:              campaign?.subject              ?? '',
+    body_html:            campaign?.body_html            ?? '',
+    recipient_mode:       campaign?.recipient_mode       ?? 'all',
+    group_id:             campaign?.group_id             ?? null,
+    filters:              campaign?.filters              ?? { statuses: [], tag_ids: [] },
+    followup_enabled:     campaign?.followup_enabled     ?? false,
+    followup_delay_hours: campaign?.followup_delay_hours ?? 48,
+    followup_subject:     campaign?.followup_subject     ?? '',
+    followup_body_html:   campaign?.followup_body_html   ?? '',
   })
 
   // Fetch recipient count whenever relevant fields change
@@ -512,6 +524,113 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
               </div>
             </div>
 
+            {/* Follow-up section — only shown when org has the feature enabled */}
+            {orgFollowupEnabled && (
+              <div className="form-card">
+                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                  <div className="flex items-center gap-2">
+                    <RefreshCw size={13} className="text-violet-500" />
+                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Automated Follow-up</p>
+                  </div>
+                  {/* Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setData('followup_enabled', !data.followup_enabled)}
+                    className={cn(
+                      'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
+                      data.followup_enabled ? 'bg-violet-600' : 'bg-slate-200'
+                    )}
+                    role="switch"
+                    aria-checked={data.followup_enabled}
+                  >
+                    <span
+                      className={cn(
+                        'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200',
+                        data.followup_enabled ? 'translate-x-4' : 'translate-x-0'
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div className="px-4 py-3">
+                  {!data.followup_enabled ? (
+                    <p className="text-[12px] text-slate-400 italic">
+                      Toggle on to automatically re-send to leads who haven't opened the first email after a set delay.
+                    </p>
+                  ) : (
+                    <div className="space-y-3">
+                      {/* Delay selector */}
+                      <Field label="Send follow-up after">
+                        <Select
+                          value={String(data.followup_delay_hours)}
+                          onValueChange={v => setData('followup_delay_hours', Number(v))}
+                        >
+                          <SelectTrigger className="h-8 text-[13px]">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {DELAY_OPTIONS.map(opt => (
+                              <SelectItem key={opt.value} value={String(opt.value)}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </Field>
+
+                      {/* Follow-up subject */}
+                      <Field label="Follow-up subject line" error={errors.followup_subject}
+                        hint="Click a token to append it">
+                        <Input
+                          value={data.followup_subject}
+                          onChange={e => setData('followup_subject', e.target.value)}
+                          className="h-8 text-[13px]"
+                          placeholder="Just checking in — {{first_name}}"
+                        />
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {TOKENS.map(t => (
+                            <TokenPill
+                              key={t.label}
+                              token={t}
+                              onClick={tok => setData('followup_subject', (data.followup_subject || '') + tok)}
+                            />
+                          ))}
+                        </div>
+                      </Field>
+
+                      {/* Follow-up body */}
+                      <Field label="Follow-up message" error={errors.followup_body_html}>
+                        <div className="flex flex-wrap gap-1 mb-1.5">
+                          <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
+                          {TOKENS.map(t => (
+                            <span key={t.label} title={t.desc}
+                              className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
+                              {t.label}
+                            </span>
+                          ))}
+                        </div>
+                        <RichEditor
+                          value={data.followup_body_html}
+                          onChange={v => setData('followup_body_html', v)}
+                          minHeight={160}
+                        />
+                      </Field>
+
+                      <div className="flex justify-end">
+                        <Button
+                          type="button" variant="outline" size="sm"
+                          className="h-8 text-xs gap-1.5 border-slate-200"
+                          onClick={() => setFollowupPreviewOpen(true)}
+                        >
+                          <Eye size={13} /> Preview Follow-up
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="flex items-center gap-2 pt-0.5 pb-4">
               <Button
@@ -546,6 +665,15 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
           fromName={sender?.from_name}
           fromEmail={sender?.from_email}
           body={data.body_html}
+        />
+
+        <EmailPreviewModal
+          open={followupPreviewOpen}
+          onClose={() => setFollowupPreviewOpen(false)}
+          subject={data.followup_subject}
+          fromName={sender?.from_name}
+          fromEmail={sender?.from_email}
+          body={data.followup_body_html}
         />
       </AppLayout>
     </>

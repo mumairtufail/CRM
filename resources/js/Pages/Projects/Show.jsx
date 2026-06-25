@@ -398,6 +398,7 @@ function UploadDocForm({ projectId, onUploaded }) {
 function DocRow({ doc, projectId, onDeleted }) {
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting]       = useState(false)
+  const isImage = doc.mime_type?.startsWith('image/')
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -427,27 +428,38 @@ function DocRow({ doc, projectId, onDeleted }) {
         loadingText="Deleting…"
         variant="destructive"
       />
-      <div className="flex items-start gap-3 p-3 rounded-xl hover:bg-slate-50 transition-colors group">
-        <div className="text-xl shrink-0 mt-0.5">{mimeIcon(doc.mime_type)}</div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] font-semibold text-slate-800 truncate">{doc.name}</p>
-          <p className="text-[11px] text-slate-400 truncate">{doc.original_name} · {doc.formatted_size}</p>
-          {doc.notes && (
-            <p className="text-[11.5px] text-slate-500 mt-1 leading-relaxed">{doc.notes}</p>
-          )}
-          <p className="text-[10.5px] text-slate-400 mt-1">
-            {format(new Date(doc.created_at), 'MMM d, yyyy')}
-          </p>
-        </div>
-        <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-          <a href={doc.url} download target="_blank" rel="noopener noreferrer"
-            className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-violet-300 hover:text-violet-600 transition-colors text-slate-500">
-            <Download size={13} />
+      <div className="rounded-xl hover:bg-slate-50 transition-colors group overflow-hidden">
+        {isImage && (
+          <a href={doc.url} target="_blank" rel="noopener noreferrer" className="block">
+            <img
+              src={doc.url}
+              alt={doc.name}
+              className="w-full h-44 object-cover rounded-xl mb-1"
+            />
           </a>
-          <button onClick={() => setConfirmOpen(true)} disabled={deleting}
-            className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-red-300 hover:text-red-500 transition-colors text-slate-500 disabled:opacity-40">
-            <Trash2 size={13} />
-          </button>
+        )}
+        <div className="flex items-start gap-3 p-3">
+          {!isImage && <div className="text-xl shrink-0 mt-0.5">{mimeIcon(doc.mime_type)}</div>}
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-slate-800 truncate">{doc.name}</p>
+            <p className="text-[11px] text-slate-400 truncate">{doc.original_name} · {doc.formatted_size}</p>
+            {doc.notes && (
+              <p className="text-[11.5px] text-slate-500 mt-1 leading-relaxed">{doc.notes}</p>
+            )}
+            <p className="text-[10.5px] text-slate-400 mt-1">
+              {format(new Date(doc.created_at), 'MMM d, yyyy')}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+            <a href={doc.url} download target="_blank" rel="noopener noreferrer"
+              className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-violet-300 hover:text-violet-600 transition-colors text-slate-500">
+              <Download size={13} />
+            </a>
+            <button onClick={() => setConfirmOpen(true)} disabled={deleting}
+              className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-red-300 hover:text-red-500 transition-colors text-slate-500 disabled:opacity-40">
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
       </div>
     </>

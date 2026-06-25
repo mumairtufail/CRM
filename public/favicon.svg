@@ -1,19 +1,43 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="crmGrad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7C3AED"/>
-      <stop offset="1" stop-color="#4F46E5"/>
+    <linearGradient id="lfbg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#4338CA"/>
+    </linearGradient>
+    <linearGradient id="lfshine" x1="0" y1="0" x2="0" y2="20" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </linearGradient>
   </defs>
-  <rect width="32" height="32" rx="8" fill="url(#crmGrad)"/>
-  <g stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" opacity="0.9">
-    <line x1="16" y1="11.5" x2="10" y2="20.5"/>
-    <line x1="16" y1="11.5" x2="22" y2="20.5"/>
-    <line x1="10" y1="20.5" x2="22" y2="20.5"/>
-  </g>
-  <g fill="#ffffff">
-    <circle cx="16" cy="11.5" r="3"/>
-    <circle cx="10" cy="20.5" r="2.6"/>
-    <circle cx="22" cy="20.5" r="2.6"/>
-  </g>
+
+  <!-- Background -->
+  <rect width="40" height="40" rx="11" fill="url(#lfbg)"/>
+
+  <!-- Inner top-shine for depth -->
+  <rect width="40" height="20" rx="11" fill="url(#lfshine)"/>
+
+  <!-- L-Flow mark:
+       Vertical bar going down, rounding into a horizontal run,
+       then curving back up — reads as "L" + an upward pipeline trend -->
+  <path d="M 13 8.5
+           L 13 26.5
+           Q 13 30 16.5 30
+           L 25.5 30
+           Q 31 30 31 24.5
+           L 31 19.5"
+        stroke="white"
+        stroke-width="4.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+        opacity="0.93"/>
+
+  <!-- Arrowhead pointing upward at the end of the path -->
+  <path d="M 28 22.5 L 31 18 L 34 22.5"
+        stroke="white"
+        stroke-width="3.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+        opacity="0.92"/>
 </svg>

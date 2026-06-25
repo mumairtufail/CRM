@@ -18,12 +18,14 @@ class EmailCampaign extends Model
         'total_recipients', 'sent_count', 'opened_count',
         'clicked_count', 'bounced_count', 'unsubscribed_count',
         'scheduled_at', 'sent_at',
+        'followup_enabled', 'followup_subject', 'followup_body_html', 'followup_delay_hours',
     ];
 
     protected $casts = [
-        'filters'      => 'array',
-        'scheduled_at' => 'datetime',
-        'sent_at'      => 'datetime',
+        'filters'          => 'array',
+        'scheduled_at'     => 'datetime',
+        'sent_at'          => 'datetime',
+        'followup_enabled' => 'boolean',
     ];
 
     public function sends()

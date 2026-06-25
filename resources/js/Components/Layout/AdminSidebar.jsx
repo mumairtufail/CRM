@@ -1,14 +1,17 @@
 import { Link, usePage } from '@inertiajs/react'
 import {
-  LayoutDashboard, Users, Building2, Shield,
-  Settings, PanelLeftClose, PanelLeftOpen,
+  LayoutDashboard, Users, Building2,
+  Settings, PanelLeftClose, PanelLeftOpen, Mail, MessageSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LogoMark } from '@/Components/Common/Logo'
 
 const navItems = [
-  { label: 'Dashboard',     href: '/admin',               icon: LayoutDashboard },
-  { label: 'Users',         href: '/admin/users',         icon: Users },
-  { label: 'Organizations', href: '/admin/organizations', icon: Building2 },
+  { label: 'Dashboard',     href: '/admin',                   icon: LayoutDashboard },
+  { label: 'Users',         href: '/admin/users',             icon: Users },
+  { label: 'Organizations', href: '/admin/organizations',     icon: Building2 },
+  { label: 'Contact Msgs',  href: '/admin/contact-messages',  icon: MessageSquare },
+  { label: 'SMTP Settings', href: '/admin/smtp-settings',     icon: Mail },
 ]
 
 export default function AdminSidebar({ open, onToggle }) {
@@ -46,13 +49,10 @@ export default function AdminSidebar({ open, onToggle }) {
         open ? 'justify-between' : 'justify-center'
       )}>
         <div className={cn('flex items-center gap-2.5 min-w-0', !open && 'justify-center w-full')}>
-          <div className="w-7 h-7 rounded-[9px] flex items-center justify-center shrink-0 shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
-            <Shield size={13} className="text-white" strokeWidth={2.5} />
-          </div>
+          <LogoMark size={28} />
           {open && (
             <div className="min-w-0">
-              <span className="block font-bold text-[13.5px] text-white truncate tracking-tight leading-none">Platform</span>
+              <span className="block font-extrabold text-[13.5px] text-white truncate tracking-tight leading-none">LeadFlow</span>
               <span className="block text-[10px] text-violet-300/80 font-semibold uppercase tracking-[0.12em] mt-1">Super Admin</span>
             </div>
           )}

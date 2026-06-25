@@ -732,11 +732,25 @@ function SmtpTab({ credentials }) {
 
 // ─── Mail settings tab ────────────────────────────────────────────────────────
 
-function MailTab({ mailSettings }) {
+function MailTab({ mailSettings, orgFollowupEnabled }) {
   const { data, setData, patch, processing } = useForm({
     mail_batch_size:  mailSettings.batch_size,
     mail_batch_delay: mailSettings.batch_delay,
   })
+
+  const [followupEnabled, setFollowupEnabled] = useState(!!orgFollowupEnabled)
+  const [savingFollowup, setSavingFollowup]   = useState(false)
+
+  const saveFollowup = () => {
+    setSavingFollowup(true)
+    router.post('/organization/settings', { followup_enabled: followupEnabled }, {
+      preserveState: true,
+      preserveScroll: true,
+      onSuccess: () => toast.success(followupEnabled ? 'Automated follow-ups enabled' : 'Automated follow-ups disabled'),
+      onError:   () => toast.error('Could not save setting'),
+      onFinish:  () => setSavingFollowup(false),
+    })
+  }
 
   const submit = e => {
     e.preventDefault()
@@ -770,6 +784,51 @@ function MailTab({ mailSettings }) {
 
           <SaveBtn processing={processing} label="Save mail settings" />
         </form>
+      </Card>
+
+      <Card title="Automated follow-ups">
+        <div className="space-y-3">
+          <p className="text-[12px] text-slate-500 leading-relaxed">
+            When enabled, campaigns with a follow-up message will automatically re-send to leads
+            who haven't opened the first email after the configured delay.
+          </p>
+
+          <div className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5">
+            <div>
+              <p className="text-[13px] font-medium text-slate-700">Enable automated follow-ups</p>
+              <p className="text-[11.5px] text-slate-400 mt-0.5">Workspace-wide toggle — each campaign also has its own switch</p>
+            </div>
+            {/* Toggle switch */}
+            <button
+              type="button"
+              onClick={() => setFollowupEnabled(v => !v)}
+              className={cn(
+                'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
+                followupEnabled ? 'bg-violet-600' : 'bg-slate-200'
+              )}
+              role="switch"
+              aria-checked={followupEnabled}
+            >
+              <span
+                className={cn(
+                  'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200',
+                  followupEnabled ? 'translate-x-4' : 'translate-x-0'
+                )}
+              />
+            </button>
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              size="sm"
+              disabled={savingFollowup}
+              onClick={saveFollowup}
+              className="h-7 text-[12px] px-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 hover:opacity-90"
+            >
+              {savingFollowup ? 'Saving…' : 'Save follow-up setting'}
+            </Button>
+          </div>
+        </div>
       </Card>
 
       <Card title="Provider limits reference">
@@ -1122,6 +1181,7 @@ function LeadGenTab({ leadGenSettings }) {
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, mailSettings,
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
+  orgFollowupEnabled,
 }) {
   const [tab, setTab] = useState('profile')
 
@@ -1157,7 +1217,7 @@ export default function ProfileEdit({
             {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
             {tab === 'workspace' && <WorkspaceTab />}
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
-            {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
+            {tab === 'mail'      && <MailTab mailSettings={mailSettings} orgFollowupEnabled={orgFollowupEnabled} />}
             {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
             {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
           </div>

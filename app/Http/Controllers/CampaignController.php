@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\LeadGroup;
 use App\Models\Tag;
 use App\Services\MailService;
+use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -51,25 +52,32 @@ class CampaignController extends Controller
             'color' => $t->color,
         ]);
 
+        $org = app(TenantContext::class)->get() ?? $request->user()?->organization;
+
         return Inertia::render('Campaigns/Create', [
-            'statuses'      => $statuses,
-            'leadCount'     => $leadCount,
-            'groups'        => $groups,
-            'tags'          => $tags,
-            'sender'        => $this->resolveSender($request->user()),
-            'activeTemplate' => $request->user()->activeEmailTemplate?->name,
+            'statuses'          => $statuses,
+            'leadCount'         => $leadCount,
+            'groups'            => $groups,
+            'tags'              => $tags,
+            'sender'            => $this->resolveSender($request->user()),
+            'activeTemplate'    => $request->user()->activeEmailTemplate?->name,
+            'orgFollowupEnabled' => $org?->isFollowupEnabled() ?? false,
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'           => 'required|string|max:200',
-            'subject'        => 'required|string|max:500',
-            'body_html'      => 'required|string',
-            'recipient_mode' => 'required|in:all,filter,group',
-            'group_id'       => 'nullable|integer|exists:lead_groups,id',
-            'filters'        => 'nullable|array',
+            'name'               => 'required|string|max:200',
+            'subject'            => 'required|string|max:500',
+            'body_html'          => 'required|string',
+            'recipient_mode'     => 'required|in:all,filter,group',
+            'group_id'           => 'nullable|integer|exists:lead_groups,id',
+            'filters'            => 'nullable|array',
+            'followup_enabled'   => 'boolean',
+            'followup_subject'   => 'required_if:followup_enabled,true|nullable|string|max:500',
+            'followup_body_html' => 'required_if:followup_enabled,true|nullable|string',
+            'followup_delay_hours' => 'nullable|integer|in:24,48,72,168',
         ]);
 
         $count = $this->countRecipients(
@@ -81,8 +89,10 @@ class CampaignController extends Controller
         $campaign = EmailCampaign::create([
             ...$validated,
             ...$this->resolveSender($request->user()),
-            'total_recipients' => $count,
-            'status'           => 'draft',
+            'total_recipients'   => $count,
+            'status'             => 'draft',
+            'followup_enabled'   => $validated['followup_enabled'] ?? false,
+            'followup_delay_hours' => $validated['followup_delay_hours'] ?? 48,
         ]);
 
         return redirect()->route('campaigns.show', $campaign);
@@ -109,24 +119,31 @@ class CampaignController extends Controller
             'color' => $t->color,
         ]);
 
+        $org = app(TenantContext::class)->get() ?? $request->user()?->organization;
+
         return Inertia::render('Campaigns/Create', [
-            'statuses'      => $statuses,
-            'leadCount'     => $leadCount,
-            'groups'        => $groups,
-            'tags'          => $tags,
-            'sender'        => $this->resolveSender($request->user()),
-            'activeTemplate' => $request->user()->activeEmailTemplate?->name,
-            'campaign'  => [
-                'id'               => $campaign->id,
-                'name'             => $campaign->name,
-                'subject'          => $campaign->subject,
-                'from_name'        => $campaign->from_name,
-                'from_email'       => $campaign->from_email,
-                'body_html'        => $campaign->body_html,
-                'recipient_mode'   => $campaign->recipient_mode ?? 'all',
-                'group_id'         => $campaign->group_id,
-                'filters'          => $campaign->filters ?? ['statuses' => [], 'tag_ids' => []],
-                'total_recipients' => $campaign->total_recipients,
+            'statuses'           => $statuses,
+            'leadCount'          => $leadCount,
+            'groups'             => $groups,
+            'tags'               => $tags,
+            'sender'             => $this->resolveSender($request->user()),
+            'activeTemplate'     => $request->user()->activeEmailTemplate?->name,
+            'orgFollowupEnabled' => $org?->isFollowupEnabled() ?? false,
+            'campaign'           => [
+                'id'                  => $campaign->id,
+                'name'                => $campaign->name,
+                'subject'             => $campaign->subject,
+                'from_name'           => $campaign->from_name,
+                'from_email'          => $campaign->from_email,
+                'body_html'           => $campaign->body_html,
+                'recipient_mode'      => $campaign->recipient_mode ?? 'all',
+                'group_id'            => $campaign->group_id,
+                'filters'             => $campaign->filters ?? ['statuses' => [], 'tag_ids' => []],
+                'total_recipients'    => $campaign->total_recipients,
+                'followup_enabled'    => (bool) $campaign->followup_enabled,
+                'followup_subject'    => $campaign->followup_subject,
+                'followup_body_html'  => $campaign->followup_body_html,
+                'followup_delay_hours' => $campaign->followup_delay_hours ?? 48,
             ],
         ]);
     }
@@ -138,12 +155,16 @@ class CampaignController extends Controller
         }
 
         $validated = $request->validate([
-            'name'           => 'required|string|max:200',
-            'subject'        => 'required|string|max:500',
-            'body_html'      => 'required|string',
-            'recipient_mode' => 'required|in:all,filter,group',
-            'group_id'       => 'nullable|integer|exists:lead_groups,id',
-            'filters'        => 'nullable|array',
+            'name'               => 'required|string|max:200',
+            'subject'            => 'required|string|max:500',
+            'body_html'          => 'required|string',
+            'recipient_mode'     => 'required|in:all,filter,group',
+            'group_id'           => 'nullable|integer|exists:lead_groups,id',
+            'filters'            => 'nullable|array',
+            'followup_enabled'   => 'boolean',
+            'followup_subject'   => 'required_if:followup_enabled,true|nullable|string|max:500',
+            'followup_body_html' => 'required_if:followup_enabled,true|nullable|string',
+            'followup_delay_hours' => 'nullable|integer|in:24,48,72,168',
         ]);
 
         $count = $this->countRecipients(
@@ -155,7 +176,9 @@ class CampaignController extends Controller
         $campaign->update([
             ...$validated,
             ...$this->resolveSender($request->user()),
-            'total_recipients' => $count,
+            'total_recipients'    => $count,
+            'followup_enabled'    => $validated['followup_enabled'] ?? false,
+            'followup_delay_hours' => $validated['followup_delay_hours'] ?? 48,
         ]);
 
         return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign updated');

@@ -32,6 +32,11 @@ class Organization extends Model
         return $this->hasMany(Lead::class);
     }
 
+    public function isFollowupEnabled(): bool
+    {
+        return (bool) ($this->settings['followup_enabled'] ?? false);
+    }
+
     public function getRouteKeyName(): string
     {
         return 'slug';

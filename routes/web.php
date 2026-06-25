@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\Admin\ContactMessageController as AdminContactMessageController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationController;
+use App\Http\Controllers\Admin\SmtpSettingsController as AdminSmtpSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\ProjectController;
@@ -23,11 +25,16 @@ use App\Http\Controllers\PipelineController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicLeadController;
 use App\Http\Controllers\SmtpCredentialController;
+use App\Http\Controllers\OrganizationSettingsController;
+use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 // Landing page — default public route
 Route::get('/', fn () => inertia('Welcome'))->name('home');
+
+// Public contact form submission (no auth required)
+Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
 
 // Public lead intake form (no auth required) — scoped to a specific organization.
 Route::get('/intake/{organization:slug}',  [PublicLeadController::class, 'show'])->name('intake.show');
@@ -43,6 +50,14 @@ Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users',                         [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/impersonate',     [AdminUserController::class, 'impersonate'])->name('users.impersonate');
     Route::get('/organizations',                 [AdminOrganizationController::class, 'index'])->name('organizations.index');
+    Route::get('/smtp-settings',                 [AdminSmtpSettingsController::class, 'edit'])->name('smtp.edit');
+    Route::post('/smtp-settings',                [AdminSmtpSettingsController::class, 'update'])->name('smtp.update');
+    Route::post('/smtp-settings/test',           [AdminSmtpSettingsController::class, 'test'])->name('smtp.test');
+
+    // Contact messages (from public landing page form)
+    Route::get('/contact-messages',                            [AdminContactMessageController::class, 'index'])->name('contact.index');
+    Route::patch('/contact-messages/{contactMessage}',         [AdminContactMessageController::class, 'update'])->name('contact.update');
+    Route::delete('/contact-messages/{contactMessage}',        [AdminContactMessageController::class, 'destroy'])->name('contact.destroy');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -143,6 +158,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/profile/workspace',    [ProfileController::class, 'updateWorkspace'])->name('profile.workspace');
     Route::delete('/profile/logo',       [ProfileController::class, 'removeLogo'])->name('profile.logo.remove');
     Route::delete('/profile',            [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Organization-level settings (follow-up toggle, etc.)
+    Route::post('/organization/settings', [OrganizationSettingsController::class, 'update'])->name('organization.settings.update');
 
     // Lead generation provider settings
     Route::post('/settings/lead-provider/save', [ProfileController::class, 'saveLeadProvider'])->name('settings.lead-provider.save');

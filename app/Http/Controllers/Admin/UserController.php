@@ -60,6 +60,6 @@ class UserController extends Controller
 
         Auth::login($user);
 
-        return redirect('/')->with('success', "You are now viewing as {$user->name}.");
+        return redirect()->route('dashboard')->with('success', "You are now viewing as {$user->name}.");
     }
 }

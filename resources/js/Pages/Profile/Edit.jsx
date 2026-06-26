@@ -102,49 +102,78 @@ const NAV = [
 ]
 
 function SettingsNav({ active, onChange, leadGenEnabled }) {
-  return (
-    <nav className="w-48 shrink-0">
-      {NAV.map((section, si) => (
-        <div key={si} className={si > 0 ? 'mt-5' : ''}>
-          {section.group && (
-            <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              {section.group}
-            </p>
-          )}
-          <div className="space-y-0.5">
-            {section.items.map(({ id, label, icon: Icon }) => {
-              const isActive = active === id
-              return (
-                <button key={id} onClick={() => onChange(id)}
-                  className={cn(
-                    'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left',
-                    isActive
-                      ? 'bg-violet-50 text-violet-700'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
-                  )}>
-                  <Icon size={14} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
-                  <span className="flex-1">{label}</span>
-                  {id === 'leadgen' && leadGenEnabled && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-                  )}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ))}
+  const allItems = NAV.flatMap(s => s.items)
 
-      {/* Help & resources */}
-      <div className="mt-5">
-        <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Help</p>
+  return (
+    <>
+      {/* Mobile: horizontal scrollable tab strip */}
+      <div className="flex md:hidden overflow-x-auto gap-1 scrollbar-none">
+        {allItems.map(({ id, label, icon: Icon }) => {
+          const isActive = active === id
+          return (
+            <button key={id} onClick={() => onChange(id)}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0',
+                isActive
+                  ? 'bg-violet-50 text-violet-700'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+              )}>
+              <Icon size={13} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+              <span>{label}</span>
+            </button>
+          )
+        })}
         <Link href="/documentation"
-          className="group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-all text-slate-600 hover:bg-violet-50 hover:text-violet-700">
-          <BookOpen size={14} className="text-slate-400 group-hover:text-violet-500" />
-          <span className="flex-1">Documentation</span>
-          <ChevronRight size={13} className="text-slate-300 group-hover:text-violet-400" />
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0 text-slate-600 hover:bg-violet-50 hover:text-violet-700">
+          <BookOpen size={13} className="text-slate-400" />
+          <span>Docs</span>
         </Link>
       </div>
-    </nav>
+
+      {/* Desktop: vertical sidebar nav */}
+      <nav className="hidden md:block">
+        {NAV.map((section, si) => (
+          <div key={si} className={si > 0 ? 'mt-5' : ''}>
+            {section.group && (
+              <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                {section.group}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map(({ id, label, icon: Icon }) => {
+                const isActive = active === id
+                return (
+                  <button key={id} onClick={() => onChange(id)}
+                    className={cn(
+                      'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left',
+                      isActive
+                        ? 'bg-violet-50 text-violet-700'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                    )}>
+                    <Icon size={14} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+                    <span className="flex-1">{label}</span>
+                    {id === 'leadgen' && leadGenEnabled && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* Help & resources */}
+        <div className="mt-5">
+          <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Help</p>
+          <Link href="/documentation"
+            className="group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-all text-slate-600 hover:bg-violet-50 hover:text-violet-700">
+            <BookOpen size={14} className="text-slate-400 group-hover:text-violet-500" />
+            <span className="flex-1">Documentation</span>
+            <ChevronRight size={13} className="text-slate-300 group-hover:text-violet-400" />
+          </Link>
+        </div>
+      </nav>
+    </>
   )
 }
 
@@ -166,7 +195,7 @@ function ProfileTab({ mustVerifyEmail }) {
     <div className="space-y-3 max-w-xl">
       <Card title="Profile information">
         <form onSubmit={submit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Name" error={errors.name}>
               <Input value={data.name} onChange={e => setData('name', e.target.value)}
                 className="h-8 text-[13px]" placeholder="Your name" />
@@ -214,7 +243,7 @@ function PasswordForm() {
           onChange={e => setData('current_password', e.target.value)}
           className="h-8 text-[13px]" placeholder="••••••••" />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="New password" error={errors.password}>
           <Input type="password" value={data.password}
             onChange={e => setData('password', e.target.value)}
@@ -382,7 +411,7 @@ function WorkspaceTab() {
                     className="h-8 text-[13px] pl-7" placeholder="www.acme.com" />
                 </div>
               </Field>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Phone number">
                   <div className="relative">
                     <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -492,7 +521,7 @@ function SmtpDialog({ open, onClose, existing }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 mt-1">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Account name">
               <Input value={form.name} onChange={e => set('name', e.target.value)} className="h-8 text-[13px]" placeholder="e.g. Gmail Work" required />
             </Field>
@@ -503,7 +532,7 @@ function SmtpDialog({ open, onClose, existing }) {
           <Field label="From email">
             <Input type="email" value={form.from_email} onChange={e => set('from_email', e.target.value)} className="h-8 text-[13px]" placeholder="you@example.com" required />
           </Field>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div className="col-span-2">
               <Field label="SMTP host">
                 <Input value={form.host} onChange={e => set('host', e.target.value)} className="h-8 text-[13px]" placeholder="smtp.gmail.com" required />
@@ -765,7 +794,7 @@ function MailTab({ mailSettings, orgFollowupEnabled }) {
     <div className="space-y-3 max-w-xl">
       <Card title="Bulk send configuration">
         <form onSubmit={submit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Batch size" hint="Emails sent per batch before pausing.">
               <Input type="number" min="1" max="500" value={data.mail_batch_size}
                 onChange={e => setData('mail_batch_size', Number(e.target.value))}
@@ -964,7 +993,7 @@ function TemplatesTab({ templates, activeTemplateId, onGoToWorkspace }) {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {templates.map(template => (
           <TemplateCard key={template.id} template={template}
             isActive={template.id === activeTemplateId}
@@ -1195,16 +1224,16 @@ export default function ProfileEdit({
       <AppLayout title="Settings">
 
         {/* Page title */}
-        <div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-white">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-5 pb-4 border-b border-slate-100 bg-white">
           <h1 className="text-[18px] font-bold text-slate-800">Settings</h1>
           <p className="text-[13px] text-slate-500 mt-0.5">Manage your profile, workspace, email, and integrations</p>
         </div>
 
-        {/* Two-column layout */}
-        <div className="flex gap-0 min-h-0 flex-1">
+        {/* Layout: stacked on mobile, side-by-side on desktop */}
+        <div className="flex flex-col md:flex-row gap-0 min-h-0 flex-1">
 
           {/* Sidebar nav */}
-          <div className="w-52 shrink-0 border-r border-slate-100 bg-white px-3 py-5">
+          <div className="md:w-52 md:shrink-0 border-b md:border-b-0 md:border-r border-slate-100 bg-white px-3 py-3 md:py-5 overflow-x-auto md:overflow-x-visible">
             <SettingsNav
               active={tab}
               onChange={setTab}
@@ -1213,7 +1242,7 @@ export default function ProfileEdit({
           </div>
 
           {/* Content area */}
-          <div className="flex-1 min-w-0 p-6 bg-slate-50 overflow-y-auto">
+          <div className="flex-1 min-w-0 p-4 sm:p-6 bg-slate-50 overflow-y-auto">
             {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
             {tab === 'workspace' && <WorkspaceTab />}
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}

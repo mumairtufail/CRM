@@ -67,16 +67,15 @@ class SmtpSettingsController extends Controller
                 ],
             ]);
 
+            $html = view('emails.smtp_test', ['smtp' => $smtp])->render();
+
             Mail::mailer('smtp_test')
-                ->raw(
-                    'This is a test email from your CRM platform SMTP configuration. If you received this, your settings are working correctly.',
-                    function ($message) use ($smtp, $request) {
-                        $message
-                            ->from($smtp['from_email'], $smtp['from_name'] ?? 'Platform')
-                            ->to($request->input('to'))
-                            ->subject('Platform SMTP Test');
-                    }
-                );
+                ->html($html, function ($message) use ($smtp, $request) {
+                    $message
+                        ->from($smtp['from_email'], $smtp['from_name'] ?? 'Platform')
+                        ->to($request->input('to'))
+                        ->subject('SMTP Test — ' . config('app.name'));
+                });
 
             return response()->json([
                 'ok'      => true,

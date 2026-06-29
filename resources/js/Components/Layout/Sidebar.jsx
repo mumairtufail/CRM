@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
 
 const navItems = [
-  { label: 'Dashboard',  href: '/',         icon: LayoutDashboard },
+  { label: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard },
   {
     label: 'Leads',
     icon: Users,

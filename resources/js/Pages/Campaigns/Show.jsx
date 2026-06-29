@@ -9,7 +9,7 @@ import {
 } from '@/Components/ui/dialog'
 import {
   ChevronLeft, Send, Eye, Users, Pencil, Trash2, MousePointerClick,
-  Loader2, StopCircle, RefreshCw, Terminal, RotateCcw,
+  Loader2, StopCircle, RefreshCw, Terminal, RotateCcw, RotateCw, PauseCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -299,8 +299,12 @@ export default function CampaignShow({ campaign, sends }) {
   const [sending, setSending]             = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting]           = useState(false)
-  const [stopping, setStopping]           = useState(false)
-  const [resuming, setResuming]           = useState(false)
+  const [stopping, setStopping]                     = useState(false)
+  const [resuming, setResuming]                     = useState(false)
+  const [stoppingFollowups, setStoppingFollowups]   = useState(false)
+  const [resumingFollowups, setResumingFollowups]   = useState(false)
+  const [cloning, setCloning]                       = useState(false)
+  const [followupEnabled, setFollowupEnabled]       = useState(campaign.followup_enabled ?? false)
 
   // Single source of truth — fetched from /log, drives stats card, table, and terminal
   const [liveLogs,  setLiveLogs]  = useState([])
@@ -357,6 +361,32 @@ export default function CampaignShow({ campaign, sends }) {
       onSuccess: () => { toast.success('Campaign queued for sending!'); setConfirmSend(false) },
       onError:   (e) => { toast.error(Object.values(e)[0] || 'Send failed'); setSending(false); setConfirmSend(false) },
       onFinish:  () => setSending(false),
+    })
+  }
+
+  const handleStopFollowups = () => {
+    setStoppingFollowups(true)
+    router.post(`/campaigns/${campaign.id}/stop`, {}, {
+      onSuccess: () => { toast.success('Follow-ups stopped'); setFollowupEnabled(false) },
+      onError:   (e) => toast.error(Object.values(e)[0] || 'Stop failed'),
+      onFinish:  () => setStoppingFollowups(false),
+    })
+  }
+
+  const handleResumeFollowups = () => {
+    setResumingFollowups(true)
+    router.post(`/campaigns/${campaign.id}/resume-followups`, {}, {
+      onSuccess: () => { toast.success('Follow-ups resumed'); setFollowupEnabled(true) },
+      onError:   (e) => toast.error(Object.values(e)[0] || 'Resume failed'),
+      onFinish:  () => setResumingFollowups(false),
+    })
+  }
+
+  const handleRunAgain = () => {
+    setCloning(true)
+    router.post(`/campaigns/${campaign.id}/clone`, {}, {
+      onError:  (e) => { toast.error(Object.values(e)[0] || 'Clone failed'); setCloning(false) },
+      onFinish: () => setCloning(false),
     })
   }
 
@@ -436,6 +466,30 @@ export default function CampaignShow({ campaign, sends }) {
               onClick={() => setConfirmDelete(true)}>
               <Trash2 size={13} /> Delete
             </Button>
+            {liveStats.status === 'sent' && followupEnabled && (
+              <Button variant="outline" size="sm" disabled={stoppingFollowups}
+                className="h-8 text-xs gap-1.5 border-orange-200 text-orange-600 hover:bg-orange-50"
+                onClick={handleStopFollowups}>
+                <PauseCircle size={13} />
+                {stoppingFollowups ? 'Stopping…' : 'Stop Follow-ups'}
+              </Button>
+            )}
+            {liveStats.status === 'sent' && !followupEnabled && campaign.followup_subject && (
+              <Button variant="outline" size="sm" disabled={resumingFollowups}
+                className="h-8 text-xs gap-1.5 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                onClick={handleResumeFollowups}>
+                <RotateCcw size={13} />
+                {resumingFollowups ? 'Resuming…' : 'Resume Follow-ups'}
+              </Button>
+            )}
+            {['sent', 'failed'].includes(liveStats.status) && (
+              <Button variant="outline" size="sm" disabled={cloning}
+                className="h-8 text-xs gap-1.5 border-slate-200"
+                onClick={handleRunAgain}>
+                <RotateCw size={13} />
+                {cloning ? 'Duplicating…' : 'Run Again'}
+              </Button>
+            )}
             {canSend && (
               <Button size="sm" className="h-8 text-xs gap-1.5 bg-amber-500 hover:bg-amber-600 text-white border-0"
                 onClick={() => setConfirmSend(true)}>
@@ -484,6 +538,22 @@ export default function CampaignShow({ campaign, sends }) {
                   </div>
                 )}
               </Card>
+            )}
+
+            {/* Follow-up status banner */}
+            {liveStats.status === 'sent' && campaign.followup_subject && (
+              <div className={cn(
+                'flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs border',
+                followupEnabled
+                  ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                  : 'bg-slate-50 border-slate-200 text-slate-500',
+              )}>
+                <RotateCcw size={12} className="shrink-0" />
+                {followupEnabled
+                  ? <>Follow-up emails are <strong>active</strong> — leads who haven't opened will receive a follow-up after the configured delay.</>
+                  : <>Follow-up emails are <strong>paused</strong> — click &quot;Resume Follow-ups&quot; to re-enable them.</>
+                }
+              </div>
             )}
 
             {/* Details */}

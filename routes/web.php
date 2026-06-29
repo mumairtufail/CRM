@@ -119,9 +119,11 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/campaigns/{campaign}',               [CampaignController::class, 'update'])->name('campaigns.update');
     Route::delete('/campaigns/{campaign}',            [CampaignController::class, 'destroy'])->name('campaigns.destroy');
     Route::post('/campaigns/bulk-delete',             [CampaignController::class, 'bulkDestroy'])->name('campaigns.bulk-destroy');
-    Route::post('/campaigns/{campaign}/send',         [CampaignController::class, 'send'])->name('campaigns.send');
-    Route::post('/campaigns/{campaign}/stop',         [CampaignController::class, 'stop'])->name('campaigns.stop');
-    Route::get('/campaigns/{campaign}/log',           [CampaignController::class, 'log'])->name('campaigns.log');
+    Route::post('/campaigns/{campaign}/send',             [CampaignController::class, 'send'])->name('campaigns.send');
+    Route::post('/campaigns/{campaign}/stop',             [CampaignController::class, 'stop'])->name('campaigns.stop');
+    Route::post('/campaigns/{campaign}/resume-followups', [CampaignController::class, 'resumeFollowups'])->name('campaigns.resume-followups');
+    Route::post('/campaigns/{campaign}/clone',            [CampaignController::class, 'clone'])->name('campaigns.clone');
+    Route::get('/campaigns/{campaign}/log',               [CampaignController::class, 'log'])->name('campaigns.log');
 
     // Lead Groups
     Route::get('/groups',                        [LeadGroupController::class, 'index'])->name('groups.index');

@@ -29,6 +29,8 @@ class CampaignController extends Controller
             'sent_count'       => $c->sent_count,
             'opened_count'     => $c->opened_count,
             'clicked_count'    => $c->clicked_count,
+            'followup_enabled' => (bool) $c->followup_enabled,
+            'followup_subject' => $c->followup_subject,
             'sent_at'          => $c->sent_at?->diffForHumans(),
             'created_at'       => $c->created_at->diffForHumans(),
         ]);
@@ -239,6 +241,8 @@ class CampaignController extends Controller
                 'opened_count'     => $campaign->opened_count,
                 'clicked_count'    => $campaign->clicked_count,
                 'failed_count'     => $failedCount,
+                'followup_enabled' => (bool) $campaign->followup_enabled,
+                'followup_subject' => $campaign->followup_subject,
                 'sent_at'          => $campaign->sent_at?->format('M d, Y H:i'),
                 'created_at'       => $campaign->created_at->format('M d, Y'),
             ],
@@ -284,13 +288,51 @@ class CampaignController extends Controller
 
     public function stop(EmailCampaign $campaign)
     {
-        if ($campaign->status !== 'sending') {
-            return back()->withErrors(['error' => 'Campaign is not currently sending.']);
+        if ($campaign->status === 'sending') {
+            $campaign->update(['status' => 'paused']);
+            return back()->with('success', 'Campaign paused. Follow-ups are also paused.');
         }
 
-        $campaign->update(['status' => 'paused']);
+        if ($campaign->status === 'sent' && $campaign->followup_enabled) {
+            $campaign->update(['followup_enabled' => false]);
+            return back()->with('success', 'Follow-ups stopped.');
+        }
 
-        return back()->with('success', 'Campaign paused.');
+        return back()->withErrors(['error' => 'Nothing to stop on this campaign.']);
+    }
+
+    public function resumeFollowups(EmailCampaign $campaign)
+    {
+        if ($campaign->status !== 'sent') {
+            return back()->withErrors(['error' => 'Follow-ups can only be resumed on sent campaigns.']);
+        }
+
+        if (! $campaign->followup_subject) {
+            return back()->withErrors(['error' => 'This campaign has no follow-up email configured.']);
+        }
+
+        $campaign->update(['followup_enabled' => true]);
+
+        return back()->with('success', 'Follow-ups resumed. Eligible leads will receive a follow-up on the next scheduler run.');
+    }
+
+    public function clone(EmailCampaign $campaign)
+    {
+        $newCampaign                    = $campaign->replicate();
+        $newCampaign->name              = $campaign->name . ' (Copy)';
+        $newCampaign->status            = 'draft';
+        $newCampaign->sent_count        = 0;
+        $newCampaign->opened_count      = 0;
+        $newCampaign->clicked_count     = 0;
+        $newCampaign->bounced_count     = 0;
+        $newCampaign->unsubscribed_count = 0;
+        $newCampaign->total_recipients  = $campaign->total_recipients;
+        $newCampaign->sent_at           = null;
+        $newCampaign->scheduled_at      = null;
+        $newCampaign->save();
+
+        return redirect()->route('campaigns.edit', $newCampaign)
+            ->with('success', 'Campaign duplicated. Review and send when ready.');
     }
 
     public function send(Request $request, EmailCampaign $campaign)

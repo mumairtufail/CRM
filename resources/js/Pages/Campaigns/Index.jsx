@@ -7,7 +7,13 @@ import { Button } from '@/Components/ui/button'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/Components/ui/dialog'
-import { Mail, Plus, Users, Send, Eye, MousePointerClick, Trash2 } from 'lucide-react'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu'
+import {
+  Mail, Plus, Users, Send, Eye, MousePointerClick, Trash2,
+  MoreHorizontal, StopCircle, RotateCcw, RotateCw, Pencil, PauseCircle,
+} from 'lucide-react'
 import { toast } from 'sonner'
 
 const STATUS_STYLE = {
@@ -19,10 +25,115 @@ const STATUS_STYLE = {
   failed:    'bg-red-50 text-red-600',
 }
 
+function CampaignActions({ campaign, onDelete }) {
+  const [busy, setBusy] = useState(null)
+
+  const post = (url, label, onSuccess) => {
+    setBusy(label)
+    router.post(url, {}, {
+      onSuccess,
+      onError: (e) => toast.error(Object.values(e)[0] || `${label} failed`),
+      onFinish: () => setBusy(null),
+    })
+  }
+
+  const { id, status, followup_enabled, followup_subject } = campaign
+  const isSent   = status === 'sent'
+  const isSending = status === 'sending'
+  const isPaused = status === 'paused'
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost" size="sm"
+          className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600 shrink-0"
+          onClick={e => e.preventDefault()}
+          disabled={!!busy}
+        >
+          <MoreHorizontal size={15} />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        {status === 'draft' && (
+          <DropdownMenuItem asChild>
+            <Link href={`/campaigns/${id}/edit`} className="flex items-center gap-2">
+              <Pencil size={13} /> Edit
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {isSending && (
+          <DropdownMenuItem
+            className="flex items-center gap-2 text-orange-600 focus:text-orange-700"
+            onClick={() => post(`/campaigns/${id}/stop`, 'Stop', () => {
+              toast.success('Campaign paused'); router.reload()
+            })}
+          >
+            <StopCircle size={13} />
+            {busy === 'Stop' ? 'Stopping…' : 'Stop'}
+          </DropdownMenuItem>
+        )}
+        {isPaused && (
+          <DropdownMenuItem
+            className="flex items-center gap-2 text-emerald-600 focus:text-emerald-700"
+            onClick={() => post(`/campaigns/${id}/send`, 'Resume', () => {
+              toast.success('Campaign resumed'); router.visit(`/campaigns/${id}`)
+            })}
+          >
+            <RotateCcw size={13} />
+            {busy === 'Resume' ? 'Resuming…' : 'Resume'}
+          </DropdownMenuItem>
+        )}
+        {isSent && followup_enabled && (
+          <DropdownMenuItem
+            className="flex items-center gap-2 text-orange-600 focus:text-orange-700"
+            onClick={() => post(`/campaigns/${id}/stop`, 'Stop Follow-ups', () => {
+              toast.success('Follow-ups stopped'); router.reload()
+            })}
+          >
+            <PauseCircle size={13} />
+            {busy === 'Stop Follow-ups' ? 'Stopping…' : 'Stop Follow-ups'}
+          </DropdownMenuItem>
+        )}
+        {isSent && !followup_enabled && followup_subject && (
+          <DropdownMenuItem
+            className="flex items-center gap-2 text-emerald-600 focus:text-emerald-700"
+            onClick={() => post(`/campaigns/${id}/resume-followups`, 'Resume Follow-ups', () => {
+              toast.success('Follow-ups resumed'); router.reload()
+            })}
+          >
+            <RotateCcw size={13} />
+            {busy === 'Resume Follow-ups' ? 'Resuming…' : 'Resume Follow-ups'}
+          </DropdownMenuItem>
+        )}
+        {(isSent || status === 'failed') && (
+          <DropdownMenuItem
+            className="flex items-center gap-2"
+            onClick={() => post(`/campaigns/${id}/clone`, 'Run Again', () => {
+              toast.success('Campaign duplicated')
+            })}
+          >
+            <RotateCw size={13} />
+            {busy === 'Run Again' ? 'Duplicating…' : 'Run Again'}
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          className="flex items-center gap-2 text-red-600 focus:text-red-700"
+          onClick={() => onDelete(id)}
+        >
+          <Trash2 size={13} /> Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
 export default function CampaignsIndex({ campaigns }) {
-  const [selected, setSelected]       = useState(new Set())
-  const [confirmOpen, setConfirmOpen] = useState(false)
-  const [deleting, setDeleting]       = useState(false)
+  const [selected, setSelected]             = useState(new Set())
+  const [confirmOpen, setConfirmOpen]       = useState(false)
+  const [deleting, setDeleting]             = useState(false)
+  const [singleDeleteId, setSingleDeleteId] = useState(null)
 
   const allIds      = campaigns?.map(c => c.id) ?? []
   const allSelected = allIds.length > 0 && allIds.every(id => selected.has(id))
@@ -53,6 +164,16 @@ export default function CampaignsIndex({ campaigns }) {
         setSelected(new Set())
         setConfirmOpen(false)
       },
+      onError: () => toast.error('Delete failed'),
+      onFinish: () => setDeleting(false),
+    })
+  }
+
+  const handleSingleDelete = () => {
+    if (!singleDeleteId) return
+    setDeleting(true)
+    router.delete(`/campaigns/${singleDeleteId}`, {
+      onSuccess: () => { toast.success('Campaign deleted'); setSingleDeleteId(null) },
       onError: () => toast.error('Delete failed'),
       onFinish: () => setDeleting(false),
     })
@@ -105,7 +226,7 @@ export default function CampaignsIndex({ campaigns }) {
             )}
 
             {campaigns.map(c => (
-              <div key={c.id} className="flex items-center gap-3">
+              <div key={c.id} className="flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={selected.has(c.id)}
@@ -172,6 +293,7 @@ export default function CampaignsIndex({ campaigns }) {
                     </div>
                   </div>
                 </Link>
+                <CampaignActions campaign={c} onDelete={id => setSingleDeleteId(id)} />
               </div>
             ))}
           </div>
@@ -190,7 +312,7 @@ export default function CampaignsIndex({ campaigns }) {
           />
         )}
 
-        {/* Confirmation modal */}
+        {/* Bulk delete confirmation */}
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
           <DialogContent className="max-w-sm">
             <DialogHeader>
@@ -210,6 +332,31 @@ export default function CampaignsIndex({ campaigns }) {
                 disabled={deleting}
               >
                 {deleting ? 'Deleting…' : `Delete ${selected.size} campaign${selected.size !== 1 ? 's' : ''}`}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Single campaign delete confirmation */}
+        <Dialog open={!!singleDeleteId} onOpenChange={open => { if (!open) setSingleDeleteId(null) }}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle className="text-sm font-semibold">Delete campaign?</DialogTitle>
+              <DialogDescription className="text-xs text-muted-foreground mt-1">
+                This will permanently delete the campaign and all its send history. This cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 mt-2">
+              <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSingleDeleteId(null)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="h-8 text-xs bg-red-600 hover:bg-red-700 text-white border-0"
+                onClick={handleSingleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting…' : 'Delete'}
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -13,7 +13,7 @@ class EmailSend extends Model
         'organization_id',
         'email_campaign_id', 'lead_id', 'email_used', 'status', 'error_message',
         'message_id', 'tracking_token', 'sent_at', 'opened_at', 'clicked_at',
-        'is_followup', 'parent_send_id',
+        'is_followup', 'parent_send_id', 'followup_step',
     ];
 
     protected $casts = [

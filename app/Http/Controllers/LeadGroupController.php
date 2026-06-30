@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Lead;
 use App\Models\LeadGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class LeadGroupController extends Controller
@@ -110,6 +111,7 @@ class LeadGroupController extends Controller
         ]);
 
         $group->leads()->syncWithoutDetaching($validated['lead_ids']);
+        Cache::increment("leads_v:{$group->organization_id}");
         $count = count($validated['lead_ids']);
 
         return back()->with('success', "{$count} lead" . ($count !== 1 ? 's' : '') . " added to group.");
@@ -123,6 +125,7 @@ class LeadGroupController extends Controller
         ]);
 
         $group->leads()->detach($validated['lead_ids']);
+        Cache::increment("leads_v:{$group->organization_id}");
 
         return back()->with('success', 'Leads removed from group.');
     }

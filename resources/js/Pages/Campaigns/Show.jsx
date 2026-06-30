@@ -31,6 +31,7 @@ const SEND_STATUS = {
   clicked:  { label: 'Clicked',  bg: 'bg-violet-50 text-violet-700' },
   failed:   { label: 'Failed',   bg: 'bg-red-50 text-red-600' },
   bounced:  { label: 'Bounced',  bg: 'bg-orange-50 text-orange-600' },
+  skipped:  { label: 'Skipped',  bg: 'bg-slate-100 text-slate-500' },
 }
 
 const LOG_STATUS = {
@@ -41,6 +42,7 @@ const LOG_STATUS = {
   clicked:  { symbol: '◈', color: '#d2a8ff' },
   failed:   { symbol: '✗', color: '#f85149' },
   bounced:  { symbol: '⚠', color: '#ffa657' },
+  skipped:  { symbol: '—', color: '#555d6b' },
 }
 
 function StatBox({ label, value, icon: Icon, color }) {
@@ -76,9 +78,9 @@ function LogLine({ entry }) {
           {entry.status}
         </span>
       </div>
-      {entry.status === 'failed' && entry.error_message && (
+      {(entry.status === 'failed' || entry.status === 'skipped') && entry.error_message && (
         <div className="pl-[76px] pr-2 pb-0.5">
-          <p className="text-[10px] font-mono leading-relaxed break-words" style={{ color: 'rgba(248,81,73,0.75)' }}>
+          <p className="text-[10px] font-mono leading-relaxed break-words" style={{ color: entry.status === 'skipped' ? 'rgba(85,93,107,0.9)' : 'rgba(248,81,73,0.75)' }}>
             └ {entry.error_message}
           </p>
         </div>
@@ -474,7 +476,7 @@ export default function CampaignShow({ campaign, sends }) {
                 {stoppingFollowups ? 'Stopping…' : 'Stop Follow-ups'}
               </Button>
             )}
-            {liveStats.status === 'sent' && !followupEnabled && campaign.followup_subject && (
+            {liveStats.status === 'sent' && !followupEnabled && (campaign.followup_steps_count > 0 || campaign.followup_subject) && (
               <Button variant="outline" size="sm" disabled={resumingFollowups}
                 className="h-8 text-xs gap-1.5 border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                 onClick={handleResumeFollowups}>
@@ -541,7 +543,7 @@ export default function CampaignShow({ campaign, sends }) {
             )}
 
             {/* Follow-up status banner */}
-            {liveStats.status === 'sent' && campaign.followup_subject && (
+            {liveStats.status === 'sent' && (campaign.followup_steps_count > 0 || campaign.followup_subject) && (
               <div className={cn(
                 'flex items-center gap-2 px-4 py-2.5 rounded-lg text-xs border',
                 followupEnabled
@@ -550,8 +552,14 @@ export default function CampaignShow({ campaign, sends }) {
               )}>
                 <RotateCcw size={12} className="shrink-0" />
                 {followupEnabled
-                  ? <>Follow-up emails are <strong>active</strong> — leads who haven't opened will receive a follow-up after the configured delay.</>
-                  : <>Follow-up emails are <strong>paused</strong> — click &quot;Resume Follow-ups&quot; to re-enable them.</>
+                  ? <>
+                      Follow-up sequence is <strong>active</strong>
+                      {campaign.followup_steps_count > 0 && (
+                        <> — <strong>{campaign.followup_steps_count}</strong> step{campaign.followup_steps_count !== 1 ? 's' : ''} configured.</>
+                      )}
+                      {' '}Leads who haven't opened any email will receive follow-ups at their scheduled delays.
+                    </>
+                  : <>Follow-up sequence is <strong>paused</strong> — click &quot;Resume Follow-ups&quot; to re-enable.</>
                 }
               </div>
             )}

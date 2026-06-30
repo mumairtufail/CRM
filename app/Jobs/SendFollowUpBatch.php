@@ -23,14 +23,18 @@ class SendFollowUpBatch implements ShouldQueue
     public int $timeout = 300;
 
     /**
-     * @param int   $campaignId     The campaign whose follow-up template to use.
-     * @param int[] $parentSendIds  IDs of original email_sends to follow up on.
-     * @param int   $userId         Owner user (for SMTP credentials).
+     * @param int   $campaignId    The campaign whose follow-up template to use.
+     * @param int[] $parentSendIds IDs of original email_sends to follow up on.
+     * @param int   $userId        Owner user (for SMTP credentials).
+     * @param int   $step          1-indexed follow-up step number.
+     * @param array $stepData      {delay_hours, subject, body_html} for this step.
      */
     public function __construct(
         public readonly int   $campaignId,
         public readonly array $parentSendIds,
         public readonly int   $userId,
+        public readonly int   $step     = 1,
+        public readonly array $stepData = [],
     ) {}
 
     public function handle(): void
@@ -39,8 +43,6 @@ class SendFollowUpBatch implements ShouldQueue
         $user     = User::find($this->userId);
 
         if (! $campaign || ! $user) return;
-
-        // Stop if campaign is paused or follow-ups are disabled
         if (in_array($campaign->status, ['paused', 'draft', 'failed'])) return;
         if (! $campaign->followup_enabled) return;
 
@@ -57,7 +59,10 @@ class SendFollowUpBatch implements ShouldQueue
             : null;
         $templateVars = EmailTemplate::varsFor($user, $fromName);
 
-        // Load the original sends with their leads
+        // Resolve step content — fall back to legacy flat columns for old jobs
+        $subjectTemplate = $this->stepData['subject']   ?? $campaign->followup_subject   ?? '';
+        $bodyTemplate    = $this->stepData['body_html'] ?? $campaign->followup_body_html ?? '';
+
         $parentSends = EmailSend::with(['lead.emails'])
             ->whereIn('id', $this->parentSendIds)
             ->get()
@@ -68,13 +73,8 @@ class SendFollowUpBatch implements ShouldQueue
             if (! $parentSend) continue;
 
             $campaign->refresh();
-            if (in_array($campaign->status, ['paused'])) break;
+            if ($campaign->status === 'paused') break;
             if (! $campaign->followup_enabled) break;
-
-            // Idempotency guard — skip if a follow-up was already sent for this parent
-            // (handles job retry safety without double-sending)
-            $alreadyFolledUp = EmailSend::where('parent_send_id', $parentSendId)->exists();
-            if ($alreadyFolledUp) continue;
 
             $lead = $parentSend->lead;
             if (! $lead) continue;
@@ -82,28 +82,47 @@ class SendFollowUpBatch implements ShouldQueue
             $email = $lead->primary_email;
             if (! $email) continue;
 
+            // Belt-and-suspenders: re-check engagement at execution time
+            // (lead may have opened/clicked between command dispatch and now)
+            $hasEngaged = EmailSend::where('lead_id', $lead->id)
+                ->where('email_campaign_id', $this->campaignId)
+                ->where(function ($q) {
+                    $q->whereIn('status', ['opened', 'clicked'])
+                        ->orWhereNotNull('opened_at');
+                })
+                ->exists();
+            if ($hasEngaged) continue;
+
+            // Idempotency guard per step — prevents double-sending on job retry
+            $alreadySent = EmailSend::where('lead_id', $lead->id)
+                ->where('email_campaign_id', $this->campaignId)
+                ->where('is_followup', true)
+                ->where('followup_step', $this->step)
+                ->exists();
+            if ($alreadySent) continue;
+
             $token     = Str::random(64);
             $domain    = Str::after($fromEmail, '@') ?: 'localhost';
             $messageId = (string) Str::uuid() . '@' . $domain;
 
-            // Create the follow-up EmailSend record first so the token is in DB
             $emailSend = EmailSend::create([
-                'organization_id'    => $parentSend->organization_id,
-                'email_campaign_id'  => $this->campaignId,
-                'lead_id'            => $lead->id,
-                'email_used'         => $email,
-                'status'             => 'pending',
-                'tracking_token'     => $token,
-                'message_id'         => FetchEmailsJob::normalizeMessageId($messageId),
-                'is_followup'        => true,
-                'parent_send_id'     => $parentSendId,
+                'organization_id'   => $parentSend->organization_id,
+                'email_campaign_id' => $this->campaignId,
+                'lead_id'           => $lead->id,
+                'email_used'        => $email,
+                'status'            => 'pending',
+                'tracking_token'    => $token,
+                'message_id'        => FetchEmailsJob::normalizeMessageId($messageId),
+                'is_followup'       => true,
+                'parent_send_id'    => $parentSendId,
+                'followup_step'     => $this->step,
             ]);
 
             try {
-                $subject = $this->replaceTokens($campaign->followup_subject, $lead);
+                $subject = $this->replaceTokens($subjectTemplate, $lead);
 
                 $html = $this->buildHtml(
-                    $campaign->followup_body_html,
+                    $bodyTemplate,
                     $subject,
                     $lead,
                     $template,
@@ -121,12 +140,12 @@ class SendFollowUpBatch implements ShouldQueue
 
                 Log::channel('campaigns')->info('Follow-up email sent', [
                     'campaign_id'    => $this->campaignId,
+                    'step'           => $this->step,
                     'parent_send_id' => $parentSendId,
                     'lead_id'        => $lead->id,
                     'email'          => $email,
                 ]);
 
-                // Update lead's contact timestamp
                 $channels = $lead->contact_channels ?? [];
                 if (empty($channels['mail'])) {
                     $channels['mail'] = now()->toIso8601String();
@@ -143,6 +162,7 @@ class SendFollowUpBatch implements ShouldQueue
                 ]);
                 Log::error('Follow-up send failed', [
                     'campaign_id'    => $this->campaignId,
+                    'step'           => $this->step,
                     'parent_send_id' => $parentSendId,
                     'lead_id'        => $lead->id,
                     'email'          => $email,
@@ -183,13 +203,13 @@ class SendFollowUpBatch implements ShouldQueue
     private function replaceTokens(string $html, Lead $lead, string $subject = ''): string
     {
         $tokens = [
-            '{{first_name}}' => $lead->first_name ?? '',
-            '{{last_name}}'  => $lead->last_name  ?? '',
-            '{{name}}'       => $lead->full_name  ?? '',
+            '{{first_name}}' => $lead->first_name    ?? '',
+            '{{last_name}}'  => $lead->last_name     ?? '',
+            '{{name}}'       => $lead->full_name     ?? '',
             '{{email}}'      => $lead->primary_email ?? '',
-            '{{company}}'    => $lead->company ?? '',
+            '{{company}}'    => $lead->company       ?? '',
             '{{phone}}'      => $lead->primary_phone ?? '',
-            '{{status}}'     => $lead->status ?? '',
+            '{{status}}'     => $lead->status        ?? '',
             '{{subject}}'    => $subject,
         ];
 

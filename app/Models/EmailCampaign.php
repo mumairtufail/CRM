@@ -19,10 +19,12 @@ class EmailCampaign extends Model
         'clicked_count', 'bounced_count', 'unsubscribed_count',
         'scheduled_at', 'sent_at',
         'followup_enabled', 'followup_subject', 'followup_body_html', 'followup_delay_hours',
+        'followup_steps',
     ];
 
     protected $casts = [
         'filters'          => 'array',
+        'followup_steps'   => 'array',
         'scheduled_at'     => 'datetime',
         'sent_at'          => 'datetime',
         'followup_enabled' => 'boolean',

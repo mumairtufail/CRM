@@ -240,6 +240,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/whatsapp/toggle',  [WhatsappCredentialController::class, 'toggle'])->name('whatsapp.toggle');
     Route::delete('/settings/whatsapp',       [WhatsappCredentialController::class, 'destroy'])->name('whatsapp.destroy');
 
+    Route::post('/settings/cache/clear', [ProfileController::class, 'clearLeadsCache'])->name('settings.cache.clear');
+
     // WhatsApp Campaigns
     Route::get('/whatsapp/campaigns',                           [WhatsappCampaignController::class, 'index'])->name('whatsapp.campaigns.index');
     Route::get('/whatsapp/campaigns/create',                    [WhatsappCampaignController::class, 'create'])->name('whatsapp.campaigns.create');

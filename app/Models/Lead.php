@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
+use App\Models\LeadGroup;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -42,6 +43,12 @@ class Lead extends Model
     public function tags()
     {
         return $this->belongsToMany(Tag::class, 'lead_tag');
+    }
+
+    public function groups()
+    {
+        return $this->belongsToMany(LeadGroup::class, 'lead_group_members', 'lead_id', 'lead_group_id')
+            ->withPivot('added_at');
     }
 
     public function activities()

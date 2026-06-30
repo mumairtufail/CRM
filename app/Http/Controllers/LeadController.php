@@ -7,73 +7,95 @@ use App\Models\Client;
 use App\Models\Lead;
 use App\Models\LeadGroup;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
 class LeadController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Lead::with(['emails', 'phones', 'tags'])
-            ->withCount('activities');
+        $orgId   = auth()->user()->organization_id;
+        $perPage = in_array((int) $request->input('per_page'), [20, 50, 100])
+            ? (int) $request->input('per_page')
+            : 20;
 
-        if ($search = $request->input('search')) {
-            $query->search($search);
-        }
+        $version  = Cache::get("leads_v:{$orgId}", 1);
+        $cacheKey = "leads:idx:{$orgId}:v{$version}:" . md5(serialize($request->all()));
 
-        if ($status = $request->input('status')) {
-            $query->byStatus($status);
-        }
+        $payload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage) {
+            $query = Lead::with(['emails', 'phones', 'tags', 'groups'])
+                ->withCount('activities');
 
-        if ($source = $request->input('source')) {
-            $query->where('source', $source);
-        }
-
-        // Location / categorical filters.
-        foreach (['country', 'city', 'industry', 'priority'] as $field) {
-            if (($value = $request->input($field)) !== null && $value !== '') {
-                $query->where($field, $value);
+            if ($search = $request->input('search')) {
+                $query->search($search);
             }
-        }
 
-        // Contact status: have they been reached out to yet?
-        $contacted = $request->input('contacted');
-        if ($contacted === 'yes') {
-            $query->whereNotNull('last_contacted_at');
-        } elseif ($contacted === 'no') {
-            $query->whereNull('last_contacted_at');
-        }
+            if ($status = $request->input('status')) {
+                $query->byStatus($status);
+            }
 
-        // "Reached on" channels — leads contacted on ANY of the selected channels.
-        $reached = array_values(array_filter(
-            (array) $request->input('reached', []),
-            fn ($ch) => in_array($ch, self::CONTACT_CHANNELS, true)
-        ));
-        if (!empty($reached)) {
-            $query->where(function ($q) use ($reached) {
-                foreach ($reached as $channel) {
-                    $q->orWhereNotNull("contact_channels->{$channel}");
+            if ($source = $request->input('source')) {
+                $query->where('source', $source);
+            }
+
+            // Location / categorical filters.
+            foreach (['country', 'city', 'industry', 'priority'] as $field) {
+                if (($value = $request->input($field)) !== null && $value !== '') {
+                    $query->where($field, $value);
                 }
-            });
-        }
+            }
 
-        $sort  = $request->input('sort', 'created_at');
-        $dir   = $request->input('dir', 'desc');
-        $query->orderBy($sort, $dir);
+            // Contact status: have they been reached out to yet?
+            $contacted = $request->input('contacted');
+            if ($contacted === 'yes') {
+                $query->whereNotNull('last_contacted_at');
+            } elseif ($contacted === 'no') {
+                $query->whereNull('last_contacted_at');
+            }
 
-        $leads = $query->paginate(20)->withQueryString();
+            // "Reached on" channels — leads contacted on ANY of the selected channels.
+            $reached = array_values(array_filter(
+                (array) $request->input('reached', []),
+                fn ($ch) => in_array($ch, self::CONTACT_CHANNELS, true)
+            ));
+            if (!empty($reached)) {
+                $query->where(function ($q) use ($reached) {
+                    foreach ($reached as $channel) {
+                        $q->orWhereNotNull("contact_channels->{$channel}");
+                    }
+                });
+            }
+
+            // Group filter.
+            if ($groupId = $request->input('group')) {
+                $query->whereHas('groups', fn ($q) => $q->where('lead_groups.id', (int) $groupId));
+            }
+
+            $sort = $request->input('sort', 'created_at');
+            $dir  = $request->input('dir', 'desc');
+            $query->orderBy($sort, $dir);
+
+            $leads = $query->paginate($perPage)->withQueryString();
+
+            return [
+                'leads'         => $leads,
+                'filterOptions' => [
+                    'countries'  => $this->distinctValues('country'),
+                    'cities'     => $this->distinctValues('city'),
+                    'industries' => $this->distinctValues('industry'),
+                    'sources'    => $this->distinctValues('source'),
+                    'groups'     => LeadGroup::orderBy('name')->get(['id', 'name', 'color'])->values(),
+                ],
+            ];
+        });
 
         return Inertia::render('Leads/Index', [
-            'leads'   => $leads,
-            'filters' => $request->only([
+            'leads'         => $payload['leads'],
+            'filters'       => $request->only([
                 'search', 'status', 'source', 'sort', 'dir',
-                'country', 'city', 'industry', 'priority', 'contacted', 'reached',
+                'country', 'city', 'industry', 'priority', 'contacted', 'reached', 'group', 'per_page',
             ]),
-            'filterOptions' => [
-                'countries'  => $this->distinctValues('country'),
-                'cities'     => $this->distinctValues('city'),
-                'industries' => $this->distinctValues('industry'),
-                'sources'    => $this->distinctValues('source'),
-            ],
+            'filterOptions' => $payload['filterOptions'],
         ]);
     }
 
@@ -426,6 +448,7 @@ class LeadController extends Controller
         }
 
         $group->leads()->syncWithoutDetaching($request->lead_ids);
+        Cache::increment("leads_v:{$group->organization_id}");
         $count = count($request->lead_ids);
 
         return response()->json([

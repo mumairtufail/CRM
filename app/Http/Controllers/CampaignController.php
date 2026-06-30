@@ -70,16 +70,34 @@ class CampaignController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'               => 'required|string|max:200',
-            'subject'            => 'required|string|max:500',
-            'body_html'          => 'required|string',
-            'recipient_mode'     => 'required|in:all,filter,group',
-            'group_id'           => 'nullable|integer|exists:lead_groups,id',
-            'filters'            => 'nullable|array',
-            'followup_enabled'   => 'boolean',
-            'followup_subject'   => 'required_if:followup_enabled,true|nullable|string|max:500',
-            'followup_body_html' => 'required_if:followup_enabled,true|nullable|string',
-            'followup_delay_hours' => 'nullable|integer|in:24,48,72,168',
+            'name'             => 'required|string|max:200',
+            'subject'          => 'required|string|max:500',
+            'body_html'        => 'required|string',
+            'recipient_mode'   => 'required|in:all,filter,group',
+            'group_id'         => 'nullable|integer|exists:lead_groups,id',
+            'filters'          => 'nullable|array',
+            'followup_enabled' => 'boolean',
+            'followup_steps'   => [
+                'nullable', 'array', 'max:10',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->boolean('followup_enabled') && empty($value)) {
+                        $fail('At least one follow-up step is required when follow-up is enabled.');
+                    }
+                    if (is_array($value) && count($value) > 1) {
+                        $prev = 0;
+                        foreach ($value as $i => $step) {
+                            if (($step['delay_hours'] ?? 0) <= $prev) {
+                                $fail('Step ' . ($i + 1) . ' delay must be greater than the previous step.');
+                                break;
+                            }
+                            $prev = $step['delay_hours'];
+                        }
+                    }
+                },
+            ],
+            'followup_steps.*.delay_hours' => 'required_with:followup_steps|integer|in:24,48,72,120,168,216,336',
+            'followup_steps.*.subject'     => 'required_with:followup_steps|string|max:500',
+            'followup_steps.*.body_html'   => 'required_with:followup_steps|string',
         ]);
 
         $count = $this->countRecipients(
@@ -91,10 +109,10 @@ class CampaignController extends Controller
         $campaign = EmailCampaign::create([
             ...$validated,
             ...$this->resolveSender($request->user()),
-            'total_recipients'   => $count,
-            'status'             => 'draft',
-            'followup_enabled'   => $validated['followup_enabled'] ?? false,
-            'followup_delay_hours' => $validated['followup_delay_hours'] ?? 48,
+            'total_recipients' => $count,
+            'status'           => 'draft',
+            'followup_enabled' => $validated['followup_enabled'] ?? false,
+            'followup_steps'   => $validated['followup_steps'] ?? null,
         ]);
 
         return redirect()->route('campaigns.show', $campaign);
@@ -132,20 +150,18 @@ class CampaignController extends Controller
             'activeTemplate'     => $request->user()->activeEmailTemplate?->name,
             'orgFollowupEnabled' => $org?->isFollowupEnabled() ?? false,
             'campaign'           => [
-                'id'                  => $campaign->id,
-                'name'                => $campaign->name,
-                'subject'             => $campaign->subject,
-                'from_name'           => $campaign->from_name,
-                'from_email'          => $campaign->from_email,
-                'body_html'           => $campaign->body_html,
-                'recipient_mode'      => $campaign->recipient_mode ?? 'all',
-                'group_id'            => $campaign->group_id,
-                'filters'             => $campaign->filters ?? ['statuses' => [], 'tag_ids' => []],
-                'total_recipients'    => $campaign->total_recipients,
-                'followup_enabled'    => (bool) $campaign->followup_enabled,
-                'followup_subject'    => $campaign->followup_subject,
-                'followup_body_html'  => $campaign->followup_body_html,
-                'followup_delay_hours' => $campaign->followup_delay_hours ?? 48,
+                'id'               => $campaign->id,
+                'name'             => $campaign->name,
+                'subject'          => $campaign->subject,
+                'from_name'        => $campaign->from_name,
+                'from_email'       => $campaign->from_email,
+                'body_html'        => $campaign->body_html,
+                'recipient_mode'   => $campaign->recipient_mode ?? 'all',
+                'group_id'         => $campaign->group_id,
+                'filters'          => $campaign->filters ?? ['statuses' => [], 'tag_ids' => []],
+                'total_recipients' => $campaign->total_recipients,
+                'followup_enabled' => (bool) $campaign->followup_enabled,
+                'followup_steps'   => $campaign->followup_steps ?? [],
             ],
         ]);
     }
@@ -157,16 +173,34 @@ class CampaignController extends Controller
         }
 
         $validated = $request->validate([
-            'name'               => 'required|string|max:200',
-            'subject'            => 'required|string|max:500',
-            'body_html'          => 'required|string',
-            'recipient_mode'     => 'required|in:all,filter,group',
-            'group_id'           => 'nullable|integer|exists:lead_groups,id',
-            'filters'            => 'nullable|array',
-            'followup_enabled'   => 'boolean',
-            'followup_subject'   => 'required_if:followup_enabled,true|nullable|string|max:500',
-            'followup_body_html' => 'required_if:followup_enabled,true|nullable|string',
-            'followup_delay_hours' => 'nullable|integer|in:24,48,72,168',
+            'name'             => 'required|string|max:200',
+            'subject'          => 'required|string|max:500',
+            'body_html'        => 'required|string',
+            'recipient_mode'   => 'required|in:all,filter,group',
+            'group_id'         => 'nullable|integer|exists:lead_groups,id',
+            'filters'          => 'nullable|array',
+            'followup_enabled' => 'boolean',
+            'followup_steps'   => [
+                'nullable', 'array', 'max:10',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->boolean('followup_enabled') && empty($value)) {
+                        $fail('At least one follow-up step is required when follow-up is enabled.');
+                    }
+                    if (is_array($value) && count($value) > 1) {
+                        $prev = 0;
+                        foreach ($value as $i => $step) {
+                            if (($step['delay_hours'] ?? 0) <= $prev) {
+                                $fail('Step ' . ($i + 1) . ' delay must be greater than the previous step.');
+                                break;
+                            }
+                            $prev = $step['delay_hours'];
+                        }
+                    }
+                },
+            ],
+            'followup_steps.*.delay_hours' => 'required_with:followup_steps|integer|in:24,48,72,120,168,216,336',
+            'followup_steps.*.subject'     => 'required_with:followup_steps|string|max:500',
+            'followup_steps.*.body_html'   => 'required_with:followup_steps|string',
         ]);
 
         $count = $this->countRecipients(
@@ -178,9 +212,9 @@ class CampaignController extends Controller
         $campaign->update([
             ...$validated,
             ...$this->resolveSender($request->user()),
-            'total_recipients'    => $count,
-            'followup_enabled'    => $validated['followup_enabled'] ?? false,
-            'followup_delay_hours' => $validated['followup_delay_hours'] ?? 48,
+            'total_recipients' => $count,
+            'followup_enabled' => $validated['followup_enabled'] ?? false,
+            'followup_steps'   => $validated['followup_steps'] ?? null,
         ]);
 
         return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign updated');
@@ -241,9 +275,11 @@ class CampaignController extends Controller
                 'opened_count'     => $campaign->opened_count,
                 'clicked_count'    => $campaign->clicked_count,
                 'failed_count'     => $failedCount,
-                'followup_enabled' => (bool) $campaign->followup_enabled,
-                'followup_subject' => $campaign->followup_subject,
-                'sent_at'          => $campaign->sent_at?->format('M d, Y H:i'),
+                'followup_enabled'      => (bool) $campaign->followup_enabled,
+                'followup_subject'      => $campaign->followup_subject,
+                'followup_steps'        => $campaign->followup_steps ?? [],
+                'followup_steps_count'  => count($campaign->followup_steps ?? []),
+                'sent_at'               => $campaign->sent_at?->format('M d, Y H:i'),
                 'created_at'       => $campaign->created_at->format('M d, Y'),
             ],
             'sends' => $sends,
@@ -307,7 +343,7 @@ class CampaignController extends Controller
             return back()->withErrors(['error' => 'Follow-ups can only be resumed on sent campaigns.']);
         }
 
-        if (! $campaign->followup_subject) {
+        if (empty($campaign->followup_steps) && ! $campaign->followup_subject) {
             return back()->withErrors(['error' => 'This campaign has no follow-up email configured.']);
         }
 

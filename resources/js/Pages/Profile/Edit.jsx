@@ -19,7 +19,7 @@ import {
   Eye, EyeOff, X, LayoutTemplate, ExternalLink,
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
   Zap, Key, Wifi, Globe, Phone, PenLine, BookOpen, ChevronRight,
-  MessageSquare,
+  MessageSquare, Database,
 } from 'lucide-react'
 
 // lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
@@ -100,6 +100,12 @@ const NAV = [
       { id: 'ai',        label: 'AI Provider',     icon: Zap },
       { id: 'leadgen',   label: 'Lead Generation', icon: Sparkles },
       { id: 'whatsapp',  label: 'WhatsApp',        icon: MessageSquare },
+    ],
+  },
+  {
+    group: 'System',
+    items: [
+      { id: 'maintenance', label: 'Maintenance', icon: Database },
     ],
   },
 ]
@@ -1694,6 +1700,68 @@ function WhatsappTab({ credential }) {
   )
 }
 
+// ─── Maintenance tab ──────────────────────────────────────────────────────────
+
+function MaintenanceTab() {
+  const [clearing, setClearing] = useState(false)
+  const [cleared, setCleared]   = useState(false)
+
+  const clearCache = async () => {
+    setClearing(true)
+    setCleared(false)
+    try {
+      const res  = await fetch('/settings/cache/clear', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content ?? '',
+          'Accept': 'application/json',
+        },
+      })
+      const json = await res.json()
+      if (json.ok) {
+        setCleared(true)
+        toast.success('Leads cache cleared.')
+      } else {
+        toast.error(json.message || 'Failed to clear cache.')
+      }
+    } catch {
+      toast.error('Request failed.')
+    } finally {
+      setClearing(false)
+    }
+  }
+
+  return (
+    <div className="space-y-3 max-w-xl">
+      <Card title="Leads cache">
+        <p className="text-[12px] text-slate-500 leading-relaxed">
+          The leads list is cached per page and filter combination (30-minute TTL).
+          Cache invalidates automatically when leads or groups are created, updated, or deleted.
+          Use this button to force-clear it if data appears stale.
+        </p>
+        <div className="flex items-center gap-3 mt-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs gap-1.5"
+            disabled={clearing}
+            onClick={clearCache}
+          >
+            <Database size={12} />
+            {clearing ? 'Clearing…' : 'Clear leads cache'}
+          </Button>
+          {cleared && (
+            <span className="text-[12px] text-emerald-600 flex items-center gap-1">
+              <CheckCircle2 size={12} /> Cleared
+            </span>
+          )}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
 // ─── Page root ────────────────────────────────────────────────────────────────
 
 export default function ProfileEdit({
@@ -1740,9 +1808,10 @@ export default function ProfileEdit({
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
             {tab === 'mail'      && <MailTab mailSettings={mailSettings} orgFollowupEnabled={orgFollowupEnabled} />}
             {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
-            {tab === 'ai'        && <AiProviderTab aiSetting={aiSetting} />}
-            {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
-            {tab === 'whatsapp'  && <WhatsappTab credential={whatsappCredential} />}
+            {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}
+            {tab === 'leadgen'     && <LeadGenTab leadGenSettings={leadGenSettings} />}
+            {tab === 'whatsapp'    && <WhatsappTab credential={whatsappCredential} />}
+            {tab === 'maintenance' && <MaintenanceTab />}
           </div>
         </div>
 

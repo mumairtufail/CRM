@@ -3,6 +3,10 @@
 namespace App\Providers;
 
 use App\Contracts\LeadGenerationInterface;
+use App\Models\Lead;
+use App\Models\LeadGroup;
+use App\Observers\LeadGroupObserver;
+use App\Observers\LeadObserver;
 use App\Models\SystemSetting;
 use App\Services\LeadGenerationService;
 use App\Services\LeadProviders\ApolloProvider;
@@ -44,6 +48,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        Lead::observe(LeadObserver::class);
+        LeadGroup::observe(LeadGroupObserver::class);
 
         $this->applySystemSmtpConfig();
     }

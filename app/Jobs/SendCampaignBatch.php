@@ -62,6 +62,10 @@ class SendCampaignBatch implements ShouldQueue
                     'campaign_id' => $this->campaignId,
                     'lead_id'     => $lead->id,
                 ]);
+                EmailSend::updateOrCreate(
+                    ['email_campaign_id' => $campaign->id, 'lead_id' => $lead->id],
+                    ['email_used' => null, 'status' => 'skipped', 'error_message' => 'Email not found', 'sent_at' => now()]
+                );
                 continue;
             }
 

@@ -249,12 +249,16 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
     (filters?.status && filters.status !== 'all') ||
     filters?.country || filters?.city || filters?.industry ||
     filters?.source || filters?.priority || filters?.contacted ||
+    filters?.group ||
     reached.length
   )
 
   const handlePageChange = useCallback(page => {
     router.get('/leads', { ...filters, page }, { preserveState: true })
   }, [filters])
+
+  const perPage = Number(filters?.per_page) || 20
+  const handlePerPageChange = useCallback(n => applyFilters({ per_page: n, page: 1 }), [applyFilters])
 
   // Single delete
   const handleDelete = () => {
@@ -377,9 +381,39 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
       accessorKey: 'company',
       header: 'Company',
       size: 150,
+      meta: { className: 'hidden md:table-cell' },
       cell: ({ getValue }) => (
         <span className="text-sm text-gray-600 truncate block max-w-[140px]">{getValue() || '—'}</span>
       ),
+    },
+    {
+      id: 'groups',
+      header: 'Group',
+      size: 140,
+      enableSorting: false,
+      meta: { className: 'hidden md:table-cell' },
+      cell: ({ row }) => {
+        const grps = row.original.groups ?? []
+        if (!grps.length) return <span className="text-gray-200 text-xs">—</span>
+        const first = grps[0]
+        const extra = grps.length - 1
+        return (
+          <div className="flex items-center gap-1 flex-wrap">
+            <span
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full border"
+              style={{
+                background: (first.color ?? '#6366f1') + '18',
+                borderColor: (first.color ?? '#6366f1') + '40',
+                color: first.color ?? '#6366f1',
+              }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: first.color ?? '#6366f1' }} />
+              {first.name}
+            </span>
+            {extra > 0 && <span className="text-[10px] text-slate-400">+{extra}</span>}
+          </div>
+        )
+      },
     },
     {
       accessorKey: 'status',
@@ -391,12 +425,14 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
       accessorKey: 'priority',
       header: 'Priority',
       size: 90,
+      meta: { className: 'hidden md:table-cell' },
       cell: ({ getValue }) => <PriorityBadge priority={getValue()} />,
     },
     {
       id: 'social',
       header: 'Social',
       size: 110,
+      meta: { className: 'hidden lg:table-cell' },
       cell: ({ row }) => <SocialLinks handles={row.original.social_handles} linkedinUrl={row.original.linkedin_url} />,
     },
     {
@@ -404,12 +440,14 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
       header: 'Outreach',
       size: 120,
       enableSorting: false,
+      meta: { className: 'hidden lg:table-cell' },
       cell: ({ row }) => <OutreachChannels key={row.original.id} lead={row.original} />,
     },
     {
       accessorKey: 'deal_value',
       header: 'Value',
       size: 100,
+      meta: { className: 'hidden md:table-cell' },
       cell: ({ getValue }) => getValue()
         ? <span className="text-sm font-semibold text-green-600">${Number(getValue()).toLocaleString()}</span>
         : <span className="text-gray-300 text-sm">—</span>,
@@ -521,6 +559,16 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
             options={CONTACTED_OPTIONS}
             onChange={v => applyFilters({ contacted: v })}
           />
+          <InlineSelect
+            icon={<UsersRound size={13} className="shrink-0 opacity-60" />}
+            placeholder="Any group"
+            value={filters?.group}
+            options={[
+              { value: 'all', label: 'Any group' },
+              ...(filterOptions?.groups ?? []).map(g => ({ value: String(g.id), label: g.name })),
+            ]}
+            onChange={v => applyFilters({ group: v })}
+          />
 
           {/* ── Reached-on multi-select (one compact dropdown for all channels) ── */}
           <Popover>
@@ -598,6 +646,18 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
           pagination={pagination}
           onPageChange={handlePageChange}
           loading={loading}
+          perPageSelector={
+            <Select value={String(perPage)} onValueChange={v => handlePerPageChange(Number(v))}>
+              <SelectTrigger className="h-7 w-auto text-xs gap-1 border-slate-200">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[20, 50, 100].map(n => (
+                  <SelectItem key={n} value={String(n)} className="text-xs">{n} per page</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          }
         />
 
         {/* ── Single delete dialog ── */}

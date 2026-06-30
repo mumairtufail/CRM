@@ -27,6 +27,7 @@ export default function DataTable({
   sorting: externalSorting,
   onSortingChange: onExternalSortingChange,
   loading = false,
+  perPageSelector,     // optional slot rendered next to "Showing X–Y" text
 }) {
   const [sorting, setSorting] = useState([])
 
@@ -57,7 +58,7 @@ export default function DataTable({
                 {hg.headers.map(header => (
                   <TableHead
                     key={header.id}
-                    className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider py-3 select-none"
+                    className={`text-[11px] font-semibold text-gray-500 uppercase tracking-wider py-3 select-none${header.column.columnDef.meta?.className ? ' ' + header.column.columnDef.meta.className : ''}`}
                     style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default', width: header.column.columnDef.size }}
                     onClick={header.column.getToggleSortingHandler()}
                   >
@@ -95,7 +96,10 @@ export default function DataTable({
               table.getRowModel().rows.map(row => (
                 <TableRow key={row.id} className="hover:bg-blue-50/20 transition-colors border-gray-50 group">
                   {row.getVisibleCells().map(cell => (
-                    <TableCell key={cell.id} className="py-3.5">
+                    <TableCell
+                      key={cell.id}
+                      className={`py-3.5${cell.column.columnDef.meta?.className ? ' ' + cell.column.columnDef.meta.className : ''}`}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
@@ -116,9 +120,12 @@ export default function DataTable({
       {/* Pagination */}
       {isServerPaged && pagination.last_page > 1 && (
         <div className="flex items-center justify-between px-1">
-          <p className="text-xs text-muted-foreground">
-            Showing {pagination.from}–{pagination.to} of {pagination.total} results
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-xs text-muted-foreground">
+              Showing {pagination.from}–{pagination.to} of {pagination.total} results
+            </p>
+            {perPageSelector}
+          </div>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="icon" className="h-8 w-8"
               onClick={() => onPageChange(1)} disabled={pagination.current_page === 1}>

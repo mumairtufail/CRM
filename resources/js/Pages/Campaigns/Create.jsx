@@ -11,7 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/Components/ui/dialog'
-import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw } from 'lucide-react'
+import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X } from 'lucide-react'
 import { toast } from 'sonner'
 import RichEditor from '@/Components/Common/RichEditor'
 import { cn } from '@/lib/utils'
@@ -43,6 +43,17 @@ const TOKENS = [
   { label: '{{company}}',    desc: 'Company name' },
   { label: '{{email}}',      desc: 'Email address' },
   { label: '{{status}}',     desc: 'Lead status' },
+]
+
+// Delay options for follow-up steps — all relative to the original email send date
+const STEP_DELAY_OPTIONS = [
+  { value: 24,  label: '1 day'   },
+  { value: 48,  label: '2 days'  },
+  { value: 72,  label: '3 days'  },
+  { value: 120, label: '5 days'  },
+  { value: 168, label: '7 days'  },
+  { value: 216, label: '9 days'  },
+  { value: 336, label: '14 days' },
 ]
 
 const STATUS_OPTIONS = [
@@ -263,7 +274,7 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
   )
 }
 
-function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }) {
+function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body, stepLabel }) {
   const sampleReplace = (s) => (s || '')
     .replace(/\{\{name\}\}/g, 'John Doe')
     .replace(/\{\{first_name\}\}/g, 'John')
@@ -277,7 +288,9 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-xl max-h-[88vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-[13px] font-semibold">Email Preview</DialogTitle>
+          <DialogTitle className="text-[13px] font-semibold">
+            {stepLabel ? `Preview — ${stepLabel}` : 'Email Preview'}
+          </DialogTitle>
         </DialogHeader>
         <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.08)' }}>
           <div className="px-4 py-3 space-y-2" style={{ background: '#f8f8f8', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
@@ -312,31 +325,124 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body }
   )
 }
 
-const DELAY_OPTIONS = [
-  { value: 24,  label: '24 hours' },
-  { value: 48,  label: '48 hours (default)' },
-  { value: 72,  label: '72 hours' },
-  { value: 168, label: '1 week' },
-]
+function FollowUpStepCard({ stepNumber, step, prevDelayHours, errors, onUpdate, onRemove, onPreview }) {
+  // Only show delay options strictly greater than the previous step's delay
+  const availableDelays = STEP_DELAY_OPTIONS.filter(o => o.value > prevDelayHours)
+
+  // If current value is no longer in the available list (shouldn't happen but be safe), reset to first available
+  const currentDelay = availableDelays.find(o => o.value === step.delay_hours)
+    ? step.delay_hours
+    : availableDelays[0]?.value ?? 24
+
+  return (
+    <div className="rounded-xl border border-slate-200 bg-slate-50/60 overflow-hidden">
+      {/* Step header */}
+      <div className="flex items-center gap-2.5 px-3 py-2.5 bg-white border-b border-slate-100">
+        <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white text-[10px] font-bold"
+          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+          {stepNumber}
+        </div>
+        <p className="text-[12px] font-semibold text-slate-700 flex-1">Follow-up #{stepNumber}</p>
+        <button
+          type="button"
+          onClick={onRemove}
+          title="Remove this step"
+          className="p-1 rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+        >
+          <X size={13} />
+        </button>
+      </div>
+
+      <div className="px-3 py-3 space-y-3">
+        {/* Delay */}
+        <Field label="Send after original email">
+          <Select value={String(currentDelay)} onValueChange={v => onUpdate('delay_hours', Number(v))}>
+            <SelectTrigger className="h-8 text-[13px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableDelays.map(opt => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+
+        {/* Subject */}
+        <Field
+          label="Subject line"
+          error={errors[`followup_steps.${stepNumber - 1}.subject`]}
+          hint="Click a token to append"
+        >
+          <Input
+            value={step.subject}
+            onChange={e => onUpdate('subject', e.target.value)}
+            className="h-8 text-[13px]"
+            placeholder="Just checking in — {{first_name}}"
+          />
+          <div className="flex flex-wrap gap-1 mt-1.5">
+            {TOKENS.map(t => (
+              <TokenPill
+                key={t.label}
+                token={t}
+                onClick={tok => onUpdate('subject', (step.subject || '') + tok)}
+              />
+            ))}
+          </div>
+        </Field>
+
+        {/* Body */}
+        <Field
+          label="Message"
+          error={errors[`followup_steps.${stepNumber - 1}.body_html`]}
+        >
+          <div className="flex flex-wrap gap-1 mb-1.5">
+            <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
+            {TOKENS.map(t => (
+              <span key={t.label} title={t.desc}
+                className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
+                {t.label}
+              </span>
+            ))}
+          </div>
+          <RichEditor
+            value={step.body_html}
+            onChange={v => onUpdate('body_html', v)}
+            minHeight={140}
+          />
+        </Field>
+
+        {/* Preview */}
+        <div className="flex justify-end">
+          <Button
+            type="button" variant="outline" size="sm"
+            className="h-7 text-[11px] gap-1 border-slate-200"
+            onClick={onPreview}
+          >
+            <Eye size={12} /> Preview
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false }) {
   const isEdit = !!campaign
-  const [previewOpen, setPreviewOpen]             = useState(false)
-  const [followupPreviewOpen, setFollowupPreviewOpen] = useState(false)
-  const [recipientCount, setRecipientCount]       = useState(campaign?.total_recipients ?? leadCount ?? 0)
-  const [subjectRef, setSubjectRef]               = useState(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const [previewStep, setPreviewStep] = useState(null) // null = closed, number = step index
+  const [recipientCount, setRecipientCount] = useState(campaign?.total_recipients ?? leadCount ?? 0)
+  const [subjectRef, setSubjectRef] = useState(null)
 
   const { data, setData, post, put, processing, errors } = useForm({
-    name:                 campaign?.name                 ?? '',
-    subject:              campaign?.subject              ?? '',
-    body_html:            campaign?.body_html            ?? '',
-    recipient_mode:       campaign?.recipient_mode       ?? 'all',
-    group_id:             campaign?.group_id             ?? null,
-    filters:              campaign?.filters              ?? { statuses: [], tag_ids: [] },
-    followup_enabled:     campaign?.followup_enabled     ?? false,
-    followup_delay_hours: campaign?.followup_delay_hours ?? 48,
-    followup_subject:     campaign?.followup_subject     ?? '',
-    followup_body_html:   campaign?.followup_body_html   ?? '',
+    name:             campaign?.name             ?? '',
+    subject:          campaign?.subject          ?? '',
+    body_html:        campaign?.body_html        ?? '',
+    recipient_mode:   campaign?.recipient_mode   ?? 'all',
+    group_id:         campaign?.group_id         ?? null,
+    filters:          campaign?.filters          ?? { statuses: [], tag_ids: [] },
+    followup_enabled: campaign?.followup_enabled ?? false,
+    followup_steps:   campaign?.followup_steps   ?? [],
   })
 
   // Fetch recipient count whenever relevant fields change
@@ -363,7 +469,6 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
   }, [data.recipient_mode, data.group_id, data.filters])
 
   const insertToken = (token) => {
-    // Insert at cursor in subject if focused there, otherwise append
     const el = subjectRef
     if (el && document.activeElement === el) {
       const start = el.selectionStart
@@ -376,9 +481,28 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
         el.focus()
       }, 0)
     } else {
-      // Append to subject
       setData('subject', (data.subject || '') + token)
     }
+  }
+
+  // Follow-up step management
+  const addStep = () => {
+    const lastDelay = data.followup_steps.at(-1)?.delay_hours ?? 0
+    const nextOpt   = STEP_DELAY_OPTIONS.find(o => o.value > lastDelay) ?? STEP_DELAY_OPTIONS.at(-1)
+    setData('followup_steps', [
+      ...data.followup_steps,
+      { _id: crypto.randomUUID(), delay_hours: nextOpt.value, subject: '', body_html: '' },
+    ])
+  }
+
+  const removeStep = (index) => {
+    setData('followup_steps', data.followup_steps.filter((_, i) => i !== index))
+  }
+
+  const updateStep = (index, field, value) => {
+    setData('followup_steps', data.followup_steps.map((s, i) =>
+      i === index ? { ...s, [field]: value } : s
+    ))
   }
 
   const submit = (e) => {
@@ -388,11 +512,14 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
     else post('/campaigns', opts)
   }
 
+  // Current preview step data
+  const previewStepData = previewStep !== null ? data.followup_steps[previewStep] : null
+
   return (
     <>
       <Head title={isEdit ? 'Edit Campaign' : 'New Campaign'} />
       <AppLayout title={isEdit ? 'Edit Campaign' : 'New Campaign'}>
-        <div className="max-w-4xl">
+        <div>
 
           {/* Page header */}
           <div className="flex items-center justify-between mb-4">
@@ -409,255 +536,248 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
             </Link>
           </div>
 
-          <form onSubmit={submit} className="space-y-3">
+          <form onSubmit={submit}>
+            <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 items-start">
 
-            {/* Sender details */}
-            <FormCard title="Sender details">
-              <Field label="Campaign name" error={errors.name}>
-                <Input value={data.name} onChange={e => setData('name', e.target.value)}
-                  className="h-8 text-[13px]" placeholder="March Follow-up Blast" />
-              </Field>
-              {/* Sender comes from the active SMTP account in Settings — not asked here */}
-              <Field label="From">
-                <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-                  <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                    {sender?.from_name?.charAt(0)?.toUpperCase() ?? 'S'}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[12.5px] font-semibold text-slate-800 truncate">
-                      {sender?.from_name || 'No sender configured'}
+              {/* LEFT COLUMN — sender + recipients */}
+              <div className="space-y-3">
+                {/* Sender details */}
+                <FormCard title="Sender details">
+                  <Field label="Campaign name" error={errors.name}>
+                    <Input value={data.name} onChange={e => setData('name', e.target.value)}
+                      className="h-8 text-[13px]" placeholder="March Follow-up Blast" />
+                  </Field>
+                  <Field label="From">
+                    <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
+                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                        {sender?.from_name?.charAt(0)?.toUpperCase() ?? 'S'}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[12.5px] font-semibold text-slate-800 truncate">
+                          {sender?.from_name || 'No sender configured'}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {sender?.from_email || 'Set up an SMTP account in Settings'}
+                        </p>
+                      </div>
+                      <Link href="/profile" className="ml-auto text-[11px] text-violet-600 hover:underline shrink-0">
+                        Change
+                      </Link>
+                    </div>
+                    <p className="text-[10.5px] text-slate-400 mt-1">
+                      Pulled automatically from your active SMTP account in Settings.
                     </p>
-                    <p className="text-[11px] text-slate-500 truncate">
-                      {sender?.from_email || 'Set up an SMTP account in Settings'}
-                    </p>
-                  </div>
-                  <Link href="/profile" className="ml-auto text-[11px] text-violet-600 hover:underline shrink-0">
-                    Change
-                  </Link>
-                </div>
-                <p className="text-[10.5px] text-slate-400 mt-1">
-                  Pulled automatically from your active SMTP account in Settings.
-                </p>
-              </Field>
+                  </Field>
 
-              {/* Dynamic subject with token pills */}
-              <Field label="Subject line" error={errors.subject}
-                hint="Click a token below to insert it into the subject line">
-                <Input
-                  ref={el => setSubjectRef(el)}
-                  value={data.subject}
-                  onChange={e => setData('subject', e.target.value)}
-                  className="h-8 text-[13px]"
-                  placeholder="Quick question about {{company}}"
-                />
-                <div className="flex flex-wrap gap-1 mt-1.5">
-                  {TOKENS.map(t => (
-                    <TokenPill key={t.label} token={t} onClick={insertToken} />
-                  ))}
-                </div>
-              </Field>
-            </FormCard>
-
-            {/* Recipients — 3-tab selector */}
-            <RecipientSelector
-              data={data}
-              setData={(updater) => {
-                if (typeof updater === 'function') {
-                  setData(current => updater(current))
-                } else {
-                  setData(updater)
-                }
-              }}
-              leadCount={leadCount}
-              groups={groups}
-              tags={tags}
-              recipientCount={recipientCount}
-            />
-
-            {/* Email body */}
-            <div className="form-card">
-              <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email body</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10.5px] text-slate-400">Template:</span>
-                  {Object.entries(TEMPLATES).map(([key, t]) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={() => setData('body_html', t.body)}
-                      className="text-[11px] text-violet-600 hover:text-violet-800 font-medium underline underline-offset-2 transition-colors"
-                    >
-                      {t.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="px-4 py-3">
-                {/* Signature notice — sign-off comes from the active template */}
-                <div className="flex items-start gap-1.5 mb-2.5 rounded-lg bg-violet-50 border border-violet-100 px-2.5 py-2">
-                  <Layers size={13} className="text-violet-500 mt-0.5 shrink-0" />
-                  <p className="text-[11px] text-violet-700 leading-relaxed">
-                    {activeTemplate
-                      ? <>Your sign-off and signature (regards, name, company, website, phone &amp; email) are added automatically by the <span className="font-semibold">{activeTemplate}</span> template — just write the message itself.</>
-                      : <>No active email template. Activate one in <Link href="/profile" className="font-semibold underline">Settings → Templates</Link> to add a signature automatically, or include your sign-off in the body below.</>}
-                  </p>
-                </div>
-                {/* Token reference */}
-                <div className="flex flex-wrap gap-1 mb-2">
-                  <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
-                  {TOKENS.map(t => (
-                    <span key={t.label} title={t.desc}
-                      className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
-                      {t.label}
-                    </span>
-                  ))}
-                </div>
-                <RichEditor
-                  value={data.body_html}
-                  onChange={v => setData('body_html', v)}
-                  minHeight={200}
-                />
-                {errors.body_html && (
-                  <p className="text-red-500 text-[11px] mt-1.5">{errors.body_html}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Follow-up section — only shown when org has the feature enabled */}
-            {orgFollowupEnabled && (
-              <div className="form-card">
-                <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                  <div className="flex items-center gap-2">
-                    <RefreshCw size={13} className="text-violet-500" />
-                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Automated Follow-up</p>
-                  </div>
-                  {/* Toggle */}
-                  <button
-                    type="button"
-                    onClick={() => setData('followup_enabled', !data.followup_enabled)}
-                    className={cn(
-                      'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
-                      data.followup_enabled ? 'bg-violet-600' : 'bg-slate-200'
-                    )}
-                    role="switch"
-                    aria-checked={data.followup_enabled}
-                  >
-                    <span
-                      className={cn(
-                        'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200',
-                        data.followup_enabled ? 'translate-x-4' : 'translate-x-0'
-                      )}
+                  <Field label="Subject line" error={errors.subject}
+                    hint="Click a token below to insert it into the subject line">
+                    <Input
+                      ref={el => setSubjectRef(el)}
+                      value={data.subject}
+                      onChange={e => setData('subject', e.target.value)}
+                      className="h-8 text-[13px]"
+                      placeholder="Quick question about {{company}}"
                     />
-                  </button>
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {TOKENS.map(t => (
+                        <TokenPill key={t.label} token={t} onClick={insertToken} />
+                      ))}
+                    </div>
+                  </Field>
+                </FormCard>
+
+                {/* Recipients — 3-tab selector */}
+                <RecipientSelector
+                  data={data}
+                  setData={(updater) => {
+                    if (typeof updater === 'function') {
+                      setData(current => updater(current))
+                    } else {
+                      setData(updater)
+                    }
+                  }}
+                  leadCount={leadCount}
+                  groups={groups}
+                  tags={tags}
+                  recipientCount={recipientCount}
+                />
+              </div>
+
+              {/* RIGHT COLUMN — email body + follow-up sequence + actions */}
+              <div className="space-y-3">
+                {/* Email body */}
+                <div className="form-card">
+                  <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                    <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email body</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10.5px] text-slate-400">Template:</span>
+                      {Object.entries(TEMPLATES).map(([key, t]) => (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => setData('body_html', t.body)}
+                          className="text-[11px] text-violet-600 hover:text-violet-800 font-medium underline underline-offset-2 transition-colors"
+                        >
+                          {t.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <div className="flex items-start gap-1.5 mb-2.5 rounded-lg bg-violet-50 border border-violet-100 px-2.5 py-2">
+                      <Layers size={13} className="text-violet-500 mt-0.5 shrink-0" />
+                      <p className="text-[11px] text-violet-700 leading-relaxed">
+                        {activeTemplate
+                          ? <>Your sign-off and signature (regards, name, company, website, phone &amp; email) are added automatically by the <span className="font-semibold">{activeTemplate}</span> template — just write the message itself.</>
+                          : <>No active email template. Activate one in <Link href="/profile" className="font-semibold underline">Settings → Templates</Link> to add a signature automatically, or include your sign-off in the body below.</>}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
+                      {TOKENS.map(t => (
+                        <span key={t.label} title={t.desc}
+                          className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
+                          {t.label}
+                        </span>
+                      ))}
+                    </div>
+                    <RichEditor
+                      value={data.body_html}
+                      onChange={v => setData('body_html', v)}
+                      minHeight={220}
+                    />
+                    {errors.body_html && (
+                      <p className="text-red-500 text-[11px] mt-1.5">{errors.body_html}</p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="px-4 py-3">
-                  {!data.followup_enabled ? (
-                    <p className="text-[12px] text-slate-400 italic">
-                      Toggle on to automatically re-send to leads who haven't opened the first email after a set delay.
-                    </p>
-                  ) : (
-                    <div className="space-y-3">
-                      {/* Delay selector */}
-                      <Field label="Send follow-up after">
-                        <Select
-                          value={String(data.followup_delay_hours)}
-                          onValueChange={v => setData('followup_delay_hours', Number(v))}
-                        >
-                          <SelectTrigger className="h-8 text-[13px]">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {DELAY_OPTIONS.map(opt => (
-                              <SelectItem key={opt.value} value={String(opt.value)}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </Field>
-
-                      {/* Follow-up subject */}
-                      <Field label="Follow-up subject line" error={errors.followup_subject}
-                        hint="Click a token to append it">
-                        <Input
-                          value={data.followup_subject}
-                          onChange={e => setData('followup_subject', e.target.value)}
-                          className="h-8 text-[13px]"
-                          placeholder="Just checking in — {{first_name}}"
+                {/* Follow-up sequence */}
+                {orgFollowupEnabled && (
+                  <div className="form-card">
+                    {/* Card header + master toggle */}
+                    <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                      <div className="flex items-center gap-2">
+                        <RefreshCw size={13} className="text-violet-500" />
+                        <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                          Automated Follow-up Sequence
+                        </p>
+                        {data.followup_enabled && data.followup_steps.length > 0 && (
+                          <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 border border-violet-100 px-1.5 py-0.5 rounded-full">
+                            {data.followup_steps.length} step{data.followup_steps.length !== 1 ? 's' : ''}
+                          </span>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setData('followup_enabled', !data.followup_enabled)}
+                        className={cn(
+                          'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
+                          data.followup_enabled ? 'bg-violet-600' : 'bg-slate-200'
+                        )}
+                        role="switch"
+                        aria-checked={data.followup_enabled}
+                      >
+                        <span
+                          className={cn(
+                            'pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200',
+                            data.followup_enabled ? 'translate-x-4' : 'translate-x-0'
+                          )}
                         />
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {TOKENS.map(t => (
-                            <TokenPill
-                              key={t.label}
-                              token={t}
-                              onClick={tok => setData('followup_subject', (data.followup_subject || '') + tok)}
+                      </button>
+                    </div>
+
+                    <div className="px-4 py-3">
+                      {!data.followup_enabled ? (
+                        <p className="text-[12px] text-slate-400 italic">
+                          Toggle on to automatically send follow-up emails to leads who haven't opened your campaign.
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {/* Engagement stop notice */}
+                          <div className="flex items-start gap-1.5 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-2">
+                            <span className="text-slate-400 mt-0.5 shrink-0 text-[11px]">ℹ</span>
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                              The sequence stops automatically for each lead the moment they open or click any email. All delays are measured from the original email's send date.
+                            </p>
+                          </div>
+
+                          {/* Empty state warning */}
+                          {data.followup_steps.length === 0 && (
+                            <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2.5">
+                              <span className="text-amber-500 text-[12px]">⚠</span>
+                              <p className="text-[12px] text-amber-700">Add at least one follow-up step below.</p>
+                            </div>
+                          )}
+
+                          {/* Step cards */}
+                          {data.followup_steps.map((step, index) => (
+                            <FollowUpStepCard
+                              key={step._id ?? index}
+                              stepNumber={index + 1}
+                              step={step}
+                              prevDelayHours={data.followup_steps[index - 1]?.delay_hours ?? 0}
+                              errors={errors}
+                              onUpdate={(field, value) => updateStep(index, field, value)}
+                              onRemove={() => removeStep(index)}
+                              onPreview={() => setPreviewStep(index)}
                             />
                           ))}
-                        </div>
-                      </Field>
 
-                      {/* Follow-up body */}
-                      <Field label="Follow-up message" error={errors.followup_body_html}>
-                        <div className="flex flex-wrap gap-1 mb-1.5">
-                          <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
-                          {TOKENS.map(t => (
-                            <span key={t.label} title={t.desc}
-                              className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
-                              {t.label}
-                            </span>
-                          ))}
-                        </div>
-                        <RichEditor
-                          value={data.followup_body_html}
-                          onChange={v => setData('followup_body_html', v)}
-                          minHeight={160}
-                        />
-                      </Field>
+                          {/* Add step button */}
+                          {data.followup_steps.length < 10 && (
+                            <button
+                              type="button"
+                              onClick={addStep}
+                              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-[12px] font-medium text-slate-400 hover:border-violet-300 hover:text-violet-500 transition-colors"
+                            >
+                              <Plus size={13} />
+                              Add Follow-up Step
+                            </button>
+                          )}
 
-                      <div className="flex justify-end">
-                        <Button
-                          type="button" variant="outline" size="sm"
-                          className="h-8 text-xs gap-1.5 border-slate-200"
-                          onClick={() => setFollowupPreviewOpen(true)}
-                        >
-                          <Eye size={13} /> Preview Follow-up
-                        </Button>
-                      </div>
+                          {/* Top-level followup_steps error */}
+                          {errors.followup_steps && (
+                            <p className="text-red-500 text-[11px]">{errors.followup_steps}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex items-center gap-2 pb-4">
+                  <Button
+                    type="button" variant="outline" size="sm"
+                    className="h-8 text-xs gap-1.5 border-slate-200"
+                    onClick={() => setPreviewOpen(true)}
+                  >
+                    <Eye size={13} /> Preview
+                  </Button>
+                  <div className="flex-1" />
+                  <Link href="/campaigns">
+                    <Button type="button" variant="outline" size="sm" className="h-8 text-xs border-slate-200">
+                      Cancel
+                    </Button>
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={processing}
+                    className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
+                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 3px 12px rgba(124,58,237,0.3)' }}
+                  >
+                    {processing ? 'Saving…' : (isEdit ? 'Update Campaign' : 'Save Campaign')}
+                  </button>
                 </div>
               </div>
-            )}
 
-            {/* Actions */}
-            <div className="flex items-center gap-2 pt-0.5 pb-4">
-              <Button
-                type="button" variant="outline" size="sm"
-                className="h-8 text-xs gap-1.5 border-slate-200"
-                onClick={() => setPreviewOpen(true)}
-              >
-                <Eye size={13} /> Preview
-              </Button>
-              <div className="flex-1" />
-              <Link href="/campaigns">
-                <Button type="button" variant="outline" size="sm" className="h-8 text-xs border-slate-200">
-                  Cancel
-                </Button>
-              </Link>
-              <button
-                type="submit"
-                disabled={processing}
-                className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 3px 12px rgba(124,58,237,0.3)' }}
-              >
-                {processing ? 'Saving…' : (isEdit ? 'Update Campaign' : 'Save Campaign')}
-              </button>
             </div>
           </form>
         </div>
 
+        {/* Main email preview */}
         <EmailPreviewModal
           open={previewOpen}
           onClose={() => setPreviewOpen(false)}
@@ -667,13 +787,15 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
           body={data.body_html}
         />
 
+        {/* Follow-up step preview */}
         <EmailPreviewModal
-          open={followupPreviewOpen}
-          onClose={() => setFollowupPreviewOpen(false)}
-          subject={data.followup_subject}
+          open={previewStep !== null}
+          onClose={() => setPreviewStep(null)}
+          subject={previewStepData?.subject ?? ''}
           fromName={sender?.from_name}
           fromEmail={sender?.from_email}
-          body={data.followup_body_html}
+          body={previewStepData?.body_html ?? ''}
+          stepLabel={previewStep !== null ? `Follow-up #${previewStep + 1}` : null}
         />
       </AppLayout>
     </>

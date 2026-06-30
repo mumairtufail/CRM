@@ -217,6 +217,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Inbox (IMAP fetch)
     Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');
+    Route::get('/inbox/sync-status',                       [InboxController::class, 'syncStatus'])->name('inbox.sync-status');
     Route::get('/inbox/{fetchedEmail}',                    [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/sync',                             [InboxController::class, 'sync'])->name('inbox.sync');
     Route::post('/inbox/send',                             [InboxController::class, 'send'])->name('inbox.send');

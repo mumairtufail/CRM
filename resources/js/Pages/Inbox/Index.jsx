@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef, memo } from 'react'
+import React, { useState, useCallback, useEffect, useRef, useMemo, memo } from 'react'
 import { Head, router } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { toast } from 'sonner'
@@ -268,8 +268,6 @@ function EmailListSkeleton() {
 }
 
 function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
-  if (syncing) return <EmailListSkeleton />
-
   const items = emails?.data ?? []
 
   if (items.length === 0) {
@@ -330,6 +328,11 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
 // ─── Reading pane ──────────────────────────────────────────────────────────────
 
 function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, onDelete, folder }) {
+  // Rewrite all links to open in new tab — iframe sandbox blocks navigation otherwise
+  const safeBodyHtml = useMemo(() => {
+    if (!email?.body_html) return ''
+    return email.body_html.replace(/<a(\s)/gi, '<a target="_blank" rel="noopener noreferrer"$1')
+  }, [email?.body_html])
 
   if (!email) {
     return (
@@ -421,11 +424,11 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
               <div key={i} className={`h-3 bg-slate-200 rounded`} style={{ width: `${w * 13}%` }} />
             ))}
           </div>
-        ) : email.body_html ? (
+        ) : safeBodyHtml ? (
           <iframe
-            srcDoc={email.body_html}
+            srcDoc={safeBodyHtml}
             title="Email body"
-            sandbox="allow-same-origin"
+            sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"
             className="w-full border-0 rounded-xl"
             style={{ minHeight: 400 }}
             onLoad={e => {
@@ -435,10 +438,12 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
               }
             }}
           />
-        ) : (
+        ) : email.body_text ? (
           <pre className="text-[13px] text-slate-700 whitespace-pre-wrap font-sans leading-relaxed">
-            {email.body_text || 'No content'}
+            {email.body_text}
           </pre>
+        ) : (
+          <p className="text-[13px] text-slate-400 italic">No content</p>
         )}
       </div>
     </div>
@@ -577,6 +582,9 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   const [syncing, setSyncing]         = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
   const bodyCache = useRef(new Map())
+  const pollRef   = useRef(null)
+
+  useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   // Sync Inertia prop updates → local state whenever server refreshes props
   useEffect(() => {
@@ -671,22 +679,53 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   }, [removeFromList])
 
   const handleSync = useCallback(async () => {
+    if (syncing) return
     setSyncing(true)
+    if (pollRef.current) clearInterval(pollRef.current)
+
+    const prevFetchedAt = credential?.last_fetched_at
+
     try {
       const res  = await fetch('/inbox/sync', { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       const json = await res.json()
-      if (json.ok) {
-        toast.success(json.message)
-        router.visit('/inbox', { replace: true })
-      } else {
+      if (!json.ok) {
         toast.error(json.error)
+        setSyncing(false)
+        return
       }
+
+      toast.success('Syncing inbox — emails will appear shortly…')
+
+      // Poll every 5 s until last_fetched_at changes (max 2 min)
+      let attempts = 0
+      pollRef.current = setInterval(async () => {
+        attempts++
+        try {
+          const sr     = await fetch('/inbox/sync-status', { headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
+          const status = await sr.json()
+          const done   = status.last_fetched_at && status.last_fetched_at !== prevFetchedAt
+          if (done || attempts >= 24) {
+            clearInterval(pollRef.current)
+            pollRef.current = null
+            setSyncing(false)
+            if (done) {
+              toast.success('Inbox synced!')
+              router.reload({ only: ['emails', 'counts', 'credential'] })
+            } else {
+              toast.info('Sync is still running — refresh again in a moment.')
+            }
+          }
+        } catch {
+          clearInterval(pollRef.current)
+          pollRef.current = null
+          setSyncing(false)
+        }
+      }, 5000)
     } catch {
       toast.error('Sync failed — check your connection.')
-    } finally {
       setSyncing(false)
     }
-  }, [])
+  }, [syncing, credential?.last_fetched_at])
 
   const notReady = !hasSmtp || !hasImap
 
@@ -709,9 +748,17 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
           <div className="w-[300px] shrink-0 flex flex-col border-r border-slate-100 bg-white">
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
               <h3 className="text-[13px] font-semibold text-slate-800 capitalize">{folder}</h3>
-              {counts?.[folder] > 0 && (
-                <span className="text-[11px] text-slate-400">{counts[folder]} messages</span>
-              )}
+              <div className="flex items-center gap-2">
+                {syncing && (
+                  <span className="flex items-center gap-1 text-[10.5px] text-violet-500 font-medium">
+                    <RefreshCw size={10} className="animate-spin" />
+                    Syncing…
+                  </span>
+                )}
+                {!syncing && counts?.[folder] > 0 && (
+                  <span className="text-[11px] text-slate-400">{counts[folder]} messages</span>
+                )}
+              </div>
             </div>
             {notReady ? (
               <SetupBanner hasSmtp={hasSmtp} />

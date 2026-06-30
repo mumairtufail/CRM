@@ -116,21 +116,19 @@ class InboxController extends Controller
 
         $orgId = $request->user()->organization_id;
 
-        try {
-            FetchEmailsJob::dispatchSync($orgId, $cred->id);
-        } catch (\Throwable $e) {
-            \Log::channel('inbox')->error("[org:{$orgId}] Sync failed via HTTP", ['error' => $e->getMessage()]);
-            return response()->json([
-                'ok'    => false,
-                'error' => 'IMAP error: ' . $e->getMessage(),
-            ], 422);
-        }
-
-        $fetched = FetchedEmail::where('smtp_credential_id', $cred->id)->count();
+        FetchEmailsJob::dispatch($orgId, $cred->id);
 
         return response()->json([
             'ok'      => true,
-            'message' => "Sync complete — {$fetched} emails in your inbox.",
+            'message' => 'Sync started — your inbox will update shortly.',
+        ]);
+    }
+
+    public function syncStatus(Request $request)
+    {
+        $cred = $request->user()->smtpCredentials()->where('is_active', true)->first();
+        return response()->json([
+            'last_fetched_at' => $cred?->last_fetched_at?->toISOString(),
         ]);
     }
 

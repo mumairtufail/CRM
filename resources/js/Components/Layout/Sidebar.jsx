@@ -90,9 +90,9 @@ function useRecentPages(currentUrl, component) {
       const label = COMPONENT_LABELS[component] || component?.split('/').pop() || 'Page'
       const stored = JSON.parse(localStorage.getItem('crm_recent_pages') || '[]')
       const entry  = { url: currentUrl, label }
-      const updated = [entry, ...stored.filter(p => p.url !== currentUrl)].slice(0, 5)
+      // Deduplicate by both URL and label to avoid showing the same page twice
+      const updated = [entry, ...stored.filter(p => p.url !== currentUrl && p.label !== label)].slice(0, 5)
       localStorage.setItem('crm_recent_pages', JSON.stringify(updated))
-      // Show all except the one we're currently on
       setRecent(updated.filter(p => p.url !== currentUrl).slice(0, 4))
     } catch {}
   }, [currentUrl])
@@ -181,14 +181,14 @@ export default function Sidebar({ open, onToggle }) {
         </button>
       )}
 
-      <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+      <div className="flex-1 flex flex-col overflow-hidden">
 
         {/* ── Navigation ────────────────────────── */}
         {open && (
-          <p className="px-4 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Navigation</p>
+          <p className="px-4 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 shrink-0">Navigation</p>
         )}
 
-        <nav className={cn('px-2 space-y-0.5', open ? 'py-1' : 'py-2')}>
+        <nav className={cn('px-2 space-y-0.5 shrink-0', open ? 'py-1' : 'py-2')}>
           {navItems.map((item) => {
             if (item.group) {
               const { label, icon: Icon, children } = item
@@ -276,50 +276,50 @@ export default function Sidebar({ open, onToggle }) {
           })}
         </nav>
 
-        {/* ── Quick actions ────────────────────── */}
-        {open && (
-          <div className="px-3 pt-3 pb-1">
-            <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 px-1 mb-1.5">Quick add</p>
-            <div className="flex gap-1.5">
-              {quickActions.map(({ label, href, icon: Icon }) => (
-                <Link key={href} href={href}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/50 hover:text-white transition-all text-[11px] font-semibold">
-                  <Plus size={10} strokeWidth={2.5} />
-                  {label.replace('New ', '')}
-                </Link>
-              ))}
+        {/* ── Quick actions + Recent ────────────── */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
+          {open && (
+            <div className="px-3 pt-3 pb-1">
+              <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 px-1 mb-1.5">Quick add</p>
+              <div className="flex gap-1.5">
+                {quickActions.map(({ label, href, icon: Icon }) => (
+                  <Link key={href} href={href}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/50 hover:text-white transition-all text-[11px] font-semibold">
+                    <Plus size={10} strokeWidth={2.5} />
+                    {label.replace('New ', '')}
+                  </Link>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* collapsed: show + icon for new lead */}
-        {!open && (
-          <div className="flex flex-col items-center gap-1 px-2 pt-2 pb-1">
-            <Link href="/leads/create" title="New Lead"
-              className="p-[9px] rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/40 hover:text-white transition-all">
-              <Plus size={13} strokeWidth={2.5} />
-            </Link>
-          </div>
-        )}
+          {!open && (
+            <div className="flex flex-col items-center gap-1 px-2 pt-2 pb-1">
+              <Link href="/leads/create" title="New Lead"
+                className="p-[9px] rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/40 hover:text-white transition-all">
+                <Plus size={13} strokeWidth={2.5} />
+              </Link>
+            </div>
+          )}
 
-        {/* ── Recent pages ─────────────────────── */}
-        {open && recentPages.length > 0 && (
-          <div className="px-3 pt-3 pb-1">
-            <div className="flex items-center gap-1.5 px-1 mb-1.5">
-              <Clock size={9} className="text-white/20" />
-              <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Recent</p>
+          {open && recentPages.length > 0 && (
+            <div className="px-3 pt-3 pb-1">
+              <div className="flex items-center gap-1.5 px-1 mb-1.5">
+                <Clock size={9} className="text-white/20" />
+                <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Recent</p>
+              </div>
+              <div className="space-y-0.5">
+                {recentPages.map((page, i) => (
+                  <Link key={i} href={page.url}
+                    className="flex items-center gap-2 px-2 py-[7px] rounded-lg text-white/30 hover:text-white/65 hover:bg-white/[0.06] transition-all group">
+                    <ChevronRight size={9} className="shrink-0 text-white/20 group-hover:text-white/40" />
+                    <span className="text-[12px] font-medium truncate">{page.label}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
-            <div className="space-y-0.5">
-              {recentPages.map((page, i) => (
-                <Link key={i} href={page.url}
-                  className="flex items-center gap-2 px-2 py-[7px] rounded-lg text-white/30 hover:text-white/65 hover:bg-white/[0.06] transition-all group">
-                  <ChevronRight size={9} className="shrink-0 text-white/20 group-hover:text-white/40" />
-                  <span className="text-[12px] font-medium truncate">{page.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* ── Bottom — user + logout ─────────────── */}

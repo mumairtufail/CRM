@@ -60,37 +60,46 @@ class WhatsappCredentialController extends Controller
 
     public function verify(Request $request)
     {
+        // Strip spaces, dashes, and parentheses before validation
+        $cleaned = preg_replace('/[\s\-\(\)]/', '', $request->input('test_number', ''));
+        $request->merge(['test_number' => $cleaned]);
+
         $request->validate([
             'test_number' => ['required', 'string', 'regex:/^\+?[1-9]\d{7,14}$/'],
         ], [
             'test_number.regex' => 'Phone number must be in international format e.g. +923001234567',
         ]);
 
-        $credential = WhatsappCredential::where('organization_id', $request->user()->organization_id)
-            ->first();
+        try {
+            $credential = WhatsappCredential::where('organization_id', $request->user()->organization_id)
+                ->first();
 
-        if (!$credential) {
-            return response()->json(['success' => false, 'message' => 'No WhatsApp credentials configured.'], 404);
+            if (!$credential) {
+                return response()->json(['success' => false, 'message' => 'No WhatsApp credentials configured.'], 404);
+            }
+
+            $service = new WhatsappService($credential);
+
+            if (!$service->verify()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Twilio credentials rejected. Double-check your Account SID and Auth Token.',
+                ], 422);
+            }
+
+            $testLead = new Lead(['first_name' => 'Test', 'last_name' => 'User', 'whatsapp_number' => $cleaned]);
+            $result   = $service->send($testLead, 'This is a test message from your CRM WhatsApp integration. If you received this, your setup is working correctly.');
+
+            if ($result['success']) {
+                $credential->update(['verified_at' => now()]);
+                return response()->json(['success' => true, 'message' => 'Test message sent! Check your WhatsApp.']);
+            }
+
+            return response()->json(['success' => false, 'message' => 'Twilio rejected the send: ' . ($result['error'] ?? 'unknown error')], 422);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('WhatsApp verify exception', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Server error: ' . $e->getMessage()], 500);
         }
-
-        $service = new WhatsappService($credential);
-
-        if (!$service->verify()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid Twilio credentials. Check your Account SID and Auth Token.',
-            ], 422);
-        }
-
-        $testLead = new Lead(['first_name' => 'Test', 'last_name' => 'User', 'whatsapp_number' => $request->test_number]);
-        $result   = $service->send($testLead, 'This is a test message from your CRM WhatsApp integration. If you received this, your setup is working correctly.');
-
-        if ($result['success']) {
-            $credential->update(['verified_at' => now()]);
-            return response()->json(['success' => true, 'message' => 'Test message sent! Check your WhatsApp.']);
-        }
-
-        return response()->json(['success' => false, 'message' => 'Failed to send: ' . $result['error']], 422);
     }
 
     public function toggle(Request $request)

@@ -141,7 +141,7 @@ export default function WhatsappConversationsIndex({ leads, search, hasCredentia
           <AlertCircle size={15} className="text-amber-500 mt-0.5 shrink-0" />
           <p className="text-[13px] text-amber-800">
             Connect your Twilio account in{' '}
-            <button className="underline font-medium" onClick={() => router.get(route('profile.edit'))}>
+            <button className="underline font-medium" onClick={() => router.get('/profile?tab=whatsapp')}>
               Settings → WhatsApp
             </button>{' '}
             to start receiving and sending WhatsApp messages.

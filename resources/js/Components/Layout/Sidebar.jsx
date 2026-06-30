@@ -109,8 +109,15 @@ export default function Sidebar({ open, onToggle }) {
 
   const recentPages = useRecentPages(url, component)
 
-  const isLeadsSection = url.startsWith('/leads') || url.startsWith('/groups') || url.startsWith('/import') || url.startsWith('/lead-generation')
-  const [leadsOpen, setLeadsOpen] = useState(isLeadsSection)
+  const [groupsOpen, setGroupsOpen] = useState(() => {
+    const state = {}
+    for (const item of navItems) {
+      if (item.group) {
+        state[item.label] = item.children.some(c => url === c.href || url.startsWith(c.href))
+      }
+    }
+    return state
+  })
 
   const closeMobile = () => {
     if (typeof window !== 'undefined' && window.innerWidth < 768) onToggle()
@@ -189,7 +196,7 @@ export default function Sidebar({ open, onToggle }) {
               if (!open) {
                 return (
                   <button key={label} title={label}
-                    onClick={() => { onToggle(); setLeadsOpen(true) }}
+                    onClick={() => { onToggle(); setGroupsOpen(prev => ({ ...prev, [label]: true })) }}
                     className={cn(
                       'relative w-full flex justify-center p-[11px] rounded-[10px] transition-all duration-150 group/nav',
                       groupActive ? 'bg-violet-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
@@ -204,7 +211,7 @@ export default function Sidebar({ open, onToggle }) {
               return (
                 <div key={label}>
                   <button
-                    onClick={() => setLeadsOpen(v => !v)}
+                    onClick={() => setGroupsOpen(prev => ({ ...prev, [label]: !prev[label] }))}
                     className={cn(
                       'relative w-full flex items-center gap-3 px-3 py-[9px] rounded-[10px] transition-all duration-150 group/nav',
                       groupActive ? 'text-white/80' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
@@ -213,10 +220,15 @@ export default function Sidebar({ open, onToggle }) {
                     <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
                       className={cn('shrink-0 transition-colors', groupActive ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
                     <span className="text-[13px] font-medium truncate flex-1 text-left">{label}</span>
-                    <ChevronDown size={12} className={cn('shrink-0 text-white/30 transition-transform duration-200', leadsOpen && 'rotate-180')} />
+                    <ChevronDown size={12} className={cn('shrink-0 text-white/30 transition-transform duration-200', groupsOpen[label] && 'rotate-180')} />
                   </button>
-                  {leadsOpen && (
-                    <div className="ml-3 pl-3 border-l border-white/[0.07] space-y-0.5 mb-0.5">
+                  <div style={{
+                    maxHeight: groupsOpen[label] ? '400px' : '0px',
+                    opacity: groupsOpen[label] ? 1 : 0,
+                    overflow: 'hidden',
+                    transition: 'max-height 0.22s ease, opacity 0.18s ease',
+                  }}>
+                    <div className="ml-3 pl-3 border-l border-white/[0.07] space-y-0.5 mb-0.5 pt-0.5">
                       {children.map(({ label: childLabel, href, icon: CIcon }) => {
                         const active = url === href || (href !== '/' && url.startsWith(href))
                         return (
@@ -234,7 +246,7 @@ export default function Sidebar({ open, onToggle }) {
                         )
                       })}
                     </div>
-                  )}
+                  </div>
                 </div>
               )
             }

@@ -1701,7 +1701,10 @@ export default function ProfileEdit({
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
   orgFollowupEnabled, whatsappCredential, aiSetting,
 }) {
-  const [tab, setTab] = useState('profile')
+  const [tab, setTab] = useState(() => {
+    const p = new URLSearchParams(window.location.search)
+    return p.get('tab') || 'profile'
+  })
 
   React.useEffect(() => {
     if (smtpSuccess) toast.success(smtpSuccess)

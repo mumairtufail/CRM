@@ -6,7 +6,12 @@ use App\Http\Controllers\Admin\OrganizationController as AdminOrganizationContro
 use App\Http\Controllers\Admin\AccountController as AdminAccountController;
 use App\Http\Controllers\Admin\SmtpSettingsController as AdminSmtpSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\AiProviderController;
 use App\Http\Controllers\CampaignController;
+use App\Http\Controllers\TwilioWebhookController;
+use App\Http\Controllers\WhatsappCampaignController;
+use App\Http\Controllers\WhatsappConversationController;
+use App\Http\Controllers\WhatsappCredentialController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectTaskController;
 use App\Http\Controllers\ProjectDocumentController;
@@ -46,6 +51,12 @@ Route::post('/intake/{organization:slug}', [PublicLeadController::class, 'store'
 // Email tracking — public, no auth (must be outside auth middleware)
 Route::get('/t/{token}/open.gif', [CampaignController::class, 'trackOpen'])->name('track.open');
 Route::get('/t/{token}/click',    [CampaignController::class, 'trackClick'])->name('track.click');
+
+// Twilio webhooks — public, validated by Twilio signature
+Route::prefix('webhook/twilio')->group(function () {
+    Route::post('/whatsapp', [TwilioWebhookController::class, 'handleIncoming'])->name('twilio.whatsapp');
+    Route::post('/status',   [TwilioWebhookController::class, 'handleStatus'])->name('twilio.status');
+});
 
 // Super admin portal
 Route::middleware(['auth', 'superadmin'])->prefix('admin')->name('admin.')->group(function () {
@@ -214,6 +225,39 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/inbox/{fetchedEmail}/trash',            [InboxController::class, 'trash'])->name('inbox.trash');
     Route::patch('/inbox/{fetchedEmail}/restore',          [InboxController::class, 'restore'])->name('inbox.restore');
     Route::delete('/inbox/{fetchedEmail}',                 [InboxController::class, 'destroy'])->name('inbox.destroy');
+
+    // AI Provider Settings
+    Route::get('/settings/ai',          [AiProviderController::class, 'show'])->name('ai.show');
+    Route::post('/settings/ai',         [AiProviderController::class, 'store'])->name('ai.store');
+    Route::post('/settings/ai/validate',[AiProviderController::class, 'validate'])->name('ai.validate');
+    Route::get('/settings/ai/models',   [AiProviderController::class, 'models'])->name('ai.models');
+    Route::delete('/settings/ai',       [AiProviderController::class, 'destroy'])->name('ai.destroy');
+
+    // WhatsApp Settings
+    Route::get('/settings/whatsapp',          [WhatsappCredentialController::class, 'show'])->name('whatsapp.settings');
+    Route::post('/settings/whatsapp',         [WhatsappCredentialController::class, 'store'])->name('whatsapp.store');
+    Route::post('/settings/whatsapp/verify',  [WhatsappCredentialController::class, 'verify'])->name('whatsapp.verify');
+    Route::post('/settings/whatsapp/toggle',  [WhatsappCredentialController::class, 'toggle'])->name('whatsapp.toggle');
+    Route::delete('/settings/whatsapp',       [WhatsappCredentialController::class, 'destroy'])->name('whatsapp.destroy');
+
+    // WhatsApp Campaigns
+    Route::get('/whatsapp/campaigns',                           [WhatsappCampaignController::class, 'index'])->name('whatsapp.campaigns.index');
+    Route::get('/whatsapp/campaigns/create',                    [WhatsappCampaignController::class, 'create'])->name('whatsapp.campaigns.create');
+    Route::post('/whatsapp/campaigns',                          [WhatsappCampaignController::class, 'store'])->name('whatsapp.campaigns.store');
+    Route::get('/whatsapp/campaigns/{campaign}',                [WhatsappCampaignController::class, 'show'])->name('whatsapp.campaigns.show');
+    Route::get('/whatsapp/campaigns/{campaign}/edit',           [WhatsappCampaignController::class, 'edit'])->name('whatsapp.campaigns.edit');
+    Route::put('/whatsapp/campaigns/{campaign}',                [WhatsappCampaignController::class, 'update'])->name('whatsapp.campaigns.update');
+    Route::delete('/whatsapp/campaigns/{campaign}',             [WhatsappCampaignController::class, 'destroy'])->name('whatsapp.campaigns.destroy');
+    Route::post('/whatsapp/campaigns/{campaign}/send',          [WhatsappCampaignController::class, 'send'])->name('whatsapp.campaigns.send');
+    Route::post('/whatsapp/campaigns/{campaign}/stop',          [WhatsappCampaignController::class, 'stop'])->name('whatsapp.campaigns.stop');
+    Route::post('/whatsapp/campaigns/{campaign}/resume',        [WhatsappCampaignController::class, 'resume'])->name('whatsapp.campaigns.resume');
+    Route::post('/whatsapp/campaigns/{campaign}/clone',         [WhatsappCampaignController::class, 'clone'])->name('whatsapp.campaigns.clone');
+    Route::get('/whatsapp/campaigns/{campaign}/log',            [WhatsappCampaignController::class, 'log'])->name('whatsapp.campaigns.log');
+
+    // WhatsApp Conversations (inbox)
+    Route::get('/whatsapp/conversations',                       [WhatsappConversationController::class, 'index'])->name('whatsapp.conversations.index');
+    Route::get('/whatsapp/conversations/{lead}',                [WhatsappConversationController::class, 'show'])->name('whatsapp.conversations.show');
+    Route::post('/whatsapp/conversations/{lead}/send',          [WhatsappConversationController::class, 'send'])->name('whatsapp.conversations.send');
 
     // SMTP Credentials
     Route::post('/smtp',                          [SmtpCredentialController::class, 'store'])->name('smtp.store');

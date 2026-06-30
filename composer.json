@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "tightenco/ziggy": "^2.0",
+        "twilio/sdk": "^8.11",
         "webklex/laravel-imap": "^6.2"
     },
     "require-dev": {

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\AiProviderSetting;
 use App\Models\EmailTemplate;
+use App\Models\WhatsappCredential;
 use App\Services\LeadProviders\ApolloProvider;
 use App\Services\LeadProviders\PeopleDataLabsProvider;
 use App\Support\TenantContext;
@@ -82,6 +84,31 @@ class ProfileController extends Controller
             'emailTemplates'        => $allTemplates->values(),
             'activeTemplateId'      => $user->active_template_id,
             'smtpSuccess'           => session('smtp_success'),
+            'aiSetting'             => (function () use ($user) {
+                $s = AiProviderSetting::where('organization_id', $user->organization_id)->first();
+                if (!$s) return null;
+                return [
+                    'provider'     => $s->provider,
+                    'model'        => $s->model,
+                    'base_url'     => $s->base_url,
+                    'is_active'    => $s->is_active,
+                    'is_validated' => $s->isValidated(),
+                    'validated_at' => $s->validated_at?->toISOString(),
+                ];
+            })(),
+            'whatsappCredential'    => (function () use ($user) {
+                $c = WhatsappCredential::where('organization_id', $user->organization_id)->first();
+                if (!$c) return null;
+                return [
+                    'id'           => $c->id,
+                    'account_sid'  => $c->account_sid,
+                    'from_number'  => $c->from_number,
+                    'display_name' => $c->display_name,
+                    'is_active'    => $c->is_active,
+                    'is_verified'  => $c->isVerified(),
+                    'verified_at'  => $c->verified_at?->toISOString(),
+                ];
+            })(),
         ]);
     }
 

@@ -2,17 +2,14 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 /**
  * Turns a plain-English lead-search prompt into the structured filter shape
- * the UI and providers expect, using an OpenAI-compatible chat endpoint
- * (NVIDIA NIM / Kimi by default — configurable in config/services.php).
+ * the UI and providers expect, using the org's configured AiService.
  *
- * This is a deliberate non-Anthropic, OpenAI-compatible integration chosen by
- * the user. It is best-effort: any failure (no key, timeout, bad output) makes
- * parse() return null so the caller can fall back to the keyword parser.
+ * Falls back to the rule-based keyword parser when no AI provider is configured
+ * or when the AI call fails / returns unparseable output.
  */
 class AiPromptParser
 {
@@ -35,14 +32,21 @@ class AiPromptParser
         'keywords'         => [],
     ];
 
+    private ?AiService $ai;
+
+    public function __construct()
+    {
+        $this->ai = AiService::forCurrentTenant();
+    }
+
     public function isConfigured(): bool
     {
-        return !empty(config('services.aileadsearch.api_key'));
+        return $this->ai !== null && $this->ai->isConfigured();
     }
 
     public function modelName(): string
     {
-        return (string) config('services.aileadsearch.model', 'unknown');
+        return $this->ai?->modelName() ?? 'rule-based';
     }
 
     /**
@@ -50,60 +54,31 @@ class AiPromptParser
      */
     public function parse(string $prompt): ?array
     {
-        $apiKey  = config('services.aileadsearch.api_key');
-        $baseUrl = rtrim((string) config('services.aileadsearch.base_url'), '/');
-        $model   = $this->modelName();
-        $timeout = (int) config('services.aileadsearch.timeout', 60);
-
-        if (!$apiKey) {
+        if (!$this->isConfigured()) {
             return null;
         }
 
         $start = microtime(true);
 
-        try {
-            $response = Http::withToken($apiKey)
-                ->acceptJson()
-                ->timeout($timeout)
-                ->post($baseUrl . '/chat/completions', [
-                    'model'       => $model,
-                    'temperature' => 0.2,
-                    'max_tokens'  => 1024,
-                    'stream'      => false,
-                    'messages'    => [
-                        ['role' => 'system', 'content' => $this->systemPrompt()],
-                        ['role' => 'user',   'content' => $prompt],
-                    ],
-                ]);
-        } catch (\Throwable $e) {
-            Log::channel('aileadsearch')->warning('[PARSE] AI request threw — falling back to keyword parser', [
-                'step'    => 'PARSE:ai-exception',
-                'engine'  => $model,
-                'error'   => $e->getMessage(),
-            ]);
-            return null;
-        }
+        $content = $this->ai->chat($this->systemPrompt(), $prompt, 1024);
 
         $elapsed = round((microtime(true) - $start) * 1000);
 
-        if ($response->failed()) {
-            Log::channel('aileadsearch')->warning('[PARSE] AI endpoint returned an error — falling back to keyword parser', [
-                'step'       => 'PARSE:ai-http-error',
-                'engine'     => $model,
-                'status'     => $response->status(),
-                'body'       => mb_substr($response->body(), 0, 500),
+        if ($content === null) {
+            Log::channel('aileadsearch')->warning('[PARSE] AI request failed — falling back to keyword parser', [
+                'step'       => 'PARSE:ai-error',
+                'engine'     => $this->modelName(),
                 'elapsed_ms' => $elapsed,
             ]);
             return null;
         }
 
-        $content = (string) data_get($response->json(), 'choices.0.message.content', '');
         $filters = $this->decodeFilters($content);
 
         if ($filters === null) {
             Log::channel('aileadsearch')->warning('[PARSE] AI output was not valid JSON — falling back to keyword parser', [
                 'step'       => 'PARSE:ai-bad-json',
-                'engine'     => $model,
+                'engine'     => $this->modelName(),
                 'raw'        => mb_substr($content, 0, 500),
                 'elapsed_ms' => $elapsed,
             ]);
@@ -114,7 +89,7 @@ class AiPromptParser
 
         Log::channel('aileadsearch')->info('[PARSE] AI returned filters', [
             'step'       => 'PARSE:ai-ok',
-            'engine'     => $model,
+            'engine'     => $this->modelName(),
             'filters'    => $filters,
             'elapsed_ms' => $elapsed,
         ]);
@@ -155,34 +130,21 @@ Rules:
 PROMPT;
     }
 
-    /**
-     * Extract and decode the JSON object from the model's reply, tolerating
-     * code fences and any leading/trailing prose.
-     */
     private function decodeFilters(string $content): ?array
     {
         $content = trim($content);
-        if ($content === '') {
-            return null;
-        }
+        if ($content === '') return null;
 
-        // Strip ```json ... ``` fences if present.
         $content = preg_replace('/^```(?:json)?\s*|\s*```$/i', '', $content);
 
-        // Grab the outermost {...} in case the model added stray text.
         if (preg_match('/\{.*\}/s', $content, $m)) {
             $content = $m[0];
         }
 
         $decoded = json_decode($content, true);
-
         return is_array($decoded) ? $decoded : null;
     }
 
-    /**
-     * Coerce the decoded payload into the canonical shape and drop any values
-     * outside the allowed enums so a hallucination can never reach a provider.
-     */
     private function sanitize(array $decoded): array
     {
         $result = self::EMPTY;
@@ -193,7 +155,6 @@ PROMPT;
                 $values = [$values];
             }
 
-            // Normalise to trimmed, non-empty, unique strings.
             $values = array_values(array_unique(array_filter(array_map(
                 fn ($v) => is_scalar($v) ? trim((string) $v) : '',
                 $values

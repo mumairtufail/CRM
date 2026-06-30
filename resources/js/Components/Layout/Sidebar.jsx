@@ -5,6 +5,7 @@ import {
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
   LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown, BookOpen,
+  MessageSquare, MessagesSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -24,6 +25,15 @@ const navItems = [
   },
   { label: 'Pipeline',   href: '/pipeline', icon: Kanban },
   { label: 'Campaigns',  href: '/campaigns', icon: Mail },
+  {
+    label: 'WhatsApp',
+    icon: MessageSquare,
+    group: true,
+    children: [
+      { label: 'WA Campaigns',     href: '/whatsapp/campaigns',     icon: MessageSquare },
+      { label: 'Conversations',    href: '/whatsapp/conversations',  icon: MessagesSquare },
+    ],
+  },
   { label: 'Clients',    href: '/clients',   icon: Briefcase },
   { label: 'Projects',   href: '/projects',  icon: FolderKanban },
   { label: 'Inbox',      href: '/inbox',     icon: Inbox },
@@ -65,6 +75,10 @@ const COMPONENT_LABELS = {
   'Projects/Show':    'Project',
   'Projects/Create':  'New Project',
   'Inbox/Index':      'Inbox',
+  'WhatsApp/Campaigns/Index':  'WhatsApp Campaigns',
+  'WhatsApp/Campaigns/Create': 'New WA Campaign',
+  'WhatsApp/Campaigns/Show':   'WA Campaign',
+  'WhatsApp/Conversations/Index': 'WA Conversations',
   'Documentation/Index': 'Documentation',
 }
 

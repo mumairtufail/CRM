@@ -40,6 +40,12 @@ return [
         'base_url' => 'https://api.apollo.io/api/v1',
     ],
 
+    'nvidia' => [
+        'base_url' => env('NVIDIA_BASE_URL', 'https://integrate.api.nvidia.com/v1'),
+        'api_key'  => env('NVIDIA_API_KEY'),
+        'model'    => env('NVIDIA_MODEL', 'moonshotai/kimi-k2'),
+    ],
+
     // AI engine that turns a plain-English prompt into structured search
     // filters for the AI Lead Search page. OpenAI-compatible endpoint
     // (NVIDIA NIM / Kimi by default). When no key is set, the lead search

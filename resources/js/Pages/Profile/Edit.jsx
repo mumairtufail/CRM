@@ -19,6 +19,7 @@ import {
   Eye, EyeOff, X, LayoutTemplate, ExternalLink,
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
   Zap, Key, Wifi, Globe, Phone, PenLine, BookOpen, ChevronRight,
+  MessageSquare,
 } from 'lucide-react'
 
 // lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
@@ -96,7 +97,9 @@ const NAV = [
   {
     group: 'Integrations',
     items: [
+      { id: 'ai',        label: 'AI Provider',     icon: Zap },
       { id: 'leadgen',   label: 'Lead Generation', icon: Sparkles },
+      { id: 'whatsapp',  label: 'WhatsApp',        icon: MessageSquare },
     ],
   },
 ]
@@ -1205,12 +1208,498 @@ function LeadGenTab({ leadGenSettings }) {
   )
 }
 
+// ─── AI Provider tab ──────────────────────────────────────────────────────────
+
+const PROVIDERS = [
+  { id: 'claude', label: 'Claude (Anthropic)', color: '#D97706', hint: 'Best for reasoning and natural conversation' },
+  { id: 'openai', label: 'OpenAI',             color: '#10B981', hint: 'GPT-4o, o1, and the full OpenAI lineup' },
+  { id: 'kimi',   label: 'Kimi K2 (NVIDIA NIM)', color: '#6366F1', hint: 'Access Kimi K2, Llama 3.1, DeepSeek, and more' },
+]
+
+const PROVIDER_MODELS = {
+  claude: [
+    { id: 'claude-opus-4-8',          label: 'Claude Opus 4.8' },
+    { id: 'claude-sonnet-4-6',        label: 'Claude Sonnet 4.6' },
+    { id: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' },
+    { id: 'claude-opus-4-5',          label: 'Claude Opus 4.5' },
+    { id: 'claude-sonnet-3-7',        label: 'Claude Sonnet 3.7' },
+    { id: 'claude-sonnet-3-5',        label: 'Claude Sonnet 3.5' },
+    { id: 'claude-haiku-3-5',         label: 'Claude Haiku 3.5' },
+  ],
+  openai: [
+    { id: 'gpt-4o',        label: 'GPT-4o' },
+    { id: 'gpt-4o-mini',   label: 'GPT-4o mini' },
+    { id: 'gpt-4-turbo',   label: 'GPT-4 Turbo' },
+    { id: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo' },
+    { id: 'o3-mini',       label: 'o3-mini' },
+    { id: 'o1-mini',       label: 'o1-mini' },
+    { id: 'o1',            label: 'o1' },
+  ],
+  kimi: [
+    { id: 'moonshotai/kimi-k2',                          label: 'Kimi K2' },
+    { id: 'moonshotai/kimi-k2.6',                        label: 'Kimi K2.6' },
+    { id: 'nvidia/llama-3.1-nemotron-70b-instruct',      label: 'Llama 3.1 Nemotron 70B' },
+    { id: 'meta/llama-3.1-405b-instruct',                label: 'Llama 3.1 405B' },
+    { id: 'nvidia/mistral-nemo-minitron-8b-8k-instruct', label: 'Mistral Nemo Minitron 8B' },
+    { id: 'deepseek-ai/deepseek-r1',                     label: 'DeepSeek R1' },
+  ],
+}
+
+function ModelCombobox({ provider, value, onChange }) {
+  const [search, setSearch] = React.useState('')
+  const [open, setOpen]     = React.useState(false)
+  const models              = PROVIDER_MODELS[provider] ?? []
+
+  const filtered = search.trim()
+    ? models.filter(m => m.label.toLowerCase().includes(search.toLowerCase()) || m.id.toLowerCase().includes(search.toLowerCase()))
+    : models
+
+  const selectedLabel = models.find(m => m.id === value)?.label ?? value
+
+  const pick = (id) => {
+    onChange(id)
+    setSearch('')
+    setOpen(false)
+  }
+
+  return (
+    <div className="relative">
+      <div
+        className="h-8 px-3 flex items-center justify-between rounded-md border border-slate-200 bg-white cursor-pointer text-[13px] hover:border-violet-400 transition-colors"
+        onClick={() => setOpen(o => !o)}>
+        <span className={value ? 'text-slate-800 font-mono text-[12px]' : 'text-slate-400'}>
+          {value ? selectedLabel : 'Select or type a model…'}
+        </span>
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`}>
+          <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+
+      {open && (
+        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
+          {/* Search input */}
+          <div className="px-2 pt-2 pb-1 border-b border-slate-100">
+            <input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search or type custom model ID…"
+              className="w-full h-7 px-2 text-[12px] rounded border border-slate-200 focus:outline-none focus:border-violet-400"
+            />
+          </div>
+
+          {/* Known models */}
+          <div className="max-h-48 overflow-y-auto">
+            {filtered.map(m => (
+              <button key={m.id} type="button"
+                onClick={() => pick(m.id)}
+                className={cn(
+                  'w-full text-left px-3 py-2 text-[12.5px] hover:bg-violet-50 transition-colors',
+                  value === m.id ? 'bg-violet-50 text-violet-700 font-medium' : 'text-slate-700'
+                )}>
+                <span className="font-medium">{m.label}</span>
+                <span className="ml-2 font-mono text-[10px] text-slate-400">{m.id}</span>
+              </button>
+            ))}
+
+            {filtered.length === 0 && search.trim() && (
+              <button type="button"
+                onClick={() => pick(search.trim())}
+                className="w-full text-left px-3 py-2.5 text-[12.5px] text-violet-700 hover:bg-violet-50 transition-colors border-t border-slate-100">
+                Use custom: <span className="font-mono font-medium">"{search.trim()}"</span>
+              </button>
+            )}
+          </div>
+
+          {/* Custom model entry shortcut */}
+          {search.trim() && filtered.length > 0 && (
+            <div className="px-3 py-2 border-t border-slate-100">
+              <button type="button" onClick={() => pick(search.trim())}
+                className="text-[11px] text-violet-600 hover:underline">
+                Use custom: <span className="font-mono">"{search.trim()}"</span>
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function AiProviderTab({ aiSetting }) {
+  const [provider, setProvider]       = React.useState(aiSetting?.provider ?? 'openai')
+  const [apiKey, setApiKey]           = React.useState('')
+  const [model, setModel]             = React.useState(aiSetting?.model ?? '')
+  const [baseUrl, setBaseUrl]         = React.useState(aiSetting?.base_url ?? '')
+  const [showKey, setShowKey]         = React.useState(false)
+  const [validating, setValidating]   = React.useState(false)
+  const [validated, setValidated]     = React.useState(aiSetting?.is_validated ?? false)
+  const [validMsg, setValidMsg]       = React.useState('')
+  const [saving, setSaving]           = React.useState(false)
+
+  // Reset model when provider changes
+  React.useEffect(() => {
+    const defaultModel = PROVIDER_MODELS[provider]?.[0]?.id ?? ''
+    if (!aiSetting || aiSetting.provider !== provider) {
+      setModel(defaultModel)
+    }
+    setValidated(false)
+    setValidMsg('')
+  }, [provider])
+
+  const providerColor = PROVIDERS.find(p => p.id === provider)?.color ?? '#7C3AED'
+
+  const validate = async () => {
+    if (!apiKey.trim()) { toast.error('Enter your API key first.'); return }
+    if (!model.trim())  { toast.error('Select a model first.'); return }
+
+    setValidating(true)
+    setValidated(false)
+    setValidMsg('')
+
+    try {
+      const res = await fetch(route('ai.validate'), {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
+          Accept:         'application/json',
+        },
+        body: JSON.stringify({ provider, api_key: apiKey, model, base_url: baseUrl || null }),
+      })
+      const data = await res.json()
+      setValidated(data.success)
+      setValidMsg(data.message ?? '')
+      if (data.success) toast.success('API key validated successfully.')
+      else              toast.error(data.message ?? 'Validation failed.')
+    } catch {
+      setValidMsg('Network error. Try again.')
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  const save = async (e) => {
+    e.preventDefault()
+    if (!apiKey.trim()) { toast.error('Enter your API key.'); return }
+    if (!model.trim())  { toast.error('Select a model.'); return }
+
+    setSaving(true)
+    router.post(route('ai.store'), {
+      provider,
+      api_key:  apiKey,
+      model,
+      base_url: baseUrl || null,
+    }, {
+      onSuccess: () => toast.success('AI provider saved successfully.'),
+      onError:   (e) => toast.error(Object.values(e)[0] ?? 'Save failed.'),
+      onFinish:  () => setSaving(false),
+    })
+  }
+
+  const remove = () => {
+    if (!confirm('Remove AI configuration?')) return
+    router.delete(route('ai.destroy'), {
+      onSuccess: () => { toast.success('AI configuration removed.'); setValidated(false) },
+    })
+  }
+
+  return (
+    <div className="space-y-3 max-w-xl">
+      {/* Current status */}
+      {aiSetting && (
+        <div className={`flex items-start gap-2.5 rounded-xl px-4 py-3 border ${aiSetting.is_validated ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+          {aiSetting.is_validated
+            ? <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+            : <AlertCircle  size={15} className="text-amber-500 mt-0.5 shrink-0" />}
+          <div>
+            <p className={`text-[13px] font-medium ${aiSetting.is_validated ? 'text-emerald-800' : 'text-amber-800'}`}>
+              {aiSetting.is_validated ? 'AI provider connected & validated' : 'AI provider saved — not yet validated'}
+            </p>
+            <p className="text-[12px] text-slate-500 mt-0.5">
+              {PROVIDERS.find(p => p.id === aiSetting.provider)?.label} · <span className="font-mono">{aiSetting.model}</span>
+            </p>
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={save} className="space-y-3">
+        {/* Provider selector */}
+        <div className="bg-white rounded-xl border border-slate-200 px-5 py-4 space-y-3">
+          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">AI Provider</p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {PROVIDERS.map(p => (
+              <button key={p.id} type="button"
+                onClick={() => setProvider(p.id)}
+                className={cn(
+                  'flex flex-col text-left p-3 rounded-xl border-2 transition-all',
+                  provider === p.id ? 'border-[var(--c)] bg-[var(--c)]/5' : 'border-slate-200 hover:border-slate-300'
+                )}
+                style={{ '--c': p.color }}>
+                <span className={cn('text-[13px] font-semibold', provider === p.id ? 'text-[var(--c)]' : 'text-slate-700')}
+                  style={provider === p.id ? { color: p.color } : {}}>
+                  {p.label}
+                </span>
+                <span className="text-[10.5px] text-slate-400 mt-0.5 leading-snug">{p.hint}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* API Key + Validate */}
+        <div className="bg-white rounded-xl border border-slate-200 px-5 py-4 space-y-3">
+          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400">API Key</p>
+
+          <Field label={`${PROVIDERS.find(p => p.id === provider)?.label} API Key`}>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type={showKey ? 'text' : 'password'}
+                  value={apiKey}
+                  onChange={e => { setApiKey(e.target.value); setValidated(false) }}
+                  className="h-8 text-[13px] font-mono pr-8"
+                  placeholder={provider === 'claude' ? 'sk-ant-...' : provider === 'openai' ? 'sk-...' : 'nvapi-...'}
+                />
+                <button type="button" onClick={() => setShowKey(v => !v)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                  {showKey ? <EyeOff size={13} /> : <Eye size={13} />}
+                </button>
+              </div>
+              <Button type="button" size="sm" disabled={validating || !apiKey.trim() || !model.trim()}
+                onClick={validate}
+                className="h-8 shrink-0 text-[12px] text-white"
+                style={{ background: validating ? '#94A3B8' : 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                {validating ? 'Testing…' : validated ? '✓ Valid' : 'Validate'}
+              </Button>
+            </div>
+
+            {validMsg && (
+              <p className={`text-[11.5px] mt-1 ${validated ? 'text-emerald-600' : 'text-red-500'}`}>
+                {validated ? '✓ ' : '✗ '}{validMsg}
+              </p>
+            )}
+          </Field>
+
+          {/* Model selector — always shown, highlighted once validated */}
+          <Field label="Model"
+            hint="Pick from the list or type any custom model ID">
+            <ModelCombobox provider={provider} value={model} onChange={setModel} />
+          </Field>
+
+          {/* Optional base URL override */}
+          {provider === 'kimi' && (
+            <Field label="Base URL (optional)" hint="Leave blank for default NVIDIA NIM endpoint">
+              <Input value={baseUrl} onChange={e => setBaseUrl(e.target.value)}
+                className="h-8 text-[12px] font-mono"
+                placeholder="https://integrate.api.nvidia.com/v1" />
+            </Field>
+          )}
+        </div>
+
+        {/* Save / Remove */}
+        <div className="flex items-center justify-between">
+          {aiSetting && (
+            <button type="button" onClick={remove}
+              className="text-[12px] text-red-400 hover:text-red-600 transition-colors">
+              Remove configuration
+            </button>
+          )}
+          <div className="ml-auto">
+            <SaveBtn processing={saving} label="Save configuration" loadingLabel="Saving…" />
+          </div>
+        </div>
+      </form>
+
+      {/* Usage summary */}
+      <Card title="Where this AI is used">
+        <div className="space-y-2 text-[12.5px] text-slate-600">
+          <div className="flex items-start gap-2">
+            <Sparkles size={13} className="text-violet-400 mt-0.5 shrink-0" />
+            <p><span className="font-medium">AI Lead Search</span> — converts plain-English prompts into structured search filters</p>
+          </div>
+          <div className="flex items-start gap-2">
+            <MessageSquare size={13} className="text-emerald-400 mt-0.5 shrink-0" />
+            <p><span className="font-medium">WhatsApp Bot</span> — auto-replies to incoming leads using your knowledge base</p>
+          </div>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+// ─── WhatsApp tab ─────────────────────────────────────────────────────────────
+
+function WhatsappTab({ credential }) {
+  const { data, setData, post, delete: del, processing, errors, reset } = useForm({
+    account_sid:  '',
+    auth_token:   '',
+    from_number:  '',
+    display_name: '',
+  })
+
+  const [testNumber, setTestNumber]         = React.useState('')
+  const [testing, setTesting]               = React.useState(false)
+  const [testResult, setTestResult]         = React.useState(null) // 'success' | 'error' | null
+  const [testMessage, setTestMessage]       = React.useState('')
+
+  const submit = e => {
+    e.preventDefault()
+    post(route('whatsapp.store'), {
+      onSuccess: () => toast.success('WhatsApp credentials saved.'),
+      onError:   () => toast.error('Please fix the errors below.'),
+    })
+  }
+
+  const verify = async () => {
+    if (!testNumber.trim()) return
+    setTesting(true)
+    setTestResult(null)
+    try {
+      const res = await fetch(route('whatsapp.verify'), {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
+          Accept:         'application/json',
+        },
+        body: JSON.stringify({ test_number: testNumber }),
+      })
+      const data = await res.json()
+      setTestResult(data.success ? 'success' : 'error')
+      setTestMessage(data.message ?? '')
+      if (data.success) toast.success(data.message)
+      else              toast.error(data.message)
+    } catch (err) {
+      setTestResult('error')
+      setTestMessage('Network error. Check your connection.')
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  const remove = () => {
+    if (!confirm('Remove WhatsApp credentials? This will disconnect the integration.')) return
+    router.delete(route('whatsapp.destroy'), { onSuccess: () => toast.success('Credentials removed.') })
+  }
+
+  return (
+    <div className="space-y-3 max-w-xl">
+      {/* Status banner */}
+      {credential && (
+        <div className={`flex items-start gap-2.5 rounded-xl px-4 py-3 border ${credential.is_verified ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+          {credential.is_verified
+            ? <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+            : <AlertCircle  size={15} className="text-amber-500 mt-0.5 shrink-0" />}
+          <div>
+            <p className={`text-[13px] font-medium ${credential.is_verified ? 'text-emerald-800' : 'text-amber-800'}`}>
+              {credential.is_verified ? 'WhatsApp connected & verified' : 'WhatsApp connected — not yet verified'}
+            </p>
+            <p className="text-[12px] text-slate-500 mt-0.5">
+              From: <span className="font-mono">{credential.from_number}</span>
+              {credential.display_name && <> · {credential.display_name}</>}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Credentials form */}
+      <Card title="Twilio Credentials"
+        badge={<a href="https://console.twilio.com" target="_blank" rel="noreferrer"
+          className="text-[11px] text-violet-600 hover:underline flex items-center gap-0.5">
+          Twilio Console <ExternalLink size={10} />
+        </a>}>
+        <form onSubmit={submit} className="space-y-3">
+          <Field label="Account SID" error={errors.account_sid}
+            hint="Found in Twilio Console — starts with AC">
+            <Input value={data.account_sid} onChange={e => setData('account_sid', e.target.value)}
+              className="h-8 text-[13px] font-mono"
+              placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+          </Field>
+
+          <Field label="Auth Token" error={errors.auth_token}
+            hint="Found below your Account SID in Twilio Console">
+            <Input type="password" value={data.auth_token} onChange={e => setData('auth_token', e.target.value)}
+              className="h-8 text-[13px] font-mono"
+              placeholder="32-character token" />
+          </Field>
+
+          <Field label="WhatsApp From Number" error={errors.from_number}
+            hint="Your Twilio WhatsApp number e.g. +14155238886">
+            <Input value={data.from_number} onChange={e => setData('from_number', e.target.value)}
+              className="h-8 text-[13px] font-mono"
+              placeholder="+14155238886" />
+          </Field>
+
+          <Field label="Display name (optional)" error={errors.display_name}>
+            <Input value={data.display_name} onChange={e => setData('display_name', e.target.value)}
+              className="h-8 text-[13px]"
+              placeholder="Lumenia Lab" />
+          </Field>
+
+          <div className="flex justify-between items-center pt-1">
+            {credential && (
+              <button type="button" onClick={remove}
+                className="text-[12px] text-red-400 hover:text-red-600 transition-colors">
+                Remove credentials
+              </button>
+            )}
+            <SaveBtn processing={processing} label="Save credentials" loadingLabel="Saving…" />
+          </div>
+        </form>
+      </Card>
+
+      {/* Test send */}
+      {credential && (
+        <Card title="Test connection">
+          <p className="text-[12px] text-slate-500 mb-3">
+            Send a test WhatsApp message to verify your setup. The number must be registered with your Twilio sandbox.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              value={testNumber}
+              onChange={e => setTestNumber(e.target.value)}
+              className="h-8 text-[13px] font-mono flex-1"
+              placeholder="+923001234567"
+            />
+            <Button type="button" size="sm" disabled={testing || !testNumber.trim()}
+              onClick={verify}
+              className="h-8 text-[12.5px] text-white"
+              style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
+              {testing ? 'Sending…' : 'Send Test'}
+            </Button>
+          </div>
+          {testResult && (
+            <p className={`text-[12px] mt-2 ${testResult === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
+              {testResult === 'success' ? '✓ ' : '✗ '}{testMessage}
+            </p>
+          )}
+        </Card>
+      )}
+
+      {/* Quick links */}
+      <Card title="Next steps">
+        <div className="space-y-2 text-[12px]">
+          <a href="https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn" target="_blank" rel="noreferrer"
+            className="flex items-center gap-2 text-violet-600 hover:underline">
+            <ExternalLink size={11} /> Set up Twilio WhatsApp Sandbox
+          </a>
+          <p className="text-slate-400">Set your Twilio webhook URL to:</p>
+          <code className="block bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] font-mono break-all">
+            {window.location.origin}/webhook/twilio/whatsapp
+          </code>
+        </div>
+      </Card>
+    </div>
+  )
+}
+
 // ─── Page root ────────────────────────────────────────────────────────────────
 
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, mailSettings,
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
-  orgFollowupEnabled,
+  orgFollowupEnabled, whatsappCredential, aiSetting,
 }) {
   const [tab, setTab] = useState('profile')
 
@@ -1248,7 +1737,9 @@ export default function ProfileEdit({
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
             {tab === 'mail'      && <MailTab mailSettings={mailSettings} orgFollowupEnabled={orgFollowupEnabled} />}
             {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
+            {tab === 'ai'        && <AiProviderTab aiSetting={aiSetting} />}
             {tab === 'leadgen'   && <LeadGenTab leadGenSettings={leadGenSettings} />}
+            {tab === 'whatsapp'  && <WhatsappTab credential={whatsappCredential} />}
           </div>
         </div>
 

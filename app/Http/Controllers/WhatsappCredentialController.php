@@ -34,9 +34,12 @@ class WhatsappCredentialController extends Controller
 
     public function store(Request $request)
     {
+        $orgId      = $request->user()->organization_id;
+        $isUpdate   = WhatsappCredential::where('organization_id', $orgId)->exists();
+
         $validated = $request->validate([
             'account_sid'  => ['required', 'string', 'regex:/^AC/'],
-            'auth_token'   => 'required|string|min:20',
+            'auth_token'   => $isUpdate ? 'nullable|string|min:20' : 'required|string|min:20',
             'from_number'  => ['required', 'string', 'regex:/^\+?[1-9]\d{7,14}$/'],
             'display_name' => 'nullable|string|max:100',
         ], [
@@ -44,15 +47,21 @@ class WhatsappCredentialController extends Controller
             'from_number.regex'  => 'Phone number must be in international format e.g. +14155238886',
         ]);
 
-        $orgId = $request->user()->organization_id;
+        $fields = [
+            'account_sid'  => $validated['account_sid'],
+            'from_number'  => $validated['from_number'],
+            'display_name' => $validated['display_name'] ?? null,
+            'is_active'    => true,
+            'verified_at'  => null,
+        ];
 
-        $credential = WhatsappCredential::updateOrCreate(
+        if (!empty($validated['auth_token'])) {
+            $fields['auth_token'] = $validated['auth_token'];
+        }
+
+        WhatsappCredential::updateOrCreate(
             ['organization_id' => $orgId],
-            [
-                ...$validated,
-                'is_active'    => true,
-                'verified_at'  => null,
-            ]
+            $fields
         );
 
         return back()->with('success', 'WhatsApp credentials saved.');

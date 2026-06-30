@@ -209,16 +209,25 @@ class LeadController extends Controller
         $lead->load(['emails', 'phones', 'tags', 'client']);
         $activities = $lead->activities()->limit(30)->get();
 
+        $sentStatuses = ['sent', 'opened', 'clicked', 'bounced', 'unsubscribed'];
+
+        $emailSends = $lead->emailSends()
+            ->whereIn('status', $sentStatuses)
+            ->with('campaign:id,name,subject,body_text,body_html,from_name,from_email,followup_subject,followup_steps')
+            ->orderBy('sent_at')
+            ->get(['id', 'email_campaign_id', 'lead_id', 'email_used', 'status', 'sent_at', 'opened_at', 'clicked_at', 'is_followup', 'parent_send_id', 'followup_step']);
+
         $leadStats = [
-            'emails_sent'       => $lead->emailSends()->where('status', 'sent')->count(),
-            'activities_total'  => $activities->count(),
-            'days_known'        => (int) $lead->created_at->diffInDays(now()),
+            'emails_sent'      => $emailSends->count(),
+            'activities_total' => $activities->count(),
+            'days_known'       => (int) $lead->created_at->diffInDays(now()),
         ];
 
         return Inertia::render('Leads/Show', [
             'lead'       => $lead,
             'activities' => $activities,
             'leadStats'  => $leadStats,
+            'emailSends' => $emailSends,
         ]);
     }
 

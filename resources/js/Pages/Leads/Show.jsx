@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import StatusBadge from '@/Components/Common/StatusBadge'
 import PriorityBadge from '@/Components/Common/PriorityBadge'
@@ -15,6 +15,7 @@ import {
   DollarSign, Calendar, Clock, Tag, Pencil, Trash2,
   ChevronLeft, MessageSquare, PhoneCall, Send, Star,
   ExternalLink, Activity, Briefcase, Users, UserCheck,
+  MousePointerClick, Eye,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
@@ -139,18 +140,14 @@ const glass = {
 function InfoRow({ icon: Icon, label, value, href }) {
   if (!value) return null
   return (
-    <div className="flex items-start gap-3 py-2.5">
-      <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 mt-0.5">
-        <Icon size={13} className="text-slate-400" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{label}</p>
-        {href
-          ? <a href={href} target="_blank" rel="noopener noreferrer"
-              className="text-[13px] text-blue-600 hover:underline truncate block mt-0.5">{value}</a>
-          : <p className="text-[13px] text-slate-700 truncate mt-0.5">{value}</p>
-        }
-      </div>
+    <div className="flex items-center gap-2 py-1.5 min-w-0">
+      <Icon size={12} className="text-slate-350 shrink-0" />
+      <span className="text-[10.5px] font-semibold text-slate-400 uppercase tracking-wide shrink-0 w-[72px]">{label}</span>
+      {href
+        ? <a href={href} target="_blank" rel="noopener noreferrer"
+            className="text-[12.5px] text-blue-600 hover:underline truncate">{value}</a>
+        : <span className="text-[12.5px] text-slate-700 truncate">{value}</span>
+      }
     </div>
   )
 }
@@ -158,43 +155,237 @@ function InfoRow({ icon: Icon, label, value, href }) {
 function Card({ title, children, className = '' }) {
   return (
     <div className={cn('rounded-2xl overflow-hidden', className)} style={glass}>
-      <div className="px-4 py-3 border-b border-slate-100/80">
+      <div className="px-4 py-2.5 border-b border-slate-100/80">
         <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">{title}</p>
       </div>
-      <div className="px-4 py-1 divide-y divide-slate-50">{children}</div>
+      <div className="px-4 py-2 divide-y divide-slate-50/80">{children}</div>
     </div>
   )
 }
 
 function MiniStat({ icon: Icon, label, value, color = 'text-violet-600', bg = 'bg-violet-50' }) {
   return (
-    <div className="rounded-xl p-3.5 flex items-center gap-3" style={glass}>
-      <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0', bg)}>
-        <Icon size={16} className={color} strokeWidth={1.75} />
+    <div className="rounded-xl p-3 flex items-center gap-2.5" style={glass}>
+      <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', bg)}>
+        <Icon size={14} className={color} strokeWidth={1.75} />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 leading-none">{label}</p>
-        <p className="text-[15px] font-bold text-slate-800 mt-0.5 leading-none truncate">{value}</p>
+        <p className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 leading-none">{label}</p>
+        <p className="text-[14px] font-bold text-slate-800 mt-0.5 leading-none truncate">{value}</p>
       </div>
     </div>
   )
 }
 
 function QuickAction({ icon: Icon, label, href, onClick, color = 'text-slate-600' }) {
-  const cls = 'flex items-center gap-2.5 w-full px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-colors text-left'
+  const cls = 'flex items-center gap-2 w-full px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition-colors text-left'
   const inner = (
     <>
-      <div className="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
-        <Icon size={13} className={color} />
+      <div className="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center shrink-0">
+        <Icon size={12} className={color} />
       </div>
-      <span className="text-[12.5px] font-medium text-slate-700">{label}</span>
+      <span className="text-[12px] font-medium text-slate-700">{label}</span>
     </>
   )
   if (href) return <a href={href} className={cls}>{inner}</a>
   return <button onClick={onClick} className={cls}>{inner}</button>
 }
 
-export default function LeadShow({ lead, activities, leadStats }) {
+const EMAIL_STATUS_CFG = {
+  sent:         { label: 'Sent',         cls: 'bg-blue-50 text-blue-700',      dot: 'bg-blue-500' },
+  opened:       { label: 'Opened',       cls: 'bg-green-50 text-green-700',    dot: 'bg-green-500' },
+  clicked:      { label: 'Clicked',      cls: 'bg-violet-50 text-violet-700',  dot: 'bg-violet-500' },
+  bounced:      { label: 'Bounced',      cls: 'bg-red-50 text-red-700',        dot: 'bg-red-400' },
+  unsubscribed: { label: 'Unsubscribed', cls: 'bg-amber-50 text-amber-700',    dot: 'bg-amber-400' },
+}
+
+function stripHtml(html) {
+  return (html || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+function EmailTimeline({ emailSends }) {
+  const [expanded, setExpanded] = useState({})
+
+  const campaigns = useMemo(() => {
+    const map = {}
+    emailSends.forEach(es => {
+      const cid = es.email_campaign_id
+      if (!map[cid]) map[cid] = { campaign: es.campaign, sends: [] }
+      map[cid].sends.push(es)
+    })
+    Object.values(map).forEach(g => {
+      g.sends.sort((a, b) => {
+        if (!a.is_followup && b.is_followup) return -1
+        if (a.is_followup && !b.is_followup) return 1
+        return (a.followup_step || 0) - (b.followup_step || 0)
+      })
+    })
+    return Object.values(map)
+  }, [emailSends])
+
+  const getSubject = (es) => {
+    if (!es.is_followup) return es.campaign?.subject || '(No subject)'
+    const steps = es.campaign?.followup_steps
+    if (Array.isArray(steps) && steps[es.followup_step - 1]?.subject) return steps[es.followup_step - 1].subject
+    return es.campaign?.followup_subject || `Follow-up #${es.followup_step}`
+  }
+
+  const getBodyPreview = (es) => {
+    if (!es.is_followup) return stripHtml(es.campaign?.body_text || es.campaign?.body_html || '')
+    const steps = es.campaign?.followup_steps
+    if (Array.isArray(steps) && steps[es.followup_step - 1]?.body_html) return stripHtml(steps[es.followup_step - 1].body_html)
+    return stripHtml(es.campaign?.followup_body_html || '')
+  }
+
+  if (!campaigns.length) return null
+
+  return (
+    <div className="space-y-4">
+      {campaigns.map(({ campaign, sends }) => (
+        <div key={campaign?.id}
+          className="rounded-2xl overflow-hidden"
+          style={{ ...glass, border: '1px solid rgba(99,102,241,0.1)' }}>
+
+          {/* Campaign header */}
+          <div className="px-4 py-3 border-b border-slate-100/80"
+            style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.06) 0%,transparent 100%)' }}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                <Mail size={14} className="text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-bold text-slate-800 truncate">{campaign?.name}</p>
+                <p className="text-[10.5px] text-slate-400 mt-0.5">
+                  {sends.length} email{sends.length !== 1 ? 's' : ''} &nbsp;·&nbsp; from {campaign?.from_email || campaign?.from_name}
+                </p>
+              </div>
+              <div className="shrink-0 text-right hidden sm:block">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                  {sends.filter(s => s.opened_at).length}/{sends.length} opened
+                </p>
+                <p className="text-[10px] text-slate-300 mt-0.5">
+                  {sends.filter(s => s.clicked_at).length} clicked
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Email flow tree */}
+          <div className="px-4 py-3">
+            <div className="relative">
+              {/* Vertical connector line */}
+              {sends.length > 1 && (
+                <div className="absolute left-[13px] top-7 w-px"
+                  style={{
+                    bottom: '28px',
+                    background: 'linear-gradient(to bottom, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%)',
+                    opacity: 0.25,
+                  }} />
+              )}
+
+              <div className="space-y-3">
+                {sends.map((es, idx) => {
+                  const subject    = getSubject(es)
+                  const preview    = getBodyPreview(es)
+                  const isExpanded = expanded[es.id]
+                  const cfg        = EMAIL_STATUS_CFG[es.status] ?? { label: es.status, cls: 'bg-slate-50 text-slate-600', dot: 'bg-slate-400' }
+                  const isLast     = idx === sends.length - 1
+
+                  return (
+                    <div key={es.id} className="flex gap-3 relative">
+                      {/* Step dot */}
+                      <div className="shrink-0 flex flex-col items-center z-10">
+                        <div className={cn(
+                          'w-7 h-7 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm',
+                          cfg.dot
+                        )}>
+                          {es.is_followup
+                            ? <Send size={11} className="text-white" />
+                            : <Mail size={11} className="text-white" />
+                          }
+                        </div>
+                      </div>
+
+                      {/* Email card */}
+                      <div className="flex-1 min-w-0 rounded-xl border border-slate-100 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+                        <div className="px-3 py-2.5">
+                          {/* Top row */}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                                <span className="text-[9.5px] font-black text-slate-400 uppercase tracking-widest">
+                                  {es.is_followup ? `Follow-up #${es.followup_step}` : 'Initial email'}
+                                </span>
+                                <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full', cfg.cls)}>
+                                  {cfg.label}
+                                </span>
+                              </div>
+                              <p className="text-[13px] font-semibold text-slate-800 leading-snug truncate">{subject}</p>
+                              <p className="text-[11px] text-slate-400 mt-0.5 truncate">→ {es.email_used}</p>
+                            </div>
+                            {preview && (
+                              <button
+                                onClick={() => setExpanded(p => ({ ...p, [es.id]: !p[es.id] }))}
+                                className="shrink-0 mt-0.5 text-[10.5px] text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                              >
+                                {isExpanded ? '▲ Hide' : '▼ Preview'}
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Tracking bar */}
+                          <div className="flex items-center gap-3 mt-2 flex-wrap">
+                            {es.sent_at && (
+                              <span className="flex items-center gap-1 text-[10.5px] text-slate-400">
+                                <Send size={9} />
+                                {formatDistanceToNow(new Date(es.sent_at), { addSuffix: true })}
+                              </span>
+                            )}
+                            {es.opened_at ? (
+                              <span className="flex items-center gap-1 text-[10.5px] font-medium text-green-600">
+                                <Eye size={9} /> Opened {formatDistanceToNow(new Date(es.opened_at), { addSuffix: true })}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-[10.5px] text-slate-300">
+                                <Eye size={9} /> Not opened
+                              </span>
+                            )}
+                            {es.clicked_at ? (
+                              <span className="flex items-center gap-1 text-[10.5px] font-medium text-violet-600">
+                                <MousePointerClick size={9} /> Clicked {formatDistanceToNow(new Date(es.clicked_at), { addSuffix: true })}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 text-[10.5px] text-slate-300">
+                                <MousePointerClick size={9} /> No click
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Expandable body preview */}
+                        {isExpanded && preview && (
+                          <div className="px-3 py-3 border-t border-slate-50 bg-slate-50/60">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email body</p>
+                            <p className="text-[11.5px] text-slate-600 leading-relaxed line-clamp-8 whitespace-pre-wrap">
+                              {preview}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function LeadShow({ lead, activities, leadStats, emailSends = [] }) {
   const [deleting, setDeleting]       = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [changingStatus, setChangingStatus] = useState(false)
@@ -316,59 +507,64 @@ export default function LeadShow({ lead, activities, leadStats }) {
           {/* Left 2/3 — details */}
           <div className="lg:col-span-2 space-y-3">
 
-            {/* Contact */}
-            {(lead.emails?.length > 0 || lead.phones?.length > 0) && (
-              <Card title="Contact">
-                {lead.emails?.map(em => (
-                  <InfoRow key={em.id} icon={Mail} label={`Email · ${em.type}`}
-                    value={em.email} href={`mailto:${em.email}`} />
-                ))}
-                {lead.phones?.map(ph => (
-                  <InfoRow key={ph.id} icon={Phone} label={`Phone · ${ph.type}`}
-                    value={ph.phone} href={`tel:${ph.phone}`} />
-                ))}
-              </Card>
+            {/* Contact + Company side-by-side */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {(lead.emails?.length > 0 || lead.phones?.length > 0) && (
+                <Card title="Contact">
+                  {lead.emails?.map(em => (
+                    <InfoRow key={em.id} icon={Mail} label={em.type || 'Email'}
+                      value={em.email} href={`mailto:${em.email}`} />
+                  ))}
+                  {lead.phones?.map(ph => (
+                    <InfoRow key={ph.id} icon={Phone} label={ph.type || 'Phone'}
+                      value={ph.phone} href={`tel:${ph.phone}`} />
+                  ))}
+                </Card>
+              )}
+
+              {(lead.company || lead.website || lead.linkedin_url || lead.city || lead.industry) && (
+                <Card title="Company & Location">
+                  <InfoRow icon={Building2} label="Company"  value={lead.company} />
+                  <InfoRow icon={Globe}    label="Website"   value={lead.website}      href={lead.website} />
+                  <InfoRow icon={Link2}    label="LinkedIn"  value={lead.linkedin_url} href={lead.linkedin_url} />
+                  <InfoRow icon={MapPin}   label="Location"  value={[lead.city, lead.country].filter(Boolean).join(', ')} />
+                  <InfoRow icon={Tag}      label="Industry"  value={lead.industry} />
+                </Card>
+              )}
+            </div>
+
+            {/* Pipeline + Social side-by-side */}
+            {(lead.deal_value || lead.last_contacted_at || lead.follow_up_at || lead.social_handles?.filter(h => h.url).length > 0) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {(lead.deal_value || lead.last_contacted_at || lead.follow_up_at) && (
+                  <Card title="Pipeline">
+                    <InfoRow icon={DollarSign} label="Deal"
+                      value={lead.deal_value ? `${lead.currency} ${Number(lead.deal_value).toLocaleString()}` : null} />
+                    <InfoRow icon={Calendar} label="Contacted"
+                      value={lead.last_contacted_at ? formatDistanceToNow(new Date(lead.last_contacted_at), { addSuffix: true }) : null} />
+                    <InfoRow icon={Clock} label="Follow-up"
+                      value={lead.follow_up_at ? formatDistanceToNow(new Date(lead.follow_up_at), { addSuffix: true }) : null} />
+                  </Card>
+                )}
+
+                {lead.social_handles?.filter(h => h.url).length > 0 && (
+                  <Card title="Social Media">
+                    {lead.social_handles.filter(h => h.url).map((h, i) => (
+                      <InfoRow key={i} icon={ExternalLink} label={h.platform} value={h.url} href={h.url} />
+                    ))}
+                  </Card>
+                )}
+              </div>
             )}
 
-            {/* Company */}
-            {(lead.company || lead.website || lead.linkedin_url || lead.city || lead.industry) && (
-              <Card title="Company & Location">
-                <InfoRow icon={Building2} label="Company"  value={lead.company} />
-                <InfoRow icon={Globe}    label="Website"   value={lead.website}      href={lead.website} />
-                <InfoRow icon={Link2}    label="LinkedIn"  value={lead.linkedin_url} href={lead.linkedin_url} />
-                <InfoRow icon={MapPin}   label="Location"  value={[lead.city, lead.country].filter(Boolean).join(', ')} />
-                <InfoRow icon={Tag}      label="Industry"  value={lead.industry} />
-              </Card>
-            )}
-
-            {/* Social handles */}
-            {lead.social_handles?.filter(h => h.url).length > 0 && (
-              <Card title="Social Media">
-                {lead.social_handles.filter(h => h.url).map((h, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2.5">
-                    <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
-                      <ExternalLink size={12} className="text-slate-400" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{h.platform}</p>
-                      <a href={h.url} target="_blank" rel="noopener noreferrer"
-                        className="text-[13px] text-blue-600 hover:underline truncate block mt-0.5">{h.url}</a>
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            )}
-
-            {/* Pipeline */}
-            {(lead.deal_value || lead.last_contacted_at || lead.follow_up_at) && (
-              <Card title="Pipeline">
-                <InfoRow icon={DollarSign} label="Deal value"
-                  value={lead.deal_value ? `${lead.currency} ${Number(lead.deal_value).toLocaleString()}` : null} />
-                <InfoRow icon={Calendar} label="Last contacted"
-                  value={lead.last_contacted_at ? formatDistanceToNow(new Date(lead.last_contacted_at), { addSuffix: true }) : null} />
-                <InfoRow icon={Clock} label="Follow-up"
-                  value={lead.follow_up_at ? formatDistanceToNow(new Date(lead.follow_up_at), { addSuffix: true }) : null} />
-              </Card>
+            {/* Email flow timeline */}
+            {emailSends.length > 0 && (
+              <div>
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2 px-1">
+                  Emails sent ({emailSends.length})
+                </p>
+                <EmailTimeline emailSends={emailSends} />
+              </div>
             )}
 
             {/* Notes */}
@@ -385,10 +581,10 @@ export default function LeadShow({ lead, activities, leadStats }) {
 
             {/* Quick actions */}
             <div className="rounded-2xl overflow-hidden" style={glass}>
-              <div className="px-4 py-3 border-b border-slate-100/80">
+              <div className="px-4 py-2.5 border-b border-slate-100/80">
                 <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">Quick actions</p>
               </div>
-              <div className="px-2 py-2">
+              <div className="px-2 py-1.5">
                 {primaryEmail && <QuickAction icon={Mail} label="Send email" href={`mailto:${primaryEmail}`} color="text-blue-500" />}
                 {primaryPhone && <QuickAction icon={PhoneCall} label="Call" href={`tel:${primaryPhone}`} color="text-green-500" />}
                 <QuickAction icon={Pencil} label="Edit lead" href={`/leads/${lead.id}/edit`} color="text-violet-500" />
@@ -398,8 +594,8 @@ export default function LeadShow({ lead, activities, leadStats }) {
             </div>
 
             {/* Inline status change */}
-            <div className="rounded-2xl p-4" style={glass}>
-              <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2.5">Change status</p>
+            <div className="rounded-2xl p-3" style={glass}>
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">Change status</p>
               <Select value={lead.status} onValueChange={handleStatusChange} disabled={changingStatus}>
                 <SelectTrigger className="h-9 text-[12.5px] bg-white">
                   <SelectValue />
@@ -417,39 +613,39 @@ export default function LeadShow({ lead, activities, leadStats }) {
 
             {/* Outreach channels */}
             <div className="rounded-2xl overflow-hidden" style={glass}>
-              <div className="px-4 py-3 border-b border-slate-100/80">
+              <div className="px-4 py-2.5 border-b border-slate-100/80">
                 <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">Outreach</p>
               </div>
-              <div className="px-2 py-2">
+              <div className="px-2 py-1.5">
                 <OutreachChannels lead={lead} variant="panel" />
               </div>
             </div>
 
             {/* Activity timeline */}
             <div className="rounded-2xl overflow-hidden" style={glass}>
-              <div className="px-4 py-3 border-b border-slate-100/80">
+              <div className="px-4 py-2.5 border-b border-slate-100/80">
                 <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">
                   Activity timeline
                   {activities?.length > 0 && <span className="ml-1.5 text-violet-500">({activities.length})</span>}
                 </p>
               </div>
-              <div className="px-4 py-3">
+              <div className="px-4 py-2.5">
                 {activities?.length ? (
                   <div className="relative">
                     {/* timeline line */}
                     <div className="absolute left-[11px] top-1 bottom-1 w-px bg-slate-100" />
-                    <div className="space-y-4">
+                    <div className="space-y-3">
                       {activities.map(act => {
                         const cfg = ACT_CFG[act.type] ?? ACT_CFG.note
                         const Icon = cfg.icon
                         return (
-                          <div key={act.id} className="flex gap-3 relative">
-                            <div className={cn('w-6 h-6 rounded-full flex items-center justify-center shrink-0 z-10', cfg.cls)}>
-                              <Icon size={11} />
+                          <div key={act.id} className="flex gap-2.5 relative">
+                            <div className={cn('w-5 h-5 rounded-full flex items-center justify-center shrink-0 z-10', cfg.cls)}>
+                              <Icon size={10} />
                             </div>
-                            <div className="flex-1 min-w-0 pb-1">
-                              <p className="text-[12px] text-slate-700 leading-snug">{act.description}</p>
-                              <p className="text-[10.5px] text-slate-400 mt-0.5">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[11.5px] text-slate-700 leading-snug">{act.description}</p>
+                              <p className="text-[10px] text-slate-400 mt-0.5">
                                 {formatDistanceToNow(new Date(act.created_at), { addSuffix: true })}
                               </p>
                             </div>

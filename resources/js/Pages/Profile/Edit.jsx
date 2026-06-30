@@ -1538,10 +1538,10 @@ function AiProviderTab({ aiSetting }) {
 
 function WhatsappTab({ credential }) {
   const { data, setData, post, delete: del, processing, errors, reset } = useForm({
-    account_sid:  '',
+    account_sid:  credential?.account_sid  ?? '',
     auth_token:   '',
-    from_number:  '',
-    display_name: '',
+    from_number:  credential?.from_number  ?? '',
+    display_name: credential?.display_name ?? '',
   })
 
   const [testNumber, setTestNumber]         = React.useState('')
@@ -1624,10 +1624,10 @@ function WhatsappTab({ credential }) {
           </Field>
 
           <Field label="Auth Token" error={errors.auth_token}
-            hint="Found below your Account SID in Twilio Console">
+            hint={credential ? 'Token already saved — enter a new one to replace it' : 'Found below your Account SID in Twilio Console'}>
             <Input type="password" value={data.auth_token} onChange={e => setData('auth_token', e.target.value)}
               className="h-8 text-[13px] font-mono"
-              placeholder="32-character token" />
+              placeholder={credential ? 'Leave blank to keep current token' : '32-character token'} />
           </Field>
 
           <Field label="WhatsApp From Number" error={errors.from_number}

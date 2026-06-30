@@ -129,6 +129,7 @@ class InboxController extends Controller
         $cred = $request->user()->smtpCredentials()->where('is_active', true)->first();
         return response()->json([
             'last_fetched_at' => $cred?->last_fetched_at?->toISOString(),
+            'inbox_count'     => FetchedEmail::inbox()->count(),
         ]);
     }
 

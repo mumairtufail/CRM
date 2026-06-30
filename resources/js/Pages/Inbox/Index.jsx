@@ -649,7 +649,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
     const next = !email.is_starred
     updateInList(email.id, { is_starred: next })
     if (folder === 'starred' && !next) removeFromList(email.id)
-    toast.success(next ? 'Starred' : 'Unstarred')
+    toast.success(next ? 'Starred' : 'Unstarred', { duration: 3000 })
     fetch(`/inbox/${email.id}/starred`, { method: 'PATCH', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       .catch(() => updateInList(email.id, { is_starred: !next }))
   }, [folder, updateInList, removeFromList])
@@ -657,7 +657,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   const handleTrash = useCallback((email) => {
     removeFromList(email.id)
     setCounts(prev => ({ ...prev, inbox: Math.max(0, (prev.inbox ?? 0) - 1), trash: (prev.trash ?? 0) + 1 }))
-    toast.success('Moved to trash')
+    toast.success('Moved to trash', { duration: 3000 })
     fetch(`/inbox/${email.id}/trash`, { method: 'PATCH', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       .catch(() => {})
   }, [removeFromList])
@@ -665,7 +665,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   const handleRestore = useCallback((email) => {
     removeFromList(email.id)
     setCounts(prev => ({ ...prev, inbox: (prev.inbox ?? 0) + 1, trash: Math.max(0, (prev.trash ?? 0) - 1) }))
-    toast.success('Restored to inbox')
+    toast.success('Restored to inbox', { duration: 3000 })
     fetch(`/inbox/${email.id}/restore`, { method: 'PATCH', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       .catch(() => {})
   }, [removeFromList])
@@ -673,7 +673,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   const handleDelete = useCallback((email) => {
     removeFromList(email.id)
     setCounts(prev => ({ ...prev, trash: Math.max(0, (prev.trash ?? 0) - 1) }))
-    toast.success('Email permanently deleted')
+    toast.success('Email permanently deleted', { duration: 3000 })
     fetch(`/inbox/${email.id}`, { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       .catch(() => {})
   }, [removeFromList])
@@ -683,20 +683,28 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
     setSyncing(true)
     if (pollRef.current) clearInterval(pollRef.current)
 
-    const prevFetchedAt = credential?.last_fetched_at
+    const prevFetchedAt   = credential?.last_fetched_at
+    const prevInboxCount  = counts?.inbox ?? 0
+    const syncToastId     = toast.loading('Syncing inbox…')
+
+    const finish = (clear) => {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+      setSyncing(false)
+      toast.dismiss(syncToastId)
+      clear()
+    }
 
     try {
       const res  = await fetch('/inbox/sync', { method: 'POST', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       const json = await res.json()
+
       if (!json.ok) {
-        toast.error(json.error)
-        setSyncing(false)
+        finish(() => toast.error(json.error, { duration: 5000 }))
         return
       }
 
-      toast.success('Syncing inbox — emails will appear shortly…')
-
-      // Poll every 5 s until last_fetched_at changes (max 2 min)
+      // Poll every 5 s — max 24 attempts (2 min)
       let attempts = 0
       pollRef.current = setInterval(async () => {
         attempts++
@@ -704,28 +712,40 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
           const sr     = await fetch('/inbox/sync-status', { headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
           const status = await sr.json()
           const done   = status.last_fetched_at && status.last_fetched_at !== prevFetchedAt
-          if (done || attempts >= 24) {
-            clearInterval(pollRef.current)
-            pollRef.current = null
-            setSyncing(false)
-            if (done) {
-              toast.success('Inbox synced!')
-              router.reload({ only: ['emails', 'counts', 'credential'] })
-            } else {
-              toast.info('Sync is still running — refresh again in a moment.')
-            }
+
+          if (!done && attempts < 24) return
+
+          const newCount  = status.inbox_count ?? 0
+          const newEmails = newCount - prevInboxCount
+
+          if (done && newEmails > 0) {
+            // New emails arrived — reload to show them
+            finish(() =>
+              router.reload({
+                only: ['emails', 'counts', 'credential'],
+                preserveScroll: true,
+                onSuccess: () =>
+                  toast.success(
+                    `${newEmails} new email${newEmails !== 1 ? 's' : ''} received!`,
+                    { duration: 5000 }
+                  ),
+              })
+            )
+          } else if (done) {
+            // Sync ran but no new emails
+            finish(() => toast.success('Inbox is up to date', { duration: 4000 }))
+          } else {
+            // Timed out
+            finish(() => toast.info('Sync is still running — check back in a moment.', { duration: 5000 }))
           }
         } catch {
-          clearInterval(pollRef.current)
-          pollRef.current = null
-          setSyncing(false)
+          finish(() => toast.error('Sync check failed — try again.', { duration: 4000 }))
         }
       }, 5000)
     } catch {
-      toast.error('Sync failed — check your connection.')
-      setSyncing(false)
+      finish(() => toast.error('Sync failed — check your connection.', { duration: 5000 }))
     }
-  }, [syncing, credential?.last_fetched_at])
+  }, [syncing, credential?.last_fetched_at, counts?.inbox])
 
   const notReady = !hasSmtp || !hasImap
 

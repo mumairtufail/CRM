@@ -31,7 +31,7 @@ export default function Seo({ seo, app_url }) {
     <>
       <Head title="Admin · SEO & Indexing" />
       <AdminLayout title="SEO & Indexing">
-        <div className="max-w-5xl mx-auto py-4 px-2">
+        <div className="max-w-7xl mx-auto py-6 px-4 w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[12px] text-slate-400 mb-3">
             <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>

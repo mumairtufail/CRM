@@ -398,7 +398,6 @@ export default function Register({ appDomain }) {
           padding: 24px;
           background: #F4F2FF;
           position: relative;
-          overflow: hidden;
           font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 

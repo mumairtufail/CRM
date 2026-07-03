@@ -106,7 +106,7 @@ export default function Branding({ custom_logo_url }) {
     <>
       <Head title="Admin · Branding & Logo" />
       <AdminLayout title="Branding & Logo">
-        <div className="max-w-4xl mx-auto py-4 px-2">
+        <div className="max-w-7xl mx-auto py-6 px-4 w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[12px] text-slate-400 mb-3">
             <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>

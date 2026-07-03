@@ -115,21 +115,65 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::patch('/blogs/{blog}/toggle',        [AdminBlogController::class, 'togglePublish'])->name('blogs.toggle');
     Route::delete('/blogs/{blog}',              [AdminBlogController::class, 'destroy'])->name('blogs.destroy');
 
-    Route::get('/settings',                      fn () => inertia('Admin/Settings'))->name('settings');
-    Route::get('/settings/account',             [AdminAccountController::class, 'edit'])->name('settings.account');
+    Route::get('/settings', function (\Illuminate\Http\Request $request) {
+        $aiSetting = \App\Models\SystemSetting::getAdminAi();
+        if (!empty($aiSetting['api_key'])) {
+            $aiSetting['api_key'] = substr($aiSetting['api_key'], 0, 8) . str_repeat('*', 24);
+        }
+
+        return inertia('Admin/Settings', [
+            'user' => $request->user('admin')?->only('name', 'email'),
+            'custom_logo_url' => \App\Models\SystemSetting::get('custom_logo_url'),
+            'setting' => $aiSetting,
+            'models' => [
+                'claude' => [
+                    ['id' => 'claude-opus-4-8',           'label' => 'Claude Opus 4.8'],
+                    ['id' => 'claude-sonnet-4-6',          'label' => 'Claude Sonnet 4.6'],
+                    ['id' => 'claude-haiku-4-5-20251001',  'label' => 'Claude Haiku 4.5'],
+                    ['id' => 'claude-opus-4-5',            'label' => 'Claude Opus 4.5'],
+                    ['id' => 'claude-sonnet-3-7',          'label' => 'Claude Sonnet 3.7'],
+                    ['id' => 'claude-sonnet-3-5',          'label' => 'Claude Sonnet 3.5'],
+                    ['id' => 'claude-haiku-3-5',           'label' => 'Claude Haiku 3.5'],
+                ],
+                'openai' => [
+                    ['id' => 'gpt-4o',            'label' => 'GPT-4o'],
+                    ['id' => 'gpt-4o-mini',       'label' => 'GPT-4o mini'],
+                    ['id' => 'gpt-4-turbo',       'label' => 'GPT-4 Turbo'],
+                    ['id' => 'gpt-3.5-turbo',     'label' => 'GPT-3.5 Turbo'],
+                    ['id' => 'o3-mini',           'label' => 'o3-mini'],
+                    ['id' => 'o1-mini',           'label' => 'o1-mini'],
+                    ['id' => 'o1',                'label' => 'o1'],
+                ],
+                'kimi' => [
+                    ['id' => 'moonshotai/kimi-k2',                             'label' => 'Kimi K2'],
+                    ['id' => 'moonshotai/kimi-k2.6',                           'label' => 'Kimi K2.6'],
+                    ['id' => 'nvidia/llama-3.1-nemotron-70b-instruct',         'label' => 'Llama 3.1 Nemotron 70B'],
+                    ['id' => 'meta/llama-3.1-405b-instruct',                   'label' => 'Llama 3.1 405B'],
+                    ['id' => 'nvidia/mistral-nemo-minitron-8b-8k-instruct',    'label' => 'Mistral Nemo Minitron 8B'],
+                    ['id' => 'deepseek-ai/deepseek-r1',                        'label' => 'DeepSeek R1'],
+                ],
+            ],
+            'seo' => \App\Models\SystemSetting::getSeo(),
+            'app_url' => config('app.url'),
+            'smtp' => \App\Models\SystemSetting::getSmtp(),
+            'configured' => \App\Models\SystemSetting::isSmtpConfigured(),
+        ]);
+    })->name('settings');
+
+    Route::get('/settings/account',             fn () => redirect()->route('settings', ['tab' => 'account']))->name('settings.account');
     Route::patch('/settings/account',           [AdminAccountController::class, 'update'])->name('settings.account.update');
     Route::patch('/settings/account/password',  [AdminAccountController::class, 'updatePassword'])->name('settings.account.password');
-    Route::get('/settings/branding',            [AdminAccountController::class, 'editBranding'])->name('settings.branding');
+    Route::get('/settings/branding',            fn () => redirect()->route('settings', ['tab' => 'branding']))->name('settings.branding');
     Route::post('/settings/branding',           [AdminAccountController::class, 'updateBranding'])->name('settings.branding.update');
     Route::post('/settings/branding/reset',     [AdminAccountController::class, 'resetBranding'])->name('settings.branding.reset');
-    Route::get('/settings/ai',                  [\App\Http\Controllers\Admin\AiSettingsController::class, 'edit'])->name('settings.ai');
+    Route::get('/settings/ai',                  fn () => redirect()->route('settings', ['tab' => 'ai']))->name('settings.ai');
     Route::post('/settings/ai',                 [\App\Http\Controllers\Admin\AiSettingsController::class, 'update'])->name('settings.ai.update');
     Route::post('/settings/ai/test',            [\App\Http\Controllers\Admin\AiSettingsController::class, 'test'])->name('settings.ai.test');
     Route::delete('/settings/ai',               [\App\Http\Controllers\Admin\AiSettingsController::class, 'destroy'])->name('settings.ai.destroy');
-    Route::get('/settings/seo',                 [\App\Http\Controllers\Admin\SeoSettingsController::class, 'edit'])->name('settings.seo');
+    Route::get('/settings/seo',                 fn () => redirect()->route('settings', ['tab' => 'seo']))->name('settings.seo');
     Route::post('/settings/seo',                [\App\Http\Controllers\Admin\SeoSettingsController::class, 'update'])->name('settings.seo.update');
 
-    Route::get('/smtp-settings',                 [AdminSmtpSettingsController::class, 'edit'])->name('smtp.edit');
+    Route::get('/smtp-settings',                 fn () => redirect()->route('settings', ['tab' => 'smtp']))->name('smtp.edit');
     Route::post('/smtp-settings',                [AdminSmtpSettingsController::class, 'update'])->name('smtp.update');
     Route::post('/smtp-settings/test',           [AdminSmtpSettingsController::class, 'test'])->name('smtp.test');
 

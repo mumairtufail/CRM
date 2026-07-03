@@ -107,38 +107,38 @@ export default function Ai({ setting, models }) {
     <>
       <Head title="Admin · AI Configuration" />
       <AdminLayout title="AI Configuration">
-        <div className="max-w-2xl mx-auto py-6 px-2">
+        <div className="max-w-4xl mx-auto py-4 px-2">
           {/* Breadcrumbs */}
-          <div className="flex items-center gap-2 text-[13px] text-slate-400 mb-6">
+          <div className="flex items-center gap-2 text-[12px] text-slate-400 mb-3">
             <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>
             <span>/</span>
             <span className="text-slate-600 font-medium">AI Configuration</span>
           </div>
 
-          <div className="mb-6 flex items-start justify-between">
+          <div className="mb-4 flex items-start justify-between">
             <div>
-              <h1 className="text-[20px] font-bold text-slate-800 mb-1 flex items-center gap-2">
-                <Cpu size={22} className="text-violet-600" />
+              <h1 className="text-[17px] font-bold text-slate-800 mb-0.5 flex items-center gap-2">
+                <Cpu size={18} className="text-violet-600" />
                 AI Configuration
               </h1>
-              <p className="text-[13px] text-slate-400 font-normal leading-relaxed">
+              <p className="text-[12px] text-slate-400 font-normal leading-snug">
                 Configure the global AI provider used for platform tasks, template writing, and auto-analysis.
               </p>
             </div>
             <Link
               href="/admin/settings"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12.5px] font-semibold text-slate-600 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[12px] font-semibold text-slate-600 transition-colors shrink-0"
             >
-              <ArrowLeft size={13} /> Back
+              <ArrowLeft size={12} /> Back
             </Link>
           </div>
 
           {/* Form and Status Card */}
-          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm mb-6">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-6">
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm mb-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
               <div>
-                <h2 className="text-[14.5px] font-bold text-slate-800">Connection Settings</h2>
-                <p className="text-[12px] text-slate-400">Configure provider keys and endpoints.</p>
+                <h2 className="text-[13.5px] font-bold text-slate-800">Connection Settings</h2>
+                <p className="text-[11.5px] text-slate-400">Configure provider keys and endpoints.</p>
               </div>
               <div className="flex items-center gap-2">
                 {defaultSetting.validated_at ? (
@@ -153,13 +153,13 @@ export default function Ai({ setting, models }) {
               </div>
             </div>
 
-            <form onSubmit={submit} className="space-y-5">
+            <form onSubmit={submit} className="space-y-4">
               {/* Provider Select */}
               <div>
-                <label className="block text-[12.5px] font-semibold text-slate-700 mb-1.5">
+                <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
                   AI Provider
                 </label>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-3 gap-2.5">
                   {[
                     { id: 'openai', label: 'OpenAI' },
                     { id: 'claude', label: 'Anthropic' },
@@ -169,7 +169,7 @@ export default function Ai({ setting, models }) {
                       key={p.id}
                       type="button"
                       onClick={() => setData('provider', p.id)}
-                      className={`py-3 px-4 rounded-xl border text-center font-bold text-[13px] transition-all flex flex-col items-center justify-center gap-1 ${
+                      className={`py-2 px-3 rounded-lg border text-center font-bold text-[12.5px] transition-all flex items-center justify-center gap-1 ${
                         data.provider === p.id
                           ? 'border-violet-600 bg-violet-50/50 text-violet-700'
                           : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
@@ -181,99 +181,104 @@ export default function Ai({ setting, models }) {
                 </div>
               </div>
 
-              {/* API Key */}
-              <div>
-                <label className="block text-[12.5px] font-semibold text-slate-700 mb-1.5">
-                  API Key
-                </label>
-                <div className="relative flex items-center">
-                  <span className="absolute left-3.5 text-slate-400">
-                    <Key size={15} />
-                  </span>
-                  <input
-                    type={showApiKey ? 'text' : 'password'}
-                    value={data.api_key}
-                    onChange={e => setData('api_key', e.target.value)}
-                    placeholder="sk-..."
-                    className="w-full h-10 pl-10 pr-10 text-[13.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowApiKey(!showApiKey)}
-                    className="absolute right-3.5 text-slate-400 hover:text-slate-600"
-                  >
-                    {showApiKey ? <EyeOff size={15} /> : <Eye size={15} />}
-                  </button>
-                </div>
-                {errors.api_key && <p className="text-red-500 text-[11.5px] mt-1">{errors.api_key}</p>}
-              </div>
-
-              {/* Model Select */}
-              <div>
-                <label className="block text-[12.5px] font-semibold text-slate-700 mb-1.5">
-                  AI Model
-                </label>
-                <select
-                  value={data.model}
-                  onChange={e => setData('model', e.target.value)}
-                  className="w-full h-10 px-3 text-[13.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none bg-white"
-                >
-                  <option value="">Select a model...</option>
-                  {currentModels.map(m => (
-                    <option key={m.id} value={m.id}>{m.label}</option>
-                  ))}
-                  <option value="custom">-- Custom Model Name --</option>
-                </select>
-                
-                {data.model === 'custom' && (
-                  <input
-                    type="text"
-                    value={data.model === 'custom' ? '' : data.model}
-                    onChange={e => setData('model', e.target.value)}
-                    placeholder="Enter custom model identifier (e.g. gpt-4-32k)"
-                    className="w-full h-10 px-3 mt-2 text-[13.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
-                  />
-                )}
-                {errors.model && <p className="text-red-500 text-[11.5px] mt-1">{errors.model}</p>}
-              </div>
-
-              {/* Base URL (Optional) */}
-              <div>
-                <label className="block text-[12.5px] font-semibold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                  Base Endpoint URL <span className="text-[10px] text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <input
-                  type="url"
-                  value={data.base_url}
-                  onChange={e => setData('base_url', e.target.value)}
-                  placeholder="e.g. https://api.openai.com/v1"
-                  className="w-full h-10 px-3 text-[13.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
-                />
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Leave empty to use the provider's default URL. Change this when proxying or using local hosts.
-                </p>
-                {errors.base_url && <p className="text-red-500 text-[11.5px] mt-1">{errors.base_url}</p>}
-              </div>
-
-              {/* Active Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50">
+              {/* API Key + Model side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* API Key */}
                 <div>
-                  <span className="block text-[13px] font-semibold text-slate-700">Enable Provider</span>
-                  <span className="block text-[11.5px] text-slate-400">Activate or suspend this AI client globally.</span>
+                  <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
+                    API Key
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 text-slate-400">
+                      <Key size={14} />
+                    </span>
+                    <input
+                      type={showApiKey ? 'text' : 'password'}
+                      value={data.api_key}
+                      onChange={e => setData('api_key', e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full h-9 pl-9 pr-9 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 text-slate-400 hover:text-slate-600"
+                    >
+                      {showApiKey ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                  {errors.api_key && <p className="text-red-500 text-[11px] mt-1">{errors.api_key}</p>}
                 </div>
-                <input
-                  type="checkbox"
-                  checked={data.is_active}
-                  onChange={e => setData('is_active', e.target.checked)}
-                  className="w-5 h-5 accent-violet-600 rounded cursor-pointer"
-                />
+
+                {/* Model Select */}
+                <div>
+                  <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
+                    AI Model
+                  </label>
+                  <select
+                    value={data.model}
+                    onChange={e => setData('model', e.target.value)}
+                    className="w-full h-9 px-3 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none bg-white"
+                  >
+                    <option value="">Select a model...</option>
+                    {currentModels.map(m => (
+                      <option key={m.id} value={m.id}>{m.label}</option>
+                    ))}
+                    <option value="custom">-- Custom Model Name --</option>
+                  </select>
+
+                  {data.model === 'custom' && (
+                    <input
+                      type="text"
+                      value={data.model === 'custom' ? '' : data.model}
+                      onChange={e => setData('model', e.target.value)}
+                      placeholder="Enter custom model identifier (e.g. gpt-4-32k)"
+                      className="w-full h-9 px-3 mt-2 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                    />
+                  )}
+                  {errors.model && <p className="text-red-500 text-[11px] mt-1">{errors.model}</p>}
+                </div>
               </div>
+
+              {/* Base URL + Active toggle side by side */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-700 mb-1.5">
+                    Base Endpoint URL <span className="text-[10px] text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={data.base_url}
+                    onChange={e => setData('base_url', e.target.value)}
+                    placeholder="e.g. https://api.openai.com/v1"
+                    className="w-full h-9 px-3 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                  />
+                  {errors.base_url && <p className="text-red-500 text-[11px] mt-1">{errors.base_url}</p>}
+                </div>
+
+                {/* Active Toggle */}
+                <div className="flex items-center justify-between px-3 rounded-lg border border-slate-100 bg-slate-50/50">
+                  <div>
+                    <span className="block text-[12.5px] font-semibold text-slate-700">Enable Provider</span>
+                    <span className="block text-[11px] text-slate-400">Activate globally.</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={data.is_active}
+                    onChange={e => setData('is_active', e.target.checked)}
+                    className="w-4.5 h-4.5 accent-violet-600 rounded cursor-pointer"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-slate-400 -mt-2">
+                Leave the base URL empty to use the provider's default. Change it when proxying or using local hosts.
+              </p>
 
               {/* Connection Test Results */}
               {testResult && (
-                <div className={`p-4 rounded-xl border text-[13px] leading-relaxed ${
-                  testResult.success 
-                    ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800' 
+                <div className={`p-3 rounded-xl border text-[12.5px] leading-relaxed ${
+                  testResult.success
+                    ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
                     : 'bg-red-50/50 border-red-100 text-red-800'
                 }`}>
                   <h4 className="font-bold mb-1 flex items-center gap-1.5">
@@ -289,13 +294,13 @@ export default function Ai({ setting, models }) {
               )}
 
               {/* Actions Footer */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={clearConfig}
-                  className="px-3.5 py-2 rounded-lg border border-red-200 text-[12.5px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-1.5 transition-colors"
+                  className="px-3 py-1.5 rounded-lg border border-red-200 text-[12px] font-semibold text-red-600 hover:bg-red-50 flex items-center gap-1.5 transition-colors"
                 >
-                  <Trash2 size={14} /> Clear Settings
+                  <Trash2 size={13} /> Clear Settings
                 </button>
 
                 <div className="flex gap-2">
@@ -303,15 +308,15 @@ export default function Ai({ setting, models }) {
                     type="button"
                     onClick={testConnection}
                     disabled={testing}
-                    className="px-3.5 py-2 rounded-lg border border-slate-200 text-[12.5px] font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-[12px] font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
                   >
-                    {testing ? <RefreshCw size={13} className="animate-spin" /> : <Send size={13} />}
+                    {testing ? <RefreshCw size={12} className="animate-spin" /> : <Send size={12} />}
                     Test Connection
                   </button>
                   <button
                     type="submit"
                     disabled={processing}
-                    className="px-4 py-2 rounded-lg bg-violet-600 text-[12.5px] font-semibold text-white hover:bg-violet-700 flex items-center gap-1.5 transition-colors shadow-sm shadow-violet-500/10 disabled:opacity-50"
+                    className="px-3.5 py-1.5 rounded-lg bg-violet-600 text-[12px] font-semibold text-white hover:bg-violet-700 flex items-center gap-1.5 transition-colors shadow-sm shadow-violet-500/10 disabled:opacity-50"
                   >
                     Save Changes
                   </button>

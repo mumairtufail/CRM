@@ -1,19 +1,50 @@
 import { useForm, Head, Link } from '@inertiajs/react'
 import GuestLayout from '@/Layouts/GuestLayout'
 import { toast } from 'sonner'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 
 export default function VerifyCode({ status }) {
-  const { data, setData, post, processing, errors } = useForm({
+  const { data, setData, post, processing, errors, reset } = useForm({
     code: '',
   })
   
   const [resending, setResending] = useState(false)
-  const [resendStatus, setResendStatus] = useState('')
+  const [expiryTime, setExpiryTime] = useState(90)
+  const [resendCooldown, setResendCooldown] = useState(60)
+  const [isExpired, setIsExpired] = useState(false)
+
+  // Expiry Timer Countdown
+  useEffect(() => {
+    if (expiryTime <= 0) {
+      setIsExpired(true)
+      return
+    }
+
+    const timer = setInterval(() => {
+      setExpiryTime(prev => prev - 1)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [expiryTime])
+
+  // Resend Cooldown Timer Countdown
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+
+    const timer = setInterval(() => {
+      setResendCooldown(prev => prev - 1)
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [resendCooldown])
 
   const submit = e => {
     e.preventDefault()
+    if (isExpired) {
+      toast.error('This code has expired. Please request a new code.')
+      return
+    }
     if (!data.code || data.code.length !== 6 || isNaN(data.code)) {
       toast.error('Please enter a valid 6-digit code.')
       return
@@ -30,10 +61,15 @@ export default function VerifyCode({ status }) {
   }
 
   const resend = async () => {
+    if (resendCooldown > 0) return
+    
     setResending(true)
     try {
       const response = await axios.post('/register/resend-code')
-      setResendStatus('code-resent')
+      setExpiryTime(90)
+      setResendCooldown(60)
+      setIsExpired(false)
+      reset('code')
       toast.success(response.data.message || 'Verification code resent successfully!')
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to resend code.'
@@ -41,6 +77,13 @@ export default function VerifyCode({ status }) {
     } finally {
       setResending(false)
     }
+  }
+
+  // Format seconds to MM:SS
+  const formatTime = seconds => {
+    const m = Math.floor(seconds / 60)
+    const s = seconds % 60
+    return `${m}:${s < 10 ? '0' : ''}${s}`
   }
 
   return (
@@ -56,12 +99,6 @@ export default function VerifyCode({ status }) {
             </p>
           </div>
 
-          {(status === 'code-resent' || resendStatus === 'code-resent') && (
-            <div className="status-banner">
-              A new 6-digit verification code has been sent.
-            </div>
-          )}
-
           <form onSubmit={submit} className="forgot-form">
             <div>
               <input
@@ -75,17 +112,30 @@ export default function VerifyCode({ status }) {
                 }}
                 maxLength={6}
                 placeholder="123456"
-                className="code-input"
+                className={`code-input ${isExpired ? 'expired-input' : ''}`}
                 required
                 autoFocus
+                disabled={isExpired || processing}
               />
+              
+              {/* Expiry Timer */}
+              <div className="timer-container">
+                {isExpired ? (
+                  <span className="expiry-text expired">Code has expired. Please resend.</span>
+                ) : (
+                  <span className={`expiry-text ${expiryTime <= 15 ? 'warning' : ''}`}>
+                    Expires in: {formatTime(expiryTime)}
+                  </span>
+                )}
+              </div>
+
               {errors.code && <p className="error-text">{errors.code}</p>}
             </div>
 
             {/* Submit */}
             <button
               type="submit"
-              disabled={processing}
+              disabled={processing || isExpired}
               className="submit-btn"
             >
               {processing ? (
@@ -98,13 +148,19 @@ export default function VerifyCode({ status }) {
           </form>
 
           <div className="card-footer">
-            <button
-              onClick={resend}
-              disabled={resending}
-              className="resend-link"
-            >
-              {resending ? 'Resending...' : 'Resend Code'}
-            </button>
+            {resendCooldown > 0 ? (
+              <span className="resend-disabled">
+                Resend Code in {resendCooldown}s
+              </span>
+            ) : (
+              <button
+                onClick={resend}
+                disabled={resending}
+                className="resend-link"
+              >
+                {resending ? 'Resending...' : 'Resend Code'}
+              </button>
+            )}
 
             <Link
               href="/"
@@ -149,16 +205,6 @@ export default function VerifyCode({ status }) {
           line-height: 1.4;
         }
 
-        .status-banner {
-          margin-bottom: 20px;
-          font-size: 12.5px;
-          color: #15803d;
-          background: #f0fdf4;
-          border-radius: 10px;
-          padding: 10px 14px;
-          border: 1px solid #bbf7d0;
-        }
-
         .forgot-form {
           display: flex;
           flex-direction: column;
@@ -183,6 +229,38 @@ export default function VerifyCode({ status }) {
         .code-input:focus {
           border-color: #7c3aed;
           box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+        }
+
+        .expired-input {
+          background-color: #f8fafc;
+          border-color: #e2e8f0;
+          color: #94a3b8;
+          text-decoration: line-through;
+        }
+
+        .timer-container {
+          margin-top: 8px;
+          text-align: right;
+        }
+
+        .expiry-text {
+          font-size: 12px;
+          color: #64748b;
+          font-weight: 600;
+        }
+
+        .expiry-text.warning {
+          color: #ea580c;
+          animation: pulse 1s infinite alternate;
+        }
+
+        .expiry-text.expired {
+          color: #ef4444;
+        }
+
+        @keyframes pulse {
+          from { opacity: 0.6; }
+          to { opacity: 1; }
         }
 
         .error-text {
@@ -244,6 +322,13 @@ export default function VerifyCode({ status }) {
           margin-top: 24px;
           font-size: 12.5px;
         }
+
+        .resend-disabled {
+          color: #94a3b8;
+          font-weight: 500;
+          cursor: not-allowed;
+        }
+
         .resend-link {
           color: #7c3aed;
           font-weight: 600;

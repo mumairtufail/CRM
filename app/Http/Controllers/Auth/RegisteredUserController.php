@@ -88,7 +88,7 @@ class RegisteredUserController extends Controller
 
         // Generate a 6-digit email verification code
         $code = rand(100000, 999999);
-        \Illuminate\Support\Facades\Cache::put('email_verification_code:' . $user->id, $code, now()->addMinutes(15));
+        \Illuminate\Support\Facades\Cache::put('email_verification_code:' . $user->id, $code, now()->addSeconds(90));
 
         // Send verification email using superadmin's default SMTP configuration
         try {
@@ -99,7 +99,7 @@ class RegisteredUserController extends Controller
                 . '<h2 style="font-size:18px;font-weight:700;margin-bottom:12px;color:#1e1b4b">Verify Your Email</h2>'
                 . '<p style="color:#4b5563;line-height:1.75;font-size:14px;">Thank you for registering! Your 6-digit email verification code is:</p>'
                 . '<div style="font-size:26px;font-weight:bold;color:#7c3aed;letter-spacing:4px;margin:24px 0;background:#f8fafc;padding:12px;text-align:center;border-radius:8px;">' . $code . '</div>'
-                . '<p style="color:#94a3b8;font-size:12px;">This code is valid for 15 minutes. If you did not request this, you can safely ignore this email.</p>'
+                . '<p style="color:#94a3b8;font-size:12px;">This code is valid for 90 seconds. If you did not request this, you can safely ignore this email.</p>'
                 . '</div>'
             );
         } catch (\Throwable $e) {
@@ -174,7 +174,7 @@ class RegisteredUserController extends Controller
 
         $user = User::findOrFail($userId);
         $code = rand(100000, 999999);
-        \Illuminate\Support\Facades\Cache::put('email_verification_code:' . $user->id, $code, now()->addMinutes(15));
+        \Illuminate\Support\Facades\Cache::put('email_verification_code:' . $user->id, $code, now()->addSeconds(90));
 
         try {
             \App\Services\MailService::sendUsingSuperadminSmtp(
@@ -184,7 +184,7 @@ class RegisteredUserController extends Controller
                 . '<h2 style="font-size:18px;font-weight:700;margin-bottom:12px;color:#1e1b4b">Verify Your Email</h2>'
                 . '<p style="color:#4b5563;line-height:1.75;font-size:14px;">Your 6-digit email verification code is:</p>'
                 . '<div style="font-size:26px;font-weight:bold;color:#7c3aed;letter-spacing:4px;margin:24px 0;background:#f8fafc;padding:12px;text-align:center;border-radius:8px;">' . $code . '</div>'
-                . '<p style="color:#94a3b8;font-size:12px;">This code is valid for 15 minutes.</p>'
+                . '<p style="color:#94a3b8;font-size:12px;">This code is valid for 90 seconds.</p>'
                 . '</div>'
             );
         } catch (\Throwable $e) {

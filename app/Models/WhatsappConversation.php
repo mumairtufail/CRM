@@ -12,10 +12,11 @@ class WhatsappConversation extends Model
     protected $fillable = [
         'lead_id',
         'organization_id',
+        'whatsapp_message_id',
         'lead_phone',
         'direction',
         'message_body',
-        'twilio_message_sid',
+        'wa_message_id',
         'is_bot_reply',
         'is_read',
         'is_qualified',
@@ -32,5 +33,10 @@ class WhatsappConversation extends Model
     public function lead()
     {
         return $this->belongsTo(Lead::class);
+    }
+
+    public function whatsappMessage()
+    {
+        return $this->belongsTo(WhatsappMessage::class);
     }
 }

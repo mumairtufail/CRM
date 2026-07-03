@@ -9,7 +9,7 @@ import {
 } from '@/Components/ui/dialog'
 import {
   ChevronLeft, Send, Eye, Users, Pencil, Trash2, MousePointerClick,
-  Loader2, StopCircle, RefreshCw, Terminal, RotateCcw, RotateCw, PauseCircle,
+  Loader2, StopCircle, RefreshCw, Terminal, RotateCcw, RotateCw, PauseCircle, FileText,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -118,7 +118,7 @@ function TerminalPanel({ logs, stats, onFetch, onStop, onResume, stopping, resum
   return (
     <div
       className="bg-[#0d1117] rounded-xl border border-[#30363d] flex flex-col overflow-hidden"
-      style={{ height: 'calc(100vh - 88px)', minHeight: 400 }}
+      style={{ height: 'calc(100dvh - 88px)', minHeight: 400 }}
     >
       {/* ── macOS title bar ── */}
       <div className="flex items-center gap-2 px-3.5 py-2.5 bg-[#161b22] border-b border-[#30363d] shrink-0 select-none">
@@ -428,7 +428,7 @@ export default function CampaignShow({ campaign, sends }) {
       <AppLayout title="Campaign">
 
         {/* ── Full-width page header ── */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-3">
             <Link href="/campaigns">
               <Button variant="outline" size="sm" className="h-8 text-xs gap-1 border-slate-200">
@@ -451,7 +451,7 @@ export default function CampaignShow({ campaign, sends }) {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-slate-200"
               onClick={() => setPreviewOpen(true)}>
               <Eye size={13} /> Preview
@@ -506,7 +506,7 @@ export default function CampaignShow({ campaign, sends }) {
         </div>
 
         {/* ── Two-column grid ── */}
-        <div className="grid xl:grid-cols-[1fr_360px] gap-4 items-start">
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_360px] gap-4 items-start">
 
           {/* ── Left column ── */}
           <div className="min-w-0 space-y-3">
@@ -514,7 +514,7 @@ export default function CampaignShow({ campaign, sends }) {
             {/* Stats row */}
             {['sent', 'sending', 'paused', 'failed'].includes(liveStats.status) && (
               <Card className="border-slate-200 shadow-none">
-                <div className="grid grid-cols-4 divide-x divide-[#e5ddd5]">
+                <div className="grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#e5ddd5]">
                   <StatBox label="Recipients"  value={liveStats.total_recipients}  icon={Users}              color="text-foreground" />
                   <StatBox label="Sent"        value={liveStats.sent_count}        icon={Send}               color="text-blue-600" />
                   <StatBox label="Open rate"   value={`${openRate}%`}              icon={Eye}                color="text-amber-600" />
@@ -539,6 +539,27 @@ export default function CampaignShow({ campaign, sends }) {
                     </div>
                   </div>
                 )}
+              </Card>
+            )}
+
+            {/* Attached form */}
+            {campaign.form && (
+              <Card className="border-slate-200 shadow-none">
+                <CardContent className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
+                      <FileText size={15} className="text-violet-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[12.5px] font-semibold text-slate-800 truncate">{campaign.form.name}</p>
+                      <p className="text-[11px] text-slate-400">Linked via <span className="font-mono">{'{{form_link}}'}</span> in this email</p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-[18px] font-bold text-slate-800 leading-none">{campaign.form_submissions ?? 0}</p>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">Submitted</p>
+                  </div>
+                </CardContent>
               </Card>
             )}
 
@@ -632,10 +653,15 @@ export default function CampaignShow({ campaign, sends }) {
                             <td className="px-4 py-2.5">
                               <div className="flex items-center gap-2">
                                 <LeadAvatar name={s.lead_name} size="sm" />
-                                <Link href={`/leads/${s.lead_id}`}
-                                  className="font-medium text-slate-700 hover:text-violet-600 transition-colors truncate max-w-[130px]">
-                                  {s.lead_name || '—'}
-                                </Link>
+                                <div className="min-w-0">
+                                  <Link href={`/leads/${s.lead_id}`}
+                                    className="font-medium text-slate-700 hover:text-violet-600 transition-colors truncate max-w-[130px] block">
+                                    {s.lead_name || '—'}
+                                  </Link>
+                                  <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">
+                                    {s.is_followup ? `Follow-up #${s.followup_step}` : 'Initial email'}
+                                  </span>
+                                </div>
                               </div>
                             </td>
                             <td className="px-4 py-2.5 hidden sm:table-cell text-slate-400 truncate max-w-[160px]">{s.email_used}</td>

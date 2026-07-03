@@ -6,7 +6,7 @@ import DataTable from '@/Components/Common/DataTable'
 import SearchInput from '@/Components/Common/SearchInput'
 import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 import { Button } from '@/Components/ui/button'
-import { Shield, Eye } from 'lucide-react'
+import { Eye } from 'lucide-react'
 import { toast } from 'sonner'
 
 const ROLE_STYLES = {
@@ -56,9 +56,6 @@ export default function AdminUsers({ users, filters }) {
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="font-medium text-gray-900 text-sm leading-none truncate">{row.original.name}</span>
-              {row.original.is_superadmin && (
-                <Shield size={12} className="text-violet-500 shrink-0" />
-              )}
             </div>
             <p className="text-xs text-gray-400 mt-0.5 truncate">{row.original.email}</p>
           </div>
@@ -77,9 +74,9 @@ export default function AdminUsers({ users, filters }) {
       accessorKey: 'role',
       header: 'Role',
       size: 100,
-      cell: ({ row }) => row.original.is_superadmin
-        ? <span className="inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold bg-violet-600 text-white">Super Admin</span>
-        : <span className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold capitalize ${ROLE_STYLES[row.original.role] || ROLE_STYLES.member}`}>{row.original.role}</span>,
+      cell: ({ row }) => (
+        <span className={`inline-block px-2 py-0.5 rounded-full text-[10.5px] font-semibold capitalize ${ROLE_STYLES[row.original.role] || ROLE_STYLES.member}`}>{row.original.role}</span>
+      ),
     },
     {
       accessorKey: 'created_at',
@@ -92,16 +89,14 @@ export default function AdminUsers({ users, filters }) {
       header: '',
       size: 120,
       cell: ({ row }) => (
-        row.original.is_superadmin ? null : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 gap-1.5 text-[12px]"
-            onClick={() => setImpersonateUser(row.original)}
-          >
-            <Eye size={12} /> Impersonate
-          </Button>
-        )
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 gap-1.5 text-[12px]"
+          onClick={() => setImpersonateUser(row.original)}
+        >
+          <Eye size={12} /> Impersonate
+        </Button>
       ),
     },
   ]

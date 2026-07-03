@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
+import TagPicker from '@/Components/Common/TagPicker'
 import { ChevronLeft, Mail, Phone, Plus, Star, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -40,7 +41,7 @@ function SectionCard({ title, children, className = "" }) {
   )
 }
 
-export default function LeadEdit({ lead }) {
+export default function LeadEdit({ lead, tags = [] }) {
   const { data, setData, put, processing, errors } = useForm({
     first_name:      lead.first_name ?? '',
     last_name:       lead.last_name  ?? '',
@@ -59,6 +60,7 @@ export default function LeadEdit({ lead }) {
     social_handles:  lead.social_handles ?? [],
     emails:          (lead.emails ?? []).map(e => ({ email: e.email, type: e.type ?? 'work', is_primary: !!e.is_primary })),
     phones:          (lead.phones ?? []).map(p => ({ phone: p.phone, type: p.type ?? 'mobile', is_primary: !!p.is_primary })),
+    tag_ids:         (lead.tags ?? []).map(t => t.id),
   })
 
   const addSocial    = ()      => setData('social_handles', [...data.social_handles, { platform: 'linkedin', url: '' }])
@@ -347,6 +349,9 @@ export default function LeadEdit({ lead }) {
                       <Input value={data.city} onChange={e => setData('city', e.target.value)}
                         className="h-9 text-xs" placeholder="New York" />
                     </FormField>
+                  </div>
+                  <div className="mt-4">
+                    <TagPicker tags={tags} selectedIds={data.tag_ids} onChange={v => setData('tag_ids', v)} />
                   </div>
                 </SectionCard>
               </div>

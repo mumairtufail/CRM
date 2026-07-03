@@ -151,13 +151,14 @@ class FetchEmailsJob implements ShouldQueue
             return [0, 0];
         }
 
-        $saved  = 0;
+        // Parse every message up front (pure in-memory work, no DB) so the dedup
+        // lookups below can be done as two bulk queries instead of one query per
+        // message inside the loop.
+        $parsed = [];
         $errors = 0;
-
         foreach ($messages as $message) {
             try {
-                $this->saveMessage($message, $cred, $localFolder, $notify);
-                $saved++;
+                $parsed[] = $this->parseMessage($message, $cred, $localFolder);
             } catch (\Throwable $e) {
                 $errors++;
                 $this->log('warning', 'Skipped one message', [
@@ -167,10 +168,67 @@ class FetchEmailsJob implements ShouldQueue
             }
         }
 
+        if (! $parsed) {
+            return [0, $errors];
+        }
+
+        $messageIds = array_values(array_unique(array_column($parsed, 'message_id')));
+        $uids       = array_values(array_unique(array_column($parsed, 'message_uid')));
+
+        $existingByMessageId = FetchedEmail::where('smtp_credential_id', $cred->id)
+            ->whereIn('message_id', $messageIds)
+            ->get()
+            ->keyBy('message_id');
+
+        $existingByUid = FetchedEmail::where('smtp_credential_id', $cred->id)
+            ->whereIn('message_uid', $uids)
+            ->get()
+            ->keyBy('message_uid');
+
+        $saved      = 0;
+        $toNotify   = [];
+
+        foreach ($parsed as $item) {
+            $attrs = $item['attrs'];
+
+            // De-dup against locally-recorded sends: a composed email saved at send
+            // time has no message_uid yet, but shares the Message-ID that now lands
+            // in the Sent folder. Match on it and fill in the IMAP details instead of
+            // creating a duplicate row.
+            $existing = $existingByMessageId->get($item['message_id']) ?? $existingByUid->get($item['message_uid']);
+
+            if ($existing) {
+                $existing->update($attrs);
+                $saved++;
+                continue;
+            }
+
+            $fetched = FetchedEmail::create($attrs);
+            $saved++;
+
+            if ($notify && $item['from_email']) {
+                $toNotify[] = [
+                    'fetched'    => $fetched,
+                    'from_name'  => $item['from_name'],
+                    'from_email' => $item['from_email'],
+                    'subject'    => $item['subject'],
+                    'reply_ids'  => $item['reply_ids'],
+                ];
+            }
+        }
+
+        if ($toNotify) {
+            $this->notifyInboundBatch($toNotify);
+        }
+
         return [$saved, $errors];
     }
 
-    private function saveMessage($message, SmtpCredential $cred, string $localFolder, bool $notify): void
+    /**
+     * Extract everything needed from an IMAP message into a plain array,
+     * without touching the database.
+     */
+    private function parseMessage($message, SmtpCredential $cred, string $localFolder): array
     {
         $uid = (string) $message->getUid();
 
@@ -196,114 +254,119 @@ class FetchEmailsJob implements ShouldQueue
         $dateAttr = $message->getDate();
         $date     = $dateAttr?->first()?->toDateTime() ?? null;
 
-        $messageId = self::normalizeMessageId($message->getMessageId());
+        $messageId = self::normalizeMessageId($message->getMessageId()) ?: $uid;
 
-        $attrs = [
-            'organization_id' => $this->organizationId,
-            'folder'          => $localFolder,
-            'message_uid'     => $uid,
-            'message_id'      => $messageId ?: $uid,
-            'from_name'       => $fromName,
-            'from_email'      => $fromEmail ?: 'unknown@unknown.com',
-            'to_addresses'    => $toList,
-            'cc_addresses'    => $ccList,
-            'subject'         => mb_substr($subject, 0, 255),
-            'body_html'       => $bodyHtml,
-            'body_text'       => $bodyText,
-            'sent_at'         => $date,
+        return [
+            'message_id'  => $messageId,
+            'message_uid' => $uid,
+            'from_name'   => $fromName,
+            'from_email'  => $fromEmail,
+            'subject'     => $subject,
+            'reply_ids'   => $this->replyTargetIds($message),
+            'attrs'       => [
+                'organization_id' => $this->organizationId,
+                'folder'          => $localFolder,
+                'message_uid'     => $uid,
+                'message_id'      => $messageId,
+                'from_name'       => $fromName,
+                'from_email'      => $fromEmail ?: 'unknown@unknown.com',
+                'to_addresses'    => $toList,
+                'cc_addresses'    => $ccList,
+                'subject'         => mb_substr($subject, 0, 255),
+                'body_html'       => $bodyHtml,
+                'body_text'       => $bodyText,
+                'sent_at'         => $date,
+            ],
         ];
-
-        // De-dup against locally-recorded sends: a composed email saved at send
-        // time has no message_uid yet, but shares the Message-ID that now lands
-        // in the Sent folder. Match on it and fill in the IMAP details instead of
-        // creating a duplicate row.
-        $existing = $messageId
-            ? FetchedEmail::where('smtp_credential_id', $cred->id)
-                ->where('message_id', $messageId)
-                ->first()
-            : null;
-
-        if ($existing) {
-            $existing->update($attrs);
-            return;
-        }
-
-        $fetched = FetchedEmail::updateOrCreate(
-            ['smtp_credential_id' => $cred->id, 'message_uid' => $uid],
-            $attrs,
-        );
-
-        // Only notify on genuinely new received emails, not updates or sent mail
-        if ($notify && $fetched->wasRecentlyCreated && $fromEmail) {
-            $this->notifyInbound($message, $fetched, $fromName, $fromEmail, $subject);
-        }
     }
 
     /**
-     * Raise a notification for a newly-received email. If the message is a reply
-     * to one of our sends (matched via In-Reply-To / References against stored
-     * Message-IDs), it's flagged as a reply; otherwise any mail from a known lead
-     * is a plain "received" notification. Unknown senders are ignored.
+     * Raise notifications for a batch of newly-received emails in three bulk
+     * queries total instead of up to three queries per message. If a message
+     * is a reply to something we sent (matched via In-Reply-To / References
+     * against stored Message-IDs), it's flagged as a reply; otherwise any mail
+     * from a known lead is a plain "received" notification. Unknown senders
+     * with no reply match are ignored.
+     *
+     * @param array<int, array{fetched: FetchedEmail, from_name: string, from_email: string, subject: string, reply_ids: array<int, string>}> $items
      */
-    private function notifyInbound($message, FetchedEmail $fetched, string $fromName, string $fromEmail, string $subject): void
+    private function notifyInboundBatch(array $items): void
     {
-        // 1. Is this a reply to something we sent? Match the referenced Message-IDs
-        //    against campaign sends first, then composed/sent mail.
-        $replyIds   = $this->replyTargetIds($message);
-        $isReply    = false;
-        $lead       = null;
+        $allReplyIds   = array_values(array_unique(array_merge(...array_column($items, 'reply_ids'))));
+        $allFromEmails = array_values(array_unique(array_column($items, 'from_email')));
 
-        if ($replyIds) {
-            // Scoped to this org explicitly — the job runs without tenant context.
-            $send = EmailSend::with('lead')
+        // Scoped to this org explicitly — the job runs without tenant context.
+        $sendsByMessageId = $allReplyIds
+            ? EmailSend::with('lead')
                 ->where('organization_id', $this->organizationId)
-                ->whereIn('message_id', $replyIds)
-                ->first();
+                ->whereIn('message_id', $allReplyIds)
+                ->get()
+                ->keyBy('message_id')
+            : collect();
 
-            if ($send) {
-                $isReply = true;
-                $lead    = $send->lead;
-            } elseif (
-                FetchedEmail::where('organization_id', $this->organizationId)
-                    ->where('folder', 'sent')
-                    ->whereIn('message_id', $replyIds)
-                    ->exists()
-            ) {
-                $isReply = true;
+        $sentMessageIds = $allReplyIds
+            ? FetchedEmail::where('organization_id', $this->organizationId)
+                ->where('folder', 'sent')
+                ->whereIn('message_id', $allReplyIds)
+                ->pluck('message_id')
+                ->flip()
+            : collect();
+
+        $leadsByEmail = LeadEmail::with('lead')
+            ->whereIn('email', $allFromEmails)
+            ->get()
+            ->keyBy(fn ($le) => strtolower($le->email));
+
+        foreach ($items as $item) {
+            $fetched   = $item['fetched'];
+            $fromName  = $item['from_name'];
+            $fromEmail = $item['from_email'];
+            $subject   = $item['subject'];
+
+            $isReply = false;
+            $lead    = null;
+
+            foreach ($item['reply_ids'] as $replyId) {
+                if ($send = $sendsByMessageId->get($replyId)) {
+                    $isReply = true;
+                    $lead    = $send->lead;
+                    break;
+                }
+
+                if ($sentMessageIds->has($replyId)) {
+                    $isReply = true;
+                }
             }
-        }
 
-        // 2. Resolve the lead by sender address when the reply match didn't give one.
-        if (! $lead) {
-            $lead = LeadEmail::with('lead')
-                ->whereRaw('LOWER(email) = ?', [strtolower($fromEmail)])
-                ->first()?->lead;
-        }
+            if (! $lead) {
+                $lead = $leadsByEmail->get(strtolower($fromEmail))?->lead;
+            }
 
-        // A reply from an unknown contact is still worth surfacing; a non-reply
-        // from an unknown contact is not.
-        if (! $isReply && ! $lead) {
-            return;
-        }
+            // A reply from an unknown contact is still worth surfacing; a non-reply
+            // from an unknown contact is not.
+            if (! $isReply && ! $lead) {
+                continue;
+            }
 
-        $who = $fromName ?: ($lead?->name ?: $fromEmail);
+            $who = $fromName ?: ($lead?->name ?: $fromEmail);
 
-        Notification::record([
-            'organization_id' => $this->organizationId,
-            'type'            => $isReply ? 'lead.email_replied' : 'lead.email_received',
-            'title'           => $isReply ? "{$who} replied to your email" : "{$who} sent you an email",
-            'body'            => mb_substr($subject, 0, 150),
-            'link'            => $lead ? '/leads/' . $lead->id : '/inbox',
-            'data'            => [
+            Notification::record([
+                'organization_id' => $this->organizationId,
+                'type'            => $isReply ? 'lead.email_replied' : 'lead.email_received',
+                'title'           => $isReply ? "{$who} replied to your email" : "{$who} sent you an email",
+                'body'            => mb_substr($subject, 0, 150),
+                'link'            => $lead ? '/leads/' . $lead->id : '/inbox',
+                'data'            => [
+                    'lead_id'  => $lead?->id,
+                    'email_id' => $fetched->id,
+                ],
+            ]);
+
+            $this->log('info', ($isReply ? 'Reply' : 'Received') . " notification created", [
                 'lead_id'  => $lead?->id,
                 'email_id' => $fetched->id,
-            ],
-        ]);
-
-        $this->log('info', ($isReply ? 'Reply' : 'Received') . " notification created", [
-            'lead_id'  => $lead?->id,
-            'email_id' => $fetched->id,
-        ]);
+            ]);
+        }
     }
 
     /**

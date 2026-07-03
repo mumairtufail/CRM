@@ -75,7 +75,7 @@ export default function WhatsappCampaignShow({ campaign: initial, sends: initial
     <AppLayout>
       <Head title={campaign.name} />
 
-      <div className="px-4 md:px-8 py-6 max-w-screen-xl mx-auto space-y-4">
+      <div className="max-w-screen-xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">

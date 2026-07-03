@@ -15,12 +15,13 @@ import {
   DollarSign, Calendar, Clock, Tag, Pencil, Trash2,
   ChevronLeft, MessageSquare, PhoneCall, Send, Star,
   ExternalLink, Activity, Briefcase, Users, UserCheck,
-  MousePointerClick, Eye,
+  MousePointerClick, Eye, ArrowRightLeft, ClipboardList,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import usePermissions from '@/Hooks/usePermissions'
 
 const STATUSES = ['new','contacted','qualified','proposal','negotiation','won','lost','unqualified']
 
@@ -123,11 +124,14 @@ function ConvertModal({ lead, onClose }) {
 }
 
 const ACT_CFG = {
-  note:          { icon: MessageSquare, cls: 'text-slate-500 bg-slate-100',   label: 'Note' },
-  email_sent:    { icon: Send,          cls: 'text-blue-500 bg-blue-50',      label: 'Email' },
-  call:          { icon: PhoneCall,     cls: 'text-green-500 bg-green-50',    label: 'Call' },
-  status_change: { icon: Star,          cls: 'text-amber-500 bg-amber-50',    label: 'Status' },
-  import:        { icon: Tag,           cls: 'text-purple-500 bg-purple-50',  label: 'Import' },
+  note:          { icon: MessageSquare,  cls: 'text-slate-500 bg-slate-100',   label: 'Note' },
+  email_sent:    { icon: Send,           cls: 'text-blue-500 bg-blue-50',      label: 'Email' },
+  call:          { icon: PhoneCall,      cls: 'text-green-500 bg-green-50',    label: 'Call' },
+  status_change: { icon: Star,           cls: 'text-amber-500 bg-amber-50',    label: 'Status' },
+  import:        { icon: Tag,            cls: 'text-purple-500 bg-purple-50',  label: 'Import' },
+  reassignment:  { icon: ArrowRightLeft, cls: 'text-blue-500 bg-blue-50',      label: 'Reassigned' },
+  deletion:      { icon: Trash2,         cls: 'text-red-500 bg-red-50',        label: 'Deleted' },
+  whatsapp:      { icon: MessageSquare,  cls: 'text-emerald-500 bg-emerald-50', label: 'WhatsApp' },
 }
 
 const glass = {
@@ -197,6 +201,8 @@ const EMAIL_STATUS_CFG = {
   clicked:      { label: 'Clicked',      cls: 'bg-violet-50 text-violet-700',  dot: 'bg-violet-500' },
   bounced:      { label: 'Bounced',      cls: 'bg-red-50 text-red-700',        dot: 'bg-red-400' },
   unsubscribed: { label: 'Unsubscribed', cls: 'bg-amber-50 text-amber-700',    dot: 'bg-amber-400' },
+  pending:      { label: 'Pending',      cls: 'bg-slate-100 text-slate-500',   dot: 'bg-slate-300' },
+  failed:       { label: 'Failed',       cls: 'bg-red-50 text-red-500',        dot: 'bg-red-300' },
 }
 
 function stripHtml(html) {
@@ -209,8 +215,8 @@ function EmailTimeline({ emailSends }) {
   const campaigns = useMemo(() => {
     const map = {}
     emailSends.forEach(es => {
-      const cid = es.email_campaign_id
-      if (!map[cid]) map[cid] = { campaign: es.campaign, sends: [] }
+      const cid = es.email_campaign_id ?? 'unknown'
+      if (!map[cid]) map[cid] = { campaignId: cid, campaign: es.campaign, sends: [] }
       map[cid].sends.push(es)
     })
     Object.values(map).forEach(g => {
@@ -241,8 +247,8 @@ function EmailTimeline({ emailSends }) {
 
   return (
     <div className="space-y-4">
-      {campaigns.map(({ campaign, sends }) => (
-        <div key={campaign?.id}
+      {campaigns.map(({ campaign, sends, campaignId }) => (
+        <div key={campaignId}
           className="rounded-2xl overflow-hidden"
           style={{ ...glass, border: '1px solid rgba(99,102,241,0.1)' }}>
 
@@ -255,9 +261,9 @@ function EmailTimeline({ emailSends }) {
                 <Mail size={14} className="text-white" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-bold text-slate-800 truncate">{campaign?.name}</p>
+                <p className="text-[13px] font-bold text-slate-800 truncate">{campaign?.name ?? '(Deleted campaign)'}</p>
                 <p className="text-[10.5px] text-slate-400 mt-0.5">
-                  {sends.length} email{sends.length !== 1 ? 's' : ''} &nbsp;·&nbsp; from {campaign?.from_email || campaign?.from_name}
+                  {sends.length} email{sends.length !== 1 ? 's' : ''}{campaign ? ` · from ${campaign.from_email || campaign.from_name}` : ''}
                 </p>
               </div>
               <div className="shrink-0 text-right hidden sm:block">
@@ -385,13 +391,129 @@ function EmailTimeline({ emailSends }) {
   )
 }
 
-export default function LeadShow({ lead, activities, leadStats, emailSends = [] }) {
+const FORM_SESSION_STATUS_CFG = {
+  in_progress: { label: 'In progress', cls: 'bg-amber-50 text-amber-700', dot: 'bg-amber-400' },
+  submitted:   { label: 'Submitted',   cls: 'bg-green-50 text-green-700', dot: 'bg-green-500' },
+  abandoned:   { label: 'Abandoned',   cls: 'bg-red-50 text-red-700',     dot: 'bg-red-400' },
+}
+
+function FormSessionTimeline({ formSessions }) {
+  const groups = useMemo(() => {
+    const map = {}
+    formSessions.forEach(fs => {
+      const fid = fs.lead_form_id ?? 'unknown'
+      if (!map[fid]) map[fid] = { formId: fid, formName: fs.lead_form?.name ?? '(Deleted form)', sessions: [] }
+      map[fid].sessions.push(fs)
+    })
+    return Object.values(map)
+  }, [formSessions])
+
+  if (!groups.length) return null
+
+  return (
+    <div className="space-y-4">
+      {groups.map(({ formId, formName, sessions }) => (
+        <div key={formId}
+          className="rounded-2xl overflow-hidden"
+          style={{ ...glass, border: '1px solid rgba(99,102,241,0.1)' }}>
+
+          <div className="px-4 py-3 border-b border-slate-100/80"
+            style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.06) 0%,transparent 100%)' }}>
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                <ClipboardList size={14} className="text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-bold text-slate-800 truncate">{formName}</p>
+                <p className="text-[10.5px] text-slate-400 mt-0.5">{sessions.length} visit{sessions.length !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-4 py-3 space-y-3">
+            {sessions.map(fs => {
+              const cfg = FORM_SESSION_STATUS_CFG[fs.status] ?? { label: fs.status, cls: 'bg-slate-50 text-slate-600', dot: 'bg-slate-400' }
+              const fieldDefs    = fs.lead_form?.fields ?? []
+              const filledFields = Object.entries(fs.values || {}).filter(([, v]) => v !== null && v !== '')
+              const totalFields  = fieldDefs.length
+              const percent      = totalFields > 0 ? Math.round((filledFields.length / totalFields) * 100) : null
+              const labelFor     = (key) => fieldDefs.find(f => f.key === key)?.label ?? key
+
+              return (
+                <div key={fs.id} className="flex gap-3">
+                  <div className="shrink-0 flex flex-col items-center z-10">
+                    <div className={cn('w-7 h-7 rounded-full flex items-center justify-center ring-2 ring-white shadow-sm', cfg.dot)}>
+                      <ClipboardList size={11} className="text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0 rounded-xl border border-slate-100 bg-white shadow-sm px-3 py-2.5">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                      <span className={cn('text-[10px] font-bold px-1.5 py-0.5 rounded-full', cfg.cls)}>{cfg.label}</span>
+                      <span className="text-[10.5px] text-slate-400">
+                        Started {formatDistanceToNow(new Date(fs.started_at), { addSuffix: true })}
+                      </span>
+                    </div>
+                    {/* Completion progress — only meaningful for sessions that never
+                        submitted, since "submitted" already means "done" regardless
+                        of whether every optional field was filled. */}
+                    {fs.status !== 'submitted' && percent !== null && (
+                      <div className="mt-1.5 mb-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] font-semibold text-slate-400">
+                            {filledFields.length} of {totalFields} fields completed
+                          </span>
+                          <span className="text-[10px] font-bold text-slate-500">{percent}%</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                          <div className={cn('h-full rounded-full', cfg.dot)} style={{ width: `${percent}%` }} />
+                        </div>
+                      </div>
+                    )}
+                    {filledFields.length > 0 && (
+                      <p className="text-[11.5px] text-slate-600 mt-1">
+                        Filled in: {filledFields.map(([k]) => labelFor(k)).join(', ')}
+                      </p>
+                    )}
+                    {fs.submitted_at ? (
+                      <p className="text-[10.5px] font-medium text-green-600 mt-1 flex items-center gap-1">
+                        <Eye size={9} /> Submitted {formatDistanceToNow(new Date(fs.submitted_at), { addSuffix: true })}
+                      </p>
+                    ) : (
+                      <p className="text-[10.5px] text-slate-400 mt-1">
+                        Last active {formatDistanceToNow(new Date(fs.last_active_at), { addSuffix: true })}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default function LeadShow({ lead, activities, leadStats, emailSends = [], formSessions = [], assignableUsers = [] }) {
   const [deleting, setDeleting]       = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [changingStatus, setChangingStatus] = useState(false)
   const [convertOpen, setConvertOpen] = useState(false)
+  const [assigning, setAssigning] = useState(false)
+  const { can } = usePermissions()
 
   const isClient = lead.status === 'client'
+
+  const handleAssign = (userId) => {
+    setAssigning(true)
+    router.patch(`/leads/${lead.id}/assign`, { assigned_to: userId === 'unassigned' ? null : userId }, {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Lead reassigned'),
+      onError: () => toast.error('Failed to reassign lead'),
+      onFinish: () => setAssigning(false),
+    })
+  }
 
   const handleDelete = () => {
     setDeleting(true)
@@ -567,6 +689,16 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [] 
               </div>
             )}
 
+            {/* Form activity — visits, autosaved fills, and abandonment */}
+            {formSessions.length > 0 && (
+              <div>
+                <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2 px-1">
+                  Form activity ({formSessions.length})
+                </p>
+                <FormSessionTimeline formSessions={formSessions} />
+              </div>
+            )}
+
             {/* Notes */}
             {lead.notes && (
               <div className="rounded-2xl p-4" style={glass}>
@@ -611,6 +743,29 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [] 
               </p>
             </div>
 
+            {/* Assigned to */}
+            <div className="rounded-2xl p-3" style={glass}>
+              <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400 mb-2">Assigned to</p>
+              {can('leads.assign') ? (
+                <Select value={String(lead.assignee?.id ?? 'unassigned')} onValueChange={handleAssign} disabled={assigning}>
+                  <SelectTrigger className="h-9 text-[12.5px] bg-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="unassigned" className="text-[12.5px]">Unassigned</SelectItem>
+                    {assignableUsers.map(u => (
+                      <SelectItem key={u.id} value={String(u.id)} className="text-[12.5px]">{u.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-[12.5px] font-medium text-slate-700">{lead.assignee?.name ?? 'Unassigned'}</p>
+              )}
+              <p className="text-[10.5px] text-slate-400 mt-1.5">
+                Added by <span className="font-semibold text-slate-600">{lead.creator?.name ?? 'Public form / unknown'}</span>
+              </p>
+            </div>
+
             {/* Outreach channels */}
             <div className="rounded-2xl overflow-hidden" style={glass}>
               <div className="px-4 py-2.5 border-b border-slate-100/80">
@@ -647,6 +802,9 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [] 
                               <p className="text-[11.5px] text-slate-700 leading-snug">{act.description}</p>
                               <p className="text-[10px] text-slate-400 mt-0.5">
                                 {formatDistanceToNow(new Date(act.created_at), { addSuffix: true })}
+                                {act.user?.name && (
+                                  <> · <span className="text-slate-500 font-medium">{act.user.name}</span></>
+                                )}
                               </p>
                             </div>
                           </div>

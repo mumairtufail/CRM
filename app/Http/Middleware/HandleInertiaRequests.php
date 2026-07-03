@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Notification;
+use App\Models\Plan;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -35,18 +36,35 @@ class HandleInertiaRequests extends Middleware
         $organization = $tenant->get();
         $impersonatorId = $request->session()->get('impersonator_id');
 
+        // Tenant users (web guard) and platform admins (admin guard) are entirely
+        // separate principals. Resolve both guards explicitly rather than via
+        // $request->user() — Laravel's `auth:admin` middleware calls
+        // Auth::shouldUse('admin') once that guard succeeds, which flips the
+        // *default* guard for the rest of the request, so an unqualified
+        // $request->user() cannot be trusted to mean "web guard" here.
+        $webUser = $request->user('web');
+        $adminUser = $request->user('admin');
+        $isAdmin = ! $webUser && (bool) $adminUser;
+
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
+                'user'        => $webUser ?? $adminUser,
+                'guard'       => $isAdmin ? 'admin' : 'web',
+                'permissions' => $this->permissionsFor($webUser),
             ],
             'organization' => $organization ? [
                 'id'   => $organization->id,
                 'name' => $organization->name,
                 'slug' => $organization->slug,
             ] : null,
+            'plan' => $organization ? [
+                'name'    => $organization->plan?->name,
+                'status'  => $organization->plan_status,
+                'modules' => $organization->plan_id ? Plan::cachedModuleKeys($organization->plan_id) : [],
+            ] : null,
             'impersonating' => $impersonatorId ? [
-                'name' => $request->user()?->name,
+                'name' => $webUser?->name,
             ] : null,
             'notifications' => $tenant->check() ? [
                 'unread' => Notification::unread()->count(),
@@ -68,5 +86,25 @@ class HandleInertiaRequests extends Middleware
                 'submitted' => $request->session()->get('submitted'),
             ],
         ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function permissionsFor(?\App\Models\User $user): array
+    {
+        if (! $user) {
+            return [];
+        }
+
+        if ($user->isOwner()) {
+            return ['*'];
+        }
+
+        if (! $user->role_id) {
+            return [];
+        }
+
+        return \App\Models\Role::cachedPermissionKeys($user->role_id);
     }
 }

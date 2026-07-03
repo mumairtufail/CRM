@@ -14,7 +14,7 @@ class EmailCampaign extends Model
         'organization_id',
         'name', 'subject', 'body_html', 'body_text', 'status',
         'from_name', 'from_email', 'filters',
-        'recipient_mode', 'group_id',
+        'recipient_mode', 'group_id', 'lead_form_id',
         'total_recipients', 'sent_count', 'opened_count',
         'clicked_count', 'bounced_count', 'unsubscribed_count',
         'scheduled_at', 'sent_at',
@@ -38,5 +38,10 @@ class EmailCampaign extends Model
     public function group()
     {
         return $this->belongsTo(LeadGroup::class, 'group_id');
+    }
+
+    public function leadForm()
+    {
+        return $this->belongsTo(LeadForm::class);
     }
 }

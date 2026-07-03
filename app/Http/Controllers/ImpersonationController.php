@@ -18,7 +18,8 @@ class ImpersonationController extends Controller
             return redirect('/');
         }
 
-        Auth::loginUsingId($impersonatorId);
+        Auth::guard('admin')->loginUsingId($impersonatorId);
+        Auth::guard('web')->logout();
         session()->forget('impersonator_id');
 
         return redirect()->route('admin.users.index')->with('success', 'Returned to your admin account.');

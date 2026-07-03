@@ -12,11 +12,20 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // A super admin who is not impersonating belongs to the platform portal.
-        if (Auth::user()->isSuperadmin() && ! session('impersonator_id')) {
-            return redirect()->route('admin.dashboard');
+        $user = Auth::user();
+
+        if ($user->isOwner() || $user->hasPermission('dashboard.view_all')) {
+            return $this->ownerView();
         }
 
+        return $this->agentView($user);
+    }
+
+    /**
+     * Organization-wide KPIs — owners, and any role granted dashboard.view_all.
+     */
+    private function ownerView()
+    {
         $now = now();
 
         $totalClosed    = Lead::whereIn('status', ['won', 'lost'])->count();
@@ -99,7 +108,72 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', compact(
             'stats', 'leadsOverTime', 'statusBreakdown', 'sourceBreakdown',
             'recentLeads', 'topDeals', 'upcomingFollowUps', 'recentActivities'
-        ));
+        ) + ['viewType' => 'owner']);
+    }
+
+    /**
+     * Own-performance KPIs for a team member (agent) without dashboard.view_all —
+     * scoped to leads assigned to them and activities they personally logged.
+     */
+    private function agentView($user)
+    {
+        $now = now();
+
+        $agentStats = [
+            'leads_assigned'  => Lead::where('assigned_to', $user->id)->count(),
+            'leads_contacted' => Lead::where('assigned_to', $user->id)->whereNotNull('last_contacted_at')->count(),
+            'emails_sent'     => EmailSend::whereHas('lead', fn ($q) => $q->where('assigned_to', $user->id))
+                ->where('status', 'sent')
+                ->whereMonth('created_at', $now->month)
+                ->count(),
+            'calls_made'      => Activity::where('user_id', $user->id)
+                ->where('type', 'call')
+                ->whereMonth('created_at', $now->month)
+                ->count(),
+            'follow_ups_due'  => Lead::where('assigned_to', $user->id)
+                ->whereNotNull('follow_up_at')
+                ->where('follow_up_at', '<=', $now)
+                ->count(),
+        ];
+
+        $myLeads = Lead::with(['emails', 'tags'])
+            ->where('assigned_to', $user->id)
+            ->latest()
+            ->limit(6)
+            ->get();
+
+        $upcomingFollowUps = Lead::where('assigned_to', $user->id)
+            ->whereNotNull('follow_up_at')
+            ->where('follow_up_at', '>=', $now)
+            ->where('follow_up_at', '<=', $now->copy()->addDays(7))
+            ->orderBy('follow_up_at')
+            ->limit(5)
+            ->get()
+            ->map(fn ($lead) => array_merge($lead->toArray(), [
+                'follow_up_at_human' => $lead->follow_up_at->diffForHumans(),
+            ]));
+
+        $recentActivities = Activity::with('lead')
+            ->where('user_id', $user->id)
+            ->latest()
+            ->limit(8)
+            ->get()
+            ->map(fn ($a) => [
+                'id'          => $a->id,
+                'type'        => $a->type,
+                'description' => $a->description,
+                'created_at'  => $a->created_at->diffForHumans(),
+                'lead_id'     => $a->lead_id,
+                'lead_name'   => $a->lead?->full_name,
+            ]);
+
+        return Inertia::render('Dashboard', [
+            'viewType'          => 'agent',
+            'agentStats'        => $agentStats,
+            'myLeads'           => $myLeads,
+            'upcomingFollowUps' => $upcomingFollowUps,
+            'recentActivities'  => $recentActivities,
+        ]);
     }
 
     private function pctChange(int $current, int $previous): ?int

@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Models\Lead;
+use App\Models\TenantWhatsappSettings;
 use App\Models\WhatsappCampaign;
-use App\Models\WhatsappCredential;
 use App\Models\WhatsappSend;
 use App\Services\WhatsappService;
 use Illuminate\Bus\Queueable;
@@ -13,6 +13,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 
 class SendWhatsappBatch implements ShouldQueue
 {
@@ -38,19 +39,19 @@ class SendWhatsappBatch implements ShouldQueue
             return;
         }
 
-        $credential = WhatsappCredential::where('organization_id', $campaign->organization_id)
-            ->where('is_active', true)
-            ->first();
+        $settings = TenantWhatsappSettings::forOrganization($campaign->organization_id);
 
-        if (!$credential) {
-            Log::error('No active WhatsApp credential for org', [
+        if (!$settings || !$settings->isUsableForSend()) {
+            Log::error('WhatsApp not enabled for org', [
                 'org_id' => $campaign->organization_id,
             ]);
             $campaign->update(['status' => 'failed']);
             return;
         }
 
-        $service = new WhatsappService($credential);
+        $service     = new WhatsappService();
+        $limiterKey  = "whatsapp-send:{$campaign->organization_id}";
+        $limit       = TenantWhatsappSettings::sendLimitFor($campaign->organization_id);
 
         foreach ($this->leadIds as $leadId) {
             $campaign->refresh();
@@ -59,8 +60,24 @@ class SendWhatsappBatch implements ShouldQueue
                 return;
             }
 
+            if (!TenantWhatsappSettings::forOrganization($campaign->organization_id)?->isUsableForSend()) {
+                Log::info('WhatsApp disabled for org mid-batch, stopping', [
+                    'org_id' => $campaign->organization_id,
+                ]);
+                return;
+            }
+
             $lead = Lead::find($leadId);
             if (!$lead) continue;
+
+            if (RateLimiter::tooManyAttempts($limiterKey, $limit->maxAttempts)) {
+                Log::info('WhatsApp rate limit hit, releasing batch to retry later', [
+                    'org_id' => $campaign->organization_id,
+                ]);
+                $this->release(RateLimiter::availableIn($limiterKey));
+                return;
+            }
+            RateLimiter::hit($limiterKey, $limit->decaySeconds);
 
             // Idempotency: skip if already sent and not failed
             $alreadySent = WhatsappSend::where('whatsapp_campaign_id', $this->campaignId)
@@ -72,15 +89,16 @@ class SendWhatsappBatch implements ShouldQueue
             if ($alreadySent) continue;
 
             $message = $this->personalize($campaign->message_body, $lead);
-            $result  = $service->send($lead, $message);
+            $result  = $service->send($lead, $message, $campaign->organization_id);
 
             WhatsappSend::create([
                 'whatsapp_campaign_id' => $this->campaignId,
                 'lead_id'              => $leadId,
                 'organization_id'      => $campaign->organization_id,
+                'whatsapp_message_id'  => $result['whatsapp_message_id'] ?? null,
                 'to_number'            => $lead->whatsapp_number ?? $lead->primary_phone ?? '',
                 'message_body'         => $message,
-                'twilio_message_sid'   => $result['message_sid'] ?? null,
+                'wa_message_id'        => $result['wa_message_id'] ?? null,
                 'status'               => $result['success'] ? ($result['status'] ?? 'sent') : 'failed',
                 'error_message'        => $result['error'] ?? null,
                 'error_code'           => $result['error_code'] ?? null,
@@ -93,8 +111,6 @@ class SendWhatsappBatch implements ShouldQueue
             } else {
                 $campaign->increment('failed_count');
             }
-
-            sleep(1); // respect Twilio rate limits
         }
 
         if ($this->isFinalBatch) {

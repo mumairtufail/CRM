@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\Plan;
+use App\Models\Tag;
 use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Auth\Events\Registered;
@@ -57,9 +59,14 @@ class RegisteredUserController extends Controller
         $slug = $validated['slug'] ?: $this->uniqueSlug($validated['workspace']);
 
         $user = DB::transaction(function () use ($validated, $slug) {
+            $basicPlan = Plan::where('slug', 'basic')->first();
+
             $organization = Organization::create([
-                'name' => $validated['workspace'],
-                'slug' => $slug,
+                'name'             => $validated['workspace'],
+                'slug'             => $slug,
+                'plan_id'          => $basicPlan?->id,
+                'plan_status'      => 'active',
+                'plan_assigned_at' => now(),
             ]);
 
             $user = User::create([
@@ -71,6 +78,8 @@ class RegisteredUserController extends Controller
             ]);
 
             $organization->update(['owner_id' => $user->id]);
+
+            Tag::seedDefaults($organization->id);
 
             return $user;
         });

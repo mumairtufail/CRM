@@ -39,7 +39,7 @@ class SendFollowUpBatch implements ShouldQueue
 
     public function handle(): void
     {
-        $campaign = EmailCampaign::find($this->campaignId);
+        $campaign = EmailCampaign::with('leadForm')->find($this->campaignId);
         $user     = User::find($this->userId);
 
         if (! $campaign || ! $user) return;
@@ -105,6 +105,14 @@ class SendFollowUpBatch implements ShouldQueue
             $domain    = Str::after($fromEmail, '@') ?: 'localhost';
             $messageId = (string) Str::uuid() . '@' . $domain;
 
+            $formLink = $campaign->leadForm
+                ? $campaign->leadForm->publicUrl() . '?' . http_build_query([
+                    'utm_source'   => 'email',
+                    'utm_medium'   => 'campaign',
+                    'utm_campaign' => $token,
+                ])
+                : '';
+
             $emailSend = EmailSend::create([
                 'organization_id'   => $parentSend->organization_id,
                 'email_campaign_id' => $this->campaignId,
@@ -119,7 +127,7 @@ class SendFollowUpBatch implements ShouldQueue
             ]);
 
             try {
-                $subject = $this->replaceTokens($subjectTemplate, $lead);
+                $subject = $this->replaceTokens($subjectTemplate, $lead, formLink: $formLink);
 
                 $html = $this->buildHtml(
                     $bodyTemplate,
@@ -128,6 +136,7 @@ class SendFollowUpBatch implements ShouldQueue
                     $template,
                     $templateVars,
                     $token,
+                    $formLink,
                 );
 
                 Mail::mailer('dynamic')
@@ -179,8 +188,9 @@ class SendFollowUpBatch implements ShouldQueue
         ?EmailTemplate $template,
         array $vars,
         string $token,
+        string $formLink = '',
     ): string {
-        $html = $this->replaceTokens($bodyHtml, $lead, $subject);
+        $html = $this->replaceTokens($bodyHtml, $lead, $subject, $formLink);
 
         $pixelUrl = url("/t/{$token}/open.gif");
         $pixelTag = '<img src="' . $pixelUrl . '" width="1" height="1" alt="" style="display:none;border:0;outline:none;text-decoration:none;" />';
@@ -200,7 +210,7 @@ class SendFollowUpBatch implements ShouldQueue
         return $html;
     }
 
-    private function replaceTokens(string $html, Lead $lead, string $subject = ''): string
+    private function replaceTokens(string $html, Lead $lead, string $subject = '', string $formLink = ''): string
     {
         $tokens = [
             '{{first_name}}' => $lead->first_name    ?? '',
@@ -211,6 +221,7 @@ class SendFollowUpBatch implements ShouldQueue
             '{{phone}}'      => $lead->primary_phone ?? '',
             '{{status}}'     => $lead->status        ?? '',
             '{{subject}}'    => $subject,
+            '{{form_link}}'  => $formLink,
         ];
 
         return str_replace(array_keys($tokens), array_values($tokens), $html);

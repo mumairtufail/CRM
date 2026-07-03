@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react'
 import {
   LayoutDashboard, Users, Building2,
   Settings, PanelLeftClose, PanelLeftOpen, Mail, MessageSquare,
+  MessageCircle, LifeBuoy, CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -10,8 +11,11 @@ const navItems = [
   { label: 'Dashboard',     href: '/admin',                   icon: LayoutDashboard },
   { label: 'Users',         href: '/admin/users',             icon: Users },
   { label: 'Organizations', href: '/admin/organizations',     icon: Building2 },
+  { label: 'Plans',         href: '/admin/plans',             icon: CreditCard },
   { label: 'Contact Msgs',  href: '/admin/contact-messages',  icon: MessageSquare },
+  { label: 'Support Cases', href: '/admin/support',           icon: LifeBuoy },
   { label: 'SMTP Settings', href: '/admin/smtp-settings',     icon: Mail },
+  { label: 'WhatsApp',      href: '/admin/whatsapp-settings', icon: MessageCircle },
 ]
 
 export default function AdminSidebar({ open, onToggle }) {

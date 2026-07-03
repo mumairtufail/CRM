@@ -1,11 +1,12 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react'
-import { Head, Link, usePage } from '@inertiajs/react'
+import { Head, Link } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import {
   BookOpen, Search, Rocket, LayoutDashboard, Users, UsersRound, Tag,
   Kanban, Upload, Sparkles, Mail, MousePointerClick, Inbox, Briefcase,
-  FolderKanban, FileText, Bell, Settings, Globe, ShieldCheck, ChevronRight,
-  Check, Lightbulb, AlertTriangle, Info, ArrowUp,
+  FolderKanban, FileText, Bell, Settings, ShieldCheck, ChevronRight,
+  Lightbulb, AlertTriangle, Info, ArrowUp,
+  MessageCircle, BarChart3, LifeBuoy, Shield, ClipboardList,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -106,7 +107,7 @@ function MiniTable({ head, rows }) {
    `keywords` powers the search box (matched against title + keywords).
    ────────────────────────────────────────────────────────────────────────── */
 
-function buildSections(intakeUrl) {
+function buildSections() {
   return [
     {
       id: 'getting-started', title: 'Getting Started', icon: Rocket,
@@ -133,10 +134,11 @@ function buildSections(intakeUrl) {
     },
     {
       id: 'dashboard', title: 'The Dashboard', icon: LayoutDashboard,
-      keywords: 'home stats charts overview metrics activity widgets',
+      keywords: 'home stats charts overview metrics activity widgets agent owner performance',
       body: (
         <>
           <Lead>Your home screen — a one-glance summary of your business. Click any card or list item to jump straight to the related page.</Lead>
+          <Callout type="note">What you see depends on your <strong>role</strong>. The <strong>owner</strong> (and anyone given the "View organization-wide dashboard" permission) sees the full picture below. Everyone else sees their own performance instead — see "Agent view" further down.</Callout>
           <SubHead>Stat cards</SubHead>
           <Lead>Totals with up/down trends: <strong>Total Leads, Won This Month, Emails Sent, Open Deals / Pipeline Value,</strong> and <strong>Conversion Rate</strong> (how many leads turn into wins).</Lead>
           <SubHead>Charts &amp; lists</SubHead>
@@ -147,12 +149,14 @@ function buildSections(intakeUrl) {
             <><strong>Recent Activity</strong> — a live feed of notes, emails, calls, and status changes.</>,
             <><strong>Follow-ups Due</strong> — leads to contact this week (overdue shown in red).</>,
           ]} />
+          <SubHead>Agent view</SubHead>
+          <Lead>A team member without organization-wide access sees a personal version instead, scoped only to leads assigned to them: <strong>Leads Assigned, Leads Contacted, Emails Sent, Calls Made,</strong> and <strong>Follow-ups Due</strong> — plus their own recent activity and upcoming follow-ups. Nothing from other teammates' leads shows up here.</Lead>
         </>
       ),
     },
     {
       id: 'leads', title: 'Leads', icon: Users,
-      keywords: 'lead prospect contact create edit delete filter search status priority convert client emails phones',
+      keywords: 'lead prospect contact create edit delete filter search status priority convert client emails phones assign assigned owner call channel',
       body: (
         <>
           <Lead>A <strong>lead</strong> is anyone you might do business with — the heart of the CRM. Go to <em>Leads → All Leads</em>.</Lead>
@@ -172,8 +176,9 @@ function buildSections(intakeUrl) {
           <SubHead>The lead detail page</SubHead>
           <Bullets items={[
             <>Full contact info, pipeline details, tags, and mini-stats (emails sent, days known).</>,
-            <><strong>Activity timeline</strong> — every note, email, call, and status change with timestamps.</>,
-            <><strong>Mark contact channels</strong> (email, LinkedIn, etc.) to record outreach.</>,
+            <><strong>Activity timeline</strong> — every note, email, call, WhatsApp message, and status change with timestamps.</>,
+            <><strong>Mark contact channels</strong> — Email, <strong>Phone Call</strong>, LinkedIn, Instagram, Facebook, WhatsApp, Reddit, or Social — to record outreach and stamp "last contacted."</>,
+            <><strong>Assigned to</strong> — if you have permission to assign leads, a dropdown on the lead page lets you hand it to a specific teammate (or leave it unassigned). New leads you create are assigned to you automatically.</>,
             <><strong>Convert to Client</strong> — turn a won lead into a customer; pick their starting status and confirm.</>,
           ]} />
           <SubHead>Statuses</SubHead>
@@ -310,6 +315,29 @@ function buildSections(intakeUrl) {
       ),
     },
     {
+      id: 'whatsapp', title: 'WhatsApp', icon: MessageCircle,
+      keywords: 'whatsapp bot automation knowledge base chat conversation campaign message qualify lead reply',
+      body: (
+        <>
+          <Lead>WhatsApp runs on a shared, managed number — there's nothing for you to configure. If it's enabled for your workspace, go to <em>WhatsApp → Conversations</em> or <em>WhatsApp → WA Campaigns</em>.</Lead>
+          <Callout type="note">Not seeing WhatsApp in your sidebar? It isn't turned on for your workspace yet — contact your account manager or support to enable it.</Callout>
+          <SubHead>Knowledge base</SubHead>
+          <Lead>Before the bot can answer anyone, write your <strong>knowledge base</strong> — short title-and-answer entries about your pricing, hours, what you offer, and anything customers ask often. Every automated reply is drafted <strong>only from what you've written here</strong>, so it sounds like your business, not a generic bot.</Lead>
+          <SubHead>How a conversation becomes a lead</SubHead>
+          <Steps items={[
+            <>Someone messages your WhatsApp number.</>,
+            <>The bot replies using your knowledge base, in seconds.</>,
+            <>If the conversation shows real interest — asking about pricing, a demo, or booking a call — it's automatically turned into a lead and tagged, so it's waiting for you on your Leads list.</>,
+            <>Every message stays on that lead's <strong>activity timeline</strong>, right next to their emails and calls.</>,
+          ]} />
+          <SubHead>Conversations</SubHead>
+          <Lead>Open any thread to see the full back-and-forth and reply yourself at any time — your reply always overrides the bot. Message status (sent, delivered, read) is shown next to each bubble.</Lead>
+          <SubHead>WA Campaigns</SubHead>
+          <Lead>Send one WhatsApp message to many leads at once, the same way you would an email campaign — choose all leads, a filtered segment, or a group, personalize with tokens like <Token>{'{{first_name}}'}</Token>, and optionally add a single automatic follow-up message after a delay.</Lead>
+        </>
+      ),
+    },
+    {
       id: 'inbox', title: 'Inbox (Connected Email)', icon: Inbox,
       keywords: 'inbox imap email read reply compose sync star trash fetch',
       body: (
@@ -372,6 +400,21 @@ function buildSections(intakeUrl) {
       ),
     },
     {
+      id: 'reports', title: 'Reports', icon: BarChart3,
+      keywords: 'report analytics agent performance channel breakdown export activity date range',
+      body: (
+        <>
+          <Lead>See how the whole team is performing, broken down by person and by channel. Go to <em>Reports</em>.</Lead>
+          <Bullets items={[
+            <>Pick a date range — last 7 days, 30 days, 90 days, or a custom range.</>,
+            <><strong>Per-agent table</strong> — leads created, leads assigned, leads contacted, deals won, conversion rate, emails sent, and WhatsApp messages sent, for each active team member.</>,
+            <><strong>Channel breakdown</strong> — how contact happened across email, WhatsApp, calls, and every other outreach channel.</>,
+            <><strong>Activity log</strong> — every logged action in the period, filterable by team member or activity type.</>,
+          ]} />
+        </>
+      ),
+    },
+    {
       id: 'notifications', title: 'Notifications', icon: Bell,
       keywords: 'notification bell alert unread mark read',
       body: (
@@ -381,6 +424,20 @@ function buildSections(intakeUrl) {
             <>You're notified about a <strong>new lead</strong> from your public form and a <strong>new email</strong> from a known lead.</>,
             <>Click a notification to mark it read and jump to the related item.</>,
             <>Use <strong>Mark all read</strong> to clear the badge.</>,
+          ]} />
+        </>
+      ),
+    },
+    {
+      id: 'support', title: 'Support', icon: LifeBuoy,
+      keywords: 'support help desk ticket case message contact platform admin',
+      body: (
+        <>
+          <Lead>Stuck on something, or found a bug? Go to <em>Support</em> to open a case directly with the platform team — no need to leave the app.</Lead>
+          <Steps items={[
+            <>Click <strong>New Case</strong>, give it a subject, and describe the issue.</>,
+            <>Reply any time to add more detail — each case keeps the full message history.</>,
+            <>You'll get a notification when the platform team replies.</>,
           ]} />
         </>
       ),
@@ -402,8 +459,9 @@ function buildSections(intakeUrl) {
             <>Use <strong>Test SMTP</strong> / <strong>Test IMAP</strong>, then set one account <strong>active</strong> (only one at a time).</>,
           ]} />
           <Callout type="tip">Gmail: enable 2-Factor Authentication, then create an <strong>App Password</strong> and use it as the password.</Callout>
-          <SubHead>Sending Limits</SubHead>
+          <SubHead>Sending Limits &amp; automated follow-ups</SubHead>
           <Lead>Control bulk send speed: <strong>batch size</strong> (emails per batch) and <strong>delay</strong> (seconds between batches). A provider-limits reference table is shown to help you choose.</Lead>
+          <Lead>The <strong>Automated follow-ups</strong> toggle on this same page turns the feature on for your workspace. Once it's on, any campaign can add a follow-up sequence that automatically re-sends to leads who haven't opened the original email — you write the sequence once per campaign, then it runs on its own.</Lead>
           <SubHead>Templates</SubHead>
           <Lead>Choose one of <strong>three built-in designs</strong> to wrap your campaigns; <strong>Preview</strong> with the eye icon, or <strong>Deactivate</strong> for plain HTML.</Lead>
           <Callout type="note">There's no custom-template builder — to change branding, update your <strong>Workspace</strong> details and they flow into the signature automatically.</Callout>
@@ -413,31 +471,54 @@ function buildSections(intakeUrl) {
       ),
     },
     {
-      id: 'public-form', title: 'Your Public Lead Form', icon: Globe,
-      keywords: 'public intake form share link website embed lead capture',
+      id: 'team', title: 'Team &amp; Permissions', icon: Shield,
+      keywords: 'team member role permission agent owner add invite deactivate roles manage',
       body: (
         <>
-          <Lead>Every workspace gets a <strong>public web page</strong> where anyone can submit their details — no login required. Share it on your website, email signature, or social bio.</Lead>
-          {intakeUrl && (
-            <div className="mt-3 flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5">
-              <Globe size={14} className="shrink-0 text-violet-500" />
-              <code className="text-[12.5px] text-slate-600 break-all">{intakeUrl}</code>
-            </div>
-          )}
+          <Lead>Bring teammates into your workspace and control exactly what each of them can see and do. Go to <em>Team</em> in the sidebar (only visible if you have access to it).</Lead>
+          <SubHead>Team members</SubHead>
+          <Steps items={[
+            <>Click <strong>Add team member</strong> and fill in their name, email, a password, and a role.</>,
+            <>They can sign in immediately with those details — there's no invite email to wait on.</>,
+            <><strong>Edit</strong> a member to change their name, email, or role; <strong>Deactivate</strong> to block their login without losing their history (their past leads and activity stay exactly where they are).</>,
+          ]} />
+          <Callout type="note">The workspace <strong>owner</strong> always has full access to everything and never appears in this list — this page is for managing everyone else.</Callout>
+          <SubHead>Roles &amp; permissions</SubHead>
+          <Lead>Click <strong>Roles &amp; permissions</strong> to see every role in your workspace. A default <strong>Agent</strong> role is created automatically for every new workspace — it can be edited or deleted like any other role, as long as no one is currently assigned to it.</Lead>
+          <Steps items={[
+            <>Click <strong>New role</strong> (or edit an existing one) and give it a name.</>,
+            <>Tick individual permissions, or use a group's <strong>select all</strong> checkbox (Leads, Pipeline, Campaigns, WhatsApp, Inbox, Clients &amp; Projects, Invoices, Team, Settings, Dashboard) to grant a whole category at once.</>,
+            <>Save — every teammate with that role gets the new permissions right away.</>,
+          ]} />
+          <Callout type="tip">Permissions decide what shows up in someone's sidebar too — if a teammate can't see Team, Reports, or another section, it's because their role doesn't include it yet.</Callout>
+        </>
+      ),
+    },
+    {
+      id: 'public-form', title: 'Lead Capture Forms', icon: ClipboardList,
+      keywords: 'public intake form share link website embed lead capture builder fields',
+      body: (
+        <>
+          <Lead>Build your own public web forms where anyone can submit their details — no login required for visitors. Go to <em>Forms</em>.</Lead>
+          <Steps items={[
+            <>Click <strong>New Form</strong>, name it, and add fields — built-in ones (First Name, Last Name, Email, Phone, Country, Notes, Budget) map straight onto the lead, or add your own custom text, number, dropdown, date, or long-answer fields.</>,
+            <>Save — each form gets its own shareable link, shown on the Forms list.</>,
+            <><strong>Toggle</strong> a form active or inactive any time, and edit its fields whenever you like.</>,
+          ]} />
           <Bullets items={[
-            <>Branded with your company name and logo (from <em>Settings → Workspace</em>).</>,
-            <>Visitors fill in name, email, phone, company, job title, website, industry, and a message.</>,
-            <>On submit: a new lead is created (source "Intake Form"), you get a notification, and it appears instantly in Leads.</>,
+            <>Every workspace starts with one default form, ready to share immediately.</>,
+            <>On submit: a new lead is created from the answers, you get a notification, and it appears instantly in Leads.</>,
+            <>Share the link on your website, email signature, social bio, or a QR code.</>,
           ]} />
         </>
       ),
     },
     {
       id: 'admin', title: 'Admin Portal', icon: ShieldCheck,
-      keywords: 'admin superadmin platform organizations users impersonate',
+      keywords: 'admin superadmin platform organizations users impersonate login guard separate',
       body: (
         <>
-          <Callout type="note">Only visible to <strong>platform administrators</strong> who run the whole system. Regular users won't see it.</Callout>
+          <Callout type="note">The platform admin portal is a completely separate login at <Token>/admin/login</Token>, only for the people who run the platform itself. It isn't part of your workspace and regular users can never reach it.</Callout>
           <Bullets items={[
             <><strong>Admin Dashboard</strong> — platform-wide totals (organizations, users, leads, invoices).</>,
             <><strong>Users</strong> — search everyone and <strong>impersonate</strong> a user to troubleshoot (a banner lets you stop).</>,
@@ -452,12 +533,7 @@ function buildSections(intakeUrl) {
 /* ────────────────────────────────────────────────────────────────────────── */
 
 export default function Documentation() {
-  const { props } = usePage()
-  const organization = props?.organization
-  const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  const intakeUrl = organization?.slug ? `${origin}/intake/${organization.slug}` : null
-
-  const sections = useMemo(() => buildSections(intakeUrl), [intakeUrl])
+  const sections = useMemo(() => buildSections(), [])
 
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(sections[0].id)
@@ -519,11 +595,11 @@ export default function Documentation() {
           </div>
         </div>
 
-        {/* Two-column layout */}
-        <div className="flex gap-0 min-h-0 flex-1">
+        {/* Two-column layout: stacked on mobile, side-by-side on desktop */}
+        <div className="flex flex-col md:flex-row gap-0 min-h-0 flex-1">
 
           {/* Table of contents */}
-          <div className="w-60 shrink-0 border-r border-slate-100 bg-white flex flex-col">
+          <div className="w-full md:w-60 md:shrink-0 border-b md:border-b-0 md:border-r border-slate-100 bg-white flex flex-col shrink-0">
             <div className="p-3 border-b border-slate-100">
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -535,7 +611,29 @@ export default function Documentation() {
                 />
               </div>
             </div>
-            <nav className="flex-1 overflow-y-auto p-2 space-y-0.5">
+
+            {/* Mobile: horizontal scrollable chip strip */}
+            <nav className="flex md:hidden overflow-x-auto gap-1 p-2 scrollbar-none">
+              {filtered.length === 0 && (
+                <p className="text-[12px] text-slate-400 px-3 py-2 whitespace-nowrap">No sections match "{query}".</p>
+              )}
+              {filtered.map(({ id, title, icon: Icon }) => {
+                const isActive = active === id
+                return (
+                  <button key={id} onClick={() => scrollTo(id)}
+                    className={cn(
+                      'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0',
+                      isActive ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-100'
+                    )}>
+                    <Icon size={13} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+                    {title}
+                  </button>
+                )
+              })}
+            </nav>
+
+            {/* Desktop: vertical nav list */}
+            <nav className="hidden md:flex md:flex-1 md:overflow-y-auto flex-col p-2 space-y-0.5">
               {filtered.length === 0 && (
                 <p className="text-[12px] text-slate-400 px-3 py-4 text-center">No sections match "{query}".</p>
               )}
@@ -556,7 +654,7 @@ export default function Documentation() {
           </div>
 
           {/* Content */}
-          <div ref={scrollRef} className="flex-1 min-w-0 overflow-y-auto bg-slate-50 relative">
+          <div ref={scrollRef} className="flex-1 min-w-0 min-h-0 overflow-y-auto bg-slate-50 relative">
             <div className="max-w-3xl mx-auto px-6 py-6 space-y-4">
               {filtered.map(({ id, title, icon: Icon, body }) => (
                 <section

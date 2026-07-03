@@ -4,18 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendWhatsappBatch;
 use App\Models\Lead;
+use App\Models\LeadForm;
 use App\Models\LeadGroup;
 use App\Models\Tag;
+use App\Models\TenantWhatsappSettings;
 use App\Models\WhatsappCampaign;
-use App\Models\WhatsappCredential;
 use App\Models\WhatsappSend;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class WhatsappCampaignController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $settings = TenantWhatsappSettings::forOrganization($request->user()->organization_id);
+
         $campaigns = WhatsappCampaign::latest()->get()->map(fn ($c) => [
             'id'                => $c->id,
             'name'              => $c->name,
@@ -33,6 +36,7 @@ class WhatsappCampaignController extends Controller
 
         return Inertia::render('WhatsApp/Campaigns/Index', [
             'campaigns' => $campaigns,
+            'enabled'   => (bool) $settings?->isUsableForSend(),
         ]);
     }
 
@@ -52,17 +56,15 @@ class WhatsappCampaignController extends Controller
             'color' => $t->color,
         ]);
 
-        $credential = WhatsappCredential::where('organization_id', $request->user()->organization_id)
-            ->where('is_active', true)
-            ->first();
+        $settings = TenantWhatsappSettings::forOrganization($request->user()->organization_id);
 
         return Inertia::render('WhatsApp/Campaigns/Create', [
             'statuses'      => $statuses,
             'leadCount'     => $leadCount,
             'groups'        => $groups,
             'tags'          => $tags,
-            'hasCredential' => (bool) $credential,
-            'fromNumber'    => $credential?->from_number,
+            'forms'         => $this->formsForPicker(),
+            'hasCredential' => (bool) $settings?->isUsableForSend(),
         ]);
     }
 
@@ -148,7 +150,8 @@ class WhatsappCampaignController extends Controller
             'leadCount'     => Lead::count(),
             'groups'        => LeadGroup::withCount('leads')->orderBy('name')->get(),
             'tags'          => Tag::withCount('leads')->orderBy('name')->get(),
-            'hasCredential' => true,
+            'forms'         => $this->formsForPicker(),
+            'hasCredential' => (bool) TenantWhatsappSettings::forOrganization($campaign->organization_id)?->isUsableForSend(),
         ]);
     }
 
@@ -185,12 +188,10 @@ class WhatsappCampaignController extends Controller
             return back()->withErrors(['send' => 'Campaign is already running.']);
         }
 
-        $credential = WhatsappCredential::where('organization_id', $request->user()->organization_id)
-            ->where('is_active', true)
-            ->first();
+        $settings = TenantWhatsappSettings::forOrganization($request->user()->organization_id);
 
-        if (!$credential) {
-            return back()->withErrors(['send' => 'No active WhatsApp account. Configure one in Settings → WhatsApp.']);
+        if (!$settings || !$settings->isUsableForSend()) {
+            return back()->withErrors(['send' => 'WhatsApp isn\'t enabled for your workspace yet. Contact support to enable it.']);
         }
 
         $leadIds = $this->resolveRecipients($campaign);
@@ -289,6 +290,19 @@ class WhatsappCampaignController extends Controller
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────
+
+    private function formsForPicker()
+    {
+        return LeadForm::where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (LeadForm $f) => [
+                'id'         => $f->id,
+                'name'       => $f->name,
+                'public_url' => $f->publicUrl(),
+            ]);
+    }
 
     private function resolveRecipients(WhatsappCampaign $campaign): array
     {

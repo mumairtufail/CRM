@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Jobs\SendCampaignBatch;
 use App\Models\EmailCampaign;
 use App\Models\EmailSend;
+use App\Models\FormSession;
 use App\Models\Lead;
+use App\Models\LeadForm;
 use App\Models\LeadGroup;
 use App\Models\Tag;
 use App\Services\MailService;
@@ -61,6 +63,7 @@ class CampaignController extends Controller
             'leadCount'         => $leadCount,
             'groups'            => $groups,
             'tags'              => $tags,
+            'forms'             => $this->formsForSelect(),
             'sender'            => $this->resolveSender($request->user()),
             'activeTemplate'    => $request->user()->activeEmailTemplate?->name,
             'orgFollowupEnabled' => $org?->isFollowupEnabled() ?? false,
@@ -75,6 +78,7 @@ class CampaignController extends Controller
             'body_html'        => 'required|string',
             'recipient_mode'   => 'required|in:all,filter,group',
             'group_id'         => 'nullable|integer|exists:lead_groups,id',
+            'lead_form_id'     => 'nullable|integer|exists:lead_forms,id',
             'filters'          => 'nullable|array',
             'followup_enabled' => 'boolean',
             'followup_steps'   => [
@@ -146,6 +150,7 @@ class CampaignController extends Controller
             'leadCount'          => $leadCount,
             'groups'             => $groups,
             'tags'               => $tags,
+            'forms'              => $this->formsForSelect(),
             'sender'             => $this->resolveSender($request->user()),
             'activeTemplate'     => $request->user()->activeEmailTemplate?->name,
             'orgFollowupEnabled' => $org?->isFollowupEnabled() ?? false,
@@ -158,6 +163,7 @@ class CampaignController extends Controller
                 'body_html'        => $campaign->body_html,
                 'recipient_mode'   => $campaign->recipient_mode ?? 'all',
                 'group_id'         => $campaign->group_id,
+                'lead_form_id'     => $campaign->lead_form_id,
                 'filters'          => $campaign->filters ?? ['statuses' => [], 'tag_ids' => []],
                 'total_recipients' => $campaign->total_recipients,
                 'followup_enabled' => (bool) $campaign->followup_enabled,
@@ -178,6 +184,7 @@ class CampaignController extends Controller
             'body_html'        => 'required|string',
             'recipient_mode'   => 'required|in:all,filter,group',
             'group_id'         => 'nullable|integer|exists:lead_groups,id',
+            'lead_form_id'     => 'nullable|integer|exists:lead_forms,id',
             'filters'          => 'nullable|array',
             'followup_enabled' => 'boolean',
             'followup_steps'   => [
@@ -245,18 +252,32 @@ class CampaignController extends Controller
             ->latest('sent_at')
             ->paginate(25)
             ->through(fn ($s) => [
-                'id'            => $s->id,
-                'lead_name'     => $s->lead?->full_name,
-                'lead_id'       => $s->lead_id,
-                'email_used'    => $s->email_used,
-                'status'        => $s->status,
-                'error_message' => $s->error_message,
-                'sent_at'       => $s->sent_at?->diffForHumans(),
-                'opened_at'     => $s->opened_at?->diffForHumans(),
-                'clicked_at'    => $s->clicked_at?->diffForHumans(),
+                'id'             => $s->id,
+                'lead_name'      => $s->lead?->full_name,
+                'lead_id'        => $s->lead_id,
+                'email_used'     => $s->email_used,
+                'status'         => $s->status,
+                'error_message'  => $s->error_message,
+                'is_followup'    => (bool) $s->is_followup,
+                'followup_step'  => $s->followup_step,
+                'sent_at'        => $s->sent_at?->diffForHumans(),
+                'opened_at'      => $s->opened_at?->diffForHumans(),
+                'clicked_at'     => $s->clicked_at?->diffForHumans(),
             ]);
 
         $failedCount = $campaign->sends()->where('status', 'failed')->count();
+
+        // Submissions are attributed via the {{form_link}}'s utm_campaign param,
+        // which carries the sending EmailSend's own tracking_token — so "did any
+        // of THIS campaign's sends lead to a submission" is just a token lookup,
+        // no new attribution column needed.
+        $formSubmissions = null;
+        if ($campaign->lead_form_id) {
+            $tokens = $campaign->sends()->pluck('tracking_token')->filter()->all();
+            $formSubmissions = FormSession::whereIn('utm_campaign', $tokens)
+                ->whereNotNull('submitted_at')
+                ->count();
+        }
 
         return Inertia::render('Campaigns/Show', [
             'campaign' => [
@@ -281,6 +302,12 @@ class CampaignController extends Controller
                 'followup_steps_count'  => count($campaign->followup_steps ?? []),
                 'sent_at'               => $campaign->sent_at?->format('M d, Y H:i'),
                 'created_at'       => $campaign->created_at->format('M d, Y'),
+                'form'              => $campaign->leadForm ? [
+                    'id'         => $campaign->leadForm->id,
+                    'name'       => $campaign->leadForm->name,
+                    'public_url' => $campaign->leadForm->publicUrl(),
+                ] : null,
+                'form_submissions'  => $formSubmissions,
             ],
             'sends' => $sends,
         ]);
@@ -587,6 +614,18 @@ class CampaignController extends Controller
             'from_name'  => $cred->from_name  ?? $user->name,
             'from_email' => $cred->from_email ?? $user->email,
         ];
+    }
+
+    /**
+     * Forms available to attach to a campaign via {{form_link}} — same
+     * active/is_default ordering as FormController::listForSelect().
+     */
+    private function formsForSelect()
+    {
+        return LeadForm::where('is_active', true)
+            ->orderByDesc('is_default')
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     private function countRecipients(array $filters, ?int $groupId, string $mode): int

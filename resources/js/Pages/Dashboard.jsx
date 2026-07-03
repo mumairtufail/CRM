@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import StatusBadge from '@/Components/Common/StatusBadge'
 import LeadAvatar from '@/Components/Common/LeadAvatar'
+import AgentStatsCards from '@/Components/Dashboard/AgentStatsCards'
 import { usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
@@ -137,9 +138,135 @@ function FunnelBar({ name, value, max, color }) {
 const FUNNEL_ORDER = ['new','contacted','qualified','proposal','negotiation','won','lost']
 const FUNNEL_COLORS = ['#7C3AED','#6366F1','#3B82F6','#0EA5E9','#10B981','#22C55E','#EF4444']
 
+function WelcomeBanner({ name, children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="relative overflow-hidden rounded-2xl px-6 py-5 mb-5"
+      style={{ background: 'linear-gradient(135deg, #1A1628 0%, #2D1B6B 50%, #1A1628 100%)', boxShadow: '0 4px 30px rgba(124,58,237,0.25)' }}
+    >
+      <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none opacity-[0.15]"
+        style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', transform: 'translate(30%,-55%)' }} />
+      <div className="absolute -bottom-16 left-1/4 w-48 h-48 rounded-full pointer-events-none opacity-[0.08]"
+        style={{ background: 'radial-gradient(circle, #4F46E5 0%, transparent 70%)' }} />
+      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1.5">
+            <Sparkles size={12} className="text-violet-300" />
+            <span className="text-violet-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
+          </div>
+          <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''}</h2>
+          <p className="text-white/40 text-[12.5px] mt-0.5">Here's your pipeline snapshot for today.</p>
+        </div>
+        {children}
+      </div>
+    </motion.div>
+  )
+}
+
+function AgentDashboard({ agentStats, myLeads, upcomingFollowUps, recentActivities, name }) {
+  return (
+    <>
+      <WelcomeBanner name={name} />
+      <AgentStatsCards agentStats={agentStats} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.35 }}>
+          <GCard className="h-full">
+            <SHead title="My leads" icon={Target} href="/leads" iconColor="text-violet-500" />
+            <div className="px-3 py-2">
+              {myLeads?.length ? myLeads.map(lead => (
+                <Link key={lead.id} href={`/leads/${lead.id}`}
+                  className="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-violet-50/60 transition-colors group">
+                  <div className="flex items-center gap-2.5">
+                    <LeadAvatar name={lead.full_name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold text-slate-800 group-hover:text-violet-700 truncate leading-none">{lead.full_name}</p>
+                      <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">{lead.company || 'No company'}</p>
+                    </div>
+                  </div>
+                  <StatusBadge status={lead.status} size="sm" />
+                </Link>
+              )) : (
+                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                  <Users size={22} className="text-slate-200" />
+                  <p className="text-[12px] text-slate-400">No leads assigned to you yet</p>
+                </div>
+              )}
+            </div>
+          </GCard>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26, duration: 0.35 }}>
+          <GCard className="h-full">
+            <SHead title="Recent activity" icon={Sparkles} iconColor="text-blue-400" />
+            <div className="px-4 py-3 space-y-3">
+              {recentActivities?.length ? recentActivities.map(act => {
+                const Ic = ACT_ICONS[act.type] || MessageSquare
+                const cl = ACT_COLORS[act.type] || ACT_COLORS.note
+                return (
+                  <div key={act.id} className="flex gap-2.5">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${cl}`}>
+                      <Ic size={11} />
+                    </div>
+                    <div className="min-w-0">
+                      {act.lead_id && (
+                        <Link href={`/leads/${act.lead_id}`}
+                          className="text-[11px] font-semibold text-violet-600 hover:underline truncate block leading-none mb-0.5">
+                          {act.lead_name}
+                        </Link>
+                      )}
+                      <p className="text-[11px] text-slate-500 leading-snug truncate">{act.description}</p>
+                      <p className="text-[10px] text-slate-300 mt-0.5">{act.created_at}</p>
+                    </div>
+                  </div>
+                )
+              }) : (
+                <div className="flex flex-col items-center justify-center py-6 gap-2">
+                  <Sparkles size={20} className="text-slate-200" />
+                  <p className="text-[12px] text-slate-400">No activity yet</p>
+                </div>
+              )}
+            </div>
+          </GCard>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32, duration: 0.35 }}>
+          <GCard className="h-full">
+            <SHead title="Follow-ups due" icon={Clock} href="/leads" iconColor="text-amber-500" />
+            <div className="px-3 py-2">
+              {upcomingFollowUps?.length ? upcomingFollowUps.map(lead => (
+                <Link key={lead.id} href={`/leads/${lead.id}`}
+                  className="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-amber-50/60 transition-colors group">
+                  <div className="flex items-center gap-2.5">
+                    <LeadAvatar name={lead.full_name} size="sm" />
+                    <div className="min-w-0">
+                      <p className="text-[12px] font-semibold text-slate-800 group-hover:text-amber-700 truncate leading-none">{lead.full_name}</p>
+                      <p className="text-[10.5px] text-amber-500 font-semibold mt-0.5">{lead.follow_up_at_human}</p>
+                    </div>
+                  </div>
+                  <StatusBadge status={lead.status} size="sm" />
+                </Link>
+              )) : (
+                <div className="flex flex-col items-center justify-center py-8 gap-2">
+                  <Clock size={22} className="text-slate-200" />
+                  <p className="text-[12px] text-slate-400">No follow-ups scheduled</p>
+                </div>
+              )}
+            </div>
+          </GCard>
+        </motion.div>
+      </div>
+    </>
+  )
+}
+
 export default function Dashboard({
-  stats, leadsOverTime, statusBreakdown, sourceBreakdown,
-  recentLeads, topDeals, upcomingFollowUps, recentActivities
+  viewType, stats, leadsOverTime, statusBreakdown, sourceBreakdown,
+  recentLeads, topDeals, upcomingFollowUps, recentActivities,
+  agentStats, myLeads,
 }) {
   const { auth } = usePage().props
   const name = auth?.user?.name?.split(' ')[0] ?? ''
@@ -150,32 +277,28 @@ export default function Dashboard({
     .map(s => statusBreakdown?.find(b => b.name === s))
     .filter(Boolean)
 
+  if (viewType === 'agent') {
+    return (
+      <>
+        <Head title="Dashboard" />
+        <AppLayout title="Dashboard">
+          <AgentDashboard
+            agentStats={agentStats} myLeads={myLeads}
+            upcomingFollowUps={upcomingFollowUps} recentActivities={recentActivities}
+            name={name}
+          />
+        </AppLayout>
+      </>
+    )
+  }
+
   return (
     <>
       <Head title="Dashboard" />
       <AppLayout title="Dashboard">
 
         {/* Welcome banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="relative overflow-hidden rounded-2xl px-6 py-5 mb-5"
-          style={{ background: 'linear-gradient(135deg, #1A1628 0%, #2D1B6B 50%, #1A1628 100%)', boxShadow: '0 4px 30px rgba(124,58,237,0.25)' }}
-        >
-          <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none opacity-[0.15]"
-            style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', transform: 'translate(30%,-55%)' }} />
-          <div className="absolute -bottom-16 left-1/4 w-48 h-48 rounded-full pointer-events-none opacity-[0.08]"
-            style={{ background: 'radial-gradient(circle, #4F46E5 0%, transparent 70%)' }} />
-          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <Sparkles size={12} className="text-violet-300" />
-                <span className="text-violet-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
-              </div>
-              <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''}</h2>
-              <p className="text-white/40 text-[12.5px] mt-0.5">Here's your pipeline snapshot for today.</p>
-            </div>
+        <WelcomeBanner name={name}>
             <div className="flex items-center gap-4 sm:gap-6 shrink-0">
               {[
                 { label: 'Leads', value: stats?.total_leads ?? 0 },
@@ -188,8 +311,7 @@ export default function Dashboard({
                 </div>
               ))}
             </div>
-          </div>
-        </motion.div>
+        </WelcomeBanner>
 
         {/* 5 Stat Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">

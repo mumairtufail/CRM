@@ -5,13 +5,16 @@ import {
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
   LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown, BookOpen,
-  MessageSquare, MessagesSquare,
+  MessageSquare, MessagesSquare, ClipboardList, ShieldCheck, BarChart3, LifeBuoy,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
+import usePermissions from '@/Hooks/usePermissions'
 
 const navItems = [
   { label: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Team',       href: '/settings/team', icon: ShieldCheck, permission: 'team.view' },
+  { label: 'Reports',    href: '/reports',   icon: BarChart3, permission: 'reports.view' },
   {
     label: 'Leads',
     icon: Users,
@@ -24,11 +27,13 @@ const navItems = [
     ],
   },
   { label: 'Pipeline',   href: '/pipeline', icon: Kanban },
-  { label: 'Campaigns',  href: '/campaigns', icon: Mail },
+  { label: 'Campaigns',  href: '/campaigns', icon: Mail, module: 'email_campaigns' },
+  { label: 'Forms',      href: '/forms',    icon: ClipboardList },
   {
     label: 'WhatsApp',
     icon: MessageSquare,
     group: true,
+    module: 'whatsapp_campaigns',
     children: [
       { label: 'WA Campaigns',     href: '/whatsapp/campaigns',     icon: MessageSquare },
       { label: 'Conversations',    href: '/whatsapp/conversations',  icon: MessagesSquare },
@@ -39,6 +44,7 @@ const navItems = [
   { label: 'Inbox',      href: '/inbox',     icon: Inbox },
   { label: 'Invoices',   href: '/invoices',  icon: FileText },
   { label: 'Settings',   href: '/profile',   icon: Settings },
+  { label: 'Support',    href: '/support',   icon: LifeBuoy },
   { label: 'Help & Docs', href: '/documentation', icon: BookOpen },
 ]
 
@@ -60,12 +66,16 @@ const COMPONENT_LABELS = {
   'Campaigns/Index':  'Campaigns',
   'Campaigns/Create': 'New Campaign',
   'Campaigns/Show':   'Campaign',
+  'Forms/Index':      'Forms',
+  'Forms/Create':     'New Form',
+  'Forms/Edit':       'Edit Form',
+  'Reports/Index':    'Reports',
+  'Support/Index':    'Support',
   'Invoices/Index':   'Invoices',
   'Invoices/Create':  'New Invoice',
   'Invoices/Show':    'Invoice',
   'Pipeline':         'Pipeline',
   'Import':           'Import',
-  'Tags/Index':       'Tags',
   'Profile/Edit':     'Settings',
   'Settings':         'Settings',
   'Clients/Index':    'Clients',
@@ -104,8 +114,13 @@ export default function Sidebar({ open, onToggle }) {
   const { url, component, props } = usePage()
   const user      = props?.auth?.user
   const organization = props?.organization
+  const plan      = props?.plan
   const logoUrl   = user?.company_logo ? `/storage/${user.company_logo}` : null
   const brandName = organization?.name || user?.company_name || 'CRM'
+  const { can } = usePermissions()
+
+  const hasModule = (key) => !key || plan?.modules?.includes(key)
+  const visibleNavItems = navItems.filter(item => (!item.permission || can(item.permission)) && hasModule(item.module))
 
   const recentPages = useRecentPages(url, component)
 
@@ -126,7 +141,7 @@ export default function Sidebar({ open, onToggle }) {
   return (
     <aside
       className={cn(
-        'sidebar-bg flex flex-col overflow-hidden',
+        'sidebar-bg flex flex-col overflow-hidden min-h-0',
         'transition-all duration-300 ease-in-out',
         // Mobile: fixed full-height overlay, slides in/out
         'fixed inset-y-0 left-0 z-50',
@@ -173,6 +188,19 @@ export default function Sidebar({ open, onToggle }) {
         )}
       </div>
 
+      {open && plan?.name && (
+        <Link href="/profile"
+          className="mx-3 mt-2.5 flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white/[0.05] hover:bg-white/[0.08] transition-colors">
+          <span className="text-[10.5px] font-semibold text-white/40 uppercase tracking-wider">Your plan</span>
+          <span className={cn(
+            'text-[11px] font-bold px-2 py-0.5 rounded-full',
+            plan.status === 'active' ? 'text-violet-300 bg-violet-500/20' : 'text-white/40 bg-white/10'
+          )}>
+            {plan.name}
+          </span>
+        </Link>
+      )}
+
       {/* Expand button when collapsed */}
       {!open && (
         <button onClick={onToggle}
@@ -181,15 +209,18 @@ export default function Sidebar({ open, onToggle }) {
         </button>
       )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Nav + quick actions + recent all scroll together, so items never get
+          clipped invisibly as the nav list grows past the viewport height. */}
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none min-h-0">
 
         {/* ── Navigation ────────────────────────── */}
         {open && (
-          <p className="px-4 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 shrink-0">Navigation</p>
+          <p className="px-4 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Navigation</p>
         )}
 
-        <nav className={cn('px-2 space-y-0.5 shrink-0', open ? 'py-1' : 'py-2')}>
-          {navItems.map((item) => {
+        <nav className={cn('px-2 space-y-0.5', open ? 'py-1' : 'py-2')}>
+          {visibleNavItems.map((item) => {
             if (item.group) {
               const { label, icon: Icon, children } = item
               const groupActive = children.some(c => url === c.href || url.startsWith(c.href))
@@ -277,7 +308,6 @@ export default function Sidebar({ open, onToggle }) {
         </nav>
 
         {/* ── Quick actions + Recent ────────────── */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none">
           {open && (
             <div className="px-3 pt-3 pb-1">
               <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20 px-1 mb-1.5">Quick add</p>

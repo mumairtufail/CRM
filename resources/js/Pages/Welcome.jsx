@@ -11,6 +11,7 @@ import {
     MailOpen, Sparkles, Clock, AlertCircle, Activity,
 } from 'lucide-react';
 import { LogoMark } from '@/Components/Common/Logo';
+import { cn } from '@/lib/utils';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ const scaleIn = {
 
 const FEATURES = [
     { icon: Users,     title: 'Lead Management',   description: 'Add leads manually, import from CSV, or pull via AI. Every lead gets its own timeline, tags, and activity log.', accent: '#7C3AED' },
-    { icon: Mail,      title: 'Email Campaigns',    description: 'Write once, send to thousands. Track who opened, clicked, and replied — per contact, not just in aggregate.', accent: '#3B82F6' },
+    { icon: Mail,      title: 'Email Campaigns',    description: 'Write once, send to thousands, and let automatic follow-ups go out to anyone who didn\'t open — no extra clicks from you.', accent: '#3B82F6' },
     { icon: Target,    title: 'Sales Pipeline',     description: 'A Kanban board for your deals. Drag cards between stages, filter by tag or status, see what\'s stuck.', accent: '#10B981' },
     { icon: FileText,  title: 'Invoicing',          description: 'Create an invoice in 30 seconds. Mark it sent, track payment. No separate tool, no copy-pasting client details.', accent: '#F59E0B' },
     { icon: Cpu,       title: 'AI Prospecting',     description: 'Describe your ideal customer and let AI find and import matching leads directly into your workspace.', accent: '#8B5CF6' },
@@ -45,9 +46,11 @@ const CHIPS = [
 ];
 
 const TESTIMONIALS = [
-    { name: 'Bilal Akhtar',   role: 'Head of Sales',   avatar: 'BA', rating: 5, text: "I typed 'SaaS founders in Lahore, under 50 employees' and had 40 verified leads in my pipeline within two minutes. Our previous prospecting process took a full day for that many names." },
-    { name: 'Sarah Mitchell', role: 'Founder',          avatar: 'SM', rating: 5, text: "The email tracking sold me. Ahmed opened my proposal email three times yesterday — so I called him this morning. Closed the deal before lunch." },
-    { name: 'Kamran Yousaf',  role: 'CEO',              avatar: 'KY', rating: 5, text: "We run three client accounts from one platform using different workspaces. Each team only sees their own data. It just works the way you'd expect it to." },
+    { name: 'Marcus Reid',    role: 'Sales Manager, USA',      avatar: 'MR', rating: 5, text: "Our WhatsApp number used to get messages that just sat there until someone had time. Now the bot answers from the FAQ we wrote ourselves, and about a third of those chats turn into a real lead before I even see them." },
+    { name: 'Dana Whitfield', role: 'Growth Lead, USA',        avatar: 'DW', rating: 5, text: "Turned on automated follow-ups in April and picked up 11 deals that month from people who never replied to the first email. That's money we were just leaving on the table before." },
+    { name: 'Julien Marchand', role: 'Founder, Canada',        avatar: 'JM', rating: 5, text: "I used to run three spreadsheets just to remember who I'd called that week. Now it's one board — drag a card, done. Gets me back a solid afternoon every week I used to lose untangling my own mess." },
+    { name: 'Priya Anand',    role: 'Sales Director, UK',      avatar: 'PA', rating: 5, text: "Reports showed one of my reps was sitting on 60 leads nobody had touched in three weeks. I'd never have caught that from a gut-feel check-in — fixed it the same day." },
+    { name: 'Omar Al Farsi',  role: 'Operations Manager, UAE', avatar: 'OA', rating: 5, text: "Pricing questions on WhatsApp, follow-ups in email, notes in someone's head — it was everywhere. Now a lead shows up once and every message about them sits in one place, whatever channel it came through." },
 ];
 
 
@@ -59,6 +62,8 @@ const FAQS = [
     { q: 'Which email providers work for campaigns?', a: 'Anything with SMTP credentials — Gmail, Outlook 365, SendGrid, Mailgun, Brevo, Postmark, and your own mail server.' },
     { q: 'Is the data stored securely?', a: 'Yes. All connections are TLS-encrypted, data is isolated by workspace. Backups run daily.' },
     { q: 'Can I convert a lead into a client and invoice them?', a: 'One click converts the lead record into a client. From there create a project and send an invoice — without re-entering any details.' },
+    { q: 'How does the WhatsApp bot know what to say?', a: 'You write a knowledge base of your own answers — pricing, hours, what makes you different — and every reply is drafted from that. Nothing generic, nothing made up. When a conversation shows real intent (someone asks about pricing or a demo), it becomes a lead automatically and lands right on your pipeline.' },
+    { q: 'Do follow-up emails send automatically?', a: 'Yes, if you turn it on for a campaign. Anyone who hasn\'t opened your email gets a follow-up on the schedule you set — you write the sequence once, it keeps running on its own.' },
 ];
 
 const STEPS = [
@@ -204,7 +209,7 @@ function MockDashboard() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Welcome({ appUrl }) {
+export default function Welcome({ appUrl, plans = [] }) {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openFaq,    setOpenFaq]    = useState(null);
     const [scrolled,   setScrolled]   = useState(false);
@@ -438,7 +443,7 @@ export default function Welcome({ appUrl }) {
                             Works with
                         </span>
                         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-                            {['Gmail', 'Outlook', 'SendGrid', 'Mailgun', 'Brevo', 'Google Sheets', 'CSV Import'].map(name => (
+                            {['Gmail', 'Outlook', 'WhatsApp Business', 'SendGrid', 'Mailgun', 'Brevo', 'Google Sheets', 'CSV Import'].map(name => (
                                 <span key={name}
                                       className="text-white/25 text-sm font-medium hover:text-white/50 transition-colors cursor-default">
                                     {name}
@@ -842,6 +847,7 @@ export default function Welcome({ appUrl }) {
                                     'Works with Gmail, Outlook, SendGrid, any SMTP',
                                     'Open & click tracking per contact',
                                     'Personalise with name, company, custom fields',
+                                    'Multi-step follow-ups to anyone who hasn\'t opened yet',
                                     'Schedule sends or throttle by hour',
                                     'Per-contact delivery log',
                                 ].map(item => (
@@ -885,6 +891,99 @@ export default function Welcome({ appUrl }) {
                                     ))}
                                 </div>
                             </div>
+                        </motion.div>
+                    </div>
+                </div>
+            </section>
+
+            {/* ── WhatsApp Automation ──────────────────────────────────────── */}
+            <section className="py-28" style={{ background: '#0A0812' }}>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+
+                        <motion.div
+                            initial={{ opacity: 0, x: -32 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                            className="rounded-2xl p-5 border border-white/8"
+                            style={{ background: 'rgba(15,13,28,0.9)' }}>
+                            <div className="flex items-center justify-between mb-4">
+                                <div className="text-white/25 text-[10px] font-bold uppercase tracking-widest">
+                                    WhatsApp · +92 300 1234567
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#25D366' }}>
+                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#25D366' }} /> Online
+                                </div>
+                            </div>
+                            <div className="space-y-2.5">
+                                <div className="max-w-[82%] bg-white/[0.06] rounded-2xl rounded-tl-sm px-3.5 py-2.5">
+                                    <p className="text-white/70 text-[12.5px] leading-relaxed">
+                                        Hey, do you have a free trial? What's pricing look like for a 5-person team?
+                                    </p>
+                                </div>
+                                <div className="max-w-[85%] ml-auto rounded-2xl rounded-tr-sm px-3.5 py-2.5"
+                                     style={{ background: 'linear-gradient(135deg,#10B981,#0d9c6f)' }}>
+                                    <p className="text-white text-[12.5px] leading-relaxed">
+                                        Yep, the free plan has no time limit. For 5 seats our Team plan is $79/mo.
+                                        Want someone to call you and walk through it?
+                                    </p>
+                                </div>
+                                <div className="flex items-center gap-1.5 pl-1 pt-1">
+                                    <Sparkles className="w-3 h-3" style={{ color: '#25D366' }} />
+                                    <span className="text-[10px] font-medium" style={{ color: 'rgba(37,211,102,0.7)' }}>
+                                        Answered from your knowledge base
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t border-white/8 flex items-center gap-2.5">
+                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
+                                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                    N
+                                </div>
+                                <span className="text-white/50 text-[11.5px]">
+                                    Lead created — <span className="font-semibold" style={{ color: '#25D366' }}>tagged "Pricing inquiry"</span>
+                                </span>
+                            </div>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, x: 32 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
+                            <div className="flex items-center gap-3 mb-5">
+                                <div className="h-px w-10" style={{ background: '#25D366' }} />
+                                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#25D366' }}>WhatsApp Automation</span>
+                            </div>
+                            <h2 className="text-4xl font-black text-white mb-5 leading-tight">
+                                Someone messages you<br />on WhatsApp. A lead shows<br />up in your pipeline.
+                            </h2>
+                            <p className="text-white/40 text-lg mb-6 leading-relaxed">
+                                Connect your WhatsApp Business number and every conversation gets a reply in seconds —
+                                drawn from the FAQs and answers you've actually written, not a generic script.
+                                The moment someone asks about pricing or a demo, LeadFlow creates the lead and tags it for you.
+                            </p>
+                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-6"
+                                 style={{ borderColor: 'rgba(37,211,102,0.3)', background: 'rgba(37,211,102,0.08)' }}>
+                                <MessageSquare className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
+                                <span className="text-[11px] font-semibold" style={{ color: '#25D366' }}>
+                                    Built on the WhatsApp Business Platform
+                                </span>
+                            </div>
+                            <ul className="space-y-3">
+                                {[
+                                    'Replies pulled from your own knowledge base, not a generic script',
+                                    "Picks up buying signals — \"pricing\", \"demo\", \"book a call\" — automatically",
+                                    'Qualified chats become leads on their own, already tagged',
+                                    'Works on the WhatsApp number you already use',
+                                    'Every message sits on the lead\'s timeline next to their emails and calls',
+                                ].map(item => (
+                                    <li key={item} className="flex items-center gap-3 text-white/50 text-sm">
+                                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#25D366' }} />{item}
+                                    </li>
+                                ))}
+                            </ul>
                         </motion.div>
                     </div>
                 </div>
@@ -1144,44 +1243,44 @@ export default function Welcome({ appUrl }) {
                                     {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
                                 </div>
                                 <blockquote className="text-white/75 text-xl leading-relaxed font-light">
-                                    "{TESTIMONIALS[1].text}"
+                                    "{TESTIMONIALS[0].text}"
                                 </blockquote>
                             </div>
                             <div className="flex items-center gap-3 pt-8 mt-8 border-t border-white/10">
                                 <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
                                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                    {TESTIMONIALS[1].avatar}
+                                    {TESTIMONIALS[0].avatar}
                                 </div>
                                 <div>
-                                    <div className="text-white font-semibold text-sm">{TESTIMONIALS[1].name}</div>
-                                    <div className="text-white/35 text-xs">{TESTIMONIALS[1].role}</div>
+                                    <div className="text-white font-semibold text-sm">{TESTIMONIALS[0].name}</div>
+                                    <div className="text-white/35 text-xs">{TESTIMONIALS[0].role}</div>
                                 </div>
                             </div>
                         </motion.div>
 
-                        <div className="flex flex-col gap-5">
-                            {[TESTIMONIALS[0], TESTIMONIALS[2]].map(({ name, role, avatar, text, rating }, i) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            {TESTIMONIALS.slice(1).map(({ name, role, avatar, text, rating }, i) => (
                                 <motion.div
                                     key={name}
                                     initial={{ opacity: 0, y: 28 }}
                                     whileInView={{ opacity: 1, y: 0 }}
                                     viewport={{ once: true }}
-                                    transition={{ duration: 0.55, delay: 0.1 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
-                                    className="flex-1 rounded-2xl p-7 bg-slate-50 border border-slate-100">
-                                    <div className="flex gap-1 mb-4">
+                                    transition={{ duration: 0.55, delay: 0.1 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                                    className="rounded-2xl p-6 bg-slate-50 border border-slate-100">
+                                    <div className="flex gap-1 mb-3">
                                         {Array.from({ length: rating }).map((_, j) => (
                                             <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                                         ))}
                                     </div>
-                                    <blockquote className="text-slate-700 leading-relaxed mb-5 text-sm">"{text}"</blockquote>
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                                    <blockquote className="text-slate-700 leading-relaxed mb-4 text-[13px]">"{text}"</blockquote>
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
                                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
                                             {avatar}
                                         </div>
                                         <div>
-                                            <div className="text-slate-900 font-semibold text-sm">{name}</div>
-                                            <div className="text-slate-400 text-xs">{role}</div>
+                                            <div className="text-slate-900 font-semibold text-[13px]">{name}</div>
+                                            <div className="text-slate-400 text-[11px]">{role}</div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -1201,8 +1300,8 @@ export default function Welcome({ appUrl }) {
 
             {/* ── Pricing ──────────────────────────────────────────────────── */}
             <section id="pricing" className="py-28" style={{ background: '#0A0812' }}>
-                <div className="max-w-3xl mx-auto px-4 sm:px-6 text-center">
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+                <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center">
                         <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-5">
                             <div className="h-px w-10 bg-violet-500" />
                             <span className="text-violet-400 text-xs font-bold uppercase tracking-widest">Pricing</span>
@@ -1211,47 +1310,73 @@ export default function Welcome({ appUrl }) {
                         <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight">
                             Pricing that fits<br />your team.
                         </motion.h2>
-                        <motion.p variants={fadeUp} className="text-white/40 text-lg mb-10 max-w-lg mx-auto leading-relaxed">
-                            We tailor plans to the size and needs of your team.
-                            Reach out and we'll walk you through the options — or just sign up free and explore it yourself.
+                        <motion.p variants={fadeUp} className="text-white/40 text-lg mb-14 max-w-lg mx-auto leading-relaxed">
+                            Start free on Basic. Upgrade whenever you need more — just sign up and we'll take it from there.
                         </motion.p>
+                    </motion.div>
 
-                        <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <a href="#contact"
-                               className="group inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base
-                                          font-semibold text-white transition-all hover:opacity-90
-                                          hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-px"
-                               style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                Contact us for pricing
-                                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                            </a>
-                            <Link href="/register"
-                                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl text-base
-                                             font-semibold text-white/60 border border-white/12
-                                             hover:bg-white/5 hover:text-white transition-all">
-                                Register free to explore
-                            </Link>
-                        </motion.div>
+                    {plans.length > 0 && (
+                        <motion.div
+                            variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                            className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
+                        >
+                            {plans.map((plan) => (
+                                <motion.div
+                                    key={plan.id}
+                                    variants={fadeUp}
+                                    className="relative rounded-2xl p-8 flex flex-col border"
+                                    style={{
+                                        background: plan.is_featured ? 'rgba(124,58,237,0.08)' : 'rgba(255,255,255,0.025)',
+                                        borderColor: plan.is_featured ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.08)',
+                                    }}
+                                >
+                                    {plan.is_featured && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold text-white whitespace-nowrap"
+                                            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                            <Star className="w-3 h-3 fill-white" /> Most Popular
+                                        </div>
+                                    )}
 
-                        <motion.div variants={fadeUp} className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-5 text-left">
-                            {[
-                                { label: 'Free forever', desc: 'Get started with no credit card. Explore every feature at your own pace.' },
-                                { label: 'Flexible plans', desc: 'Pay only for what your team needs. No bloated bundles.' },
-                                { label: 'No long contracts', desc: 'Monthly or annual billing. Cancel any time without hassle.' },
-                            ].map(({ label, desc }) => (
-                                <div key={label}
-                                     className="rounded-2xl p-6 border border-white/8"
-                                     style={{ background: 'rgba(255,255,255,0.025)' }}>
-                                    <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-4"
-                                         style={{ background: 'rgba(124,58,237,0.18)' }}>
-                                        <Check className="w-4 h-4 text-violet-400" />
+                                    <h3 className="text-white font-bold text-xl mb-1.5">{plan.name}</h3>
+                                    <p className="text-white/40 text-sm mb-6 min-h-[40px]">{plan.tagline}</p>
+
+                                    <div className="mb-6">
+                                        <span className="text-4xl font-black text-white">${Number(plan.price_monthly ?? 0).toFixed(0)}</span>
+                                        <span className="text-white/35 text-sm font-medium">/mo</span>
                                     </div>
-                                    <div className="text-white font-bold text-sm mb-1.5">{label}</div>
-                                    <div className="text-white/35 text-sm leading-relaxed">{desc}</div>
-                                </div>
+
+                                    <div className="flex-1 space-y-3 mb-8">
+                                        <div className="flex items-start gap-2.5 text-white/70 text-sm">
+                                            <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                            Core CRM — leads, pipeline, invoicing, reports, team
+                                        </div>
+                                        {plan.modules.map((m) => (
+                                            <div key={m.id} className="flex items-start gap-2.5 text-white/70 text-sm">
+                                                <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                                {m.name}
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    <Link href="/register"
+                                        className={cn(
+                                            'group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-px',
+                                            plan.is_featured
+                                                ? 'text-white hover:opacity-90 hover:shadow-2xl hover:shadow-violet-500/25'
+                                                : 'text-white/70 border border-white/15 hover:bg-white/5 hover:text-white'
+                                        )}
+                                        style={plan.is_featured ? { background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' } : undefined}
+                                    >
+                                        {plan.cta_text || 'Get started'}
+                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                                    </Link>
+                                    {plan.cta_text?.toLowerCase().includes('upgrade') && (
+                                        <p className="text-white/30 text-xs mt-2.5 text-center">Sign up free, then contact us to upgrade.</p>
+                                    )}
+                                </motion.div>
                             ))}
                         </motion.div>
-                    </motion.div>
+                    )}
                 </div>
             </section>
 

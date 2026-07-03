@@ -6,6 +6,7 @@ import { toast } from 'sonner'
 // Keep in sync with LeadController::CONTACT_CHANNELS (PHP).
 export const CONTACT_CHANNELS = [
   { key: 'mail',      label: 'Email',      verb: 'via', letter: '@',  bg: '#6366f1' },
+  { key: 'call',      label: 'Phone Call', verb: 'via', letter: 'ph', bg: '#0d9488' },
   { key: 'linkedin',  label: 'LinkedIn',   verb: 'on',  letter: 'in', bg: '#0A66C2' },
   { key: 'instagram', label: 'Instagram',  verb: 'on',  letter: 'ig', bg: '#E1306C' },
   { key: 'facebook',  label: 'Facebook',   verb: 'on',  letter: 'fb', bg: '#1877F2' },

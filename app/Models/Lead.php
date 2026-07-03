@@ -13,22 +13,38 @@ class Lead extends Model
     use HasFactory, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
-        'organization_id',
+        'organization_id', 'lead_form_id', 'assigned_to', 'created_by',
         'first_name', 'last_name', 'company', 'job_title', 'website',
         'linkedin_url', 'notes', 'source', 'status', 'priority',
         'deal_value', 'currency', 'country', 'city', 'industry',
-        'avatar_url', 'social_handles', 'contact_channels', 'whatsapp_number', 'last_contacted_at', 'follow_up_at',
+        'avatar_url', 'social_handles', 'contact_channels', 'custom_fields', 'whatsapp_number', 'last_contacted_at', 'follow_up_at',
     ];
 
     protected $casts = [
         'social_handles'    => 'array',
         'contact_channels'  => 'array',
+        'custom_fields'     => 'array',
         'deal_value'        => 'decimal:2',
         'last_contacted_at' => 'datetime',
         'follow_up_at'      => 'datetime',
     ];
 
     protected $appends = ['full_name', 'primary_email', 'primary_phone'];
+
+    public function leadForm()
+    {
+        return $this->belongsTo(LeadForm::class);
+    }
+
+    public function assignee()
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public function emails()
     {

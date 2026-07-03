@@ -15,7 +15,7 @@ class AccountController extends Controller
     public function edit(Request $request): Response
     {
         return Inertia::render('Admin/Settings/Account', [
-            'user' => $request->user()->only('name', 'email'),
+            'user' => $request->user('admin')->only('name', 'email'),
         ]);
     }
 
@@ -23,10 +23,10 @@ class AccountController extends Controller
     {
         $validated = $request->validate([
             'name'  => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
+            'email' => 'required|email|max:255|unique:admins,email,' . $request->user('admin')->id,
         ]);
 
-        $request->user()->fill($validated)->save();
+        $request->user('admin')->fill($validated)->save();
 
         return back()->with('success', 'Profile updated.');
     }
@@ -34,11 +34,11 @@ class AccountController extends Controller
     public function updatePassword(Request $request): RedirectResponse
     {
         $request->validate([
-            'current_password' => ['required', 'current_password'],
+            'current_password' => ['required', 'current_password:admin'],
             'password'         => ['required', 'confirmed', Password::defaults()],
         ]);
 
-        $request->user()->update([
+        $request->user('admin')->update([
             'password' => Hash::make($request->password),
         ]);
 

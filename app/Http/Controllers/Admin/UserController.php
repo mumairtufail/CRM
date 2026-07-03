@@ -13,7 +13,10 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with('organization:id,name,slug');
+        // Exclude the vestigial users-table row(s) left behind for platform
+        // superadmins — their real record now lives in the separate `admins`
+        // table/guard, so this is not a real tenant user to list here.
+        $query = User::with('organization:id,name,slug')->where('role', '!=', 'superadmin');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -28,7 +31,6 @@ class UserController extends Controller
                 'name'          => $u->name,
                 'email'         => $u->email,
                 'role'          => $u->role,
-                'is_superadmin' => $u->is_superadmin,
                 'organization'  => $u->organization ? [
                     'name' => $u->organization->name,
                     'slug' => $u->organization->slug,
@@ -48,17 +50,9 @@ class UserController extends Controller
      */
     public function impersonate(User $user): RedirectResponse
     {
-        if ($user->isSuperadmin()) {
-            abort(403, 'You cannot impersonate another super admin.');
-        }
+        session(['impersonator_id' => Auth::guard('admin')->id()]);
 
-        if ($user->id === Auth::id()) {
-            return back();
-        }
-
-        session(['impersonator_id' => Auth::id()]);
-
-        Auth::login($user);
+        Auth::guard('web')->login($user);
 
         return redirect()->route('dashboard')->with('success', "You are now viewing as {$user->name}.");
     }

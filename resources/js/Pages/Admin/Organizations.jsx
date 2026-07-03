@@ -4,10 +4,86 @@ import AdminLayout from '@/Components/Layout/AdminLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import DataTable from '@/Components/Common/DataTable'
 import SearchInput from '@/Components/Common/SearchInput'
-import { Users, UserCircle } from 'lucide-react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/Components/ui/dialog'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/Components/ui/select'
+import { Switch } from '@/Components/ui/switch'
+import { Users, UserCircle, CreditCard, Pencil } from 'lucide-react'
+import { toast } from 'sonner'
+import { cn } from '@/lib/utils'
 
-export default function AdminOrganizations({ organizations, filters }) {
+function ChangePlanDialog({ organization, plans, onOpenChange }) {
+  const [planId, setPlanId] = useState(organization.plan?.id ? String(organization.plan.id) : '')
+  const [active, setActive] = useState(organization.plan_status === 'active')
+  const [saving, setSaving] = useState(false)
+
+  const submit = () => {
+    setSaving(true)
+    router.patch(`/admin/organizations/${organization.id}/plan`, {
+      plan_id: planId || null,
+      plan_status: active ? 'active' : 'inactive',
+    }, {
+      preserveScroll: true,
+      onSuccess: () => { toast.success(`Updated ${organization.name}'s plan`); onOpenChange(false) },
+      onError: () => toast.error('Could not update plan'),
+      onFinish: () => setSaving(false),
+    })
+  }
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Change plan — {organization.name}</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Plan</label>
+            <Select value={planId} onValueChange={setPlanId}>
+              <SelectTrigger>
+                <SelectValue placeholder="No plan" />
+              </SelectTrigger>
+              <SelectContent>
+                {plans.map(p => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Plan active</p>
+              <p className="text-xs text-slate-400">Suspends module access without removing the plan</p>
+            </div>
+            <Switch checked={active} onCheckedChange={setActive} />
+          </div>
+        </div>
+
+        <DialogFooter>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={submit}
+            disabled={saving}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+          >
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+export default function AdminOrganizations({ organizations, filters, plans }) {
   const [loading, setLoading] = useState(false)
+  const [planTarget, setPlanTarget] = useState(null)
 
   useEffect(() => {
     const start = router.on('start', () => setLoading(true))
@@ -77,6 +153,25 @@ export default function AdminOrganizations({ organizations, filters }) {
       ),
     },
     {
+      id: 'plan',
+      header: 'Plan',
+      size: 160,
+      cell: ({ row }) => (
+        <button
+          onClick={() => setPlanTarget(row.original)}
+          className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-lg hover:bg-violet-50 transition-colors"
+        >
+          <CreditCard size={13} className="text-violet-400 shrink-0" />
+          <span className="text-sm text-gray-700 font-medium">{row.original.plan?.name ?? 'No plan'}</span>
+          <span className={cn(
+            'w-1.5 h-1.5 rounded-full shrink-0',
+            row.original.plan_status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'
+          )} />
+          <Pencil size={11} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+      ),
+    },
+    {
       accessorKey: 'created_at',
       header: 'Created',
       size: 110,
@@ -109,6 +204,14 @@ export default function AdminOrganizations({ organizations, filters }) {
           onPageChange={handlePageChange}
           loading={loading}
         />
+
+        {planTarget && (
+          <ChangePlanDialog
+            organization={planTarget}
+            plans={plans}
+            onOpenChange={(open) => { if (!open) setPlanTarget(null) }}
+          />
+        )}
       </AdminLayout>
     </>
   )

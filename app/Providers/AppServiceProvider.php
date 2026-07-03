@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Contracts\LeadGenerationInterface;
 use App\Models\Lead;
 use App\Models\LeadGroup;
+use App\Models\TenantWhatsappSettings;
 use App\Observers\LeadGroupObserver;
 use App\Observers\LeadObserver;
 use App\Models\SystemSetting;
@@ -12,8 +13,10 @@ use App\Services\LeadGenerationService;
 use App\Services\LeadProviders\ApolloProvider;
 use App\Services\LeadProviders\PeopleDataLabsProvider;
 use App\Support\TenantContext;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -53,6 +56,22 @@ class AppServiceProvider extends ServiceProvider
         LeadGroup::observe(LeadGroupObserver::class);
 
         $this->applySystemSmtpConfig();
+        $this->registerWhatsappRateLimiter();
+    }
+
+    /**
+     * Per-tenant WhatsApp send limiter — trial tenants get a much stricter cap than
+     * paid ones, and campaign batches (App\Jobs\SendWhatsappBatch) hit this same named
+     * limiter manually per-iteration so campaigns and live conversation sends share one
+     * per-organization ceiling instead of each having their own budget.
+     */
+    private function registerWhatsappRateLimiter(): void
+    {
+        RateLimiter::for('whatsapp-send', function (Request $request) {
+            $orgId = $request->user()?->organization_id;
+
+            return TenantWhatsappSettings::sendLimitFor($orgId)->by("whatsapp-send:{$orgId}");
+        });
     }
 
     private function applySystemSmtpConfig(): void

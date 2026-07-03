@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
 use App\Models\Organization;
+use App\Models\Plan;
 use App\Models\Tag;
 use App\Models\User;
 use App\Support\TenantContext;
@@ -16,20 +18,31 @@ class DatabaseSeeder extends Seeder
         // System (shared) email templates — no tenant context, organization_id stays null.
         $this->call(EmailTemplateSeeder::class);
 
-        // Platform super admin — no organization, full cross-tenant portal access.
-        User::create([
-            'organization_id' => null,
-            'role'            => 'superadmin',
-            'is_superadmin'   => true,
-            'name'            => 'Super Admin',
-            'email'           => 'hello@lumenialab.com',
-            'password'        => Hash::make('password'),
+        // Permission catalog — must run before any Organization is created, since
+        // creating an Organization auto-seeds a default "Agent" role from it.
+        $this->call(PermissionSeeder::class);
+
+        // Subscription plan catalog — must run before any Organization is created
+        // so we can assign a default plan below.
+        $this->call(ModuleSeeder::class);
+        $this->call(PlanSeeder::class);
+
+        // Platform super admin — separate `admins` table/guard, full cross-tenant portal access.
+        Admin::create([
+            'name'     => 'Super Admin',
+            'email'    => 'hello@lumenialab.com',
+            'password' => Hash::make('password'),
         ]);
 
-        // Demo organization + owner.
+        // Demo organization + owner — on the Basic plan, same default a real signup gets.
+        $basicPlan = Plan::where('slug', 'basic')->first();
+
         $organization = Organization::create([
-            'name' => 'Demo Workspace',
-            'slug' => 'demo',
+            'name'             => 'Demo Workspace',
+            'slug'             => 'demo',
+            'plan_id'          => $basicPlan?->id,
+            'plan_status'      => 'active',
+            'plan_assigned_at' => now(),
         ]);
 
         $admin = User::create([
@@ -45,21 +58,6 @@ class DatabaseSeeder extends Seeder
         // Scope the rest of the seed (tags, etc.) to the demo organization.
         app(TenantContext::class)->set($organization);
 
-        $tagData = [
-            ['name' => 'Hot Lead',   'color' => '#ef4444'],
-            ['name' => 'Cold',       'color' => '#64748b'],
-            ['name' => 'Follow Up',  'color' => '#f59e0b'],
-            ['name' => 'VIP',        'color' => '#8b5cf6'],
-            ['name' => 'Agency',     'color' => '#3b82f6'],
-            ['name' => 'Startup',    'color' => '#10b981'],
-            ['name' => 'Enterprise', 'color' => '#6366f1'],
-            ['name' => 'Pakistan',   'color' => '#14b8a6'],
-            ['name' => 'UAE',        'color' => '#ec4899'],
-            ['name' => 'US',         'color' => '#0ea5e9'],
-        ];
-
-        foreach ($tagData as $tag) {
-            Tag::create($tag);
-        }
+        Tag::seedDefaults($organization->id);
     }
 }

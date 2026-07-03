@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react'
 import { Head, useForm, usePage, router, Link } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
+import ConfirmDialog from '@/Components/Common/ConfirmDialog'
+import EmptyState from '@/Components/Common/EmptyState'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
@@ -19,7 +21,7 @@ import {
   Eye, EyeOff, X, LayoutTemplate, ExternalLink,
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
   Zap, Key, Wifi, Globe, Phone, PenLine, BookOpen, ChevronRight,
-  MessageSquare, Database,
+  MessageSquare, Database, Tag as TagIcon, Pencil, Trash2,
 } from 'lucide-react'
 
 // lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
@@ -84,6 +86,7 @@ const NAV = [
     items: [
       { id: 'profile',   label: 'Profile',        icon: User },
       { id: 'workspace', label: 'Workspace',       icon: Building2 },
+      { id: 'tags',      label: 'Tags',           icon: TagIcon },
     ],
   },
   {
@@ -716,6 +719,197 @@ function SmtpCard({ cred, onEdit }) {
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+// ─── Tags tab ─────────────────────────────────────────────────────────────────
+
+const TAG_PRESET_COLORS = [
+  '#7C3AED', '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B',
+  '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6', '#F97316',
+]
+
+function TagsTab({ tags }) {
+  const [deleteId, setDeleteId] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+
+  const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
+    id: null,
+    name: '',
+    color: '#7C3AED',
+  })
+
+  const openCreateModal = () => {
+    reset()
+    clearErrors()
+    setData({ id: null, name: '', color: '#7C3AED' })
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (tag) => {
+    reset()
+    clearErrors()
+    setData({ id: tag.id, name: tag.name, color: tag.color || '#7C3AED' })
+    setIsModalOpen(true)
+  }
+
+  const handleModalClose = () => {
+    setIsModalOpen(false)
+    reset()
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    if (data.id) {
+      put(`/tags/${data.id}`, {
+        onSuccess: () => { toast.success('Tag updated'); handleModalClose() },
+        onError: () => toast.error('Failed to update tag'),
+      })
+    } else {
+      post('/tags', {
+        onSuccess: () => { toast.success('Tag created'); handleModalClose() },
+        onError: () => toast.error('Failed to create tag'),
+      })
+    }
+  }
+
+  const handleDelete = () => {
+    setDeleting(true)
+    router.delete(`/tags/${deleteId}`, {
+      onSuccess: () => toast.success('Tag deleted'),
+      onError: () => toast.error('Failed to delete tag'),
+      onFinish: () => { setDeleting(false); setDeleteId(null) },
+    })
+  }
+
+  return (
+    <div className="space-y-3 max-w-2xl">
+      <Card
+        title="Tags"
+        badge={
+          <Button size="sm" className="h-7 gap-1.5 text-xs" onClick={openCreateModal}>
+            <Plus size={12} /> Add Tag
+          </Button>
+        }
+      >
+        {tags?.length ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {tags.map(tag => (
+              <div key={tag.id} className="rounded-xl border border-slate-200 p-3 flex flex-col gap-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: tag.color || '#7C3AED' }} />
+                  <span className="text-[13px] font-semibold text-slate-800 truncate">{tag.name}</span>
+                </div>
+                <p className="text-[11px] text-slate-400">{tag.leads_count ?? 0} leads</p>
+                <div className="flex items-center gap-1 mt-auto">
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                    onClick={() => openEditModal(tag)} title="Edit tag">
+                    <Pencil size={11} />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-red-600 hover:bg-red-50"
+                    onClick={() => setDeleteId(tag.id)} title="Delete tag">
+                    <Trash2 size={11} />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            icon={TagIcon}
+            title="No tags yet"
+            description="Tags help you categorize and filter your leads. Create one to get started."
+            action={
+              <Button size="sm" className="gap-1.5 h-9" onClick={openCreateModal}>
+                <Plus size={14} /> Add Tag
+              </Button>
+            }
+          />
+        )}
+      </Card>
+
+      <Dialog open={isModalOpen} onOpenChange={open => !open && handleModalClose()}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-[14px] font-bold text-slate-800">
+              {data.id ? 'Edit Tag' : 'Create Tag'}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4 pt-1">
+            <div className="space-y-1">
+              <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Name</Label>
+              <Input
+                value={data.name}
+                onChange={(e) => setData('name', e.target.value)}
+                placeholder="e.g. VIP, Hot Lead, Enterprise"
+                className="h-8 text-[13px]"
+                autoFocus
+              />
+              {errors.name && <p className="text-red-500 text-[11px]">{errors.name}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Color</Label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {TAG_PRESET_COLORS.map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setData('color', c)}
+                    className="w-6 h-6 rounded-full transition-transform hover:scale-110 focus:outline-none"
+                    style={{
+                      background: c,
+                      boxShadow: data.color === c ? `0 0 0 2px white, 0 0 0 4px ${c}` : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={data.color}
+                  onChange={(e) => setData('color', e.target.value)}
+                  className="w-8 h-8 p-0.5 rounded border border-slate-200 cursor-pointer"
+                />
+                <Input
+                  type="text"
+                  value={data.color}
+                  onChange={(e) => setData('color', e.target.value)}
+                  className="flex-1 h-8 text-[13px] font-mono"
+                  placeholder="#7C3AED"
+                />
+                <div className="w-8 h-8 rounded-lg shrink-0" style={{ background: data.color }} />
+              </div>
+              {errors.color && <p className="text-red-500 text-[11px]">{errors.color}</p>}
+            </div>
+
+            <DialogFooter className="gap-2 pt-2">
+              <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={handleModalClose}>
+                Cancel
+              </Button>
+              <button
+                type="submit"
+                disabled={processing}
+                className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+              >
+                {processing ? 'Saving…' : data.id ? 'Save Changes' : 'Create Tag'}
+              </button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={!!deleteId}
+        onOpenChange={open => !open && setDeleteId(null)}
+        title="Delete tag?"
+        description="This tag will be removed from all leads. This cannot be undone."
+        onConfirm={handleDelete}
+        loading={deleting}
+      />
+    </div>
   )
 }
 
@@ -1535,166 +1729,60 @@ function AiProviderTab({ aiSetting }) {
 }
 
 // ─── WhatsApp tab ─────────────────────────────────────────────────────────────
+// Read-only status only — WhatsApp runs on a pooled Meta number managed by the
+// platform. Tenants never see or configure any Meta credential (see docs/meta-whatsapp.md).
 
-function WhatsappTab({ credential }) {
-  const { data, setData, post, delete: del, processing, errors, reset } = useForm({
-    account_sid:  credential?.account_sid  ?? '',
-    auth_token:   '',
-    from_number:  credential?.from_number  ?? '',
-    display_name: credential?.display_name ?? '',
-  })
-
-  const [testNumber, setTestNumber]         = React.useState('')
-  const [testing, setTesting]               = React.useState(false)
-  const [testResult, setTestResult]         = React.useState(null) // 'success' | 'error' | null
-  const [testMessage, setTestMessage]       = React.useState('')
-
-  const submit = e => {
-    e.preventDefault()
-    post(route('whatsapp.store'), {
-      onSuccess: () => toast.success('WhatsApp credentials saved.'),
-      onError:   () => toast.error('Please fix the errors below.'),
-    })
-  }
-
-  const verify = async () => {
-    if (!testNumber.trim()) return
-    setTesting(true)
-    setTestResult(null)
-    try {
-      const res = await fetch(route('whatsapp.verify'), {
-        method:  'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
-          Accept:         'application/json',
-        },
-        body: JSON.stringify({ test_number: testNumber }),
-      })
-      const data = await res.json()
-      setTestResult(data.success ? 'success' : 'error')
-      setTestMessage(data.message ?? '')
-      if (data.success) toast.success(data.message)
-      else              toast.error(data.message)
-    } catch (err) {
-      setTestResult('error')
-      setTestMessage('Network error. Check your connection.')
-    } finally {
-      setTesting(false)
-    }
-  }
-
-  const remove = () => {
-    if (!confirm('Remove WhatsApp credentials? This will disconnect the integration.')) return
-    router.delete(route('whatsapp.destroy'), { onSuccess: () => toast.success('Credentials removed.') })
-  }
+function WhatsappTab({ status }) {
+  const enabled = !!status?.enabled
 
   return (
     <div className="space-y-3 max-w-xl">
-      {/* Status banner */}
-      {credential && (
-        <div className={`flex items-start gap-2.5 rounded-xl px-4 py-3 border ${credential.is_verified ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
-          {credential.is_verified
-            ? <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
-            : <AlertCircle  size={15} className="text-amber-500 mt-0.5 shrink-0" />}
-          <div>
-            <p className={`text-[13px] font-medium ${credential.is_verified ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {credential.is_verified ? 'WhatsApp connected & verified' : 'WhatsApp connected — not yet verified'}
-            </p>
-            <p className="text-[12px] text-slate-500 mt-0.5">
-              From: <span className="font-mono">{credential.from_number}</span>
-              {credential.display_name && <> · {credential.display_name}</>}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Credentials form */}
-      <Card title="Twilio Credentials"
-        badge={<a href="https://console.twilio.com" target="_blank" rel="noreferrer"
-          className="text-[11px] text-violet-600 hover:underline flex items-center gap-0.5">
-          Twilio Console <ExternalLink size={10} />
-        </a>}>
-        <form onSubmit={submit} className="space-y-3">
-          <Field label="Account SID" error={errors.account_sid}
-            hint="Found in Twilio Console — starts with AC">
-            <Input value={data.account_sid} onChange={e => setData('account_sid', e.target.value)}
-              className="h-8 text-[13px] font-mono"
-              placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
-          </Field>
-
-          <Field label="Auth Token" error={errors.auth_token}
-            hint={credential ? 'Token already saved — enter a new one to replace it' : 'Found below your Account SID in Twilio Console'}>
-            <Input type="password" value={data.auth_token} onChange={e => setData('auth_token', e.target.value)}
-              className="h-8 text-[13px] font-mono"
-              placeholder={credential ? 'Leave blank to keep current token' : '32-character token'} />
-          </Field>
-
-          <Field label="WhatsApp From Number" error={errors.from_number}
-            hint="Your Twilio WhatsApp number e.g. +14155238886">
-            <Input value={data.from_number} onChange={e => setData('from_number', e.target.value)}
-              className="h-8 text-[13px] font-mono"
-              placeholder="+14155238886" />
-          </Field>
-
-          <Field label="Display name (optional)" error={errors.display_name}>
-            <Input value={data.display_name} onChange={e => setData('display_name', e.target.value)}
-              className="h-8 text-[13px]"
-              placeholder="Lumenia Lab" />
-          </Field>
-
-          <div className="flex justify-between items-center pt-1">
-            {credential && (
-              <button type="button" onClick={remove}
-                className="text-[12px] text-red-400 hover:text-red-600 transition-colors">
-                Remove credentials
-              </button>
-            )}
-            <SaveBtn processing={processing} label="Save credentials" loadingLabel="Saving…" />
-          </div>
-        </form>
-      </Card>
-
-      {/* Test send */}
-      {credential && (
-        <Card title="Test connection">
-          <p className="text-[12px] text-slate-500 mb-3">
-            Send a test WhatsApp message to verify your setup. The number must be registered with your Twilio sandbox.
+      <div className={`flex items-start gap-2.5 rounded-xl px-4 py-3 border ${enabled ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`}>
+        {enabled
+          ? <CheckCircle2 size={15} className="text-emerald-500 mt-0.5 shrink-0" />
+          : <AlertCircle  size={15} className="text-slate-400 mt-0.5 shrink-0" />}
+        <div>
+          <p className={`text-[13px] font-medium ${enabled ? 'text-emerald-800' : 'text-slate-600'}`}>
+            {enabled ? 'WhatsApp is active on your account' : "WhatsApp isn't active on your account yet"}
           </p>
-          <div className="flex gap-2">
-            <Input
-              value={testNumber}
-              onChange={e => setTestNumber(e.target.value)}
-              className="h-8 text-[13px] font-mono flex-1"
-              placeholder="+923001234567"
-            />
-            <Button type="button" size="sm" disabled={testing || !testNumber.trim()}
-              onClick={verify}
-              className="h-8 text-[12.5px] text-white"
-              style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
-              {testing ? 'Sending…' : 'Send Test'}
-            </Button>
+          <p className="text-[12px] text-slate-500 mt-0.5">
+            {enabled
+              ? 'Your team can send and receive WhatsApp messages from the Conversations inbox.'
+              : 'Contact your account manager to enable WhatsApp for your workspace.'}
+          </p>
+        </div>
+      </div>
+
+      {enabled && (
+        <Card title="Usage this month">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-slate-500">Plan</span>
+              <span className="font-medium text-slate-800 capitalize">{status?.planType ?? 'trial'}</span>
+            </div>
+            <div className="flex items-center justify-between text-[13px]">
+              <span className="text-slate-500">Messages sent</span>
+              <span className="font-medium text-slate-800">
+                {status?.usedThisMonth ?? 0}{status?.quota ? ` / ${status.quota}` : ''}
+              </span>
+            </div>
+            {status?.quota && (
+              <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-emerald-400"
+                  style={{ width: `${Math.min(100, ((status.usedThisMonth ?? 0) / status.quota) * 100)}%` }}
+                />
+              </div>
+            )}
           </div>
-          {testResult && (
-            <p className={`text-[12px] mt-2 ${testResult === 'success' ? 'text-emerald-600' : 'text-red-500'}`}>
-              {testResult === 'success' ? '✓ ' : '✗ '}{testMessage}
-            </p>
-          )}
         </Card>
       )}
 
-      {/* Quick links */}
-      <Card title="Next steps">
-        <div className="space-y-2 text-[12px]">
-          <a href="https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn" target="_blank" rel="noreferrer"
-            className="flex items-center gap-2 text-violet-600 hover:underline">
-            <ExternalLink size={11} /> Set up Twilio WhatsApp Sandbox
-          </a>
-          <p className="text-slate-400">Set your Twilio webhook URL to:</p>
-          <code className="block bg-slate-50 border border-slate-200 rounded px-2 py-1 text-[11px] font-mono break-all">
-            {window.location.origin}/webhook/twilio/whatsapp
-          </code>
-        </div>
+      <Card title="About this integration">
+        <p className="text-[12px] text-slate-500 leading-relaxed">
+          WhatsApp messaging runs on a single shared number managed by the platform for speed and reliability.
+          There's nothing to configure on your end — once enabled, WhatsApp appears alongside your other inboxes.
+        </p>
       </Card>
     </div>
   )
@@ -1767,7 +1855,7 @@ function MaintenanceTab() {
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, mailSettings,
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
-  orgFollowupEnabled, whatsappCredential, aiSetting,
+  orgFollowupEnabled, whatsappStatus, aiSetting, tags = [],
 }) {
   const [tab, setTab] = useState(() => {
     const p = new URLSearchParams(window.location.search)
@@ -1805,12 +1893,13 @@ export default function ProfileEdit({
           <div className="flex-1 min-w-0 p-4 sm:p-6 bg-slate-50 overflow-y-auto">
             {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
             {tab === 'workspace' && <WorkspaceTab />}
+            {tab === 'tags'      && <TagsTab tags={tags} />}
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
             {tab === 'mail'      && <MailTab mailSettings={mailSettings} orgFollowupEnabled={orgFollowupEnabled} />}
             {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
             {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}
             {tab === 'leadgen'     && <LeadGenTab leadGenSettings={leadGenSettings} />}
-            {tab === 'whatsapp'    && <WhatsappTab credential={whatsappCredential} />}
+            {tab === 'whatsapp'    && <WhatsappTab status={whatsappStatus} />}
             {tab === 'maintenance' && <MaintenanceTab />}
           </div>
         </div>

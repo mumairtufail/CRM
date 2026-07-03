@@ -13,6 +13,7 @@
 /.vscode
 /.zed
 /auth.json
+/docs
 /node_modules
 # /public/build  ← committed so Hostinger has compiled assets
 /public/fonts-manifest.dev.json

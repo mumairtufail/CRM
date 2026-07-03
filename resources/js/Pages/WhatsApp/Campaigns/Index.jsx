@@ -6,7 +6,7 @@ import { Badge } from '@/Components/ui/badge'
 import { toast } from 'sonner'
 import {
   Plus, Send, Pause, Play, Copy, Trash2, MessageSquare,
-  CheckCheck, Eye, AlertCircle, Clock, Users,
+  CheckCheck, Eye, AlertCircle, Clock, Users, Lock,
 } from 'lucide-react'
 
 const STATUS_COLOR = {
@@ -100,12 +100,37 @@ function CampaignActions({ campaign }) {
   )
 }
 
-export default function WhatsappCampaignsIndex({ campaigns }) {
+function LockedState() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center max-w-sm">
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+          <Lock size={22} className="text-slate-400" />
+        </div>
+        <p className="text-[15px] font-semibold text-slate-700">WhatsApp isn't active on your account yet</p>
+        <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
+          Contact your account manager to enable WhatsApp messaging for your workspace.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export default function WhatsappCampaignsIndex({ campaigns, enabled }) {
+  if (!enabled) {
+    return (
+      <AppLayout>
+        <Head title="WhatsApp Campaigns" />
+        <LockedState />
+      </AppLayout>
+    )
+  }
+
   return (
     <AppLayout>
       <Head title="WhatsApp Campaigns" />
 
-      <div className="px-4 md:px-8 py-6 space-y-4 max-w-screen-xl mx-auto">
+      <div className="space-y-4 max-w-screen-xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

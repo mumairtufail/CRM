@@ -1,25 +1,45 @@
-import { Head, router, useForm } from '@inertiajs/react'
+import { Head, router } from '@inertiajs/react'
 import { useState, useEffect, useRef } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Input } from '@/Components/ui/input'
 import { Button } from '@/Components/ui/button'
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@/Components/ui/select'
 import { toast } from 'sonner'
-import { Search, Send, MessageSquare, AlertCircle, Bot, User } from 'lucide-react'
+import {
+  Search, Send, MessageSquare, AlertCircle, Bot, ChevronLeft,
+  Check, CheckCheck, Clock, XCircle, Lock,
+} from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-function ConversationThread({ lead, onClose }) {
-  const [messages, setMessages] = useState([])
-  const [text, setText] = useState('')
-  const [sending, setSending] = useState(false)
+const STATUS_ICON = {
+  queued:    <Clock size={11} className="text-slate-400" />,
+  sent:      <Check size={11} className="text-slate-400" />,
+  delivered: <CheckCheck size={11} className="text-slate-400" />,
+  read:      <CheckCheck size={11} className="text-blue-500" />,
+  failed:    <XCircle size={11} className="text-red-500" />,
+}
+
+function ConversationThread({ lead, templates, onBack }) {
+  const [messages, setMessages]     = useState([])
+  const [sessionOpen, setSessionOpen] = useState(true)
+  const [text, setText]             = useState('')
+  const [templateName, setTemplateName] = useState('')
+  const [sending, setSending]       = useState(false)
   const bottomRef = useRef(null)
 
+  const load = async () => {
+    const res  = await fetch(route('whatsapp.conversations.show', lead.id))
+    const data = await res.json()
+    setMessages(data.messages ?? [])
+    setSessionOpen(!!data.session_open)
+  }
+
   useEffect(() => {
-    const load = async () => {
-      const res  = await fetch(route('whatsapp.conversations.show', lead.id))
-      const data = await res.json()
-      setMessages(data.messages ?? [])
-    }
     load()
+    const interval = setInterval(load, 5000)
+    return () => clearInterval(interval)
   }, [lead.id])
 
   useEffect(() => {
@@ -28,7 +48,10 @@ function ConversationThread({ lead, onClose }) {
 
   const sendMsg = async (e) => {
     e.preventDefault()
-    if (!text.trim()) return
+    const usingTemplate = !sessionOpen
+    if (usingTemplate && !templateName) { toast.error('Choose a template to start this conversation.'); return }
+    if (!usingTemplate && !text.trim()) return
+
     setSending(true)
 
     const res = await fetch(route('whatsapp.conversations.send', lead.id), {
@@ -38,21 +61,18 @@ function ConversationThread({ lead, onClose }) {
         'X-CSRF-TOKEN':  document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
         'Accept':        'application/json',
       },
-      body: JSON.stringify({ message: text }),
+      body: JSON.stringify(usingTemplate
+        ? { message_type: 'template', template_name: templateName }
+        : { message_type: 'text', message: text }),
     })
 
     const data = await res.json()
     setSending(false)
 
     if (data.success) {
-      setMessages(prev => [...prev, {
-        id:           Date.now(),
-        direction:    'outbound',
-        message_body: text,
-        is_bot_reply: false,
-        created_at:   new Date().toISOString(),
-      }])
       setText('')
+      setTemplateName('')
+      load()
     } else {
       toast.error(data.message ?? 'Failed to send message.')
     }
@@ -62,13 +82,16 @@ function ConversationThread({ lead, onClose }) {
     <div className="flex flex-col h-full">
       {/* Thread header */}
       <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100 bg-slate-50">
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[13px] font-bold"
+        <button onClick={onBack} className="md:hidden -ml-1 p-1 text-slate-500 hover:text-slate-800">
+          <ChevronLeft size={18} />
+        </button>
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[13px] font-bold shrink-0"
           style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
           {lead.name?.charAt(0)?.toUpperCase()}
         </div>
-        <div>
-          <p className="text-[13px] font-semibold text-slate-800">{lead.name}</p>
-          <p className="text-[11px] text-slate-400">{lead.whatsapp_number}</p>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold text-slate-800 truncate">{lead.name}</p>
+          <p className="text-[11px] text-slate-400 truncate">{lead.whatsapp_number}</p>
         </div>
       </div>
 
@@ -84,7 +107,7 @@ function ConversationThread({ lead, onClose }) {
           <div key={msg.id}
             className={cn('flex', msg.direction === 'outbound' ? 'justify-end' : 'justify-start')}>
             <div className={cn(
-              'max-w-[75%] px-3 py-2 rounded-xl text-[13px] shadow-sm',
+              'max-w-[85%] sm:max-w-[75%] px-3 py-2 rounded-xl text-[13px] shadow-sm',
               msg.direction === 'outbound'
                 ? 'bg-[#DCF8C6] rounded-tr-none'
                 : 'bg-white rounded-tl-none'
@@ -95,8 +118,9 @@ function ConversationThread({ lead, onClose }) {
                 </p>
               )}
               <p className="text-slate-800 whitespace-pre-wrap">{msg.message_body}</p>
-              <p className="text-[10px] text-slate-400 mt-1 text-right">
+              <p className="text-[10px] text-slate-400 mt-1 flex items-center justify-end gap-1">
                 {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {msg.direction === 'outbound' && (STATUS_ICON[msg.status] ?? null)}
               </p>
             </div>
           </div>
@@ -104,55 +128,104 @@ function ConversationThread({ lead, onClose }) {
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <form onSubmit={sendMsg} className="flex items-center gap-2 px-4 py-3 border-t border-slate-200 bg-white">
-        <Input
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="Type a message…"
-          className="h-8 text-[13px] flex-1"
-          disabled={sending}
-        />
-        <Button type="submit" size="sm" disabled={sending || !text.trim()}
-          className="h-8 w-8 p-0 text-white"
-          style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
-          <Send size={14} />
-        </Button>
+      {/* Compose */}
+      <form onSubmit={sendMsg} className="px-4 py-3 border-t border-slate-200 bg-white space-y-2">
+        {!sessionOpen && (
+          <p className="text-[11px] text-amber-600 flex items-center gap-1">
+            <AlertCircle size={11} /> No open session — send an approved template to start this conversation.
+          </p>
+        )}
+        <div className="flex items-center gap-2">
+          {!sessionOpen ? (
+            <Select value={templateName} onValueChange={setTemplateName}>
+              <SelectTrigger className="h-8 text-[13px] flex-1">
+                <SelectValue placeholder={templates?.length ? 'Choose a template…' : 'No approved templates configured'} />
+              </SelectTrigger>
+              <SelectContent>
+                {(templates ?? []).map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              value={text}
+              onChange={e => setText(e.target.value)}
+              placeholder="Type a message…"
+              className="h-8 text-[13px] flex-1"
+              disabled={sending}
+            />
+          )}
+          <Button type="submit" size="sm" disabled={sending || (sessionOpen ? !text.trim() : !templateName)}
+            className="h-8 w-8 p-0 text-white shrink-0"
+            style={{ background: 'linear-gradient(135deg,#25D366,#128C7E)' }}>
+            <Send size={14} />
+          </Button>
+        </div>
       </form>
     </div>
   )
 }
 
-export default function WhatsappConversationsIndex({ leads, search, hasCredential, isVerified }) {
-  const [activeLead, setActiveLead] = useState(leads[0] ?? null)
+function LockedState() {
+  return (
+    <div className="flex-1 flex items-center justify-center bg-slate-50 p-6">
+      <div className="text-center max-w-sm">
+        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+          <Lock size={22} className="text-slate-400" />
+        </div>
+        <p className="text-[15px] font-semibold text-slate-700">WhatsApp isn't active on your account yet</p>
+        <p className="text-[13px] text-slate-500 mt-1.5 leading-relaxed">
+          Contact your account manager to enable WhatsApp messaging for your workspace.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+export default function WhatsappConversationsIndex({ leads, search, enabled, quotaLimit, quotaUsed, templates }) {
+  const [activeLead, setActiveLead] = useState(null)
   const [searchText, setSearchText] = useState(search ?? '')
+  const [showThreadOnMobile, setShowThreadOnMobile] = useState(false)
 
   const doSearch = (e) => {
     e.preventDefault()
     router.get(route('whatsapp.conversations.index'), { search: searchText }, { preserveState: true })
   }
 
+  const openLead = (lead) => {
+    setActiveLead(lead)
+    setShowThreadOnMobile(true)
+  }
+
+  if (!enabled) {
+    return (
+      <AppLayout noPadding>
+        <Head title="WhatsApp Conversations" />
+        <div className="flex flex-1 min-h-0">
+          <LockedState />
+        </div>
+      </AppLayout>
+    )
+  }
+
   return (
-    <AppLayout>
+    <AppLayout noPadding>
       <Head title="WhatsApp Conversations" />
 
-      {!hasCredential && (
-        <div className="m-4 flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
-          <AlertCircle size={15} className="text-amber-500 mt-0.5 shrink-0" />
-          <p className="text-[13px] text-amber-800">
-            Connect your Twilio account in{' '}
-            <button className="underline font-medium" onClick={() => router.get('/profile?tab=whatsapp')}>
-              Settings → WhatsApp
-            </button>{' '}
-            to start receiving and sending WhatsApp messages.
+      {quotaLimit != null && (
+        <div className="mx-4 mt-3 shrink-0 flex items-center gap-2.5 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">
+          <p className="text-[12px] text-blue-700">
+            <span className="font-semibold">{quotaUsed}</span> of <span className="font-semibold">{quotaLimit}</span> WhatsApp messages used this month
           </p>
         </div>
       )}
 
-      <div className="flex h-[calc(100vh-3.5rem)]">
-        {/* Sidebar: lead list */}
-        <div className="w-72 border-r border-slate-200 bg-white flex flex-col">
-          <div className="px-3 py-3 border-b border-slate-100">
+      <div className="flex flex-1 min-h-0">
+        {/* Sidebar: lead list — hidden on mobile once a thread is open */}
+        <div className={cn(
+          'w-full md:w-72 border-r border-slate-200 bg-white flex-col shrink-0',
+          showThreadOnMobile ? 'hidden md:flex' : 'flex'
+        )}>
+          <div className="px-3 py-3 border-b border-slate-100 shrink-0">
             <form onSubmit={doSearch}>
               <div className="relative">
                 <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -166,7 +239,7 @@ export default function WhatsappConversationsIndex({ leads, search, hasCredentia
             </form>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" data-scroll-region>
             {leads.length === 0 ? (
               <div className="py-10 text-center">
                 <MessageSquare size={24} className="mx-auto text-slate-300 mb-2" />
@@ -175,7 +248,7 @@ export default function WhatsappConversationsIndex({ leads, search, hasCredentia
             ) : (
               leads.map(lead => (
                 <button key={lead.id}
-                  onClick={() => setActiveLead(lead)}
+                  onClick={() => openLead(lead)}
                   className={cn(
                     'w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors',
                     activeLead?.id === lead.id ? 'bg-emerald-50 border-l-2 border-l-emerald-500' : ''
@@ -208,10 +281,14 @@ export default function WhatsappConversationsIndex({ leads, search, hasCredentia
           </div>
         </div>
 
-        {/* Chat panel */}
-        <div className="flex-1 flex flex-col">
+        {/* Chat panel — hidden on mobile until a thread is opened */}
+        <div className={cn('flex-1 min-h-0 flex-col', showThreadOnMobile ? 'flex' : 'hidden md:flex')}>
           {activeLead ? (
-            <ConversationThread lead={activeLead} onClose={() => setActiveLead(null)} />
+            <ConversationThread
+              lead={activeLead}
+              templates={templates}
+              onBack={() => setShowThreadOnMobile(false)}
+            />
           ) : (
             <div className="flex-1 flex items-center justify-center bg-[#E5DDD5]">
               <div className="text-center">

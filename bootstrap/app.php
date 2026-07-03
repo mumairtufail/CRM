@@ -20,8 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'tenant'     => \App\Http\Middleware\ResolveTenant::class,
-            'superadmin' => \App\Http\Middleware\EnsureSuperadmin::class,
+            'permission' => \App\Http\Middleware\EnsurePermission::class,
+            'module'     => \App\Http\Middleware\EnsureModuleAccess::class,
         ]);
+
+        $middleware->redirectGuestsTo(
+            fn (Request $request) => $request->is('admin/*') ? route('admin.login') : route('login')
+        );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

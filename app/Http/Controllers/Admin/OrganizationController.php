@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
+use App\Models\Plan;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class OrganizationController extends Controller
@@ -12,7 +15,7 @@ class OrganizationController extends Controller
     public function index(Request $request)
     {
         $query = Organization::withCount(['users', 'leads'])
-            ->with('owner:id,name,email');
+            ->with(['owner:id,name,email', 'plan:id,name,slug']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -32,12 +35,31 @@ class OrganizationController extends Controller
                     'name'  => $o->owner->name,
                     'email' => $o->owner->email,
                 ] : null,
+                'plan'        => $o->plan ? ['id' => $o->plan->id, 'name' => $o->plan->name] : null,
+                'plan_status' => $o->plan_status,
                 'created_at'  => $o->created_at->format('M j, Y'),
             ]);
 
         return Inertia::render('Admin/Organizations', [
             'organizations' => $organizations,
             'filters'       => $request->only(['search']),
+            'plans'         => Plan::orderBy('sort_order')->get(['id', 'name']),
         ]);
+    }
+
+    public function updatePlan(Request $request, Organization $organization): RedirectResponse
+    {
+        $validated = $request->validate([
+            'plan_id'     => ['nullable', Rule::exists('plans', 'id')],
+            'plan_status' => ['required', Rule::in(['active', 'inactive'])],
+        ]);
+
+        $organization->update([
+            'plan_id'          => $validated['plan_id'],
+            'plan_status'      => $validated['plan_status'],
+            'plan_assigned_at' => now(),
+        ]);
+
+        return back()->with('success', "Updated {$organization->name}'s plan.");
     }
 }

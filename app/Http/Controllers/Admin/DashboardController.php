@@ -17,7 +17,11 @@ class DashboardController extends Controller
         // organization in the system.
         $stats = [
             'organizations' => Organization::count(),
-            'users'         => User::where('is_superadmin', false)->count(),
+            // Excludes the vestigial users-table row(s) left behind for platform
+            // superadmins — their real record now lives in the separate `admins`
+            // table/guard, so counting them here would double-count against
+            // the `admins` table and isn't a real tenant user.
+            'users'         => User::where('role', '!=', 'superadmin')->count(),
             'leads'         => Lead::count(),
             'invoices'      => Invoice::count(),
         ];
@@ -37,8 +41,8 @@ class DashboardController extends Controller
                 'created_at'  => $o->created_at->diffForHumans(),
             ]);
 
-        $recentUsers = User::where('is_superadmin', false)
-            ->with('organization:id,name')
+        $recentUsers = User::with('organization:id,name')
+            ->where('role', '!=', 'superadmin')
             ->latest()
             ->limit(8)
             ->get()

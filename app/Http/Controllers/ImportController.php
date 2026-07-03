@@ -229,6 +229,7 @@ class ImportController extends Controller
                 $sourceLabel = $source === 'google_sheet' ? 'Google Sheets' : 'CSV';
                 Activity::create([
                     'lead_id'     => $lead->id,
+                    'user_id'     => auth()->id(),
                     'type'        => 'import',
                     'description' => "Imported via {$sourceLabel}",
                 ]);

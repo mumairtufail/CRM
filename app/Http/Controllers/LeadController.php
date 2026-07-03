@@ -6,7 +6,10 @@ use App\Models\Activity;
 use App\Models\Client;
 use App\Models\Lead;
 use App\Models\LeadGroup;
+use App\Models\Tag;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
@@ -22,7 +25,7 @@ class LeadController extends Controller
         $version  = Cache::get("leads_v:{$orgId}", 1);
         $cacheKey = "leads:idx:{$orgId}:v{$version}:" . md5(serialize($request->all()));
 
-        $payload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage) {
+        $payload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage, $orgId) {
             $query = Lead::with(['emails', 'phones', 'tags', 'groups'])
                 ->withCount('activities');
 
@@ -32,10 +35,19 @@ class LeadController extends Controller
 
             if ($status = $request->input('status')) {
                 $query->byStatus($status);
+            } else {
+                // Converted leads live on the Clients page, not the Leads list.
+                $query->where('status', '!=', 'client');
             }
 
             if ($source = $request->input('source')) {
                 $query->where('source', $source);
+            }
+
+            // Assigned agent filter — used by both the Leads page's own filter UI and
+            // Reports' agent drill-down links (?assigned_to=<id>).
+            if ($assignedTo = $request->input('assigned_to')) {
+                $query->where('assigned_to', $assignedTo);
             }
 
             // Location / categorical filters.
@@ -77,14 +89,21 @@ class LeadController extends Controller
 
             $leads = $query->paginate($perPage)->withQueryString();
 
+            // Cache stores (e.g. database) reject unserializing objects, so only
+            // plain arrays go into the cached payload — never Eloquent models/collections.
             return [
-                'leads'         => $leads,
+                'leads'         => $leads->toArray(),
                 'filterOptions' => [
-                    'countries'  => $this->distinctValues('country'),
-                    'cities'     => $this->distinctValues('city'),
-                    'industries' => $this->distinctValues('industry'),
-                    'sources'    => $this->distinctValues('source'),
-                    'groups'     => LeadGroup::orderBy('name')->get(['id', 'name', 'color'])->values(),
+                    'countries'  => $this->distinctValues('country')->toArray(),
+                    'cities'     => $this->distinctValues('city')->toArray(),
+                    'industries' => $this->distinctValues('industry')->toArray(),
+                    'sources'    => $this->distinctValues('source')->toArray(),
+                    'groups'     => LeadGroup::orderBy('name')->get(['id', 'name', 'color'])->values()->toArray(),
+                    'users'      => User::where('organization_id', $orgId)
+                        ->where('is_active', true)
+                        ->orderBy('name')
+                        ->get(['id', 'name'])
+                        ->toArray(),
                 ],
             ];
         });
@@ -94,6 +113,7 @@ class LeadController extends Controller
             'filters'       => $request->only([
                 'search', 'status', 'source', 'sort', 'dir',
                 'country', 'city', 'industry', 'priority', 'contacted', 'reached', 'group', 'per_page',
+                'assigned_to',
             ]),
             'filterOptions' => $payload['filterOptions'],
         ]);
@@ -134,7 +154,9 @@ class LeadController extends Controller
 
     public function create()
     {
-        return Inertia::render('Leads/Create');
+        return Inertia::render('Leads/Create', [
+            'tags' => Tag::orderBy('name')->get(['id', 'name', 'color']),
+        ]);
     }
 
     public function store(Request $request)
@@ -164,6 +186,9 @@ class LeadController extends Controller
             'social_handles'          => 'nullable|array',
             'social_handles.*.platform' => 'nullable|string|max:50',
             'social_handles.*.url'      => 'nullable|string|max:255',
+            'assigned_to'  => 'nullable|exists:users,id',
+            'tag_ids'      => 'nullable|array',
+            'tag_ids.*'    => 'integer|exists:tags,id',
         ], [
             'emails.*.email.required_with' => 'Email address is required.',
             'emails.*.email.email'         => 'Must be a valid email address.',
@@ -171,9 +196,17 @@ class LeadController extends Controller
         ]);
 
         $lead = Lead::create(array_merge(
-            $validated,
-            ['social_handles' => $validated['social_handles'] ?? null]
+            Arr::except($validated, ['tag_ids']),
+            [
+                'social_handles' => $validated['social_handles'] ?? null,
+                'assigned_to'    => $validated['assigned_to'] ?? auth()->id(),
+                'created_by'     => auth()->id(),
+            ]
         ));
+
+        if (!empty($validated['tag_ids'])) {
+            $lead->tags()->sync($validated['tag_ids']);
+        }
 
         if (!empty($validated['emails'])) {
             foreach ($validated['emails'] as $i => $em) {
@@ -197,6 +230,7 @@ class LeadController extends Controller
 
         Activity::create([
             'lead_id'     => $lead->id,
+            'user_id'     => auth()->id(),
             'type'        => 'import',
             'description' => "Lead created via {$lead->source}",
         ]);
@@ -206,28 +240,43 @@ class LeadController extends Controller
 
     public function show(Lead $lead)
     {
-        $lead->load(['emails', 'phones', 'tags', 'client']);
-        $activities = $lead->activities()->limit(30)->get();
-
-        $sentStatuses = ['sent', 'opened', 'clicked', 'bounced', 'unsubscribed'];
+        $lead->load(['emails', 'phones', 'tags', 'client', 'assignee:id,name', 'creator:id,name']);
+        $activities = $lead->activities()->with('user:id,name')->limit(30)->get();
 
         $emailSends = $lead->emailSends()
-            ->whereIn('status', $sentStatuses)
+            ->whereNotIn('status', ['skipped'])
             ->with('campaign:id,name,subject,body_text,body_html,from_name,from_email,followup_subject,followup_steps')
             ->orderBy('sent_at')
             ->get(['id', 'email_campaign_id', 'lead_id', 'email_used', 'status', 'sent_at', 'opened_at', 'clicked_at', 'is_followup', 'parent_send_id', 'followup_step']);
 
         $leadStats = [
-            'emails_sent'      => $emailSends->count(),
+            'emails_sent'      => $emailSends->whereIn('status', ['sent', 'opened', 'clicked'])->count(),
             'activities_total' => $activities->count(),
             'days_known'       => (int) $lead->created_at->diffInDays(now()),
         ];
 
+        // Matches sessions already linked to this lead (via submission), plus any
+        // abandoned/lead-less sessions whose captured email matches one of this
+        // lead's own emails — so a form they started but never finished still surfaces here.
+        $formSessions = \App\Models\FormSession::where(fn ($q) => $q
+                ->where('lead_id', $lead->id)
+                ->orWhere(fn ($q2) => $q2
+                    ->whereIn('identifying_email', $lead->emails->pluck('email'))
+                    ->whereNull('lead_id')))
+            ->with('leadForm:id,name,fields')
+            ->orderByDesc('last_active_at')
+            ->get();
+
         return Inertia::render('Leads/Show', [
-            'lead'       => $lead,
-            'activities' => $activities,
-            'leadStats'  => $leadStats,
-            'emailSends' => $emailSends,
+            'lead'            => $lead,
+            'activities'      => $activities,
+            'leadStats'       => $leadStats,
+            'emailSends'      => $emailSends,
+            'formSessions'    => $formSessions,
+            'assignableUsers' => \App\Models\User::where('organization_id', $lead->organization_id)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -237,6 +286,7 @@ class LeadController extends Controller
 
         return Inertia::render('Leads/Edit', [
             'lead' => $lead,
+            'tags' => Tag::orderBy('name')->get(['id', 'name', 'color']),
         ]);
     }
 
@@ -268,6 +318,9 @@ class LeadController extends Controller
             'phones.*.phone'      => 'required_with:phones|string|max:50',
             'phones.*.type'       => 'nullable|string|max:20',
             'phones.*.is_primary' => 'nullable|boolean',
+            'assigned_to'         => 'nullable|exists:users,id',
+            'tag_ids'             => 'nullable|array',
+            'tag_ids.*'           => 'integer|exists:tags,id',
         ], [
             'emails.*.email.required_with' => 'Email address is required.',
             'emails.*.email.email'         => 'Must be a valid email address.',
@@ -275,11 +328,15 @@ class LeadController extends Controller
         ]);
 
         $oldStatus = $lead->status;
-        $lead->update(array_merge($validated, [
+        $lead->update(array_merge(Arr::except($validated, ['tag_ids']), [
             'currency' => $validated['currency'] ?? 'USD',
             'status'   => $validated['status']   ?? $lead->status,
             'priority' => $validated['priority'] ?? $lead->priority,
         ]));
+
+        if (array_key_exists('tag_ids', $validated)) {
+            $lead->tags()->sync($validated['tag_ids'] ?? []);
+        }
 
         // Sync emails — replace all existing with the submitted list
         if (array_key_exists('emails', $validated)) {
@@ -308,6 +365,7 @@ class LeadController extends Controller
         if ($oldStatus !== $lead->status) {
             Activity::create([
                 'lead_id'     => $lead->id,
+                'user_id'     => auth()->id(),
                 'type'        => 'status_change',
                 'description' => "Status changed from {$oldStatus} to {$lead->status}",
                 'meta'        => ['old_status' => $oldStatus, 'new_status' => $lead->status],
@@ -325,6 +383,7 @@ class LeadController extends Controller
 
         Activity::create([
             'lead_id'     => $lead->id,
+            'user_id'     => auth()->id(),
             'type'        => 'status_change',
             'description' => "Status changed from {$old} to {$lead->status}",
             'meta'        => ['old_status' => $old, 'new_status' => $lead->status],
@@ -334,10 +393,45 @@ class LeadController extends Controller
     }
 
     /**
+     * Reassign a lead to another team member. A blank assigned_to unassigns.
+     */
+    public function assign(Request $request, Lead $lead)
+    {
+        $validated = $request->validate(['assigned_to' => 'nullable|exists:users,id']);
+
+        $oldAssignedTo = $lead->assigned_to;
+        $newAssignedTo = $validated['assigned_to'] ?? null;
+
+        $lead->update(['assigned_to' => $newAssignedTo]);
+
+        Activity::create([
+            'lead_id'     => $lead->id,
+            'user_id'     => auth()->id(),
+            'type'        => 'reassignment',
+            'description' => $this->describeReassignment($oldAssignedTo, $newAssignedTo),
+            'meta'        => ['old_assigned_to' => $oldAssignedTo, 'new_assigned_to' => $newAssignedTo],
+        ]);
+
+        return back()->with('success', 'Lead reassigned.');
+    }
+
+    private function describeReassignment(?int $oldId, ?int $newId): string
+    {
+        $oldName = $oldId ? (User::find($oldId)?->name ?? 'a former team member') : null;
+        $newName = $newId ? (User::find($newId)?->name ?? 'a team member') : null;
+
+        return match (true) {
+            $newName && $oldName => "Reassigned from {$oldName} to {$newName}",
+            (bool) $newName      => "Assigned to {$newName}",
+            default              => 'Unassigned',
+        };
+    }
+
+    /**
      * Channels a lead can be marked as contacted on. Keep in sync with the
      * CONTACT_CHANNELS list in resources/js/Components/Common/OutreachChannels.jsx.
      */
-    public const CONTACT_CHANNELS = ['mail', 'linkedin', 'instagram', 'facebook', 'whatsapp', 'reddit', 'social'];
+    public const CONTACT_CHANNELS = ['mail', 'call', 'linkedin', 'instagram', 'facebook', 'whatsapp', 'reddit', 'social'];
 
     public function updateChannels(Request $request, Lead $lead)
     {
@@ -365,9 +459,11 @@ class LeadController extends Controller
 
         Activity::create([
             'lead_id'     => $lead->id,
-            'type'        => 'note',
+            'user_id'     => auth()->id(),
+            'type'        => $validated['channel'] === 'call' ? 'call' : 'note',
             'description' => ($validated['value'] ? 'Marked contacted on ' : 'Unmarked contacted on ')
                 . ucfirst($validated['channel'] === 'mail' ? 'email' : $validated['channel']),
+            'meta'        => ['channel' => $validated['channel'], 'contacted' => $validated['value']],
         ]);
 
         return response()->json(['ok' => true, 'contact_channels' => $channels]);
@@ -375,6 +471,14 @@ class LeadController extends Controller
 
     public function destroy(Lead $lead)
     {
+        Activity::create([
+            'lead_id'     => $lead->id,
+            'user_id'     => auth()->id(),
+            'type'        => 'deletion',
+            'description' => 'Lead deleted: ' . $lead->full_name,
+            'meta'        => ['lead_name' => $lead->full_name, 'company' => $lead->company],
+        ]);
+
         $lead->delete();
 
         return redirect()->route('leads.index')->with('success', 'Lead deleted.');
@@ -386,6 +490,18 @@ class LeadController extends Controller
             'ids'   => 'required|array|min:1',
             'ids.*' => 'integer|exists:leads,id',
         ]);
+
+        $leads = Lead::whereIn('id', $request->ids)->get(['id', 'first_name', 'last_name', 'company']);
+
+        foreach ($leads as $lead) {
+            Activity::create([
+                'lead_id'     => $lead->id,
+                'user_id'     => auth()->id(),
+                'type'        => 'deletion',
+                'description' => 'Lead deleted (bulk): ' . $lead->full_name,
+                'meta'        => ['lead_name' => $lead->full_name, 'company' => $lead->company, 'bulk' => true],
+            ]);
+        }
 
         Lead::whereIn('id', $request->ids)->delete();
 
@@ -426,6 +542,7 @@ class LeadController extends Controller
 
         Activity::create([
             'lead_id'     => $lead->id,
+            'user_id'     => auth()->id(),
             'type'        => 'status_change',
             'description' => "Lead converted to client",
             'meta'        => ['client_id' => $client->id],

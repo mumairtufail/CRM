@@ -8,8 +8,11 @@ import { Badge } from '@/Components/ui/badge'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/Components/ui/select'
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from '@/Components/ui/dropdown-menu'
 import { toast } from 'sonner'
-import { MessageSquare, Users, Filter, FolderOpen, AlertCircle, Info, Clock } from 'lucide-react'
+import { MessageSquare, Users, Filter, FolderOpen, AlertCircle, Info, Clock, ClipboardList, Copy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 function Field({ label, error, hint, children }) {
@@ -26,8 +29,8 @@ function Field({ label, error, hint, children }) {
 const TOKENS = ['{{first_name}}', '{{last_name}}', '{{name}}', '{{company}}', '{{email}}', '{{phone}}']
 
 export default function WhatsappCampaignCreate({
-  statuses, leadCount, groups, tags,
-  hasCredential, fromNumber, campaign,
+  statuses, leadCount, groups, tags, forms,
+  hasCredential, campaign,
 }) {
   const isEdit = !!campaign
 
@@ -44,6 +47,17 @@ export default function WhatsappCampaignCreate({
 
   const insertToken = (token) => {
     setData('message_body', data.message_body + token)
+  }
+
+  const insertFormLink = (form) => {
+    setData('message_body', data.message_body + (data.message_body && !data.message_body.endsWith(' ') ? ' ' : '') + form.public_url)
+  }
+
+  const copyFormLink = (e, form) => {
+    e.stopPropagation()
+    navigator.clipboard?.writeText(form.public_url)
+      .then(() => toast.success('Form link copied'))
+      .catch(() => toast.error('Could not copy link'))
   }
 
   const submit = (e) => {
@@ -70,16 +84,16 @@ export default function WhatsappCampaignCreate({
     <AppLayout>
       <Head title={isEdit ? 'Edit WhatsApp Campaign' : 'New WhatsApp Campaign'} />
 
-      <div className="px-4 md:px-8 py-6 max-w-2xl mx-auto space-y-4">
+      <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
         <div>
           <h1 className="text-[18px] font-bold text-slate-800">
             {isEdit ? 'Edit Campaign' : 'New WhatsApp Campaign'}
           </h1>
           <p className="text-[13px] text-slate-500 mt-0.5">
-            {fromNumber
-              ? `Sending from: ${fromNumber}`
-              : 'Configure WhatsApp credentials in Settings before sending'}
+            {hasCredential
+              ? 'Sending through your workspace’s WhatsApp connection'
+              : 'WhatsApp isn’t enabled for your workspace yet'}
           </p>
         </div>
 
@@ -87,13 +101,9 @@ export default function WhatsappCampaignCreate({
           <div className="flex items-start gap-2.5 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
             <AlertCircle size={15} className="text-amber-500 mt-0.5 shrink-0" />
             <div>
-              <p className="text-[13px] font-medium text-amber-800">No WhatsApp account connected</p>
+              <p className="text-[13px] font-medium text-amber-800">WhatsApp isn't enabled yet</p>
               <p className="text-[12px] text-amber-700 mt-0.5">
-                Add your Twilio credentials in{' '}
-                <button className="underline" onClick={() => router.get(route('profile.edit'))}>
-                  Settings → WhatsApp
-                </button>{' '}
-                before you can send campaigns.
+                Contact your account manager or support to enable WhatsApp for your workspace before you can send campaigns.
               </p>
             </div>
           </div>
@@ -118,7 +128,7 @@ export default function WhatsappCampaignCreate({
                 className="text-[13px] resize-none"
                 placeholder="Hi {{first_name}}, I wanted to reach out about..."
               />
-              <div className="flex flex-wrap gap-1 mt-1.5">
+              <div className="flex flex-wrap items-center gap-1 mt-1.5">
                 {TOKENS.map(t => (
                   <button key={t} type="button"
                     onClick={() => insertToken(t)}
@@ -126,6 +136,29 @@ export default function WhatsappCampaignCreate({
                     {t}
                   </button>
                 ))}
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button type="button" disabled={!forms?.length}
+                      className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-50 text-slate-600 text-[11px] font-medium hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                      <ClipboardList size={11} /> Insert form link
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    {forms?.length ? forms.map(f => (
+                      <DropdownMenuItem key={f.id} className="flex items-center justify-between gap-2 text-xs"
+                        onClick={() => insertFormLink(f)}>
+                        <span className="truncate">{f.name}</span>
+                        <button type="button" title="Copy link" className="shrink-0 text-slate-400 hover:text-slate-700"
+                          onClick={(e) => copyFormLink(e, f)}>
+                          <Copy size={12} />
+                        </button>
+                      </DropdownMenuItem>
+                    )) : (
+                      <p className="px-2 py-1.5 text-[11.5px] text-slate-400">No forms yet — create one first.</p>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </Field>
           </div>

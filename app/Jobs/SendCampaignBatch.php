@@ -29,7 +29,7 @@ class SendCampaignBatch implements ShouldQueue
 
     public function handle(): void
     {
-        $campaign = EmailCampaign::find($this->campaignId);
+        $campaign = EmailCampaign::with('leadForm')->find($this->campaignId);
         $user     = User::find($this->userId);
 
         if (! $campaign || ! $user) return;
@@ -78,6 +78,17 @@ class SendCampaignBatch implements ShouldQueue
             // Generate a unique tracking token for this send
             $token = Str::random(64);
 
+            // The token also doubles as the form link's utm_campaign — a
+            // submission carrying this value back is unambiguously "came
+            // from this exact send", no separate attribution column needed.
+            $formLink = $campaign->leadForm
+                ? $campaign->leadForm->publicUrl() . '?' . http_build_query([
+                    'utm_source'   => 'email',
+                    'utm_medium'   => 'campaign',
+                    'utm_campaign' => $token,
+                ])
+                : '';
+
             // Explicit Message-ID — links replies (In-Reply-To) and the Sent copy
             // back to this send. Stored on the EmailSend so inbound replies resolve.
             $domain    = Str::after($fromEmail, '@') ?: 'localhost';
@@ -97,7 +108,7 @@ class SendCampaignBatch implements ShouldQueue
 
             try {
                 // Personalise the subject line tokens per-lead (e.g. {{company}}).
-                $subject = $this->replaceTokens($campaign->subject, $lead);
+                $subject = $this->replaceTokens($campaign->subject, $lead, formLink: $formLink);
 
                 $html = $this->buildHtml(
                     $campaign->body_html,
@@ -106,6 +117,7 @@ class SendCampaignBatch implements ShouldQueue
                     $template,
                     $templateVars,
                     $token,
+                    $formLink,
                 );
 
                 \Illuminate\Support\Facades\Mail::mailer('dynamic')
@@ -178,9 +190,10 @@ class SendCampaignBatch implements ShouldQueue
         ?EmailTemplate $template,
         array $vars,
         string $token,
+        string $formLink = '',
     ): string {
         // 1. Replace lead tokens in body
-        $html = $this->replaceTokens($bodyHtml, $lead, $subject);
+        $html = $this->replaceTokens($bodyHtml, $lead, $subject, $formLink);
 
         // 2. Inject tracking pixel just before closing </body> or at end
         $pixelUrl  = url("/t/{$token}/open.gif");
@@ -208,7 +221,7 @@ class SendCampaignBatch implements ShouldQueue
      * Replace {{token}} placeholders with lead data.
      * Also replaces {{subject}} for use in subject (passed separately).
      */
-    private function replaceTokens(string $html, Lead $lead, string $subject = ''): string
+    private function replaceTokens(string $html, Lead $lead, string $subject = '', string $formLink = ''): string
     {
         $tokens = [
             '{{first_name}}' => $lead->first_name ?? '',
@@ -219,6 +232,7 @@ class SendCampaignBatch implements ShouldQueue
             '{{phone}}'      => $lead->primary_phone ?? '',
             '{{status}}'     => $lead->status ?? '',
             '{{subject}}'    => $subject,
+            '{{form_link}}'  => $formLink,
         ];
 
         return str_replace(array_keys($tokens), array_values($tokens), $html);

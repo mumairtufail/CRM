@@ -49,7 +49,7 @@ export default function AppLayout({ children, title, noPadding = false }) {
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#F4F2FF' }}>
       {impersonating && <ImpersonationBanner name={impersonating.name} />}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Mobile backdrop — closes sidebar when tapped outside */}
         {sidebarOpen && (
           <div
@@ -60,9 +60,12 @@ export default function AppLayout({ children, title, noPadding = false }) {
 
         <Sidebar open={sidebarOpen} onToggle={toggleSidebar} />
 
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <div className="flex-1 flex flex-col overflow-hidden min-w-0 min-h-0">
           <TopBar title={title} onMenuClick={toggleSidebar} />
-          <main className={noPadding ? 'flex-1 overflow-hidden flex flex-col' : 'flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5'}>
+          <main
+            data-scroll-region
+            className={noPadding ? 'flex-1 overflow-hidden flex flex-col min-h-0' : 'flex-1 overflow-y-auto min-h-0 px-4 py-4 sm:px-6 sm:py-5'}
+          >
             {children}
           </main>
         </div>

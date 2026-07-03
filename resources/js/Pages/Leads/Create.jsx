@@ -7,6 +7,7 @@ import { Textarea } from '@/Components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
+import TagPicker from '@/Components/Common/TagPicker'
 import { ChevronLeft, Plus, X, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState } from 'react'
@@ -40,7 +41,7 @@ function SectionCard({ title, action, children, className = "", contentClassName
   )
 }
 
-export default function LeadCreate() {
+export default function LeadCreate({ tags = [] }) {
   const { data, setData, post, transform, processing, errors } = useForm({
     first_name: '', last_name: '', company: '', job_title: '',
     website: '', linkedin_url: '', notes: '',
@@ -49,6 +50,7 @@ export default function LeadCreate() {
     emails: [{ email: '', type: 'work', is_primary: true }],
     phones: [{ phone: '', type: 'mobile', is_primary: true }],
     social_handles: [],
+    tag_ids: [],
   })
 
   // Strip empty email/phone/social rows before the request is sent
@@ -329,6 +331,8 @@ export default function LeadCreate() {
                           className="h-9 text-xs" placeholder="New York" />
                       </FormField>
                     </div>
+
+                    <TagPicker tags={tags} selectedIds={data.tag_ids} onChange={v => setData('tag_ids', v)} />
                   </div>
 
                 </SectionCard>

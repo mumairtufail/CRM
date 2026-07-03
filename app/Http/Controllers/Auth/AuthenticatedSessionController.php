@@ -33,12 +33,16 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Super admins land in the platform portal, everyone else in their CRM.
-        if ($request->user()->isSuperadmin()) {
-            return redirect()->intended(route('admin.dashboard', absolute: false));
+        // Only honor a stashed "intended" URL if it belongs to the tenant app —
+        // a guest hitting an /admin/* page earlier in this browser session could
+        // otherwise leave a stale admin URL that bounces this login straight
+        // back out to /admin/login.
+        $intended = $request->session()->pull('url.intended');
+        if ($intended && ! str_starts_with(parse_url($intended, PHP_URL_PATH) ?? '', '/admin')) {
+            return redirect()->to($intended);
         }
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->to(route('dashboard', absolute: false));
     }
 
     /**

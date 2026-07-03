@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProfileUpdateRequest;
 use App\Models\AiProviderSetting;
 use App\Models\EmailTemplate;
-use App\Models\WhatsappCredential;
+use App\Models\Tag;
+use App\Models\TenantWhatsappSettings;
+use App\Models\WhatsappUsageMonthly;
 use App\Services\LeadProviders\ApolloProvider;
 use App\Services\LeadProviders\PeopleDataLabsProvider;
 use App\Support\TenantContext;
@@ -97,19 +99,18 @@ class ProfileController extends Controller
                     'validated_at' => $s->validated_at?->toISOString(),
                 ];
             })(),
-            'whatsappCredential'    => (function () use ($user) {
-                $c = WhatsappCredential::where('organization_id', $user->organization_id)->first();
-                if (!$c) return null;
+            'whatsappStatus'        => (function () use ($user) {
+                $settings = TenantWhatsappSettings::forOrganization($user->organization_id);
+                $usage    = WhatsappUsageMonthly::currentMonthFor($user->organization_id);
+
                 return [
-                    'id'           => $c->id,
-                    'account_sid'  => $c->account_sid,
-                    'from_number'  => $c->from_number,
-                    'display_name' => $c->display_name,
-                    'is_active'    => $c->is_active,
-                    'is_verified'  => $c->isVerified(),
-                    'verified_at'  => $c->verified_at?->toISOString(),
+                    'enabled'    => (bool) $settings?->isUsableForSend(),
+                    'planType'   => $settings?->plan_type,
+                    'quota'      => $settings?->monthly_message_quota,
+                    'usedThisMonth' => $usage?->sent_count ?? 0,
                 ];
             })(),
+            'tags'                  => Tag::withCount('leads')->orderBy('name')->get(),
         ]);
     }
 

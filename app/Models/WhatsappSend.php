@@ -13,9 +13,10 @@ class WhatsappSend extends Model
         'whatsapp_campaign_id',
         'lead_id',
         'organization_id',
+        'whatsapp_message_id',
         'to_number',
         'message_body',
-        'twilio_message_sid',
+        'wa_message_id',
         'status',
         'error_message',
         'error_code',
@@ -53,5 +54,10 @@ class WhatsappSend extends Model
     public function followUp()
     {
         return $this->hasOne(WhatsappSend::class, 'parent_send_id');
+    }
+
+    public function whatsappMessage()
+    {
+        return $this->belongsTo(WhatsappMessage::class);
     }
 }

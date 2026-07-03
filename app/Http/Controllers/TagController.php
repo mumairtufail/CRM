@@ -3,22 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Tag;
-use Inertia\Inertia;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class TagController extends Controller
 {
-    public function index()
-    {
-        $tags = Tag::withCount('leads')->orderBy('name')->get();
-
-        return Inertia::render('Tags/Index', ['tags' => $tags]);
-    }
-
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name'  => 'required|string|max:50|unique:tags',
+            'name'  => [
+                'required', 'string', 'max:50',
+                // Tag names are unique per-workspace, not globally — two
+                // different organizations may each have their own "VIP" tag.
+                Rule::unique('tags', 'name')->where('organization_id', $request->user()->organization_id),
+            ],
             'color' => 'nullable|string|max:7',
         ]);
 
@@ -30,7 +28,10 @@ class TagController extends Controller
     public function update(Request $request, Tag $tag)
     {
         $validated = $request->validate([
-            'name'  => 'required|string|max:50|unique:tags,name,' . $tag->id,
+            'name'  => [
+                'required', 'string', 'max:50',
+                Rule::unique('tags', 'name')->where('organization_id', $request->user()->organization_id)->ignore($tag->id),
+            ],
             'color' => 'nullable|string|max:7',
         ]);
 

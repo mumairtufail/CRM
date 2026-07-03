@@ -211,7 +211,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
     return () => { start(); finish() }
   }, [])
 
-  const { data: rows, ...pagination } = leads
+  const { data: rows = [], ...pagination } = leads ?? {}
 
   // Clear selection whenever the page data changes (filter / page change)
   useEffect(() => { setSelectedIds(new Set()) }, [leads])
@@ -249,7 +249,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
     (filters?.status && filters.status !== 'all') ||
     filters?.country || filters?.city || filters?.industry ||
     filters?.source || filters?.priority || filters?.contacted ||
-    filters?.group ||
+    filters?.group || filters?.assigned_to ||
     reached.length
   )
 
@@ -568,6 +568,16 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
               ...(filterOptions?.groups ?? []).map(g => ({ value: String(g.id), label: g.name })),
             ]}
             onChange={v => applyFilters({ group: v })}
+          />
+          <InlineSelect
+            icon={<UsersRound size={13} className="shrink-0 opacity-60" />}
+            placeholder="Anyone"
+            value={filters?.assigned_to ? String(filters.assigned_to) : undefined}
+            options={[
+              { value: 'all', label: 'Anyone' },
+              ...(filterOptions?.users ?? []).map(u => ({ value: String(u.id), label: u.name })),
+            ]}
+            onChange={v => applyFilters({ assigned_to: v })}
           />
 
           {/* ── Reached-on multi-select (one compact dropdown for all channels) ── */}

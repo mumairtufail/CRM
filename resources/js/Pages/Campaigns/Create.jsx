@@ -43,6 +43,7 @@ const TOKENS = [
   { label: '{{company}}',    desc: 'Company name' },
   { label: '{{email}}',      desc: 'Email address' },
   { label: '{{status}}',     desc: 'Lead status' },
+  { label: '{{form_link}}',  desc: 'Link to the attached form (pick one below) — clicks and submissions are tracked automatically' },
 ]
 
 // Delay options for follow-up steps — all relative to the original email send date
@@ -283,6 +284,7 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body, 
     .replace(/\{\{email\}\}/g, 'john@acme.com')
     .replace(/\{\{phone\}\}/g, '+1 555-0100')
     .replace(/\{\{status\}\}/g, 'qualified')
+    .replace(/\{\{form_link\}\}/g, 'https://example.com/f/sample-form')
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -427,7 +429,7 @@ function FollowUpStepCard({ stepNumber, step, prevDelayHours, errors, onUpdate, 
   )
 }
 
-export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false }) {
+export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], forms = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false }) {
   const isEdit = !!campaign
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewStep, setPreviewStep] = useState(null) // null = closed, number = step index
@@ -440,6 +442,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
     body_html:        campaign?.body_html        ?? '',
     recipient_mode:   campaign?.recipient_mode   ?? 'all',
     group_id:         campaign?.group_id         ?? null,
+    lead_form_id:     campaign?.lead_form_id     ?? null,
     filters:          campaign?.filters          ?? { statuses: [], tag_ids: [] },
     followup_enabled: campaign?.followup_enabled ?? false,
     followup_steps:   campaign?.followup_steps   ?? [],
@@ -537,7 +540,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
           </div>
 
           <form onSubmit={submit}>
-            <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-4 items-start">
 
               {/* LEFT COLUMN — sender + recipients */}
               <div className="space-y-3">
@@ -633,7 +636,20 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                           : <>No active email template. Activate one in <Link href="/profile" className="font-semibold underline">Settings → Templates</Link> to add a signature automatically, or include your sign-off in the body below.</>}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-1 mb-2">
+                    <Field label="Attach a form (optional)"
+                      hint="Adds a {{form_link}} token you can drop into the subject or body. Clicks are tracked automatically, and submissions show up on this campaign's page.">
+                      <Select
+                        value={data.lead_form_id ? String(data.lead_form_id) : 'none'}
+                        onValueChange={v => setData('lead_form_id', v === 'none' ? null : Number(v))}
+                      >
+                        <SelectTrigger className="h-8 text-[13px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No form attached</SelectItem>
+                          {forms.map(f => <SelectItem key={f.id} value={String(f.id)}>{f.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                    <div className="flex flex-wrap gap-1 mb-2 mt-3">
                       <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
                       {TOKENS.map(t => (
                         <span key={t.label} title={t.desc}

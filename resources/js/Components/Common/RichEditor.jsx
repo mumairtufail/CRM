@@ -17,6 +17,7 @@ export const TEMPLATE_VARS = [
   { id: 'company',    desc: 'Company name',  ex: 'Acme Inc.' },
   { id: 'phone',      desc: 'Phone number',  ex: '+1 555-0100' },
   { id: 'status',     desc: 'Lead status',   ex: 'qualified' },
+  { id: 'form_link',  desc: 'Link to the attached form', ex: 'https://yourapp.com/f/contact' },
 ]
 
 // Inline decoration: highlights {{var}} tokens in the editor view

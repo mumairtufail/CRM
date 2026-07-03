@@ -1,12 +1,10 @@
 import {
-  Menu, Bell, Search, ChevronDown, User, LogOut, Check,
-  Share2, ExternalLink, Copy, X,
-  LayoutDashboard, Users, UserPlus, Kanban, Mail, Upload, Tag, FileText, Settings,
+  Menu, Bell, Search, ChevronDown, User, LogOut, Check, X,
+  LayoutDashboard, Users, UserPlus, Kanban, Mail, Upload, Tag, FileText, Settings, ClipboardList,
 } from 'lucide-react'
 import { usePage, Link, router } from '@inertiajs/react'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { formatDistanceToNow } from 'date-fns'
-import { toast } from 'sonner'
 
 // Searchable app destinations.
 const PAGES = [
@@ -19,7 +17,8 @@ const PAGES = [
   { label: 'Invoices',      href: '/invoices',         keywords: 'billing payments money',     icon: FileText },
   { label: 'New Invoice',   href: '/invoices/create',  keywords: 'create bill invoice',        icon: FileText },
   { label: 'Import',        href: '/import',           keywords: 'csv upload sheets',          icon: Upload },
-  { label: 'Tags',          href: '/tags',             keywords: 'labels categories',          icon: Tag },
+  { label: 'Forms',         href: '/forms',            keywords: 'lead capture intake public link', icon: ClipboardList },
+  { label: 'Tags',          href: '/profile?tab=tags', keywords: 'labels categories settings', icon: Tag },
   { label: 'Settings',      href: '/profile',          keywords: 'profile account workspace smtp mail', icon: Settings },
 ]
 
@@ -28,8 +27,9 @@ function timeAgo(iso) {
 }
 
 export default function TopBar({ title, onMenuClick }) {
-  const { auth, organization, notifications } = usePage().props
+  const { auth, notifications } = usePage().props
   const user     = auth?.user
+  const isAdmin  = auth?.guard === 'admin'
   const initial  = user?.name?.charAt(0)?.toUpperCase() ?? 'A'
   const name     = user?.name ?? 'User'
   const email    = user?.email ?? ''
@@ -40,7 +40,6 @@ export default function TopBar({ title, onMenuClick }) {
   // Dropdown open states
   const [userOpen, setUserOpen]   = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
-  const [formOpen, setFormOpen]   = useState(false)
 
   // Search state
   const [query, setQuery]       = useState('')
@@ -49,7 +48,6 @@ export default function TopBar({ title, onMenuClick }) {
 
   const userRef   = useRef(null)
   const notifRef  = useRef(null)
-  const formRef   = useRef(null)
   const searchRef = useRef(null)
 
   // Close any open dropdown on outside click
@@ -57,7 +55,6 @@ export default function TopBar({ title, onMenuClick }) {
     const handler = (e) => {
       if (userRef.current && !userRef.current.contains(e.target)) setUserOpen(false)
       if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
-      if (formRef.current && !formRef.current.contains(e.target)) setFormOpen(false)
       if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false)
     }
     document.addEventListener('mousedown', handler)
@@ -67,7 +64,7 @@ export default function TopBar({ title, onMenuClick }) {
   // Close everything on navigation
   useEffect(() => {
     const off = router.on('finish', () => {
-      setUserOpen(false); setNotifOpen(false); setFormOpen(false); setSearchOpen(false)
+      setUserOpen(false); setNotifOpen(false); setSearchOpen(false)
     })
     return off
   }, [])
@@ -82,7 +79,7 @@ export default function TopBar({ title, onMenuClick }) {
 
   useEffect(() => { setHighlight(0) }, [query])
 
-  const signOut = () => router.post(route('logout'))
+  const signOut = () => router.post(route(isAdmin ? 'admin.logout' : 'logout'))
 
   const go = (href) => {
     setQuery('')
@@ -114,16 +111,6 @@ export default function TopBar({ title, onMenuClick }) {
   const deleteNotification = (e, n) => {
     e.stopPropagation()
     router.delete(`/notifications/${n.id}`, { preserveScroll: true, preserveState: true })
-  }
-
-  const formUrl = organization ? `/intake/${organization.slug}` : null
-  const copyFormLink = () => {
-    if (!formUrl) return
-    const abs = `${window.location.origin}${formUrl}`
-    navigator.clipboard?.writeText(abs)
-      .then(() => toast.success('Form link copied'))
-      .catch(() => toast.error('Could not copy link'))
-    setFormOpen(false)
   }
 
   // Shared suggestion list renderer
@@ -237,46 +224,6 @@ export default function TopBar({ title, onMenuClick }) {
             </div>
           )}
         </div>
-
-        {/* Lead-form link (tenant only) */}
-        {organization && (
-          <div className="relative" ref={formRef}>
-            <button
-              onClick={() => setFormOpen(o => !o)}
-              className="p-2 rounded-[9px] hover:bg-black/[0.05] transition-colors"
-              aria-label="Public lead form"
-              title="Your public lead form"
-            >
-              <Share2 size={15} className="text-slate-500" />
-            </button>
-            {formOpen && (
-              <div className="absolute right-0 top-full mt-2 w-60 rounded-xl overflow-hidden z-50 bg-white"
-                style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
-                <div className="px-4 py-3 border-b border-slate-100">
-                  <p className="text-[12.5px] font-semibold text-slate-800">Public lead form</p>
-                  <p className="text-[11px] text-slate-400 truncate mt-0.5">{formUrl}</p>
-                </div>
-                <div className="p-1">
-                  <a
-                    href={formUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setFormOpen(false)}
-                    className="flex items-center gap-2.5 w-full px-3 py-2 rounded-[8px] text-[12.5px] text-slate-700 hover:bg-slate-50 transition-colors"
-                  >
-                    <ExternalLink size={13} className="text-slate-400" /> Open form
-                  </a>
-                  <button
-                    onClick={copyFormLink}
-                    className="flex items-center gap-2.5 w-full px-3 py-2 rounded-[8px] text-[12.5px] text-slate-700 hover:bg-slate-50 transition-colors"
-                  >
-                    <Copy size={13} className="text-slate-400" /> Copy link
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Notifications */}
         <div className="relative" ref={notifRef}>
@@ -392,7 +339,7 @@ export default function TopBar({ title, onMenuClick }) {
               </div>
               <div className="p-1">
                 <Link
-                  href="/profile"
+                  href={isAdmin ? route('admin.settings.account') : '/profile'}
                   onClick={() => setUserOpen(false)}
                   className="flex items-center gap-2.5 w-full px-3 py-2 rounded-[8px] text-[12.5px] text-slate-700 hover:bg-slate-50 transition-colors"
                 >

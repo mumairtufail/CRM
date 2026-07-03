@@ -85,7 +85,7 @@ const FOLDERS = [
 
 function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChange, onCompose }) {
   return (
-    <div className="w-[188px] shrink-0 flex flex-col border-r border-slate-100"
+    <div className="hidden lg:flex w-[188px] shrink-0 flex-col border-r border-slate-100"
       style={{ background: '#F7F6FB' }}>
 
       {/* Compose button */}
@@ -171,6 +171,60 @@ function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChan
             {formatDistanceToNow(new Date(credential.last_fetched_at), { addSuffix: true })}
           </p>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Condensed folder switcher + actions for narrow screens, replacing the vertical sidebar.
+function MobileTopBar({ folder, counts, syncing, onSync, onFolderChange, onCompose }) {
+  return (
+    <div className="lg:hidden shrink-0 border-b border-slate-100 bg-white">
+      <div className="flex items-center gap-2 px-3 py-2">
+        <button
+          onClick={onCompose}
+          className="shrink-0 h-8 w-8 rounded-xl flex items-center justify-center text-white"
+          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+          aria-label="Compose"
+        >
+          <PenLine size={14} />
+        </button>
+
+        <div className="flex-1 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+          {FOLDERS.map(({ key, label, icon: Icon, countKey }) => {
+            const count = counts?.[countKey] ?? 0
+            const active = folder === key
+            return (
+              <button key={key}
+                onClick={() => onFolderChange(key)}
+                className={cn(
+                  'shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all whitespace-nowrap',
+                  active ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500'
+                )}
+              >
+                <Icon size={12} className={active ? 'text-white' : 'text-slate-400'} />
+                {label}
+                {count > 0 && (
+                  <span className={cn(
+                    'text-[10px] font-bold rounded-full px-1.5 leading-tight',
+                    active ? 'bg-white/25 text-white' : 'bg-slate-200 text-slate-600'
+                  )}>
+                    {key === 'inbox' && counts.unread > 0 ? counts.unread : count}
+                  </span>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        <button
+          onClick={onSync}
+          disabled={syncing}
+          className="shrink-0 h-8 w-8 rounded-xl flex items-center justify-center border border-slate-200 text-slate-500 disabled:opacity-50"
+          aria-label="Sync inbox"
+        >
+          <RefreshCw size={13} className={syncing ? 'animate-spin' : ''} />
+        </button>
       </div>
     </div>
   )
@@ -353,9 +407,9 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Toolbar */}
-      <div className="flex items-center gap-1.5 px-5 py-3 border-b border-slate-100 shrink-0">
+      <div className="flex items-center gap-1.5 px-3 sm:px-5 py-3 border-b border-slate-100 shrink-0 overflow-x-auto">
         <button onClick={onClose}
-          className="h-7 px-2.5 rounded-lg text-[11.5px] text-slate-500 hover:bg-slate-100 transition-colors">
+          className="h-7 px-2.5 rounded-lg text-[11.5px] text-slate-500 hover:bg-slate-100 transition-colors shrink-0">
           ← Back
         </button>
         <div className="flex-1" />
@@ -386,8 +440,8 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
       </div>
 
       {/* Email header */}
-      <div className="px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
-        <h2 className="text-[17px] font-semibold text-slate-900 leading-snug mb-3">
+      <div className="px-4 sm:px-6 pt-5 pb-4 border-b border-slate-100 shrink-0">
+        <h2 className="text-[16px] sm:text-[17px] font-semibold text-slate-900 leading-snug mb-3">
           {email.subject || '(No subject)'}
         </h2>
         <div className="flex items-start gap-3">
@@ -417,7 +471,7 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
       </div>
 
       {/* Email body */}
-      <div className="flex-1 overflow-y-auto px-6 py-5">
+      <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
         {bodyLoading && !email.body_html && !email.body_text ? (
           <div className="space-y-2.5 animate-pulse">
             {[3, 4, 2, 5, 3, 2, 4].map((w, i) => (
@@ -753,7 +807,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
     <>
       <Head title="Inbox" />
       <AppLayout title="Inbox" noPadding>
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden lg:flex-row">
 
           <FolderPanel
             folder={folder}
@@ -765,7 +819,20 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
             onCompose={() => setComposeOpen(true)}
           />
 
-          <div className="w-[300px] shrink-0 flex flex-col border-r border-slate-100 bg-white">
+          <MobileTopBar
+            folder={folder}
+            counts={counts}
+            syncing={syncing}
+            onSync={handleSync}
+            onFolderChange={handleFolderChange}
+            onCompose={() => setComposeOpen(true)}
+          />
+
+          {/* Email list — full width on mobile, hidden once an email is open */}
+          <div className={cn(
+            'w-full lg:w-[300px] shrink-0 flex-col border-r border-slate-100 bg-white',
+            selected ? 'hidden lg:flex' : 'flex'
+          )}>
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
               <h3 className="text-[13px] font-semibold text-slate-800 capitalize">{folder}</h3>
               <div className="flex items-center gap-2">
@@ -793,7 +860,11 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
             )}
           </div>
 
-          <div className="flex-1 flex flex-col bg-white min-w-0">
+          {/* Reading pane — full width on mobile, shown only once an email is selected */}
+          <div className={cn(
+            'flex-1 flex-col bg-white min-w-0',
+            selected ? 'flex' : 'hidden lg:flex'
+          )}>
             {notReady ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center"

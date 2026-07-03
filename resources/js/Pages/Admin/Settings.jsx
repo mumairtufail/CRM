@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react'
 import { useState } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
-import { Search, User, Mail, ChevronRight } from 'lucide-react'
+import { Search, User, Mail, ChevronRight, Image as ImageIcon, Cpu } from 'lucide-react'
 
 const CARDS = [
   {
@@ -21,6 +21,24 @@ const CARDS = [
     href:        '/admin/smtp-settings',
     iconBg:      'bg-blue-50',
     iconColor:   'text-blue-600',
+  },
+  {
+    id:          'branding',
+    label:       'Branding & Logo',
+    description: 'Upload a custom logo and download vector/raster logo assets.',
+    icon:        ImageIcon,
+    href:        '/admin/settings/branding',
+    iconBg:      'bg-emerald-50',
+    iconColor:   'text-emerald-600',
+  },
+  {
+    id:          'ai',
+    label:       'AI Configuration',
+    description: 'Configure and test the system-wide AI provider and models.',
+    icon:        Cpu,
+    href:        '/admin/settings/ai',
+    iconBg:      'bg-purple-50',
+    iconColor:   'text-purple-600',
   },
 ]
 

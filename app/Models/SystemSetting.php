@@ -67,4 +67,52 @@ class SystemSetting extends Model
             Cache::forget("system_setting:smtp_{$field}");
         }
     }
+
+    // ── Admin AI helpers ──────────────────────────────────────────────────────
+
+    public static function getAdminAi(): array
+    {
+        $apiKey = static::getCached('admin_ai_api_key');
+        if (!empty($apiKey)) {
+            try {
+                $apiKey = decrypt($apiKey);
+            } catch (\Throwable) {
+                $apiKey = '';
+            }
+        }
+
+        return [
+            'provider'     => static::getCached('admin_ai_provider'),
+            'api_key'      => $apiKey,
+            'model'        => static::getCached('admin_ai_model'),
+            'base_url'     => static::getCached('admin_ai_base_url'),
+            'is_active'    => (bool) static::getCached('admin_ai_is_active', false),
+            'validated_at' => static::getCached('admin_ai_validated_at'),
+        ];
+    }
+
+    public static function saveAdminAi(array $data): void
+    {
+        $fields = ['provider', 'api_key', 'model', 'base_url', 'is_active', 'validated_at'];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                $val = $data[$field];
+                if ($field === 'is_active') {
+                    $val = $val ? '1' : '0';
+                }
+                if ($field === 'api_key' && !empty($val)) {
+                    $val = encrypt($val);
+                }
+                static::set("admin_ai_{$field}", $val);
+            }
+        }
+    }
+
+    public static function clearAdminAiCache(): void
+    {
+        $fields = ['provider', 'api_key', 'model', 'base_url', 'is_active', 'validated_at'];
+        foreach ($fields as $field) {
+            Cache::forget("system_setting:admin_ai_{$field}");
+        }
+    }
 }

@@ -4,6 +4,9 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
+use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,4 +35,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
+
+        // Render a styled Inertia page for common HTTP errors (403/404/419/429/503)
+        // instead of Laravel's bare-bones default error view. Only 403 passes the
+        // real exception message through — those are our own hand-written abort()
+        // strings (e.g. the module-gate message); 404/419/429/500/503 messages are
+        // framework/internal text (e.g. "No query results for model [...]") that
+        // isn't meant for end users, so the frontend falls back to a generic line.
+        $exceptions->respond(function (HttpResponse $response, Throwable $exception, Request $request) {
+            $status = $response->getStatusCode();
+
+            if ($request->is('api/*') || $request->expectsJson() || ! in_array($status, [403, 404, 419, 429, 500, 503], true)) {
+                return $response;
+            }
+
+            return Inertia::render('Error', [
+                'status'  => $status,
+                'message' => $status === 403 ? $exception->getMessage() : null,
+            ])->toResponse($request)->setStatusCode($status);
+        });
     })->create();

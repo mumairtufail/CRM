@@ -154,4 +154,27 @@ class AiService
         $setting = AiProviderSetting::where('is_active', true)->first();
         return $setting ? new self($setting) : null;
     }
+
+    /**
+     * Resolve the AiService for the platform administrator.
+     */
+    public static function forAdmin(): ?self
+    {
+        $config = \App\Models\SystemSetting::getAdminAi();
+
+        if (empty($config['api_key']) || empty($config['model']) || !$config['is_active']) {
+            return null;
+        }
+
+        // Build a temporary (unsaved) setting model to pass to the service
+        $setting = new AiProviderSetting([
+            'provider'  => $config['provider'],
+            'api_key'   => $config['api_key'],
+            'model'     => $config['model'],
+            'base_url'  => $config['base_url'],
+            'is_active' => true,
+        ]);
+
+        return new self($setting);
+    }
 }

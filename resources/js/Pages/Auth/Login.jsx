@@ -72,7 +72,7 @@ export default function Login({ status }) {
                   <label htmlFor="password" className="form-label">
                     Password
                   </label>
-                  {route.has('password.request') && (
+                  {route().has('password.request') && (
                     <Link href={route('password.request')} className="forgot-link">
                       Forgot password?
                     </Link>

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\WhatsappSettingsController as AdminWhatsappSettin
 use App\Http\Controllers\Admin\WhatsappTenantAccessController as AdminWhatsappTenantAccessController;
 use App\Http\Controllers\Admin\WhatsappUnassignedInboundController as AdminWhatsappUnassignedInboundController;
 use App\Http\Controllers\Admin\SupportCaseController as AdminSupportCaseController;
+use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Auth\AdminAuthenticatedSessionController;
 use App\Http\Controllers\SupportCaseController;
 use App\Http\Controllers\AiProviderController;
@@ -58,6 +59,10 @@ Route::get('/', function () {
     ]);
 })->name('home');
 
+// Public Blog routes (SEO optimized)
+Route::get('/blog',              [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
+Route::get('/blog/{slug}',       [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+
 // Public contact form submission (no auth required)
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
 
@@ -99,10 +104,26 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::patch('/plans/{plan}/toggle',          [AdminPlanController::class, 'toggleActive'])->name('plans.toggle');
     Route::delete('/plans/{plan}',                [AdminPlanController::class, 'destroy'])->name('plans.destroy');
 
+    // Blogs Management
+    Route::get('/blogs',                        [AdminBlogController::class, 'index'])->name('blogs.index');
+    Route::get('/blogs/create',                 [AdminBlogController::class, 'create'])->name('blogs.create');
+    Route::post('/blogs',                       [AdminBlogController::class, 'store'])->name('blogs.store');
+    Route::get('/blogs/{blog}/edit',            [AdminBlogController::class, 'edit'])->name('blogs.edit');
+    Route::post('/blogs/{blog}',                [AdminBlogController::class, 'update'])->name('blogs.update');
+    Route::patch('/blogs/{blog}/toggle',        [AdminBlogController::class, 'togglePublish'])->name('blogs.toggle');
+    Route::delete('/blogs/{blog}',              [AdminBlogController::class, 'destroy'])->name('blogs.destroy');
+
     Route::get('/settings',                      fn () => inertia('Admin/Settings'))->name('settings');
     Route::get('/settings/account',             [AdminAccountController::class, 'edit'])->name('settings.account');
     Route::patch('/settings/account',           [AdminAccountController::class, 'update'])->name('settings.account.update');
     Route::patch('/settings/account/password',  [AdminAccountController::class, 'updatePassword'])->name('settings.account.password');
+    Route::get('/settings/branding',            [AdminAccountController::class, 'editBranding'])->name('settings.branding');
+    Route::post('/settings/branding',           [AdminAccountController::class, 'updateBranding'])->name('settings.branding.update');
+    Route::post('/settings/branding/reset',     [AdminAccountController::class, 'resetBranding'])->name('settings.branding.reset');
+    Route::get('/settings/ai',                  [\App\Http\Controllers\Admin\AiSettingsController::class, 'edit'])->name('settings.ai');
+    Route::post('/settings/ai',                 [\App\Http\Controllers\Admin\AiSettingsController::class, 'update'])->name('settings.ai.update');
+    Route::post('/settings/ai/test',            [\App\Http\Controllers\Admin\AiSettingsController::class, 'test'])->name('settings.ai.test');
+    Route::delete('/settings/ai',               [\App\Http\Controllers\Admin\AiSettingsController::class, 'destroy'])->name('settings.ai.destroy');
 
     Route::get('/smtp-settings',                 [AdminSmtpSettingsController::class, 'edit'])->name('smtp.edit');
     Route::post('/smtp-settings',                [AdminSmtpSettingsController::class, 'update'])->name('smtp.update');
@@ -130,7 +151,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::patch('/support/{supportCase}/status', [AdminSupportCaseController::class, 'updateStatus'])->name('support.status');
 });
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     // Stop impersonating — available to the impersonated user (not super-admin gated).
     Route::post('/impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');

@@ -44,4 +44,35 @@ class AccountController extends Controller
 
         return back()->with('success', 'Password changed.');
     }
+
+    public function editBranding(Request $request): Response
+    {
+        return Inertia::render('Admin/Settings/Branding', [
+            'custom_logo_url' => \App\Models\SystemSetting::get('custom_logo_url'),
+        ]);
+    }
+
+    public function updateBranding(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'logo' => 'required|image|max:2048', // 2MB max
+        ]);
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('branding', 'public');
+            $url = '/storage/' . $path;
+            
+            \App\Models\SystemSetting::set('custom_logo_url', $url);
+            
+            return back()->with('success', 'Branding logo updated successfully.');
+        }
+
+        return back()->with('error', 'Failed to upload logo.');
+    }
+
+    public function resetBranding(Request $request): RedirectResponse
+    {
+        \App\Models\SystemSetting::set('custom_logo_url', null);
+        return back()->with('success', 'Branding reset to default logo.');
+    }
 }

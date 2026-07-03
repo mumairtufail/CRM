@@ -1,10 +1,27 @@
 import { cn } from '@/lib/utils'
+import { usePage } from '@inertiajs/react'
 
 /**
  * Inline SVG mark — identical to favicon.svg so it's always crisp at any size.
  * Using inline SVG avoids flickers and keeps the gradient self-contained.
  */
 export function LogoMark({ size = 32, className = '' }) {
+  const { props } = usePage()
+  const customLogoUrl = props.custom_logo_url
+
+  if (customLogoUrl) {
+    return (
+      <img
+        src={customLogoUrl}
+        width={size}
+        height={size}
+        className={cn('shrink-0 object-contain rounded-md', className)}
+        alt="Logo"
+        style={{ width: size, height: size }}
+      />
+    )
+  }
+
   return (
     <svg
       width={size}

@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            'custom_logo_url' => \App\Models\SystemSetting::getCached('custom_logo_url'),
             'auth' => [
                 'user'        => $webUser ?? $adminUser,
                 'guard'       => $isAdmin ? 'admin' : 'web',

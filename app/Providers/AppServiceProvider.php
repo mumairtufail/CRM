@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -57,6 +59,12 @@ class AppServiceProvider extends ServiceProvider
 
         $this->applySystemSmtpConfig();
         $this->registerWhatsappRateLimiter();
+
+        VerifyEmail::toMailUsing(function (object $notifiable, string $url) {
+            return (new MailMessage)
+                ->subject('Verify Email Address - LumeniaCRM')
+                ->view('emails.verify-email', ['url' => $url, 'user' => $notifiable]);
+        });
     }
 
     /**

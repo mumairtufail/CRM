@@ -73,14 +73,17 @@ class PlanController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'name'          => 'required|string|max:100',
-            'tagline'       => 'nullable|string|max:255',
-            'price_monthly' => 'nullable|numeric|min:0',
-            'price_yearly'  => 'nullable|numeric|min:0',
-            'is_featured'   => 'boolean',
-            'cta_text'      => 'nullable|string|max:100',
-            'modules'       => 'array',
-            'modules.*'     => [Rule::exists('modules', 'id')],
+            'name'                   => 'required|string|max:100',
+            'tagline'                => 'nullable|string|max:255',
+            'description'            => 'nullable|string',
+            'price_monthly'          => 'nullable|numeric|min:0',
+            'price_monthly_original' => 'nullable|numeric|min:0',
+            'price_yearly'           => 'nullable|numeric|min:0',
+            'price_yearly_original'  => 'nullable|numeric|min:0',
+            'is_featured'            => 'boolean',
+            'cta_text'               => 'nullable|string|max:100',
+            'modules'                => 'array',
+            'modules.*'              => [Rule::exists('modules', 'id')],
         ]);
     }
 
@@ -100,17 +103,20 @@ class PlanController extends Controller
     private function transform(Plan $plan): array
     {
         return [
-            'id'                => $plan->id,
-            'name'              => $plan->name,
-            'slug'              => $plan->slug,
-            'tagline'           => $plan->tagline,
-            'price_monthly'     => $plan->price_monthly,
-            'price_yearly'      => $plan->price_yearly,
-            'is_active'         => $plan->is_active,
-            'is_featured'       => $plan->is_featured,
-            'cta_text'          => $plan->cta_text,
-            'organizations_count' => $plan->organizations_count,
-            'modules'           => $plan->modules->map(fn ($m) => ['id' => $m->id, 'key' => $m->key, 'name' => $m->name]),
+            'id'                     => $plan->id,
+            'name'                   => $plan->name,
+            'slug'                   => $plan->slug,
+            'tagline'                => $plan->tagline,
+            'description'            => $plan->description,
+            'price_monthly'          => $plan->price_monthly,
+            'price_monthly_original' => $plan->price_monthly_original,
+            'price_yearly'           => $plan->price_yearly,
+            'price_yearly_original'  => $plan->price_yearly_original,
+            'is_active'              => $plan->is_active,
+            'is_featured'            => $plan->is_featured,
+            'cta_text'               => $plan->cta_text,
+            'organizations_count'    => $plan->organizations_count,
+            'modules'                => $plan->modules->map(fn ($m) => ['id' => $m->id, 'key' => $m->key, 'name' => $m->name]),
         ];
     }
 }

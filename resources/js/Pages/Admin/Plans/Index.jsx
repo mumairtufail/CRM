@@ -1,5 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import { Card } from '@/Components/ui/card'
@@ -11,13 +11,17 @@ import {
 import { Plus, Check, X, Pencil, Trash2, Users, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import RichEditor from '@/Components/Common/RichEditor'
 
 function emptyForm() {
   return {
     name: '',
     tagline: '',
+    description: '',
     price_monthly: '',
+    price_monthly_original: '',
     price_yearly: '',
+    price_yearly_original: '',
     is_featured: false,
     cta_text: '',
     modules: [],
@@ -25,17 +29,32 @@ function emptyForm() {
 }
 
 function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
-  const form = useForm(editing
-    ? {
-      name: editing.name,
-      tagline: editing.tagline || '',
-      price_monthly: editing.price_monthly ?? '',
-      price_yearly: editing.price_yearly ?? '',
-      is_featured: editing.is_featured,
-      cta_text: editing.cta_text || '',
-      modules: editing.modules.map(m => m.id),
+  const form = useForm(emptyForm())
+
+  // Reset/Set form fields whenever editing target changes or modal opens/closes
+  useEffect(() => {
+    if (!open) {
+      form.reset()
+      return
     }
-    : emptyForm())
+    if (editing) {
+      form.setData({
+        name: editing.name,
+        tagline: editing.tagline || '',
+        description: editing.description || '',
+        price_monthly: editing.price_monthly ?? '',
+        price_monthly_original: editing.price_monthly_original ?? '',
+        price_yearly: editing.price_yearly ?? '',
+        price_yearly_original: editing.price_yearly_original ?? '',
+        is_featured: editing.is_featured,
+        cta_text: editing.cta_text || '',
+        modules: editing.modules.map(m => m.id),
+      })
+    } else {
+      form.setData(emptyForm())
+    }
+    form.clearErrors()
+  }, [editing, open])
 
   const toggleModule = (id) => {
     const has = form.data.modules.includes(id)
@@ -62,7 +81,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
           <DialogTitle>{editing ? `Edit ${editing.name}` : 'New Plan'}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-[68vh] overflow-y-auto pr-1">
           <div>
             <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Plan name</label>
             <input
@@ -84,22 +103,57 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Description (HTML / Features)</label>
+            <RichEditor
+              value={form.data.description}
+              onChange={val => form.setData('description', val)}
+              placeholder="Enter plan details or list of features..."
+              minHeight={120}
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Price / month</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Original Price / mo</label>
               <input
                 type="number" min="0" step="0.01"
-                value={form.data.price_monthly}
-                onChange={e => form.setData('price_monthly', e.target.value)}
+                value={form.data.price_monthly_original}
+                onChange={e => form.setData('price_monthly_original', e.target.value)}
+                placeholder="e.g. 49"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Price / year</label>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Discount Price / mo</label>
+              <input
+                type="number" min="0" step="0.01"
+                value={form.data.price_monthly}
+                onChange={e => form.setData('price_monthly', e.target.value)}
+                placeholder="e.g. 29"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Original Price / yr</label>
+              <input
+                type="number" min="0" step="0.01"
+                value={form.data.price_yearly_original}
+                onChange={e => form.setData('price_yearly_original', e.target.value)}
+                placeholder="e.g. 490"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Discount Price / yr</label>
               <input
                 type="number" min="0" step="0.01"
                 value={form.data.price_yearly}
                 onChange={e => form.setData('price_yearly', e.target.value)}
+                placeholder="e.g. 290"
                 className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
               />
             </div>
@@ -200,6 +254,9 @@ function PlanCard({ plan, modules, onEdit, onDelete }) {
       <p className="text-sm text-slate-500 mb-4 min-h-[36px]">{plan.tagline}</p>
 
       <div className="mb-4">
+        {plan.price_monthly_original && (
+          <span className="text-sm line-through text-slate-400 mr-1.5">${Number(plan.price_monthly_original).toFixed(0)}</span>
+        )}
         <span className="text-3xl font-black text-slate-900">${Number(plan.price_monthly ?? 0).toFixed(0)}</span>
         <span className="text-sm text-slate-400 font-medium">/mo</span>
       </div>

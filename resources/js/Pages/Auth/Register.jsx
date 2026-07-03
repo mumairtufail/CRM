@@ -1,8 +1,9 @@
 import { useForm, Head, Link } from '@inertiajs/react'
 import { Input } from '@/Components/ui/input'
-import { Eye, EyeOff, Check } from 'lucide-react'
+import { Eye, EyeOff, Check, Building, Globe, User, Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import Logo from '@/Components/Common/Logo'
+import { motion, AnimatePresence } from 'framer-motion'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -40,6 +41,7 @@ function Asterisk() {
 export default function Register({ appDomain }) {
   const [showPass, setShowPass] = useState(false)
   const [touched, setTouched] = useState({})
+  const [step, setStep] = useState(1)
 
   const { data, setData, post, processing, errors, reset } = useForm({
     workspace: '',
@@ -61,12 +63,42 @@ export default function Register({ appDomain }) {
     setTouched(t => (t[field] ? t : { ...t, [field]: true }))
   }, [])
 
+  const handleNextStep = (e) => {
+    e.preventDefault()
+    
+    // Validate Step 1 fields
+    const workspaceErr = validateField('workspace', data)
+    const slugErr = validateField('slug', data)
+    
+    setTouched(t => ({ ...t, workspace: true, slug: true }))
+    
+    if (workspaceErr || slugErr) {
+      if (workspaceErr) document.getElementById('workspace')?.focus()
+      else document.getElementById('slug')?.focus()
+      return
+    }
+    
+    setStep(2)
+  }
+
+  const handlePrevStep = (e) => {
+    e.preventDefault()
+    setStep(1)
+  }
+
   const submit = (e) => {
     e.preventDefault()
 
     // Run full client validation before hitting the server.
-    const firstInvalid = FIELDS.find(f => validateField(f, data))
-    setTouched(Object.fromEntries(FIELDS.map(f => [f, true])))
+    const step2Fields = ['name', 'email', 'password', 'password_confirmation']
+    const firstInvalid = step2Fields.find(f => validateField(f, data))
+    
+    setTouched(t => {
+      const nextTouched = { ...t }
+      step2Fields.forEach(f => { nextTouched[f] = true })
+      return nextTouched
+    })
+    
     if (firstInvalid) {
       document.getElementById(firstInvalid)?.focus()
       return
@@ -75,13 +107,6 @@ export default function Register({ appDomain }) {
     post(route('register'), { onFinish: () => reset('password', 'password_confirmation') })
   }
 
-  const labelStyle = {
-    display: 'block', fontSize: 12.5, fontWeight: 600,
-    color: '#374151', marginBottom: 6, letterSpacing: '-0.1px',
-  }
-  const errStyle = { color: '#ef4444', fontSize: 11.5, marginTop: 5 }
-  const baseInput = 'h-11 text-[13.5px] bg-white border-slate-200'
-  const inputStyle = (field) => errorFor(field) ? { borderColor: '#f87171' } : {}
   const pwOk = data.password.length >= 8
   const pwMatch = data.password_confirmation && data.password_confirmation === data.password
 
@@ -91,219 +116,587 @@ export default function Register({ appDomain }) {
 
       <div className="login-root">
         <div className="login-card">
+          <div className="card-content">
+            {/* Brand */}
+            <div className="login-brand">
+              <Logo size={28} showText={true} text="LumeniaCRM" textColor="text-slate-900" textClassName="text-[17px] font-bold" />
+            </div>
 
-          {/* Brand */}
-          <div className="login-brand">
-            <Logo size={40} showText={false} />
-            <span className="login-brand-name">CRM</span>
+            <div className="login-header">
+              <h1 className="login-title">Create workspace</h1>
+              <p className="login-subtitle">Set up your sales dashboard in seconds</p>
+            </div>
+
+            {/* Step Progress bar */}
+            <div className="progress-container">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: step === 1 ? '50%' : '100%' }}
+                />
+              </div>
+              <div className="progress-steps">
+                <span className={`progress-step-text ${step === 1 ? 'active' : ''}`}>1. Company</span>
+                <span className={`progress-step-text ${step === 2 ? 'active' : ''}`}>2. Account</span>
+              </div>
+            </div>
+
+            {/* noValidate disables the browser's native validation bubbles in favor of our inline messages */}
+            <form onSubmit={step === 1 ? handleNextStep : submit} noValidate>
+              <AnimatePresence mode="wait">
+                {step === 1 ? (
+                  <motion.div
+                    key="step1"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="step-section"
+                  >
+                    <div className="form-grid">
+                      {/* Workspace name */}
+                      <div className="form-group">
+                        <label htmlFor="workspace" className="form-label">Workspace name<Asterisk /></label>
+                        <div className="input-wrapper">
+                          <div className="input-icon">
+                            <Building size={16} />
+                          </div>
+                          <Input
+                            id="workspace"
+                            autoFocus
+                            value={data.workspace}
+                            onChange={e => setData('workspace', e.target.value)}
+                            onBlur={() => markTouched('workspace')}
+                            placeholder="Acme Inc."
+                            aria-invalid={!!errorFor('workspace')}
+                            className="login-input"
+                            style={errorFor('workspace') ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}}
+                          />
+                        </div>
+                        {errorFor('workspace') && <p className="error-text">{errorFor('workspace')}</p>}
+                      </div>
+
+                      {/* Workspace URL (slug, optional) */}
+                      <div className="form-group">
+                        <label htmlFor="slug" className="form-label">
+                          Workspace URL <span className="label-optional">(optional)</span>
+                        </label>
+                        <div className="input-wrapper">
+                          <div className="input-icon">
+                            <Globe size={16} />
+                          </div>
+                          <Input
+                            id="slug"
+                            value={data.slug}
+                            onChange={e => setData('slug', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
+                            onBlur={() => markTouched('slug')}
+                            placeholder="acme"
+                            aria-invalid={!!errorFor('slug')}
+                            className={`login-input ${appDomain ? 'pr-24' : ''}`}
+                            style={errorFor('slug') ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}}
+                          />
+                          {appDomain && (
+                            <span className="domain-suffix">
+                              .{appDomain}
+                            </span>
+                          )}
+                        </div>
+                        {errorFor('slug') ? (
+                          <p className="error-text">{errorFor('slug')}</p>
+                        ) : (
+                          <p className="input-hint">
+                            Used in public link. Leaves blank to auto-generate.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Continue Button */}
+                    <button
+                      type="submit"
+                      className="submit-btn"
+                      style={{ marginTop: 12 }}
+                    >
+                      Continue
+                      <ArrowRight size={16} />
+                    </button>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="step2"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.15 }}
+                    className="step-section"
+                  >
+                    <div className="form-grid">
+                      {/* Your name */}
+                      <div className="form-group">
+                        <label htmlFor="name" className="form-label">Your name<Asterisk /></label>
+                        <div className="input-wrapper">
+                          <div className="input-icon">
+                            <User size={16} />
+                          </div>
+                          <Input
+                            id="name"
+                            autoComplete="name"
+                            autoFocus
+                            value={data.name}
+                            onChange={e => setData('name', e.target.value)}
+                            onBlur={() => markTouched('name')}
+                            placeholder="Jane Doe"
+                            aria-invalid={!!errorFor('name')}
+                            className="login-input"
+                            style={errorFor('name') ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}}
+                          />
+                        </div>
+                        {errorFor('name') && <p className="error-text">{errorFor('name')}</p>}
+                      </div>
+
+                      {/* Email */}
+                      <div className="form-group">
+                        <label htmlFor="email" className="form-label">Email address<Asterisk /></label>
+                        <div className="input-wrapper">
+                          <div className="input-icon">
+                            <Mail size={16} />
+                          </div>
+                          <Input
+                            id="email"
+                            type="email"
+                            autoComplete="username"
+                            value={data.email}
+                            onChange={e => setData('email', e.target.value)}
+                            onBlur={() => markTouched('email')}
+                            placeholder="you@company.com"
+                            aria-invalid={!!errorFor('email')}
+                            className="login-input"
+                            style={errorFor('email') ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}}
+                          />
+                        </div>
+                        {errorFor('email') && <p className="error-text">{errorFor('email')}</p>}
+                      </div>
+                    </div>
+
+                    <div className="form-grid">
+                      {/* Password */}
+                      <div className="form-group">
+                        <label htmlFor="password" className="form-label">Password<Asterisk /></label>
+                        <div className="input-wrapper">
+                          <div className="input-icon">
+                            <Lock size={16} />
+                          </div>
+                          <Input
+                            id="password"
+                            type={showPass ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            value={data.password}
+                            onChange={e => setData('password', e.target.value)}
+                            onBlur={() => markTouched('password')}
+                            placeholder="••••••••"
+                            aria-invalid={!!errorFor('password')}
+                            className="login-input pr-10"
+                            style={errorFor('password') ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}}
+                          />
+                          <button
+                            type="button"
+                            tabIndex={-1}
+                            onClick={() => setShowPass(v => !v)}
+                            className="password-toggle"
+                          >
+                            {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                        {errorFor('password') ? (
+                          <p className="error-text">{errorFor('password')}</p>
+                        ) : (
+                          <p className="input-hint" style={{ color: pwOk ? '#10b981' : '#94a3b8', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            {pwOk && <Check size={12} />} At least 8 characters
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Confirm password */}
+                      <div className="form-group">
+                        <label htmlFor="password_confirmation" className="form-label">Confirm password<Asterisk /></label>
+                        <div className="input-wrapper">
+                          <div className="input-icon">
+                            <Lock size={16} />
+                          </div>
+                          <Input
+                            id="password_confirmation"
+                            type={showPass ? 'text' : 'password'}
+                            autoComplete="new-password"
+                            value={data.password_confirmation}
+                            onChange={e => setData('password_confirmation', e.target.value)}
+                            onBlur={() => markTouched('password_confirmation')}
+                            placeholder="••••••••"
+                            aria-invalid={!!errorFor('password_confirmation')}
+                            className="login-input pr-10"
+                            style={errorFor('password_confirmation') ? { borderColor: '#ef4444', boxShadow: '0 0 0 1px #ef4444' } : {}}
+                          />
+                          {pwMatch && (
+                            <Check size={16} className="text-emerald-500" style={{
+                              position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                            }} />
+                          )}
+                        </div>
+                        {errorFor('password_confirmation') && <p className="error-text">{errorFor('password_confirmation')}</p>}
+                      </div>
+                    </div>
+
+                    {/* Actions row */}
+                    <div className="actions-row">
+                      <button
+                        type="button"
+                        onClick={handlePrevStep}
+                        className="back-btn"
+                      >
+                        <ArrowLeft size={16} />
+                        Back
+                      </button>
+                      
+                      <button
+                        type="submit"
+                        disabled={processing}
+                        className="submit-btn flex-1"
+                      >
+                        {processing ? (
+                          <>
+                            <span className="btn-spinner" />
+                            Creating…
+                          </>
+                        ) : (
+                          <>
+                            Register
+                            <Check size={16} />
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+
+            <div className="card-footer">
+              <p>
+                Already have an account?{' '}
+                <Link href={route('login')} className="signup-link">Sign in</Link>
+              </p>
+            </div>
           </div>
-
-          <h1 className="login-title">Create your workspace</h1>
-          <p className="login-subtitle">Start your team's CRM in seconds</p>
-
-          {/* noValidate disables the browser's native validation bubbles in favor of our inline messages */}
-          <form onSubmit={submit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-
-            {/* Workspace name */}
-            <div>
-              <label htmlFor="workspace" style={labelStyle}>Workspace name<Asterisk /></label>
-              <Input
-                id="workspace"
-                autoFocus
-                value={data.workspace}
-                onChange={e => setData('workspace', e.target.value)}
-                onBlur={() => markTouched('workspace')}
-                placeholder="Acme Inc."
-                aria-invalid={!!errorFor('workspace')}
-                className={baseInput}
-                style={inputStyle('workspace')}
-              />
-              {errorFor('workspace') && <p style={errStyle}>{errorFor('workspace')}</p>}
-            </div>
-
-            {/* Workspace URL (slug, optional) */}
-            <div>
-              <label htmlFor="slug" style={labelStyle}>
-                Workspace URL <span style={{ color: '#cbd5e1', fontWeight: 500 }}>(optional)</span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Input
-                  id="slug"
-                  value={data.slug}
-                  onChange={e => setData('slug', e.target.value.toLowerCase().replace(/\s+/g, '-'))}
-                  onBlur={() => markTouched('slug')}
-                  placeholder="acme"
-                  aria-invalid={!!errorFor('slug')}
-                  className={`${baseInput} ${appDomain ? 'pr-24' : ''}`}
-                  style={inputStyle('slug')}
-                />
-                {appDomain && (
-                  <span style={{
-                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                    color: '#94a3b8', fontSize: 12.5, pointerEvents: 'none',
-                  }}>
-                    .{appDomain}
-                  </span>
-                )}
-              </div>
-              {errorFor('slug')
-                ? <p style={errStyle}>{errorFor('slug')}</p>
-                : <p style={{ color: '#94a3b8', fontSize: 11, marginTop: 5 }}>
-                    A unique ID for your workspace (used in your public lead-form link). Leave blank to auto-generate.
-                  </p>}
-            </div>
-
-            {/* Your name */}
-            <div>
-              <label htmlFor="name" style={labelStyle}>Your name<Asterisk /></label>
-              <Input
-                id="name"
-                autoComplete="name"
-                value={data.name}
-                onChange={e => setData('name', e.target.value)}
-                onBlur={() => markTouched('name')}
-                placeholder="Jane Doe"
-                aria-invalid={!!errorFor('name')}
-                className={baseInput}
-                style={inputStyle('name')}
-              />
-              {errorFor('name') && <p style={errStyle}>{errorFor('name')}</p>}
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" style={labelStyle}>Email address<Asterisk /></label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="username"
-                value={data.email}
-                onChange={e => setData('email', e.target.value)}
-                onBlur={() => markTouched('email')}
-                placeholder="you@company.com"
-                aria-invalid={!!errorFor('email')}
-                className={baseInput}
-                style={inputStyle('email')}
-              />
-              {errorFor('email') && <p style={errStyle}>{errorFor('email')}</p>}
-            </div>
-
-            {/* Password */}
-            <div>
-              <label htmlFor="password" style={labelStyle}>Password<Asterisk /></label>
-              <div style={{ position: 'relative' }}>
-                <Input
-                  id="password"
-                  type={showPass ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={data.password}
-                  onChange={e => setData('password', e.target.value)}
-                  onBlur={() => markTouched('password')}
-                  placeholder="••••••••"
-                  aria-invalid={!!errorFor('password')}
-                  className={`${baseInput} pr-10`}
-                  style={inputStyle('password')}
-                />
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  onClick={() => setShowPass(v => !v)}
-                  style={{
-                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                    color: '#94a3b8', background: 'none', border: 'none',
-                    cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center',
-                  }}
-                >
-                  {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
-                </button>
-              </div>
-              {errorFor('password')
-                ? <p style={errStyle}>{errorFor('password')}</p>
-                : <p style={{
-                    fontSize: 11, marginTop: 5, display: 'flex', alignItems: 'center', gap: 4,
-                    color: pwOk ? '#10b981' : '#94a3b8',
-                  }}>
-                    {pwOk && <Check size={12} />} At least 8 characters
-                  </p>}
-            </div>
-
-            {/* Confirm password */}
-            <div>
-              <label htmlFor="password_confirmation" style={labelStyle}>Confirm password<Asterisk /></label>
-              <div style={{ position: 'relative' }}>
-                <Input
-                  id="password_confirmation"
-                  type={showPass ? 'text' : 'password'}
-                  autoComplete="new-password"
-                  value={data.password_confirmation}
-                  onChange={e => setData('password_confirmation', e.target.value)}
-                  onBlur={() => markTouched('password_confirmation')}
-                  placeholder="••••••••"
-                  aria-invalid={!!errorFor('password_confirmation')}
-                  className={`${baseInput} pr-10`}
-                  style={inputStyle('password_confirmation')}
-                />
-                {pwMatch && (
-                  <Check size={15} className="text-emerald-500" style={{
-                    position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  }} />
-                )}
-              </div>
-              {errorFor('password_confirmation') && <p style={errStyle}>{errorFor('password_confirmation')}</p>}
-            </div>
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={processing}
-              className="login-btn"
-              style={{
-                marginTop: 6,
-                background: processing ? 'rgba(15,23,42,0.45)' : '#0f172a',
-                cursor: processing ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {processing ? (<><span className="login-spinner" />Creating workspace…</>) : 'Create workspace'}
-            </button>
-          </form>
-
-          <p style={{ textAlign: 'center', fontSize: 13, color: '#94a3b8', marginTop: 22 }}>
-            Already have an account?{' '}
-            <Link href={route('login')} style={{ color: '#0f172a', fontWeight: 600 }}>Sign in</Link>
-          </p>
         </div>
       </div>
 
       <style>{`
         .login-root {
-          display: flex; align-items: center; justify-content: center;
-          min-height: 100vh; padding: 24px; background: #F4F2FF;
-          font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 24px;
+          background: #F4F2FF;
+          position: relative;
+          overflow: hidden;
+          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
+
+        /* Glassmorphic card styling - Light Mode */
         .login-card {
-          width: 100%; max-width: 420px; background: #ffffff;
-          border: 1px solid rgba(0,0,0,0.06); border-radius: 18px;
-          padding: 40px 36px;
-          box-shadow: 0 20px 60px rgba(79,70,229,0.10), 0 2px 8px rgba(0,0,0,0.04);
+          width: 100%;
+          max-width: 540px; /* Wider card to fit two columns comfortably */
+          background: rgba(255, 255, 255, 0.88);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1px solid rgba(255, 255, 255, 0.6);
+          border-radius: 20px;
+          padding: 40px;
+          box-shadow: 
+            0 20px 40px -15px rgba(124, 58, 237, 0.08),
+            0 2px 10px rgba(0, 0, 0, 0.02);
+          position: relative;
+          z-index: 10;
+          overflow: hidden;
+          transition: max-width 0.3s ease;
         }
-        .login-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
-        .login-brand-name { font-size: 17px; font-weight: 800; letter-spacing: -0.4px; color: #0f172a; }
-        .login-title { font-size: 24px; font-weight: 700; letter-spacing: -0.8px; color: #0f172a; margin-bottom: 5px; }
-        .login-subtitle { font-size: 13.5px; color: #94a3b8; margin-bottom: 30px; }
-        .login-btn {
-          height: 44px; border-radius: 9px; border: none; color: white;
-          font-weight: 600; font-size: 14px; letter-spacing: -0.2px;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-          transition: background 0.15s ease, opacity 0.15s ease;
+
+        .login-brand {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin-bottom: 24px;
         }
-        .login-btn:not(:disabled):hover { background: #1e293b !important; }
-        .login-spinner {
-          width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.25);
-          border-top-color: white; border-radius: 50%;
-          animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0;
+
+        .login-header {
+          margin-bottom: 24px;
+        }
+        .login-title {
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.6px;
+          color: #0f172a;
+          margin-bottom: 5px;
+          line-height: 1.2;
+        }
+        .login-subtitle {
+          font-size: 13.5px;
+          color: #64748b;
+          font-weight: 400;
+        }
+
+        /* Progress Steps Indicator */
+        .progress-container {
+          margin-bottom: 24px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .progress-bar {
+          height: 4px;
+          width: 100%;
+          background: rgba(0, 0, 0, 0.05);
+          border-radius: 2px;
+          overflow: hidden;
+        }
+        .progress-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #7c3aed 0%, #4f46e5 100%);
+          transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .progress-steps {
+          display: flex;
+          justify-content: space-between;
+        }
+        .progress-step-text {
+          font-size: 11px;
+          font-weight: 600;
+          color: #94a3b8;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          transition: color 0.3s ease;
+        }
+        .progress-step-text.active {
+          color: #7c3aed;
+        }
+
+        .step-section {
+          display: flex;
+          flex-direction: column;
+          gap: 18px;
+        }
+
+        /* Form Grid (Two Columns) */
+        .form-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 16px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+          min-width: 0; /* Prevents flex/grid blowouts */
+        }
+
+        .form-label {
+          font-size: 12.5px;
+          font-weight: 600;
+          color: #374151;
+          letter-spacing: -0.1px;
+        }
+        .label-optional {
+          color: #94a3b8;
+          font-weight: 400;
+          font-size: 11.5px;
+        }
+
+        /* Input styling */
+        .input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+        .input-icon {
+          position: absolute;
+          left: 14px;
+          color: #94a3b8;
+          display: flex;
+          align-items: center;
+          pointer-events: none;
+          transition: color 0.2s ease;
+        }
+        .login-input {
+          height: 44px !important;
+          padding-left: 42px !important;
+          font-size: 13.5px !important;
+          color: #0f172a !important;
+          background: #ffffff !important;
+          border: 1px solid #e2e8f0 !important;
+          border-radius: 10px !important;
+          transition: all 0.2s ease !important;
+          width: 100% !important;
+        }
+        .login-input::placeholder {
+          color: #cbd5e1;
+        }
+        .login-input:hover {
+          border-color: #cbd5e1 !important;
+        }
+        .login-input:focus {
+          border-color: #7c3aed !important;
+          background: #ffffff !important;
+          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
+        }
+        .input-wrapper:focus-within .input-icon {
+          color: #7c3aed;
+        }
+
+        .domain-suffix {
+          position: absolute;
+          right: 14px;
+          color: #64748b;
+          font-size: 13.5px;
+          pointer-events: none;
+          font-weight: 500;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 14px;
+          color: #94a3b8;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          transition: color 0.15s ease;
+        }
+        .password-toggle:hover {
+          color: #475569;
+        }
+
+        .error-text {
+          color: #ef4444;
+          font-size: 11.5px;
+          margin-top: 4px;
+          font-weight: 500;
+        }
+
+        .input-hint {
+          color: #64748b;
+          font-size: 11px;
+          margin-top: 4px;
+          line-height: 1.4;
+        }
+
+        .actions-row {
+          display: flex;
+          gap: 12px;
+          margin-top: 10px;
+        }
+
+        .back-btn {
+          height: 44px;
+          padding: 0 18px;
+          border-radius: 10px;
+          border: 1px solid #e2e8f0;
+          background: #ffffff;
+          color: #475569;
+          font-weight: 600;
+          font-size: 13.5px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .back-btn:hover {
+          background: #f8fafc;
+          color: #0f172a;
+          border-color: #cbd5e1;
+        }
+
+        /* Gradient submit button */
+        .submit-btn {
+          height: 44px;
+          border-radius: 10px;
+          border: none;
+          color: #ffffff;
+          font-weight: 600;
+          font-size: 14px;
+          letter-spacing: -0.2px;
+          background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          cursor: pointer;
+          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.18);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .submit-btn:not(:disabled):hover {
+          background: linear-gradient(135deg, #8b5cf6 0%, #5b52f9 100%);
+          box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);
+          transform: translateY(-1px);
+        }
+        .submit-btn:not(:disabled):active {
+          transform: translateY(1px);
+        }
+        .submit-btn:disabled {
+          background: #e2e8f0;
+          color: #94a3b8;
+          cursor: not-allowed;
+          box-shadow: none;
+        }
+
+        .btn-spinner {
+          width: 14px;
+          height: 14px;
+          border: 2px solid rgba(255, 255, 255, 0.25);
+          border-top-color: #ffffff;
+          border-radius: 50%;
+          animation: spin 0.7s linear infinite;
+          display: inline-block;
+          flex-shrink: 0;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 480px) { .login-card { padding: 32px 24px; } }
+
+        .card-footer {
+          margin-top: 24px;
+          text-align: center;
+          font-size: 13px;
+          color: #64748b;
+          border-top: 1px solid #f1f5f9;
+          padding-top: 18px;
+        }
+        .signup-link {
+          color: #7c3aed;
+          font-weight: 600;
+          text-decoration: none;
+          transition: color 0.15s ease;
+        }
+        .signup-link:hover {
+          color: #6d28d9;
+        }
+
+        @media (max-width: 600px) {
+          .login-card {
+            padding: 32px 20px;
+            border-radius: 16px;
+            max-width: 100%;
+          }
+          .form-grid {
+            grid-template-columns: 1fr;
+            gap: 14px;
+          }
+          .login-title {
+            font-size: 21px;
+          }
+        }
       `}</style>
     </>
   )

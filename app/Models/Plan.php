@@ -12,15 +12,17 @@ use Illuminate\Support\Facades\Cache;
 class Plan extends Model
 {
     protected $fillable = [
-        'name', 'slug', 'tagline', 'price_monthly', 'price_yearly',
+        'name', 'slug', 'tagline', 'description', 'price_monthly', 'price_monthly_original', 'price_yearly', 'price_yearly_original',
         'is_active', 'is_featured', 'sort_order', 'cta_text',
     ];
 
     protected $casts = [
-        'is_active'     => 'boolean',
-        'is_featured'   => 'boolean',
-        'price_monthly' => 'decimal:2',
-        'price_yearly'  => 'decimal:2',
+        'is_active'              => 'boolean',
+        'is_featured'            => 'boolean',
+        'price_monthly'          => 'decimal:2',
+        'price_monthly_original' => 'decimal:2',
+        'price_yearly'           => 'decimal:2',
+        'price_yearly_original'  => 'decimal:2',
     ];
 
     public function modules(): BelongsToMany

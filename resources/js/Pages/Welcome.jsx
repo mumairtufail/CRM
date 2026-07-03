@@ -1340,22 +1340,34 @@ export default function Welcome({ appUrl, plans = [] }) {
                                     <h3 className="text-white font-bold text-xl mb-1.5">{plan.name}</h3>
                                     <p className="text-white/40 text-sm mb-6 min-h-[40px]">{plan.tagline}</p>
 
-                                    <div className="mb-6">
+                                    <div className="mb-6 flex items-baseline gap-2">
+                                        {plan.price_monthly_original && (
+                                            <span className="text-lg line-through text-white/30">${Number(plan.price_monthly_original).toFixed(0)}</span>
+                                        )}
                                         <span className="text-4xl font-black text-white">${Number(plan.price_monthly ?? 0).toFixed(0)}</span>
                                         <span className="text-white/35 text-sm font-medium">/mo</span>
                                     </div>
 
                                     <div className="flex-1 space-y-3 mb-8">
-                                        <div className="flex items-start gap-2.5 text-white/70 text-sm">
-                                            <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-                                            Core CRM — leads, pipeline, invoicing, reports, team
-                                        </div>
-                                        {plan.modules.map((m) => (
-                                            <div key={m.id} className="flex items-start gap-2.5 text-white/70 text-sm">
-                                                <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-                                                {m.name}
-                                            </div>
-                                        ))}
+                                        {plan.description ? (
+                                            <div 
+                                                className="plan-rich-description text-white/70 text-sm space-y-2"
+                                                dangerouslySetInnerHTML={{ __html: plan.description }}
+                                            />
+                                        ) : (
+                                            <>
+                                                <div className="flex items-start gap-2.5 text-white/70 text-sm">
+                                                    <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                                    Core CRM — leads, pipeline, invoicing, reports, team
+                                                </div>
+                                                {plan.modules.map((m) => (
+                                                    <div key={m.id} className="flex items-start gap-2.5 text-white/70 text-sm">
+                                                        <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                                        {m.name}
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
                                     </div>
 
                                     <Link href="/register"
@@ -1751,6 +1763,22 @@ export default function Welcome({ appUrl, plans = [] }) {
                     </div>
                 </div>
             </footer>
+
+            <style>{`
+                .plan-rich-description ul {
+                    list-style-type: disc !important;
+                    padding-left: 1.25rem !important;
+                    margin-top: 0.5rem !important;
+                    margin-bottom: 0.5rem !important;
+                }
+                .plan-rich-description li {
+                    margin-bottom: 0.25rem !important;
+                    list-style-type: disc !important;
+                }
+                .plan-rich-description p {
+                    margin-bottom: 0.5rem !important;
+                }
+            `}</style>
         </div>
     );
 }

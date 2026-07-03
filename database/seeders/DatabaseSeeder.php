@@ -35,7 +35,9 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Demo organization + owner — on the Basic plan, same default a real signup gets.
-        $basicPlan = Plan::where('slug', 'basic')->first();
+        $basicPlan = Plan::where('slug', 'basic')->first()
+            ?? Plan::where('is_active', true)->orderBy('sort_order')->first()
+            ?? Plan::first();
 
         $organization = Organization::create([
             'name'             => 'Demo Workspace',

@@ -59,7 +59,9 @@ class RegisteredUserController extends Controller
         $slug = $validated['slug'] ?: $this->uniqueSlug($validated['workspace']);
 
         $user = DB::transaction(function () use ($validated, $slug) {
-            $basicPlan = Plan::where('slug', 'basic')->first();
+            $basicPlan = Plan::where('slug', 'basic')->first()
+                ?? Plan::where('is_active', true)->orderBy('sort_order')->first()
+                ?? Plan::first();
 
             $organization = Organization::create([
                 'name'             => $validated['workspace'],

@@ -6,7 +6,6 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
-use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(

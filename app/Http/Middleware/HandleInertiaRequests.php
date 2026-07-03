@@ -49,6 +49,11 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'custom_logo_url' => \App\Models\SystemSetting::getCached('custom_logo_url'),
+            'seo' => [
+                'meta_title'       => \App\Models\SystemSetting::getCached('seo_meta_title', 'LumeniaCRM - Turn Leads into Revenue'),
+                'meta_description' => \App\Models\SystemSetting::getCached('seo_meta_description', 'Manage leads, campaigns, and pipelines in one unified platform.'),
+                'meta_keywords'    => \App\Models\SystemSetting::getCached('seo_meta_keywords', 'crm, leadflow, lead tracking, prospecting'),
+            ],
             'auth' => [
                 'user'        => $webUser ?? $adminUser,
                 'guard'       => $isAdmin ? 'admin' : 'web',

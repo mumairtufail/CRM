@@ -115,4 +115,34 @@ class SystemSetting extends Model
             Cache::forget("system_setting:admin_ai_{$field}");
         }
     }
+
+    // ── SEO helpers ───────────────────────────────────────────────────────────
+
+    public static function getSeo(): array
+    {
+        return [
+            'meta_title'       => static::getCached('seo_meta_title'),
+            'meta_description' => static::getCached('seo_meta_description'),
+            'meta_keywords'    => static::getCached('seo_meta_keywords'),
+            'robots_txt'       => static::getCached('seo_robots_txt', "User-agent: *\nDisallow:"),
+        ];
+    }
+
+    public static function saveSeo(array $data): void
+    {
+        $fields = ['meta_title', 'meta_description', 'meta_keywords', 'robots_txt'];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                static::set("seo_{$field}", $data[$field]);
+            }
+        }
+    }
+
+    public static function clearSeoCache(): void
+    {
+        $fields = ['meta_title', 'meta_description', 'meta_keywords', 'robots_txt'];
+        foreach ($fields as $field) {
+            Cache::forget("system_setting:seo_{$field}");
+        }
+    }
 }

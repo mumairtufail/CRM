@@ -177,4 +177,62 @@ class BlogController extends Controller
 
         return back()->with('success', 'Blog post deleted successfully.');
     }
+
+    public function generateSeoSuggest(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'body'  => 'required|string',
+        ]);
+
+        $service = \App\Services\AiService::forAdmin();
+
+        if (!$service) {
+            return response()->json([
+                'message' => 'Admin AI configuration is not set or inactive. Please configure an active AI provider in Admin Settings first.'
+            ], 422);
+        }
+
+        $systemPrompt = "You are a professional SEO expert and blog copywriter. Analyze the post title and content, and provide optimized SEO metadata in strict JSON format. Do not wrap the JSON in markdown blocks (e.g. ```json), do not write any greetings or explanations. Respond with ONLY the raw JSON.";
+        
+        $bodyExcerpt = mb_substr(strip_tags($request->body), 0, 1200);
+        $userPrompt = <<<PROMPT
+Please generate an optimized SEO Title, Meta Description, and a list of tags for the following blog post:
+
+Title: {$request->title}
+Content: {$bodyExcerpt}
+
+Expected JSON response format:
+{
+  "title": "Optimized title (under 60 characters)",
+  "description": "Engaging search description (under 155 characters)",
+  "tags": ["tag1", "tag2", "tag3"]
+}
+PROMPT;
+
+        $reply = $service->chat($systemPrompt, $userPrompt, 400);
+
+        if (!$reply) {
+            return response()->json([
+                'message' => 'AI Provider failed to respond. Please check your AI API key and connection settings.'
+            ], 500);
+        }
+
+        $jsonText = trim($reply);
+        // Clean markdown code blocks if the LLM wrapped it anyway
+        if (preg_match('/^```(?:json)?(.*)```$/s', $jsonText, $matches)) {
+            $jsonText = trim($matches[1]);
+        }
+
+        $data = json_decode($jsonText, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            \Illuminate\Support\Facades\Log::warning('LLM SEO suggestion returned invalid JSON', ['response' => $reply]);
+            return response()->json([
+                'message' => 'AI returned an invalid JSON response structure. Please try again.'
+            ], 422);
+        }
+
+        return response()->json($data);
+    }
 }

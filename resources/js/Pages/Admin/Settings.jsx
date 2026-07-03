@@ -1,7 +1,7 @@
 import { Head, Link } from '@inertiajs/react'
 import { useState } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
-import { Search, User, Mail, ChevronRight, Image as ImageIcon, Cpu } from 'lucide-react'
+import { Search, User, Mail, ChevronRight, Image as ImageIcon, Cpu, Globe } from 'lucide-react'
 
 const CARDS = [
   {
@@ -39,6 +39,15 @@ const CARDS = [
     href:        '/admin/settings/ai',
     iconBg:      'bg-purple-50',
     iconColor:   'text-purple-600',
+  },
+  {
+    id:          'seo',
+    label:       'SEO & Indexing',
+    description: 'Manage landing page meta tags, robots.txt, and sitemap configuration.',
+    icon:        Globe,
+    href:        '/admin/settings/seo',
+    iconBg:      'bg-indigo-50',
+    iconColor:   'text-indigo-600',
   },
 ]
 

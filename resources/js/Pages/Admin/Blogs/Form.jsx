@@ -1,14 +1,16 @@
 import { Head, Link, useForm } from '@inertiajs/react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
-import { ArrowLeft, BookOpen, FileText, Image as ImageIcon, Save, Tag as TagIcon, X } from 'lucide-react'
+import { ArrowLeft, BookOpen, FileText, Image as ImageIcon, Save, Tag as TagIcon, X, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { useState, useRef } from 'react'
 import RichEditor from '@/Components/Common/RichEditor'
+import axios from 'axios'
 
 export default function Form({ blog }) {
   const fileInputRef = useRef(null)
   const [imagePreview, setImagePreview] = useState(blog?.image_url || null)
   const [tagInput, setTagInput] = useState('')
+  const [suggesting, setSuggesting] = useState(false)
 
   const isEdit = !!blog
 
@@ -21,6 +23,44 @@ export default function Form({ blog }) {
     image: null,
     is_published: !!blog?.is_published,
   })
+
+  const suggestSeo = async () => {
+    if (!data.title) {
+      toast.error('Please enter a post title first.')
+      return
+    }
+    if (!data.body) {
+      toast.error('Please write some content in the body first.')
+      return
+    }
+
+    setSuggesting(true)
+    toast.info('AI is generating SEO optimization suggestions...')
+
+    try {
+      const response = await axios.post('/admin/blogs/generate-seo', {
+        title: data.title,
+        body: data.body,
+      })
+
+      const seoData = response.data
+      
+      // Update form fields
+      setData(prev => ({
+        ...prev,
+        title: seoData.title || prev.title,
+        description: seoData.description || prev.description,
+        tags: seoData.tags && Array.isArray(seoData.tags) ? seoData.tags : prev.tags,
+      }))
+      
+      toast.success('SEO Suggestions applied!')
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to generate SEO suggestion.'
+      toast.error(msg)
+    } finally {
+      setSuggesting(false)
+    }
+  }
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -239,9 +279,20 @@ export default function Form({ blog }) {
 
               {/* SEO & Meta Card */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                <h3 className="text-[13.5px] font-bold text-slate-800 pb-2 border-b border-slate-100">
-                  SEO Meta
-                </h3>
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <h3 className="text-[13.5px] font-bold text-slate-800">
+                    SEO Meta
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={suggestSeo}
+                    disabled={suggesting}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-600 hover:text-violet-850 transition-colors disabled:opacity-50"
+                  >
+                    <Sparkles size={12} className={suggesting ? 'animate-pulse' : ''} />
+                    {suggesting ? 'Suggesting...' : 'AI Suggest'}
+                  </button>
+                </div>
 
                 {/* Description */}
                 <div>

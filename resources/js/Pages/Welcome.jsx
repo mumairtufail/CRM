@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import { Link, useForm, Head, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Users, Mail, FileText, Briefcase,
@@ -210,6 +210,9 @@ function MockDashboard() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Welcome({ appUrl, plans = [] }) {
+    const { props } = usePage();
+    const seo = props.seo || {};
+
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openFaq,    setOpenFaq]    = useState(null);
     const [scrolled,   setScrolled]   = useState(false);
@@ -243,6 +246,14 @@ export default function Welcome({ appUrl, plans = [] }) {
 
     return (
         <div className="min-h-screen bg-white font-sans antialiased">
+            <Head>
+                <title>{seo.meta_title || 'LumeniaCRM'}</title>
+                <meta name="description" content={seo.meta_description || ''} />
+                {seo.meta_keywords && <meta name="keywords" content={seo.meta_keywords} />}
+                <meta property="og:title" content={seo.meta_title || 'LumeniaCRM'} />
+                <meta property="og:description" content={seo.meta_description || ''} />
+                <meta property="og:type" content="website" />
+            </Head>
 
             {/* ── Nav ──────────────────────────────────────────────────────── */}
             <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${

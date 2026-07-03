@@ -62,6 +62,7 @@ Route::get('/', function () {
 // Public Blog routes (SEO optimized)
 Route::get('/blog',              [\App\Http\Controllers\BlogController::class, 'index'])->name('blog.index');
 Route::get('/blog/{slug}',       [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
+Route::get('/sitemap.xml',       [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
 // Public contact form submission (no auth required)
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
@@ -107,6 +108,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Blogs Management
     Route::get('/blogs',                        [AdminBlogController::class, 'index'])->name('blogs.index');
     Route::get('/blogs/create',                 [AdminBlogController::class, 'create'])->name('blogs.create');
+    Route::post('/blogs/generate-seo',          [AdminBlogController::class, 'generateSeoSuggest'])->name('blogs.generate-seo');
     Route::post('/blogs',                       [AdminBlogController::class, 'store'])->name('blogs.store');
     Route::get('/blogs/{blog}/edit',            [AdminBlogController::class, 'edit'])->name('blogs.edit');
     Route::post('/blogs/{blog}',                [AdminBlogController::class, 'update'])->name('blogs.update');
@@ -124,6 +126,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/settings/ai',                 [\App\Http\Controllers\Admin\AiSettingsController::class, 'update'])->name('settings.ai.update');
     Route::post('/settings/ai/test',            [\App\Http\Controllers\Admin\AiSettingsController::class, 'test'])->name('settings.ai.test');
     Route::delete('/settings/ai',               [\App\Http\Controllers\Admin\AiSettingsController::class, 'destroy'])->name('settings.ai.destroy');
+    Route::get('/settings/seo',                 [\App\Http\Controllers\Admin\SeoSettingsController::class, 'edit'])->name('settings.seo');
+    Route::post('/settings/seo',                [\App\Http\Controllers\Admin\SeoSettingsController::class, 'update'])->name('settings.seo.update');
 
     Route::get('/smtp-settings',                 [AdminSmtpSettingsController::class, 'edit'])->name('smtp.edit');
     Route::post('/smtp-settings',                [AdminSmtpSettingsController::class, 'update'])->name('smtp.update');

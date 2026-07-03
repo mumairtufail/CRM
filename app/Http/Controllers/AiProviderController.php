@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class AiProviderController extends Controller
 {
-    /** Known models per provider — shown in the UI dropdown */
+    /** Known models per  provider — shown in the UI dropdown */
     private const MODELS = [
         'claude' => [
             ['id' => 'claude-opus-4-8',           'label' => 'Claude Opus 4.8'],

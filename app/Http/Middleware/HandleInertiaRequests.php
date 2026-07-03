@@ -44,7 +44,10 @@ class HandleInertiaRequests extends Middleware
         // $request->user() cannot be trusted to mean "web guard" here.
         $webUser = $request->user('web');
         $adminUser = $request->user('admin');
-        $isAdmin = ! $webUser && (bool) $adminUser;
+        
+        $isAdminContext = $request->is('admin*') || $request->is('admin');
+        $resolvedUser = $isAdminContext ? $adminUser : ($webUser ?? $adminUser);
+        $resolvedGuard = ($isAdminContext || (!$webUser && $adminUser)) ? 'admin' : 'web';
 
         return [
             ...parent::share($request),
@@ -62,8 +65,8 @@ class HandleInertiaRequests extends Middleware
                 'meta_keywords'    => \App\Models\SystemSetting::getCached('seo_meta_keywords', 'crm, leadflow, lead tracking, prospecting'),
             ],
             'auth' => [
-                'user'        => $webUser ?? $adminUser,
-                'guard'       => $isAdmin ? 'admin' : 'web',
+                'user'        => $resolvedUser,
+                'guard'       => $resolvedGuard,
                 'permissions' => $this->permissionsFor($webUser),
             ],
             'organization' => $organization ? [

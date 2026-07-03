@@ -17,6 +17,14 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
+    Route::get('register/verify', [RegisteredUserController::class, 'showVerifyForm'])
+        ->name('register.verify');
+
+    Route::post('register/verify', [RegisteredUserController::class, 'verifyCode']);
+
+    Route::post('register/resend-code', [RegisteredUserController::class, 'resendCode'])
+        ->name('register.resend-code');
+
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 

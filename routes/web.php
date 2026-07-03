@@ -200,7 +200,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::patch('/support/{supportCase}/status', [AdminSupportCaseController::class, 'updateStatus'])->name('support.status');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
 
     // Stop impersonating — available to the impersonated user (not super-admin gated).
     Route::post('/impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');

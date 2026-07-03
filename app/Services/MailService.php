@@ -271,4 +271,37 @@ class MailService
 
         return str_replace(array_keys($tokens), array_values($tokens), $html);
     }
+
+    /**
+     * Send email using the Superadmin's default configured SMTP credentials.
+     */
+    public static function sendUsingSuperadminSmtp(string $toEmail, string $subject, string $bodyHtml): void
+    {
+        $smtp = \App\Models\SystemSetting::getSmtp();
+        
+        if (empty($smtp['host']) || empty($smtp['username'])) {
+            // Fallback to default mailer configuration if superadmin SMTP is not configured
+            Mail::html($bodyHtml, function ($message) use ($toEmail, $subject) {
+                $message->to($toEmail)->subject($subject);
+            });
+            return;
+        }
+
+        Config::set('mail.mailers.superadmin_dynamic', [
+            'transport'  => 'smtp',
+            'host'       => $smtp['host'],
+            'port'       => $smtp['port'] ?? 587,
+            'encryption' => ($smtp['encryption'] === 'none' || empty($smtp['encryption'])) ? null : $smtp['encryption'],
+            'username'   => $smtp['username'],
+            'password'   => $smtp['password'],
+            'timeout'    => 30,
+        ]);
+
+        Mail::mailer('superadmin_dynamic')->html($bodyHtml, function ($message) use ($toEmail, $subject, $smtp) {
+            $message
+                ->to($toEmail)
+                ->from($smtp['from_email'] ?? $smtp['username'], $smtp['from_name'] ?? 'System')
+                ->subject($subject);
+        });
+    }
 }

@@ -13,7 +13,7 @@ use Illuminate\Notifications\Notifiable;
 
 #[Fillable(['organization_id', 'role', 'role_id', 'is_active', 'name', 'email', 'password', 'company_name', 'company_logo', 'company_website', 'company_phone', 'company_email', 'company_linkedin', 'mail_batch_size', 'mail_batch_delay', 'active_template_id'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;

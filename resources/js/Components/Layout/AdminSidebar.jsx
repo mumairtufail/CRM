@@ -15,7 +15,6 @@ const navItems = [
   { label: 'Blogs',         href: '/admin/blogs',             icon: BookOpen },
   { label: 'Contact Msgs',  href: '/admin/contact-messages',  icon: MessageSquare },
   { label: 'Support Cases', href: '/admin/support',           icon: LifeBuoy },
-  { label: 'SMTP Settings', href: '/admin/smtp-settings',     icon: Mail },
   { label: 'WhatsApp',      href: '/admin/whatsapp-settings', icon: MessageCircle },
 ]
 

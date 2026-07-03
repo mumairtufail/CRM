@@ -49,6 +49,13 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'custom_logo_url' => \App\Models\SystemSetting::getCached('custom_logo_url'),
+            'latestBlogs' => \Illuminate\Support\Facades\Cache::remember('latest_5_blogs', 3600, function () {
+                return \App\Models\Blog::where('is_published', true)
+                    ->orderBy('published_at', 'desc')
+                    ->limit(5)
+                    ->get(['title', 'slug'])
+                    ->toArray();
+            }),
             'seo' => [
                 'meta_title'       => \App\Models\SystemSetting::getCached('seo_meta_title', 'LumeniaCRM - Turn Leads into Revenue'),
                 'meta_description' => \App\Models\SystemSetting::getCached('seo_meta_description', 'Manage leads, campaigns, and pipelines in one unified platform.'),

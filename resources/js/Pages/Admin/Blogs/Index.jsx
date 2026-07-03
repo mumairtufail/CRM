@@ -1,9 +1,13 @@
 import { Head, Link, router } from '@inertiajs/react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
-import { BookOpen, Calendar, Edit2, Eye, EyeOff, Plus, Tag as TagIcon, Trash2, User } from 'lucide-react'
+import { BookOpen, Calendar, Edit2, Eye, EyeOff, Plus, Tag as TagIcon, Trash2, User, Sparkles, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useState } from 'react'
+import axios from 'axios'
 
 export default function Index({ blogs }) {
+  const [generating, setGenerating] = useState(false)
+
   const togglePublish = (id) => {
     router.patch(`/admin/blogs/${id}/toggle`, {}, {
       preserveScroll: true,
@@ -23,6 +27,22 @@ export default function Index({ blogs }) {
     }
   }
 
+  const generateAiBlog = async () => {
+    setGenerating(true)
+    const toastId = toast.loading('AI is searching trending topics and writing the blog post...')
+
+    try {
+      const response = await axios.post('/admin/blogs/ai-generate')
+      toast.success(response.data.message || 'AI Blog post generated successfully!', { id: toastId })
+      router.reload({ preserveScroll: true })
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Failed to generate AI blog.'
+      toast.error(msg, { id: toastId })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
   return (
     <>
       <Head title="Admin · Blogs" />
@@ -39,12 +59,27 @@ export default function Index({ blogs }) {
                 Create, edit, and publish search engine optimized blog posts for the marketing site.
               </p>
             </div>
-            <Link
-              href="/admin/blogs/create"
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-violet-500/10 transition-colors self-start sm:self-auto"
-            >
-              <Plus size={15} /> Write Post
-            </Link>
+            <div className="flex items-center gap-2.5 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={generateAiBlog}
+                disabled={generating}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-amber-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+              >
+                {generating ? (
+                  <Loader2 size={15} className="animate-spin" />
+                ) : (
+                  <Sparkles size={15} />
+                )}
+                AI Write Blog
+              </button>
+              <Link
+                href="/admin/blogs/create"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-violet-500/10 transition-colors"
+              >
+                <Plus size={15} /> Write Post
+              </Link>
+            </div>
           </div>
 
           {/* Table Card */}
@@ -120,20 +155,30 @@ export default function Index({ blogs }) {
 
                         {/* Status */}
                         <td className="py-4 px-5 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => togglePublish(blog.id)}
-                              title={blog.is_published ? 'Unpublish Post' : 'Publish Post'}
-                              className={`px-2 py-0.5 rounded-full text-[11px] font-bold border transition-colors inline-flex items-center gap-1 ${
+                          <div className="flex items-center gap-3">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 ${
                                 blog.is_published
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-150 hover:bg-emerald-100'
-                                  : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-150'
+                                  : 'bg-amber-50 text-amber-700 border-amber-150'
                               }`}
                             >
                               {blog.is_published ? <Eye size={11} /> : <EyeOff size={11} />}
-                              {blog.is_published ? 'Published' : 'Draft'}
+                              {blog.is_published ? 'Approved' : 'Pending'}
+                            </span>
+                            
+                            <button
+                              type="button"
+                              onClick={() => togglePublish(blog.id)}
+                              className={`px-2.5 py-1 rounded text-[11.5px] font-bold transition-all cursor-pointer ${
+                                blog.is_published
+                                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'
+                                  : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/10'
+                              }`}
+                            >
+                              {blog.is_published ? 'Unpublish' : 'Approve'}
                             </button>
+
                             {blog.is_published && blog.published_at && (
                               <span className="text-[11px] text-slate-400 flex items-center gap-1">
                                 <Calendar size={11} />

@@ -39,4 +39,21 @@ class Blog extends Model
     {
         return $this->belongsTo(Admin::class, 'created_by');
     }
+
+    /**
+     * Resolve the full image URL.
+     */
+    public function imageUrl(): ?string
+    {
+        if (!$this->image_path) {
+            return null;
+        }
+
+        if (filter_var($this->image_path, FILTER_VALIDATE_URL)) {
+            return $this->image_path;
+        }
+
+        return asset($this->image_path);
+    }
 }
+

@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils'
 import {
   Search, User, Mail, ChevronRight, Image as ImageIcon, Cpu, Globe,
   Lock, CheckCircle2, AlertCircle, Eye, EyeOff, Send, Loader2, Zap,
-  Upload, RefreshCw, Download, FileText, ShieldAlert, Key, Save, Trash2
+  Upload, RefreshCw, Download, FileText, ShieldAlert, Key, Trash2
 } from 'lucide-react'
 
 // SMTP presets definition
@@ -513,12 +513,12 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
       <div className={cn(
         "flex flex-col gap-1 rounded-lg transition-all p-1.5 duration-200", 
         colSpan,
-        isMatched && "bg-violet-50/50 border border-violet-150 ring-2 ring-violet-50"
+        isMatched && "bg-violet-50/50 border border-violet-200 ring-2 ring-violet-50"
       )}>
         <Label htmlFor={id} className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
           {label}
           {isMatched && (
-            <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded bg-violet-100 text-violet-700 text-[9px] font-bold uppercase tracking-wider animate-pulse">
+            <span className="inline-flex items-center gap-0.5 px-1 py-0.5 rounded bg-violet-100 text-violet-700 text-[9px] font-bold uppercase tracking-wider animate-pulse">
               Match
             </span>
           )}
@@ -530,12 +530,12 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
 
   return (
     <>
-      <Head title="Admin · Settings Consolidation" />
+      <Head title="Admin · Settings" />
       <AdminLayout title="Settings">
-        <div className="max-w-7xl mx-auto py-5 px-4 w-full">
+        <div className="max-w-7xl mx-auto w-full space-y-5">
           
           {/* Top Panel: Header & Search */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 bg-white p-4 border border-slate-200 rounded-2xl shadow-sm">
             <div>
               <h1 className="text-[18px] font-bold text-slate-800 leading-tight">Admin System Settings</h1>
               <p className="text-[12px] text-slate-400 font-normal">Manage your site profile, outbound server, assets, and engine optimization in one place.</p>
@@ -554,10 +554,10 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-5 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 items-start">
             
             {/* Sidebar Navigation */}
-            <div className="flex flex-col gap-1.5 bg-white border border-slate-200 rounded-2xl p-2.5 shadow-sm lg:col-span-1">
+            <div className="flex flex-col gap-1.5 bg-white border border-slate-200 rounded-2xl p-2.5 shadow-sm md:col-span-1">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 mb-1.5">Settings Panels</p>
               {filteredTabs.length === 0 ? (
                 <div className="py-6 text-center text-[12px] text-slate-400 font-medium">
@@ -593,7 +593,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         <span className={cn(
                           "px-1.5 py-0.5 rounded-full text-[10px] font-bold border",
                           isActive 
-                            ? "bg-white text-violet-700 border-white/20" 
+                            ? "bg-white text-violet-750 border-white/20" 
                             : "bg-violet-100 text-violet-700 border-violet-200"
                         )}>
                           {matches}
@@ -606,14 +606,14 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
             </div>
 
             {/* Content Area: Rendering active tab */}
-            <div className="lg:col-span-3">
+            <div className="md:col-span-2 lg:col-span-3">
               
               {/* TAB 1: Account Settings */}
               {activeTab === 'account' && (
                 <div className="space-y-4">
                   
                   {/* Profile Details Form */}
-                  <form onSubmit={saveProfile} className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm">
+                  <form onSubmit={saveProfile} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
                       <User size={16} className="text-violet-600" />
                       <h2 className="text-[13.5px] font-bold text-slate-800">Account Credentials</h2>
@@ -625,7 +625,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           id="profile_name"
                           value={profileForm.data.name}
                           onChange={e => profileForm.setData('name', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {profileForm.errors.name && <p className="text-[11px] text-red-500 mt-0.5">{profileForm.errors.name}</p>}
                       </FieldWrapper>
@@ -636,7 +636,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           type="email"
                           value={profileForm.data.email}
                           onChange={e => profileForm.setData('email', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {profileForm.errors.email && <p className="text-[11px] text-red-500 mt-0.5">{profileForm.errors.email}</p>}
                       </FieldWrapper>
@@ -647,7 +647,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         type="submit" 
                         disabled={profileForm.processing} 
                         size="sm"
-                        className="bg-violet-600 hover:bg-violet-700 text-white h-7.5 px-3.5 text-[12px] font-semibold rounded-lg shadow-sm"
+                        className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12px] font-semibold rounded-lg shadow-sm"
                       >
                         {profileForm.processing ? 'Saving Changes…' : 'Save Details'}
                       </Button>
@@ -655,7 +655,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                   </form>
 
                   {/* Password Form */}
-                  <form onSubmit={savePassword} className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm">
+                  <form onSubmit={savePassword} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4 pb-3 border-b border-slate-100">
                       <Lock size={16} className="text-violet-600" />
                       <h2 className="text-[13.5px] font-bold text-slate-800">Change Password</h2>
@@ -668,7 +668,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           type="password"
                           value={passwordForm.data.current_password}
                           onChange={e => passwordForm.setData('current_password', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {passwordForm.errors.current_password && <p className="text-[11px] text-red-500 mt-0.5">{passwordForm.errors.current_password}</p>}
                       </FieldWrapper>
@@ -679,7 +679,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           type="password"
                           value={passwordForm.data.password}
                           onChange={e => passwordForm.setData('password', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {passwordForm.errors.password && <p className="text-[11px] text-red-500 mt-0.5">{passwordForm.errors.password}</p>}
                       </FieldWrapper>
@@ -690,7 +690,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           type="password"
                           value={passwordForm.data.password_confirmation}
                           onChange={e => passwordForm.setData('password_confirmation', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                       </FieldWrapper>
                     </div>
@@ -700,7 +700,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         type="submit" 
                         disabled={passwordForm.processing} 
                         size="sm"
-                        className="bg-violet-600 hover:bg-violet-700 text-white h-7.5 px-3.5 text-[12px] font-semibold rounded-lg shadow-sm"
+                        className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12px] font-semibold rounded-lg shadow-sm"
                       >
                         {passwordForm.processing ? 'Updating Password…' : 'Update Password'}
                       </Button>
@@ -747,17 +747,17 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                     )}
                   </div>
 
-                  <form onSubmit={saveSmtp} className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm space-y-4">
+                  <form onSubmit={saveSmtp} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
                     <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                       <Mail size={16} className="text-violet-600" />
                       <h2 className="text-[13.5px] font-bold text-slate-800">Outbound Mail Configuration</h2>
                     </div>
 
                     {/* Presets Grid */}
-                    <div className="p-3 bg-slate-50 border border-slate-150 rounded-xl">
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
                       <div className="flex items-center gap-1.5 mb-2">
                         <Zap size={13} className="text-violet-600" />
-                        <span className="text-[11.5px] font-bold text-slate-700">Quick Configuration Presets</span>
+                        <span className="text-[11.5px] font-bold text-slate-705">Quick Configuration Presets</span>
                       </div>
                       <div className="grid grid-cols-3 sm:grid-cols-7 gap-2">
                         {SMTP_PRESETS.map(preset => (
@@ -769,7 +769,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                               'relative flex flex-col items-center gap-1 px-1.5 py-2.5 rounded-lg border transition-all',
                               activeSmtpPreset === preset.id
                                 ? 'border-violet-500 bg-violet-50/50 shadow-inner'
-                                : 'border-slate-200 bg-white hover:border-violet-300'
+                                : 'border-slate-200 bg-white hover:border-violet-350'
                             )}
                           >
                             <div className="w-[14px] h-[14px] flex items-center justify-center mb-0.5">
@@ -796,7 +796,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={smtpForm.data.host}
                           onChange={e => smtpForm.setData('host', e.target.value)}
                           placeholder="smtp.mailgun.org"
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5 font-mono"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5 font-mono"
                         />
                         {smtpForm.errors.host && <p className="text-[11px] text-red-500 mt-0.5">{smtpForm.errors.host}</p>}
                       </FieldWrapper>
@@ -808,7 +808,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={smtpForm.data.port}
                           onChange={e => smtpForm.setData('port', parseInt(e.target.value) || 587)}
                           placeholder="587"
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5 font-mono"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5 font-mono"
                         />
                         {smtpForm.errors.port && <p className="text-[11px] text-red-500 mt-0.5">{smtpForm.errors.port}</p>}
                       </FieldWrapper>
@@ -818,7 +818,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={smtpForm.data.encryption} 
                           onValueChange={v => smtpForm.setData('encryption', v)}
                         >
-                          <SelectTrigger id="smtp_encryption" className="h-8 text-[12.5px] rounded-lg mt-0.5 bg-white">
+                          <SelectTrigger id="smtp_encryption" className="h-9 text-[12.5px] rounded-lg mt-0.5 bg-white">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -834,7 +834,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           id="smtp_username"
                           value={smtpForm.data.username}
                           onChange={e => smtpForm.setData('username', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                           autoComplete="off"
                         />
                         {smtpForm.errors.username && <p className="text-[11px] text-red-500 mt-0.5">{smtpForm.errors.username}</p>}
@@ -848,7 +848,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                             value={smtpForm.data.password}
                             onChange={e => smtpForm.setData('password', e.target.value)}
                             placeholder={smtp?.username ? '•••••••• (unchanged)' : 'Enter SMTP password'}
-                            className="h-8 text-[12.5px] rounded-lg pr-9"
+                            className="h-9 text-[12.5px] rounded-lg pr-9"
                             autoComplete="new-password"
                           />
                           <button
@@ -867,7 +867,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           id="smtp_from_name"
                           value={smtpForm.data.from_name}
                           onChange={e => smtpForm.setData('from_name', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {smtpForm.errors.from_name && <p className="text-[11px] text-red-500 mt-0.5">{smtpForm.errors.from_name}</p>}
                       </FieldWrapper>
@@ -878,7 +878,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           type="email"
                           value={smtpForm.data.from_email}
                           onChange={e => smtpForm.setData('from_email', e.target.value)}
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5 font-mono"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5 font-mono"
                         />
                         {smtpForm.errors.from_email && <p className="text-[11px] text-red-500 mt-0.5">{smtpForm.errors.from_email}</p>}
                       </FieldWrapper>
@@ -889,7 +889,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         type="submit"
                         disabled={smtpForm.processing}
                         size="sm"
-                        className="bg-violet-600 hover:bg-violet-700 text-white h-7.5 px-3.5 text-[12px] font-semibold rounded-lg shadow-sm"
+                        className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12px] font-semibold rounded-lg shadow-sm"
                       >
                         {smtpForm.processing ? 'Saving Outbound Settings…' : 'Save Connection'}
                       </Button>
@@ -903,17 +903,17 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   
                   {/* Logo Upload Card */}
-                  <div className="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm flex flex-col justify-between">
+                  <div className="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between min-h-[260px]">
                     <div>
                       <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-3">
                         <ImageIcon size={16} className="text-violet-600" />
                         <h2 className="text-[13.5px] font-bold text-slate-800">System Brand Mark</h2>
                       </div>
-                      <p className="text-[11.5px] text-slate-400 mb-3 leading-relaxed">
+                      <p className="text-[11.5px] text-slate-400 mb-4 leading-relaxed">
                         Customize your workspace layout branding by uploading a PNG, JPG, or SVG mark. Max 2MB file size.
                       </p>
 
-                      <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-150 mb-3">
+                      <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200 mb-4">
                         <div className="flex flex-col items-center gap-1 shrink-0">
                           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Logo Preview</span>
                           <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-inner">
@@ -934,12 +934,12 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                       </div>
                     </div>
 
-                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                    <div className="space-y-2 pt-2.5 border-t border-slate-100">
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="flex-1 py-1.5 rounded-lg border border-slate-200 hover:border-slate-350 text-[11.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5"
+                          className="flex-1 py-2 rounded-lg border border-slate-200 hover:border-slate-300 text-[11.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5"
                         >
                           <Upload size={12} />
                           Browse File
@@ -949,7 +949,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                             type="button"
                             onClick={resetLogo}
                             disabled={resetLogoForm.processing}
-                            className="px-3 py-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-[11.5px] font-semibold text-red-600 transition-colors disabled:opacity-50"
+                            className="px-3 py-2 rounded-lg border border-red-200 hover:bg-red-50 text-[11.5px] font-semibold text-red-650 transition-colors disabled:opacity-50"
                           >
                             Reset Defaults
                           </button>
@@ -966,7 +966,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
 
                       {uploadLogoForm.data.logo && (
                         <form onSubmit={uploadLogo} className="flex items-center justify-between p-2 rounded-lg border border-violet-100 bg-violet-50/50 mt-2 animate-fadeIn">
-                          <span className="text-[11.5px] text-violet-700 font-semibold truncate max-w-[60%]">
+                          <span className="text-[11.5px] text-violet-750 font-semibold truncate max-w-[60%]">
                             Selected: {uploadLogoForm.data.logo.name}
                           </span>
                           <button
@@ -982,17 +982,17 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                   </div>
 
                   {/* Brand Assets Download Card */}
-                  <div className="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm flex flex-col justify-between">
+                  <div className="md:col-span-2 bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col justify-between min-h-[260px]">
                     <div>
                       <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-3">
                         <Download size={16} className="text-violet-600" />
                         <h2 className="text-[13.5px] font-bold text-slate-800">Media Branding Resources</h2>
                       </div>
-                      <p className="text-[11.5px] text-slate-400 mb-3 leading-relaxed">
+                      <p className="text-[11.5px] text-slate-400 mb-4 leading-relaxed">
                         Download high-definition SVG layout configurations or 512px transparent PNG files of the default mark for system documentation.
                       </p>
 
-                      <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-150 mb-3">
+                      <div className="flex items-center gap-3.5 p-3 rounded-xl bg-slate-50 border border-slate-200 mb-4">
                         <div className="flex flex-col items-center gap-1 shrink-0">
                           <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Default Core</span>
                           <div ref={svgRef} className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center p-2 shadow-sm">
@@ -1001,16 +1001,16 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         </div>
                         <div className="flex-1">
                           <p className="text-[12px] font-semibold text-slate-700">Official Brand Assets</p>
-                          <p className="text-[10.5px] text-slate-405 mt-0.5">Vector (SVG) scalable, or pre-rendered raster PNG mark.</p>
+                          <p className="text-[10.5px] text-slate-400 mt-0.5">Vector (SVG) scalable, or pre-rendered raster PNG mark.</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-2 border-t border-slate-100">
+                    <div className="flex gap-2 pt-2.5 border-t border-slate-100">
                       <button
                         type="button"
                         onClick={downloadSvg}
-                        className="flex-1 py-1.5 rounded-lg border border-slate-250 bg-white hover:bg-slate-50 text-[11.5px] font-bold text-slate-700 flex items-center justify-center gap-1 shadow-sm transition-colors"
+                        className="flex-1 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-[11.5px] font-bold text-slate-700 flex items-center justify-center gap-1 shadow-sm transition-colors"
                       >
                         <Download size={12} className="text-slate-400" />
                         Download SVG
@@ -1018,7 +1018,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                       <button
                         type="button"
                         onClick={downloadPng}
-                        className="flex-1 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11.5px] font-bold flex items-center justify-center gap-1 shadow-sm transition-colors"
+                        className="flex-1 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11.5px] font-bold flex items-center justify-center gap-1 shadow-sm transition-colors"
                       >
                         <Download size={12} />
                         Download PNG
@@ -1033,7 +1033,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                 <div className="space-y-4">
                   
                   {/* AI Service Form */}
-                  <form onSubmit={saveAi} className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm space-y-4">
+                  <form onSubmit={saveAi} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
                     <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                       <div className="flex items-center gap-2">
                         <Cpu size={16} className="text-violet-600" />
@@ -1042,7 +1042,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                       <button
                         type="button"
                         onClick={clearAiConfig}
-                        className="text-[11.5px] font-bold text-red-650 hover:underline flex items-center gap-1"
+                        className="text-[11.5px] font-bold text-red-600 hover:underline flex items-center gap-1"
                       >
                         <Trash2 size={12} />
                         Clear Config
@@ -1063,10 +1063,10 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                               type="button"
                               onClick={() => aiForm.setData('provider', p.id)}
                               className={cn(
-                                'py-1 rounded-lg border font-bold text-[11.5px] transition-all text-center',
+                                'py-1.5 rounded-lg border font-bold text-[11.5px] transition-all text-center',
                                 aiForm.data.provider === p.id
-                                  ? 'border-violet-650 bg-violet-50 text-violet-750'
-                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-350'
+                                  ? 'border-violet-600 bg-violet-50 text-violet-750'
+                                  : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                               )}
                             >
                               {p.label}
@@ -1087,7 +1087,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                             value={aiForm.data.api_key}
                             onChange={e => aiForm.setData('api_key', e.target.value)}
                             placeholder="sk-..."
-                            className="w-full h-8 pl-8 pr-8 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                            className="w-full h-9 pl-8 pr-8 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
                           />
                           <button
                             type="button"
@@ -1106,7 +1106,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={aiForm.data.model}
                           onValueChange={v => aiForm.setData('model', v)}
                         >
-                          <SelectTrigger id="ai_model" className="h-8 text-[12.5px] mt-0.5 bg-white">
+                          <SelectTrigger id="ai_model" className="h-9 text-[12.5px] mt-0.5 bg-white">
                             <SelectValue placeholder="Select model..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -1122,7 +1122,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                             type="text"
                             onChange={e => aiForm.setData('model', e.target.value)}
                             placeholder="e.g. gpt-4-32k"
-                            className="w-full h-8 px-2.5 mt-2 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                            className="w-full h-9 px-2.5 mt-2 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
                           />
                         )}
                         {aiForm.errors.model && <p className="text-red-500 text-[11px] mt-0.5">{aiForm.errors.model}</p>}
@@ -1136,18 +1136,18 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={aiForm.data.base_url}
                           onChange={e => aiForm.setData('base_url', e.target.value)}
                           placeholder="e.g. https://api.openai.com/v1"
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {aiForm.errors.base_url && <p className="text-red-500 text-[11px] mt-0.5">{aiForm.errors.base_url}</p>}
                       </FieldWrapper>
                     </div>
 
                     {/* Activation & Diagnostic validation */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3.5 bg-slate-50 border border-slate-150 rounded-xl items-center">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-3.5 bg-slate-50 border border-slate-200 rounded-xl items-center">
                       <div className="md:col-span-2 flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
                         <div>
                           <span className="block text-[12px] font-bold text-slate-700">Service Active Status</span>
-                          <span className="block text-[10px] text-slate-405 mt-0.5">Toggle global auto-writing.</span>
+                          <span className="block text-[10px] text-slate-400 mt-0.5">Toggle global auto-writing.</span>
                         </div>
                         <input
                           type="checkbox"
@@ -1160,7 +1160,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                       <div className="md:col-span-2 flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-lg">
                         <div>
                           <span className="block text-[12px] font-bold text-slate-700">Diagnostic Verification</span>
-                          <span className="block text-[10px] text-slate-405 mt-0.5">
+                          <span className="block text-[10px] text-slate-400 mt-0.5">
                             {setting?.validated_at ? `Verified: ${new Date(setting.validated_at).toLocaleDateString()}` : 'Connection not validated.'}
                           </span>
                         </div>
@@ -1177,14 +1177,14 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                     </div>
 
                     {/* Diagnostics Result Card */}
-                    <div className="p-3 border border-slate-150 bg-slate-50 rounded-xl space-y-2">
+                    <div className="p-3 border border-slate-200 bg-slate-50 rounded-xl space-y-2">
                       <div className="flex items-center justify-between">
                         <span className="text-[11.5px] font-bold text-slate-700">API Connection Testing</span>
                         <button
                           type="button"
                           onClick={testAiConnection}
                           disabled={testingAi}
-                          className="px-3 py-1 rounded-lg border border-slate-350 text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-[11px] font-bold bg-white text-slate-700 hover:bg-slate-50 flex items-center gap-1.5 transition-colors disabled:opacity-50 shadow-sm"
                         >
                           {testingAi ? <RefreshCw size={11} className="animate-spin" /> : <Send size={11} />}
                           Run AI Diagnostic
@@ -1216,7 +1216,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         type="submit"
                         disabled={aiForm.processing}
                         size="sm"
-                        className="bg-violet-600 hover:bg-violet-700 text-white h-7.5 px-3.5 text-[12px] font-semibold rounded-lg shadow-sm"
+                        className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12px] font-semibold rounded-lg shadow-sm"
                       >
                         {aiForm.processing ? 'Saving AI Config…' : 'Save AI Settings'}
                       </Button>
@@ -1230,7 +1230,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                 <div className="space-y-4">
                   
                   {/* SEO Details Form */}
-                  <form onSubmit={saveSeo} className="bg-white border border-slate-200 rounded-2xl p-4.5 shadow-sm space-y-4">
+                  <form onSubmit={saveSeo} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
                     <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
                       <Globe size={16} className="text-violet-600" />
                       <h2 className="text-[13.5px] font-bold text-slate-800">Search Engine Indexing Optimizations</h2>
@@ -1244,7 +1244,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={seoForm.data.meta_title}
                           onChange={e => seoForm.setData('meta_title', e.target.value)}
                           placeholder="LumeniaCRM - Lead Management Engine"
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {seoForm.errors.meta_title && <p className="text-red-500 text-[11px] mt-0.5">{seoForm.errors.meta_title}</p>}
                       </FieldWrapper>
@@ -1256,7 +1256,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           value={seoForm.data.meta_keywords}
                           onChange={e => seoForm.setData('meta_keywords', e.target.value)}
                           placeholder="crm, outbound, metrics"
-                          className="h-8 text-[12.5px] rounded-lg mt-0.5"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
                         />
                         {seoForm.errors.meta_keywords && <p className="text-red-500 text-[11px] mt-0.5">{seoForm.errors.meta_keywords}</p>}
                       </FieldWrapper>
@@ -1269,7 +1269,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           onChange={e => seoForm.setData('meta_description', e.target.value)}
                           placeholder="Describe your layout platform details in under 160 characters..."
                           rows="2"
-                          className="w-full p-2 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-650 resize-none leading-normal mt-0.5"
+                          className="w-full p-2 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-600 resize-none leading-normal mt-0.5"
                         />
                         {seoForm.errors.meta_description && <p className="text-red-500 text-[11px] mt-0.5">{seoForm.errors.meta_description}</p>}
                       </FieldWrapper>
@@ -1283,32 +1283,34 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                           rows="4"
                           className="w-full p-2 font-mono text-[11.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none bg-slate-50 text-slate-700 leading-normal mt-0.5"
                         />
-                        <div className="mt-1 p-2 bg-slate-50 border border-slate-150 rounded-lg text-[10.5px] text-slate-405 space-y-0.5">
-                          <p>• <span className="font-mono bg-white px-1 py-0.2 rounded border border-slate-200">User-agent: *</span> controls all search crawlers.</p>
-                          <p>• Include <span className="font-mono bg-white px-1 py-0.2 rounded border border-slate-200">Sitemap: {sitemapUrl}</span> dynamically.</p>
+                        <div className="mt-1 p-2 bg-slate-50 border border-slate-200 rounded-lg text-[10.5px] text-slate-400 space-y-0.5">
+                          <p>• <span className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">User-agent: *</span> controls all search crawlers.</p>
+                          <p>• Include <span className="font-mono bg-white px-1 py-0.5 rounded border border-slate-200">Sitemap: {sitemapUrl}</span> dynamically.</p>
                         </div>
                         {seoForm.errors.robots_txt && <p className="text-red-500 text-[11px] mt-0.5">{seoForm.errors.robots_txt}</p>}
                       </FieldWrapper>
 
                       {/* Sitemap Status Box */}
-                      <div className="md:col-span-1 p-3 bg-slate-50 border border-slate-150 rounded-xl flex flex-col justify-between mt-2.5">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <FileText size={13} className="text-emerald-500" />
-                          <span className="text-[11.5px] font-bold text-slate-755">Sitemap Integration</span>
+                      <div className="md:col-span-1 p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between mt-2.5">
+                        <div>
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <FileText size={13} className="text-emerald-500" />
+                            <span className="text-[11.5px] font-bold text-slate-700">Sitemap Integration</span>
+                          </div>
+                          <p className="text-[10.5px] text-slate-400 leading-relaxed mb-3">
+                            Dynamically built and cached based on layout urls and public blogs.
+                          </p>
                         </div>
-                        <p className="text-[10.5px] text-slate-405 leading-relaxed mb-3">
-                          Dynamically built and cached based on layout urls and public blogs.
-                        </p>
                         
                         <div className="p-2 bg-white border border-emerald-100 rounded-lg flex items-center justify-between">
                           <a
                             href="/sitemap.xml"
                             target="_blank"
-                            className="text-[10.5px] text-violet-650 hover:underline font-bold truncate max-w-[70%]"
+                            className="text-[10.5px] text-violet-600 hover:underline font-bold truncate max-w-[70%]"
                           >
                             sitemap.xml
                           </a>
-                          <span className="px-1.5 py-0.2 text-[9px] font-bold rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
                             Live
                           </span>
                         </div>
@@ -1320,7 +1322,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                         type="submit"
                         disabled={seoForm.processing}
                         size="sm"
-                        className="bg-violet-600 hover:bg-violet-700 text-white h-7.5 px-3.5 text-[12px] font-semibold rounded-lg shadow-sm"
+                        className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12px] font-semibold rounded-lg shadow-sm"
                       >
                         {seoForm.processing ? 'Saving SEO Config…' : 'Save SEO Options'}
                       </Button>
@@ -1340,7 +1342,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
             <DialogTitle className="text-[14px] font-bold text-slate-800">Send Outbound Diagnostic Email</DialogTitle>
           </DialogHeader>
           <div className="py-2 space-y-1.5">
-            <Label className="text-[11.5px] font-bold text-slate-655">
+            <Label className="text-[11.5px] font-bold text-slate-600">
               Recipient Email Address <span className="text-red-400 font-normal">*</span>
             </Label>
             <Input
@@ -1348,7 +1350,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
               placeholder="recipient@example.com"
               value={testToEmail}
               onChange={e => setTestToEmail(e.target.value)}
-              className="h-8.5 text-[12.5px] rounded-lg mt-0.5"
+              className="h-9 text-[12.5px] rounded-lg mt-0.5"
               autoFocus
             />
             <p className="text-[10.5px] text-slate-400 leading-snug">
@@ -1359,7 +1361,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
             <button
               type="button"
               onClick={() => setShowSmtpTestDialog(false)}
-              className="h-7.5 px-3 text-[11.5px] font-semibold text-slate-650 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+              className="h-8 px-3 text-[11.5px] font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
             >
               Cancel
             </button>
@@ -1367,7 +1369,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
               type="button"
               onClick={sendSmtpTest}
               disabled={!testToEmail || smtpTestLoading}
-              className="flex items-center gap-1.5 h-7.5 px-3.5 text-[11.5px] font-bold text-white rounded-lg transition-all hover:opacity-90 bg-violet-600 disabled:opacity-40"
+              className="flex items-center gap-1.5 h-8 px-4 text-[11.5px] font-bold text-white rounded-lg transition-all hover:opacity-90 bg-violet-600 disabled:opacity-40"
             >
               {smtpTestLoading ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
               Send Test

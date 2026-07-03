@@ -21,6 +21,8 @@ export default function Form({ blog }) {
     body: blog?.body || '',
     tags: blog?.tags || [],
     image: null,
+    image_url_link: blog?.image_path && blog.image_path.startsWith('http') ? blog.image_path : '',
+    image_cleared: false,
     is_published: !!blog?.is_published,
   })
 
@@ -71,7 +73,11 @@ export default function Form({ blog }) {
       return
     }
 
-    setData('image', file)
+    setData(prev => ({
+      ...prev,
+      image: file,
+      image_cleared: false,
+    }))
     const reader = new FileReader()
     reader.onloadend = () => {
       setImagePreview(reader.result)
@@ -80,7 +86,12 @@ export default function Form({ blog }) {
   }
 
   const removeImage = () => {
-    setData('image', null)
+    setData(prev => ({
+      ...prev,
+      image: null,
+      image_url_link: '',
+      image_cleared: true,
+    }))
     setImagePreview(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
@@ -275,6 +286,34 @@ export default function Form({ blog }) {
                   className="hidden"
                 />
                 {errors.image && <p className="text-red-500 text-[11.5px] mt-1">{errors.image}</p>}
+
+                {/* Image URL link input option */}
+                <div className="mt-4 pt-4 border-t border-slate-100">
+                  <label className="block text-[11.5px] font-semibold text-slate-500 mb-1">
+                    Or Image URL Link
+                  </label>
+                  <input
+                    type="text"
+                    value={data.image_url_link || ''}
+                    onChange={e => {
+                      const val = e.target.value
+                      setData(prev => ({
+                        ...prev,
+                        image_url_link: val,
+                        image: null,
+                        image_cleared: val ? false : prev.image_cleared,
+                      }))
+                      if (val) {
+                        setImagePreview(val)
+                      } else {
+                        setImagePreview(null)
+                      }
+                    }}
+                    placeholder="https://images.unsplash.com/photo-..."
+                    className="w-full h-8 px-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                  />
+                  {errors.image_url_link && <p className="text-red-500 text-[11.5px] mt-1">{errors.image_url_link}</p>}
+                </div>
               </div>
 
               {/* SEO & Meta Card */}

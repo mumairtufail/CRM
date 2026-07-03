@@ -109,6 +109,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/blogs',                        [AdminBlogController::class, 'index'])->name('blogs.index');
     Route::get('/blogs/create',                 [AdminBlogController::class, 'create'])->name('blogs.create');
     Route::post('/blogs/generate-seo',          [AdminBlogController::class, 'generateSeoSuggest'])->name('blogs.generate-seo');
+    Route::post('/blogs/ai-generate',           [AdminBlogController::class, 'aiGenerate'])->name('blogs.ai-generate');
     Route::post('/blogs',                       [AdminBlogController::class, 'store'])->name('blogs.store');
     Route::get('/blogs/{blog}/edit',            [AdminBlogController::class, 'edit'])->name('blogs.edit');
     Route::post('/blogs/{blog}',                [AdminBlogController::class, 'update'])->name('blogs.update');

@@ -212,6 +212,7 @@ function MockDashboard() {
 export default function Welcome({ appUrl, plans = [] }) {
     const { props } = usePage();
     const seo = props.seo || {};
+    const latestBlogs = props.latestBlogs || [];
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openFaq,    setOpenFaq]    = useState(null);
@@ -1726,7 +1727,7 @@ export default function Welcome({ appUrl, plans = [] }) {
             {/* ── Footer ───────────────────────────────────────────────────── */}
             <footer style={{ background: '#030208' }} className="border-t border-white/5">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
                         <div className="col-span-2 md:col-span-1">
                             <div className="flex items-center gap-2.5 mb-4">
                                 <LogoMark size={32} />
@@ -1757,6 +1758,26 @@ export default function Welcome({ appUrl, plans = [] }) {
                                 </ul>
                             </div>
                         ))}
+
+                        <div>
+                            <div className="text-white font-semibold text-sm mb-4">Latest Blogs</div>
+                            <ul className="space-y-2.5">
+                                <li>
+                                    <Link href="/blog" className="text-violet-400 hover:text-white text-sm font-semibold transition-colors block mb-1">Our Blog</Link>
+                                </li>
+                                {latestBlogs && latestBlogs.length > 0 ? (
+                                    latestBlogs.map((b) => (
+                                        <li key={b.slug}>
+                                            <Link href={`/blog/${b.slug}`} className="text-slate-600 hover:text-white text-sm transition-colors block truncate max-w-[185px]" title={b.title}>
+                                                {b.title}
+                                            </Link>
+                                        </li>
+                                    ))
+                                ) : (
+                                    <li className="text-slate-700 text-sm italic">No articles yet</li>
+                                )}
+                            </ul>
+                        </div>
                     </div>
 
                     <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">

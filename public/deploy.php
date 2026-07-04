@@ -91,10 +91,6 @@ logMsg(run('php artisan route:cache'));
 logMsg(run('php artisan view:cache'));
 logMsg(run('php artisan event:cache'));
 
-// Fix storage symlink if missing
-logMsg('>> storage:link');
-logMsg(run('php artisan storage:link'));
-
 logMsg('=== Deployment complete ===');
 http_response_code(200);
 echo 'Deployed successfully';

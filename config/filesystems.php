@@ -33,16 +33,22 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/private-files',
             'serve' => true,
             'throw' => false,
             'report' => false,
         ],
 
+        // No storage:link symlink required: 'serve' makes Laravel register a
+        // /storage/{path} route that streams files straight from
+        // storage/app/public. Needed because some hosts disable both
+        // symlink() and exec(), so `artisan storage:link` can never succeed.
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
+            'serve' => true,
             'throw' => false,
             'report' => false,
         ],

@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import axios from 'axios'
-import { MessageCircle, X, Send, ChevronDown } from 'lucide-react'
+import { MessageCircle, Send, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { LogoMark } from '@/Components/Common/Logo'
 
 const SESSION_KEY = 'chatbot_session_id'
 const HISTORY_KEY = 'chatbot_history'
@@ -107,8 +108,6 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
     }
   }
 
-  const initial = agentName?.charAt(0)?.toUpperCase() || 'S'
-
   return (
     <>
       {/* Chat panel */}
@@ -146,13 +145,10 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
 
           <div className="relative shrink-0">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-[15px]"
-              style={{
-                background: 'linear-gradient(140deg, #8B5CF6, #6D28D9)',
-                boxShadow: '0 2px 8px rgba(124,58,237,0.5), inset 0 1px 1px rgba(255,255,255,0.25)',
-              }}
+              className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
+              style={{ boxShadow: '0 2px 10px rgba(124,58,237,0.45)' }}
             >
-              {initial}
+              <LogoMark size={40} />
             </div>
             <span className="absolute -bottom-px -right-px w-3 h-3 rounded-full bg-emerald-400 ring-[2.5px] ring-[#1B1330]" />
           </div>
@@ -172,28 +168,17 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
         </div>
 
         {/* Messages */}
-        <div className="h-[380px] overflow-y-auto px-3.5 py-4 space-y-[3px]" style={{ scrollbarWidth: 'thin' }}>
+        <div className="chat-scroll h-[380px] overflow-y-auto px-3.5 py-4 space-y-[3px]">
           {grouped.map((msg, i) => (
             <div
               key={i}
               className={cn(
-                'flex items-end gap-1.5 group',
+                'flex items-end group',
                 msg.role === 'agent' ? 'justify-start' : 'justify-end',
                 msg.isFirstOfGroup && i !== 0 && 'mt-3'
               )}
               style={{ animation: 'chatMsgIn 0.22s ease-out' }}
             >
-              {msg.role === 'agent' && (
-                <div className="w-5 h-5 rounded-full shrink-0 mb-0.5" style={{ visibility: msg.isLastOfGroup ? 'visible' : 'hidden' }}>
-                  <div
-                    className="w-full h-full rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                    style={{ background: 'linear-gradient(140deg, #8B5CF6, #6D28D9)' }}
-                  >
-                    {initial}
-                  </div>
-                </div>
-              )}
-
               <div className="flex flex-col max-w-[78%]">
                 <div className={cn(
                   'px-3.5 py-2.5 text-[13px] leading-[1.5] whitespace-pre-wrap',
@@ -225,15 +210,7 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
           ))}
 
           {sending && (
-            <div className="flex items-end gap-1.5 mt-3">
-              <div className="w-5 h-5 rounded-full shrink-0">
-                <div
-                  className="w-full h-full rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                  style={{ background: 'linear-gradient(140deg, #8B5CF6, #6D28D9)' }}
-                >
-                  {initial}
-                </div>
-              </div>
+            <div className="flex items-end mt-3">
               <div
                 className="px-3.5 py-3 rounded-[16px] rounded-bl-[4px] flex items-center gap-1"
                 style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)' }}
@@ -274,32 +251,30 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
         </div>
       </div>
 
-      {/* Launcher bubble */}
+      {/* Launcher bubble — hidden while the panel is open; the header's own
+          chevron is the only close control, so there's never two floating
+          circles competing for the same corner. */}
       <button
-        onClick={() => setOpen(o => !o)}
-        aria-label={open ? 'Close chat' : `Chat with ${agentName}`}
+        onClick={() => setOpen(true)}
+        aria-label={`Chat with ${agentName}`}
+        aria-hidden={open}
+        tabIndex={open ? -1 : 0}
         className={cn(
           'fixed bottom-5 right-4 sm:right-6 z-[70] w-14 h-14 rounded-full',
           'flex items-center justify-center text-white',
-          'transition-all duration-300 ease-out hover:scale-[1.06] active:scale-95',
-          mounted ? 'opacity-100 translate-y-0 scale-100' : 'opacity-0 translate-y-3 scale-90'
+          'transition-all duration-300 ease-out',
+          open
+            ? 'opacity-0 scale-75 translate-y-2 pointer-events-none'
+            : mounted
+              ? 'opacity-100 translate-y-0 scale-100 hover:scale-[1.06] active:scale-95 pointer-events-auto'
+              : 'opacity-0 translate-y-3 scale-90 pointer-events-none'
         )}
         style={{
           background: 'linear-gradient(150deg, #8B5CF6, #6425D0 55%, #4F46E5)',
           boxShadow: '0 10px 30px -6px rgba(124,58,237,0.55), 0 2px 8px rgba(0,0,0,0.25)',
         }}
       >
-        <span className={cn(
-          'absolute inset-0 rounded-full transition-transform duration-300',
-          open ? 'scale-0' : 'scale-100'
-        )}>
-          <MessageCircle size={23} strokeWidth={2.1} className="absolute inset-0 m-auto" />
-        </span>
-        <X
-          size={22}
-          strokeWidth={2.2}
-          className={cn('absolute inset-0 m-auto transition-transform duration-300', open ? 'scale-100 rotate-0' : 'scale-0 rotate-45')}
-        />
+        <MessageCircle size={23} strokeWidth={2.1} />
 
         {unread && !open && (
           <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-rose-500 ring-2 ring-[#0C0815]" />
@@ -311,6 +286,11 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
           from { opacity: 0; transform: translateY(4px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        .chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.14) transparent; }
+        .chat-scroll::-webkit-scrollbar { width: 6px; }
+        .chat-scroll::-webkit-scrollbar-track { background: transparent; }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
+        .chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
       `}</style>
     </>
   )

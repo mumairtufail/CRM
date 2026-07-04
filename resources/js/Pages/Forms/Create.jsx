@@ -15,7 +15,7 @@ export default function FormsCreate({ builtinCatalog }) {
           <h1 className="text-[18px] font-bold text-slate-800">New Form</h1>
           <p className="text-[13px] text-slate-500 mt-0.5">Choose the fields to collect, then share the public link.</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           <FormBuilder
             builtinCatalog={builtinCatalog}
             submitUrl={route('forms.store')}

@@ -15,7 +15,7 @@ export default function FormsEdit({ form, builtinCatalog }) {
           <h1 className="text-[18px] font-bold text-slate-800">Edit Form</h1>
           <p className="text-[13px] text-slate-500 mt-0.5">Changes apply immediately — the public link stays the same.</p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6">
           <FormBuilder
             builtinCatalog={builtinCatalog}
             initial={form}

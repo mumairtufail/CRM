@@ -22,7 +22,7 @@ function FieldPreview({ field }) {
  */
 export default function FormPreviewPanel({ data }) {
   return (
-    <div className="sticky top-4 space-y-2.5">
+    <div className="sticky top-6 space-y-2.5">
       <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-400 px-1">
         <Eye size={12} />
         Live preview

@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react'
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Plus, Trash2, Printer, Download, Sparkles, AlertCircle } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Printer, Download, Sparkles, AlertCircle, ChevronRight } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 
 export default function InvoiceGenerator({ latestBlogs = [] }) {
@@ -411,7 +411,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                       className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
                     >
                       <span>{faq.q}</span>
-                      <span className={`text-slate-400 text-lg transition-transform ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`}>▶</span>
+                      <ChevronRight className={`text-slate-400 w-5 h-5 transition-transform duration-200 ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`} />
                     </button>
                     {activeFaq === index && (
                       <div className="px-6 pb-5 pt-2 text-slate-500 text-sm leading-relaxed border-t border-slate-100 font-normal">

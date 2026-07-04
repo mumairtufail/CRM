@@ -35,8 +35,11 @@ function getInitialSidebar() {
   return stored === null ? true : stored === 'true'
 }
 
-export default function AppLayout({ children, title, noPadding = false }) {
-  const [sidebarOpen, setSidebarOpen] = useState(getInitialSidebar)
+export default function AppLayout({ children, title, noPadding = false, defaultSidebarClosed = false }) {
+  const [sidebarOpen, setSidebarOpen] = useState(() => {
+    if (defaultSidebarClosed) return false
+    return getInitialSidebar()
+  })
   const { impersonating } = usePage().props
 
   const toggleSidebar = () => setSidebarOpen(v => {

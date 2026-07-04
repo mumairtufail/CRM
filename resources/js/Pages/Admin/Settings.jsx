@@ -645,7 +645,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-5 items-start">
             
             {/* Sidebar Navigation */}
-            <div className="flex flex-col gap-1.5 bg-white border border-slate-200 rounded-2xl p-2.5 shadow-sm md:col-span-1">
+            <div className="flex flex-col gap-1.5 bg-white border border-slate-200 rounded-2xl p-2.5 shadow-sm md:col-span-1 md:sticky md:top-4 md:self-start">
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2.5 mb-1.5">Settings Panels</p>
               {filteredTabs.length === 0 ? (
                 <div className="py-6 text-center text-[12px] text-slate-400 font-medium">

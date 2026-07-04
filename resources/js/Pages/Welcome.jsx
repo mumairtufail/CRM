@@ -11,6 +11,7 @@ import {
     MailOpen, Sparkles, Clock, AlertCircle, Activity, PenTool, Link2
 } from 'lucide-react';
 import { LogoMark } from '@/Components/Common/Logo';
+import ChatWidget from '@/Components/Common/ChatWidget';
 import { cn } from '@/lib/utils';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
@@ -246,7 +247,7 @@ function RotatingWord() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Welcome({ appUrl, plans = [] }) {
+export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
     const { props } = usePage();
     const seo = props.seo || {};
     const latestBlogs = props.latestBlogs || [];
@@ -2008,6 +2009,13 @@ export default function Welcome({ appUrl, plans = [] }) {
                     margin-bottom: 0.5rem !important;
                 }
             `}</style>
+
+            {chatbot?.enabled && (
+                <ChatWidget
+                    agentName={chatbot.agent_name}
+                    welcomeMessage={chatbot.welcome_message}
+                />
+            )}
         </div>
     );
 }

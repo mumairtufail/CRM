@@ -1313,6 +1313,217 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
                 </div>
               )}
 
+              {/* TAB: AI Chatbot */}
+              {activeTab === 'chatbot' && (
+                <div className="space-y-4">
+
+                  {/* Status banner + link to recorded conversations */}
+                  <div className={cn(
+                    'flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-[12px]',
+                    chatbotForm.data.enabled
+                      ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
+                      : 'bg-amber-50/50 border-amber-100 text-amber-800'
+                  )}>
+                    <div className="flex items-center gap-2">
+                      {chatbotForm.data.enabled
+                        ? <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
+                        : <AlertCircle size={14} className="text-amber-500 shrink-0" />
+                      }
+                      <span className="font-semibold">
+                        {chatbotForm.data.enabled
+                          ? 'Chat widget is live on the public landing page.'
+                          : 'Chat widget is currently disabled.'}
+                      </span>
+                    </div>
+                    <Link
+                      href="/admin/chatbot-conversations"
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition-colors shrink-0"
+                    >
+                      <MessageSquare size={11} />
+                      View Recorded Conversations
+                    </Link>
+                  </div>
+
+                  {/* Persona & behavior form */}
+                  <form onSubmit={saveChatbot} className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
+                      <Bot size={16} className="text-violet-600" />
+                      <h2 className="text-[13.5px] font-bold text-slate-800">Chat Agent Persona</h2>
+                    </div>
+
+                    <p className="text-[11.5px] text-slate-400 leading-relaxed -mt-1">
+                      The chatbot answers visitors using your knowledge base below and the AI provider from the
+                      <button type="button" onClick={() => changeTab('ai')} className="text-violet-600 font-semibold hover:underline mx-1">AI Configuration</button>
+                      tab. Configure the AI provider first or the widget will not be able to reply.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                      <FieldWrapper id="chatbot_agent_name" label="Agent Display Name" colSpan="md:col-span-2">
+                        <Input
+                          id="chatbot_agent_name"
+                          value={chatbotForm.data.agent_name}
+                          onChange={e => chatbotForm.setData('agent_name', e.target.value)}
+                          placeholder="Sarah"
+                          className="h-9 text-[12.5px] rounded-lg mt-0.5"
+                        />
+                        {chatbotForm.errors.agent_name && <p className="text-[11px] text-red-500 mt-0.5">{chatbotForm.errors.agent_name}</p>}
+                      </FieldWrapper>
+
+                      <FieldWrapper id="chatbot_enabled" label="Widget Status" colSpan="md:col-span-2">
+                        <div className="flex items-center justify-between px-2.5 mt-0.5 bg-slate-50 border border-slate-200 rounded-lg h-9">
+                          <span className="text-[11.5px] font-semibold text-slate-600">
+                            {chatbotForm.data.enabled ? 'Enabled — visible to visitors' : 'Disabled — hidden from visitors'}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={chatbotForm.data.enabled}
+                            onChange={e => chatbotForm.setData('enabled', e.target.checked)}
+                            className="w-4 h-4 accent-violet-600 cursor-pointer"
+                          />
+                        </div>
+                      </FieldWrapper>
+
+                      <FieldWrapper id="chatbot_welcome" label="Welcome Message" colSpan="md:col-span-4">
+                        <textarea
+                          id="chatbot_welcome"
+                          value={chatbotForm.data.welcome_message}
+                          onChange={e => chatbotForm.setData('welcome_message', e.target.value)}
+                          rows="2"
+                          placeholder="Hey there! I'm Sarah from the team. How can I help you today?"
+                          className="w-full p-2 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-600 resize-none leading-normal mt-0.5"
+                        />
+                        {chatbotForm.errors.welcome_message && <p className="text-[11px] text-red-500 mt-0.5">{chatbotForm.errors.welcome_message}</p>}
+                      </FieldWrapper>
+
+                      <FieldWrapper id="chatbot_prompt" label="System Prompt (Persona & Behavior)" colSpan="md:col-span-4">
+                        <textarea
+                          id="chatbot_prompt"
+                          value={chatbotForm.data.system_prompt}
+                          onChange={e => chatbotForm.setData('system_prompt', e.target.value)}
+                          rows="10"
+                          placeholder={chatbot_default_prompt}
+                          className="w-full p-2.5 font-mono text-[11.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none bg-slate-50 text-slate-700 leading-relaxed mt-0.5"
+                        />
+                        <div className="flex items-center justify-between mt-1">
+                          <p className="text-[10.5px] text-slate-400 leading-snug">
+                            Leave empty to use the built-in default (shown as placeholder). Use <span className="font-mono bg-slate-100 px-1 rounded">{'{agent_name}'}</span> to insert the agent name. The knowledge base is appended automatically.
+                          </p>
+                          {chatbotForm.data.system_prompt && (
+                            <button
+                              type="button"
+                              onClick={resetChatbotPrompt}
+                              className="flex items-center gap-1 text-[10.5px] font-bold text-slate-500 hover:text-violet-600 shrink-0 ml-3"
+                            >
+                              <RotateCcw size={10} />
+                              Use default
+                            </button>
+                          )}
+                        </div>
+                        {chatbotForm.errors.system_prompt && <p className="text-[11px] text-red-500 mt-0.5">{chatbotForm.errors.system_prompt}</p>}
+                      </FieldWrapper>
+                    </div>
+
+                    <div className="flex justify-end pt-2 border-t border-slate-100">
+                      <Button
+                        type="submit"
+                        disabled={chatbotForm.processing}
+                        size="sm"
+                        className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12px] font-semibold rounded-lg shadow-sm"
+                      >
+                        {chatbotForm.processing ? 'Saving Chatbot…' : 'Save Chatbot Settings'}
+                      </Button>
+                    </div>
+                  </form>
+
+                  {/* Knowledge base manager */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                      <div className="flex items-center gap-2">
+                        <FileText size={16} className="text-violet-600" />
+                        <h2 className="text-[13.5px] font-bold text-slate-800">Knowledge Base</h2>
+                        <span className="px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 border border-slate-200">
+                          {chatbot_knowledge.length} {chatbot_knowledge.length === 1 ? 'entry' : 'entries'}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openKbDialog()}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[11px] font-bold shadow-sm transition-colors"
+                      >
+                        <Plus size={11} />
+                        Add Entry
+                      </button>
+                    </div>
+
+                    <p className="text-[11.5px] text-slate-400 leading-relaxed">
+                      Everything the chatbot is allowed to say comes from these entries — product docs, pricing, FAQs, policies.
+                      Only active entries are used. The bot will not invent answers outside this content.
+                    </p>
+
+                    {chatbot_knowledge.length === 0 ? (
+                      <div className="py-8 text-center border border-dashed border-slate-200 rounded-xl">
+                        <FileText size={20} className="mx-auto text-slate-300 mb-2" />
+                        <p className="text-[12px] font-semibold text-slate-500">No knowledge base entries yet</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">Add your docs, FAQs, and pricing so the chatbot has something to answer from.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {chatbot_knowledge.map(entry => (
+                          <div
+                            key={entry.id}
+                            className={cn(
+                              'flex items-start justify-between gap-3 p-3 rounded-xl border transition-colors',
+                              entry.is_active ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50 opacity-70'
+                            )}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <p className="text-[12.5px] font-bold text-slate-700 truncate">{entry.title}</p>
+                                <span className={cn(
+                                  'px-1.5 py-0.5 rounded-full text-[9px] font-bold border shrink-0',
+                                  entry.is_active
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                    : 'bg-slate-100 text-slate-500 border-slate-200'
+                                )}>
+                                  {entry.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{entry.content}</p>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                type="button"
+                                title={entry.is_active ? 'Deactivate' : 'Activate'}
+                                onClick={() => toggleKbEntry(entry)}
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors"
+                              >
+                                {entry.is_active ? <EyeOff size={12} /> : <Eye size={12} />}
+                              </button>
+                              <button
+                                type="button"
+                                title="Edit"
+                                onClick={() => openKbDialog(entry)}
+                                className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors"
+                              >
+                                <Pencil size={12} />
+                              </button>
+                              <button
+                                type="button"
+                                title="Delete"
+                                onClick={() => deleteKbEntry(entry)}
+                                className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-500 transition-colors"
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* TAB 5: SEO Settings */}
               {activeTab === 'seo' && (
                 <div className="space-y-4">
@@ -1461,6 +1672,64 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
             >
               {smtpTestLoading ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
               Send Test
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Chatbot Knowledge Base Entry Dialog */}
+      <Dialog open={kbDialogOpen} onOpenChange={setKbDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="text-[14px] font-bold text-slate-800">
+              {kbEditing ? 'Edit Knowledge Base Entry' : 'Add Knowledge Base Entry'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <div className="space-y-1.5">
+              <Label className="text-[11.5px] font-bold text-slate-600">
+                Title <span className="text-red-400 font-normal">*</span>
+              </Label>
+              <Input
+                value={kbTitle}
+                onChange={e => setKbTitle(e.target.value)}
+                placeholder="e.g. Pricing plans, Refund policy, Getting started"
+                className="h-9 text-[12.5px] rounded-lg"
+                autoFocus
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-[11.5px] font-bold text-slate-600">
+                Content <span className="text-red-400 font-normal">*</span>
+              </Label>
+              <textarea
+                value={kbContent}
+                onChange={e => setKbContent(e.target.value)}
+                rows="8"
+                placeholder="Paste the docs, FAQ answer, or policy text the chatbot should answer from…"
+                className="w-full p-2.5 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-600 leading-relaxed resize-y"
+              />
+              <p className="text-[10.5px] text-slate-400 leading-snug">
+                Plain text works best. Keep each entry focused on one topic so answers stay accurate.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <button
+              type="button"
+              onClick={() => setKbDialogOpen(false)}
+              className="h-8 px-3 text-[11.5px] font-semibold text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={saveKbEntry}
+              disabled={kbSaving || !kbTitle.trim() || !kbContent.trim()}
+              className="flex items-center gap-1.5 h-8 px-4 text-[11.5px] font-bold text-white rounded-lg transition-all hover:opacity-90 bg-violet-600 disabled:opacity-40"
+            >
+              {kbSaving ? <Loader2 size={11} className="animate-spin" /> : <Plus size={11} />}
+              {kbEditing ? 'Save Changes' : 'Add Entry'}
             </button>
           </DialogFooter>
         </DialogContent>

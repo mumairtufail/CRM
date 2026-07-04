@@ -173,7 +173,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
             'configured' => \App\Models\SystemSetting::isSmtpConfigured(),
             'chatbot' => \App\Models\SystemSetting::getChatbot(),
             'chatbot_default_prompt' => \App\Services\ChatbotService::defaultSystemPrompt(),
-            'chatbot_knowledge' => \App\Models\ChatbotKnowledgeEntry::orderBy('sort_order')->orderBy('id')->get(),
+            // Guard: don't 500 if the deploy hasn't run the chatbot migration yet.
+            'chatbot_knowledge' => \Illuminate\Support\Facades\Schema::hasTable('chatbot_knowledge_entries')
+                ? \App\Models\ChatbotKnowledgeEntry::orderBy('sort_order')->orderBy('id')->get()
+                : [],
         ]);
     })->name('settings');
 

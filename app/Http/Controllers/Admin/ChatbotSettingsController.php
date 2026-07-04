@@ -70,6 +70,14 @@ class ChatbotSettingsController extends Controller
 
     public function conversations(Request $request): Response
     {
+        // Guard: don't 500 if the deploy hasn't run the chatbot migration yet.
+        if (!\Illuminate\Support\Facades\Schema::hasTable('chatbot_conversations')) {
+            return Inertia::render('Admin/ChatbotConversations', [
+                'conversations' => ['data' => [], 'links' => []],
+                'filters'       => ['search' => ''],
+            ]);
+        }
+
         $conversations = ChatbotConversation::withCount('messages')
             ->when($request->filled('search'), function ($q) use ($request) {
                 $s = $request->string('search');

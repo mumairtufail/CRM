@@ -1,10 +1,19 @@
 import { Head, Link } from '@inertiajs/react'
 import { useState } from 'react'
-import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Zap } from 'lucide-react'
+import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Zap, Menu, X } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 
 export default function Hub({ latestBlogs = [] }) {
   const [activeFaq, setActiveFaq] = useState(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  const navLinks = [
+    { label: 'Features',       href: '/#features'      },
+    { label: 'AI Prospecting', href: '/#integrations'  },
+    { label: 'How it works',   href: '/#how-it-works'  },
+    { label: 'Pricing',        href: '/#pricing'       },
+    { label: 'Contact',        href: '/#contact'       },
+  ]
 
   const tools = [
     {
@@ -66,26 +75,67 @@ export default function Hub({ latestBlogs = [] }) {
       </Head>
 
       <div className="min-h-screen bg-[#F8F9FD] font-sans antialiased text-slate-800 flex flex-col justify-between">
-        {/* Header */}
-        <header className="sticky top-0 z-50 bg-[#F8F9FD]/80 backdrop-blur-md border-b border-slate-100">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Logo size={32} showText={true} text="LumeniaCRM" textClassName="text-[17px] font-extrabold" />
-            </Link>
-            <nav className="hidden md:flex items-center gap-6 text-[14px] font-semibold text-slate-600">
-              <Link href="/" className="hover:text-violet-600 transition-colors">Home</Link>
-              <Link href="/blog" className="hover:text-violet-600 transition-colors">Blog</Link>
-              <Link href="/tools" className="text-violet-600">Free Tools</Link>
-              <Link href="/login" className="hover:text-violet-600 transition-colors">Sign in</Link>
-              <Link
-                href="/register"
-                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-violet-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
-              >
-                Get Started
-              </Link>
-            </nav>
-          </div>
-        </header>
+        {/* Header/Nav */}
+        <nav className="fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all duration-300">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between h-16">
+                    <Link href="/" className="flex items-center gap-2.5">
+                        <LogoMark size={34} />
+                        <span className="font-extrabold text-[17px] tracking-tight leading-none text-slate-900">
+                            Lumenia CRM
+                        </span>
+                    </Link>
+
+                    <div className="hidden md:flex items-center gap-8">
+                        {navLinks.map(({ label, href }) => (
+                            <a key={label} href={href}
+                               className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
+                        ))}
+                    </div>
+
+                    <div className="hidden md:flex items-center gap-2">
+                        <Link href="/login"
+                              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors">
+                            Sign In
+                        </Link>
+                        <Link href="/register"
+                              className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
+                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                            Get Started
+                        </Link>
+                    </div>
+
+                    <button className="md:hidden p-1.5 text-slate-700"
+                            onClick={() => setMobileOpen(v => !v)}>
+                        {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    </button>
+                </div>
+            </div>
+
+            {mobileOpen && (
+                <div className="md:hidden border-t border-white/10 px-4 py-4 space-y-1"
+                     style={{ background: 'rgba(10,8,18,0.97)' }}>
+                    {navLinks.map(({ label, href }) => (
+                        <a key={label} href={href} onClick={() => setMobileOpen(false)}
+                           className="block py-2.5 text-white/75 hover:text-white text-sm font-medium">{label}</a>
+                    ))}
+                    <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+                        <Link href="/login"
+                              className="block py-3 rounded-xl text-center text-sm font-medium text-white/75 border border-white/15 hover:bg-white/5">
+                            Sign In
+                        </Link>
+                        <Link href="/register"
+                              className="block py-3 rounded-xl text-center text-sm font-bold text-white"
+                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                            Get Started
+                        </Link>
+                    </div>
+                </div>
+            )}
+        </nav>
+
+        {/* Spacer for sticky header */}
+        <div className="h-16 w-full shrink-0" />
 
         {/* Hero */}
         <section className="py-20 md:py-28 text-center bg-gradient-to-b from-white to-transparent relative overflow-hidden">
@@ -168,7 +218,7 @@ export default function Hub({ latestBlogs = [] }) {
                 <div key={index} className="bg-white border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                   <button
                     onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                    className="w-full px-6 py-4.5 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
+                    className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
                   >
                     <span>{faq.q}</span>
                     <ChevronRight size={18} className={`text-slate-400 transition-transform ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`} />
@@ -186,56 +236,75 @@ export default function Hub({ latestBlogs = [] }) {
 
         {/* Footer */}
         <footer style={{ background: '#030208' }} className="border-t border-white/5 w-full">
-          <div className="max-w-7xl mx-auto px-6 py-12">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-10 border-b border-white/5 pb-10">
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <LogoMark size={28} />
-                  <span className="font-extrabold text-white text-[15px]">Lumenia CRM</span>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-10 mb-12">
+                    <div className="col-span-2 md:col-span-1">
+                        <div className="flex items-center gap-2.5 mb-4">
+                            <LogoMark size={32} />
+                            <span className="font-extrabold text-white text-[17px] tracking-tight leading-none">Lumenia CRM</span>
+                        </div>
+                        <p className="text-slate-600 text-sm leading-relaxed">
+                            A CRM for sales teams that actually want to use their CRM. By Lumenia Lab.
+                        </p>
+                    </div>
+
+                    {[
+                        { heading: 'Product', links: [{ label: 'Features', href: '/#features' }, { label: 'Pricing', href: '/#pricing' }, { label: 'FAQ', href: '/#faq' }, { label: 'Changelog', href: '#' }] },
+                        { heading: 'Free Tools', links: [{ label: 'Email Signature', href: '/tools/email-signature-generator', internal: true }, { label: 'Invoice Generator', href: '/tools/invoice-generator', internal: true }, { label: 'All Free Tools', href: '/tools', internal: true }] },
+                        { heading: 'Account', links: [{ label: 'Sign In', href: '/login', internal: true }, { label: 'Register', href: '/register', internal: true }, { label: 'Support', href: '#' }, { label: 'Contact', href: '#' }] },
+                        { heading: 'Legal',   links: [{ label: 'Privacy Policy', href: '#' }, { label: 'Terms of Service', href: '#' }, { label: 'Security', href: '#' }] },
+                    ].map(({ heading, links }) => (
+                        <div key={heading}>
+                            <div className="text-white font-semibold text-sm mb-4">{heading}</div>
+                            <ul className="space-y-2.5">
+                                {links.map(({ label, href, internal }) => (
+                                    <li key={label}>
+                                        {internal ? (
+                                            <Link href={href} className="text-slate-600 hover:text-white text-sm transition-colors">{label}</Link>
+                                        ) : (
+                                            <a href={href} className="text-slate-600 hover:text-white text-sm transition-colors">{label}</a>
+                                        )}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    ))}
+
+                    <div>
+                        <div className="text-white font-semibold text-sm mb-4">Latest Blogs</div>
+                        <ul className="space-y-2.5">
+                            <li>
+                                <Link href="/blog" className="text-violet-400 hover:text-white text-sm font-semibold transition-colors block mb-1">Our Blog</Link>
+                            </li>
+                            {latestBlogs && latestBlogs.length > 0 ? (
+                                latestBlogs.map((b) => (
+                                    <li key={b.slug}>
+                                        <Link href={`/blog/${b.slug}`} className="text-slate-600 hover:text-white text-sm transition-colors block truncate max-w-[185px]" title={b.title}>
+                                            {b.title}
+                                        </Link>
+                                    </li>
+                                ))
+                            ) : (
+                                <li className="text-slate-700 text-sm italic">No articles yet</li>
+                            )}
+                        </ul>
+                    </div>
                 </div>
-                <p className="text-slate-500 text-xs leading-relaxed">
-                  A premium CRM for scaling sales teams. Manage pipelines, invoices, email campaigns, and support.
-                </p>
-              </div>
 
-              <div>
-                <h4 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">Product</h4>
-                <ul className="space-y-2 text-xs">
-                  <li><Link href="/#features" className="text-slate-500 hover:text-white transition-colors">Features</Link></li>
-                  <li><Link href="/#pricing" className="text-slate-500 hover:text-white transition-colors">Pricing</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">Free Tools</h4>
-                <ul className="space-y-2 text-xs">
-                  <li><Link href="/tools/email-signature-generator" className="text-slate-500 hover:text-white transition-colors">Email Signature Generator</Link></li>
-                  <li><Link href="/tools/invoice-generator" className="text-slate-500 hover:text-white transition-colors">Invoice Generator</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <h4 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">Latest Blogs</h4>
-                <ul className="space-y-2 text-xs">
-                  <li><Link href="/blog" className="text-violet-400 hover:text-white font-semibold transition-colors">Our Blog</Link></li>
-                  {latestBlogs.slice(0, 2).map((b) => (
-                    <li key={b.slug}>
-                      <Link href={`/blog/${b.slug}`} className="text-slate-500 hover:text-white transition-colors block truncate max-w-[200px]">
-                        {b.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+                <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p className="text-slate-700 text-sm">
+                        © {new Date().getFullYear()} Lumenia Lab. All rights reserved.
+                    </p>
+                    <div className="flex items-center gap-6">
+                        <a href="#" className="text-slate-700 hover:text-white text-sm transition-colors">Twitter / X</a>
+                        <a href="#" className="text-slate-700 hover:text-white text-sm transition-colors">LinkedIn</a>
+                        <a href="mailto:hello@lumenialab.com"
+                           className="text-slate-700 hover:text-white text-sm transition-colors">
+                            hello@lumenialab.com
+                        </a>
+                    </div>
+                </div>
             </div>
-
-            <div className="pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-slate-500">
-              <p>© {new Date().getFullYear()} Lumenia Lab. All rights reserved.</p>
-              <div className="flex gap-6">
-                <a href="mailto:hello@lumenialab.com" className="hover:text-white transition-colors">hello@lumenialab.com</a>
-              </div>
-            </div>
-          </div>
         </footer>
       </div>
     </>

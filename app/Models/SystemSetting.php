@@ -19,7 +19,7 @@ class SystemSetting extends Model
 
     public static function getCached(string $key, mixed $default = null): mixed
     {
-        return Cache::remember("system_setting:{$key}", 3600, fn () => static::get($key));
+        return Cache::remember("system_setting:{$key}", 3600, fn () => static::get($key, $default));
     }
 
     // ── Write helpers ─────────────────────────────────────────────────────────

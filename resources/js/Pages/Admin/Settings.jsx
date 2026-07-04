@@ -1317,22 +1317,27 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
               {activeTab === 'chatbot' && (
                 <div className="space-y-4">
 
-                  {/* Status banner + link to recorded conversations */}
+                  {/* Status banner + link to recorded conversations — reflects the last SAVED
+                      state from the server, not the in-progress form draft below, so it can't
+                      claim "live" for a toggle that hasn't actually been saved yet. */}
                   <div className={cn(
                     'flex items-center justify-between gap-3 px-4 py-3 rounded-2xl border text-[12px]',
-                    chatbotForm.data.enabled
+                    chatbot?.enabled
                       ? 'bg-emerald-50/50 border-emerald-100 text-emerald-800'
                       : 'bg-amber-50/50 border-amber-100 text-amber-800'
                   )}>
                     <div className="flex items-center gap-2">
-                      {chatbotForm.data.enabled
+                      {chatbot?.enabled
                         ? <CheckCircle2 size={14} className="text-emerald-500 shrink-0" />
                         : <AlertCircle size={14} className="text-amber-500 shrink-0" />
                       }
                       <span className="font-semibold">
-                        {chatbotForm.data.enabled
+                        {chatbot?.enabled
                           ? 'Chat widget is live on the public landing page.'
                           : 'Chat widget is currently disabled.'}
+                        {chatbotForm.data.enabled !== !!chatbot?.enabled && (
+                          <span className="ml-2 font-bold text-violet-700">— unsaved change, click Save below to apply</span>
+                        )}
                       </span>
                     </div>
                     <Link

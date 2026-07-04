@@ -97,6 +97,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/users/{user}/impersonate',     [AdminUserController::class, 'impersonate'])->name('users.impersonate');
     Route::get('/organizations',                 [AdminOrganizationController::class, 'index'])->name('organizations.index');
     Route::patch('/organizations/{organization:id}/plan', [AdminOrganizationController::class, 'updatePlan'])->name('organizations.plan.update');
+    Route::delete('/organizations/{organization:id}', [AdminOrganizationController::class, 'destroy'])->name('organizations.destroy');
 
     // Subscription plans
     Route::get('/plans',                          [AdminPlanController::class, 'index'])->name('plans.index');

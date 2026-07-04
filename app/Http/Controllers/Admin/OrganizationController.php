@@ -62,4 +62,11 @@ class OrganizationController extends Controller
 
         return back()->with('success', "Updated {$organization->name}'s plan.");
     }
+
+    public function destroy(Organization $organization): RedirectResponse
+    {
+        $organization->delete();
+
+        return back()->with('success', "Workspace {$organization->name} has been deleted successfully.");
+    }
 }

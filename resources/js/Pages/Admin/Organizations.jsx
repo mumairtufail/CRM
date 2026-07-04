@@ -7,9 +7,10 @@ import SearchInput from '@/Components/Common/SearchInput'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/Components/ui/dialog'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/Components/ui/select'
 import { Switch } from '@/Components/ui/switch'
-import { Users, UserCircle, CreditCard, Pencil } from 'lucide-react'
+import { Users, UserCircle, CreditCard, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 
 function ChangePlanDialog({ organization, plans, onOpenChange }) {
   const [planId, setPlanId] = useState(organization.plan?.id ? String(organization.plan.id) : '')
@@ -84,6 +85,29 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
 export default function AdminOrganizations({ organizations, filters, plans }) {
   const [loading, setLoading] = useState(false)
   const [planTarget, setPlanTarget] = useState(null)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedOrg, setSelectedOrg] = useState(null)
+  const [deleting, setDeleting] = useState(false)
+
+  const requestDeleteOrg = (org) => {
+    setSelectedOrg(org)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteOrg = () => {
+    if (!selectedOrg) return
+    setDeleting(true)
+    router.delete(`/admin/organizations/${selectedOrg.id}`, {
+      onSuccess: () => {
+        setIsDeleteDialogOpen(false)
+        setSelectedOrg(null)
+        toast.success('Workspace deleted successfully.')
+      },
+      onFinish: () => {
+        setDeleting(false)
+      }
+    })
+  }
 
   useEffect(() => {
     const start = router.on('start', () => setLoading(true))
@@ -177,6 +201,20 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
       size: 110,
       cell: ({ getValue }) => <span className="text-sm text-gray-500">{getValue()}</span>,
     },
+    {
+      id: 'actions',
+      header: 'Actions',
+      size: 80,
+      cell: ({ row }) => (
+        <button
+          onClick={() => requestDeleteOrg(row.original)}
+          className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors"
+          title="Delete Workspace"
+        >
+          <Trash2 size={13.5} />
+        </button>
+      ),
+    },
   ]
 
   return (
@@ -212,6 +250,17 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
             onOpenChange={(open) => { if (!open) setPlanTarget(null) }}
           />
         )}
+
+        <ConfirmDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title="Delete Workspace"
+          description={`Are you sure you want to delete the workspace "${selectedOrg?.name}"? This will permanently delete all associated users, leads, settings, campaigns, and workspace data. This action cannot be undone.`}
+          onConfirm={confirmDeleteOrg}
+          loading={deleting}
+          confirmText="Delete"
+          loadingText="Deleting..."
+        />
       </AdminLayout>
     </>
   )

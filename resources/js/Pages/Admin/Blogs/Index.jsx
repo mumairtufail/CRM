@@ -4,9 +4,13 @@ import { BookOpen, Calendar, Edit2, Eye, EyeOff, Plus, Tag as TagIcon, Trash2, U
 import { toast } from 'sonner'
 import { useState } from 'react'
 import axios from 'axios'
+import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 
 export default function Index({ blogs }) {
   const [generating, setGenerating] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [selectedBlogId, setSelectedBlogId] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   const togglePublish = (id) => {
     router.patch(`/admin/blogs/${id}/toggle`, {}, {
@@ -17,14 +21,24 @@ export default function Index({ blogs }) {
     })
   }
 
-  const deleteBlog = (id) => {
-    if (confirm('Are you sure you want to delete this blog post?')) {
-      router.delete(`/admin/blogs/${id}`, {
-        onSuccess: () => {
-          toast.success('Blog post deleted.')
-        }
-      })
-    }
+  const requestDeleteBlog = (id) => {
+    setSelectedBlogId(id)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteBlog = () => {
+    if (!selectedBlogId) return
+    setDeleting(true)
+    router.delete(`/admin/blogs/${selectedBlogId}`, {
+      onSuccess: () => {
+        setIsDeleteDialogOpen(false)
+        setSelectedBlogId(null)
+        toast.success('Blog post deleted.')
+      },
+      onFinish: () => {
+        setDeleting(false)
+      }
+    })
   }
 
   const generateAiBlog = async () => {
@@ -200,7 +214,7 @@ export default function Index({ blogs }) {
                             </Link>
                             <button
                               type="button"
-                              onClick={() => deleteBlog(blog.id)}
+                              onClick={() => requestDeleteBlog(blog.id)}
                               className="p-1.5 rounded-lg border border-red-200 hover:bg-red-50 text-red-500 hover:text-red-700 transition-colors"
                               title="Delete post"
                             >
@@ -240,6 +254,17 @@ export default function Index({ blogs }) {
             )}
           </div>
         </div>
+
+        <ConfirmDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          title="Delete Blog Post"
+          description="Are you sure you want to delete this blog post? This action cannot be undone."
+          onConfirm={confirmDeleteBlog}
+          loading={deleting}
+          confirmText="Delete"
+          loadingText="Deleting..."
+        />
       </AdminLayout>
     </>
   )

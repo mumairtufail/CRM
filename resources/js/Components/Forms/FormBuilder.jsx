@@ -183,7 +183,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
   }
 
   return (
-    <div className="w-full h-full flex flex-col md:flex-row min-h-0 overflow-hidden bg-white border border-slate-200 rounded-3xl shadow-sm">
+    <div className="w-full flex-1 flex flex-col md:flex-row min-h-0 overflow-hidden bg-white border border-slate-200 rounded-3xl shadow-sm">
       
       {/* LEFT PANEL: CONFIGURATION */}
       <div className="flex-1 md:flex-[5] flex flex-col min-h-0 overflow-hidden p-4 md:p-6 justify-between">
@@ -217,14 +217,14 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
 
         {/* Scrollable inputs inside left panel */}
         <form onSubmit={submit} className="flex-1 min-h-0 flex flex-col justify-between mt-4">
-          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4">
-            
+          <div className="flex-1 min-h-0 flex flex-col">
+
             {/* BUILD FIELDS TAB */}
             {activeSubTab === 'build' && (
-              <div className="space-y-4">
-                
-                {/* Suggested fields */}
-                <div className="bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-2">
+              <div className="flex-1 min-h-0 flex flex-col space-y-4">
+
+                {/* Suggested fields — pinned */}
+                <div className="shrink-0 bg-slate-50/50 border border-slate-100 rounded-xl p-3.5 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Suggested Fields</span>
                     <span className="text-[9px] text-slate-400 font-semibold">Click to toggle</span>
@@ -252,8 +252,8 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                 </div>
 
                 {/* Form fields editor list */}
-                <div className="space-y-2.5">
-                  <div className="flex justify-between items-center border-b border-slate-100 pb-1.5">
+                <div className="flex-1 min-h-0 flex flex-col space-y-2.5">
+                  <div className="shrink-0 flex justify-between items-center border-b border-slate-100 pb-1.5">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Active Form Fields</span>
                     <Button
                       type="button"
@@ -266,7 +266,8 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                     </Button>
                   </div>
 
-                  <div className="space-y-2">
+                  {/* Only this list scrolls — tabs, suggested fields, and header stay pinned */}
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2 pb-1">
                     {data.fields.map((f, i) => (
                       <div key={f.key} className="flex items-start gap-3 border border-slate-150 rounded-lg p-3 bg-white hover:border-slate-300 transition-colors">
                         
@@ -376,7 +377,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
 
             {/* SETTINGS TAB */}
             {activeSubTab === 'settings' && (
-              <div className="space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <FieldWrapper label="Form Name" error={errors.name}>
                     <Input

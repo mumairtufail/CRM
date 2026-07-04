@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePage, router } from '@inertiajs/react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
@@ -41,6 +41,11 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
     return getInitialSidebar()
   })
   const { impersonating } = usePage().props
+
+  useEffect(() => {
+    document.body.classList.add('overflow-hidden')
+    return () => document.body.classList.remove('overflow-hidden')
+  }, [])
 
   const toggleSidebar = () => setSidebarOpen(v => {
     const next = !v

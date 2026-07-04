@@ -7,6 +7,9 @@ import { Checkbox } from '@/Components/ui/checkbox'
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/Components/ui/select'
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from '@/Components/ui/dialog'
 import { Badge } from '@/Components/ui/badge'
 import { toast } from 'sonner'
 import { Plus, X, ArrowUp, ArrowDown, Copy, Check, Loader2, Layers, Eye, Settings, Trash2 } from 'lucide-react'
@@ -50,11 +53,16 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
     description:      initial?.description ?? '',
     success_message:  initial?.success_message ?? '',
     slug:             initial?.slug ?? '',
-    fields: initial?.fields ?? builtinCatalog
+    fields: (initial?.fields ?? builtinCatalog
       .filter(c => c.key === 'first_name' || c.key === 'email')
       .map((c, i) => ({
         key: c.key, kind: 'builtin', type: c.type, label: c.label,
         required: c.always_required || c.key === 'email', placeholder: null, options: null, order: i,
+      }))).map(f => ({
+        ...f,
+        required: !!f.required,
+        placeholder: f.placeholder || null,
+        options: f.options || null
       })),
   })
 
@@ -137,7 +145,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
 
     setData('fields', [...data.fields, {
       key, kind: 'custom', type: newField.type, label: newField.label,
-      required: newField.required,
+      required: !!newField.required,
       placeholder: null,
       options: newField.type === 'dropdown' ? newField.options.filter(o => o.trim()) : null,
       order: data.fields.length,
@@ -151,9 +159,27 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
       toast.error(slugStatus === 'checking' ? 'Checking link availability...' : 'Choose an available URL slug.')
       return
     }
-    const options = { onError: () => toast.error('Please fix errors.') }
-    if (method === 'put') put(submitUrl, options)
-    else post(submitUrl, options)
+
+    // Force strict booleans for all required flags on submit
+    const sanitizedFields = data.fields.map(f => ({
+      ...f,
+      required: !!f.required
+    }))
+
+    const options = {
+      onError: (errs) => {
+        const firstErr = Object.values(errs)[0];
+        toast.error(typeof firstErr === 'string' ? firstErr : 'Please fix validation errors.');
+      }
+    }
+    
+    // Inertia form submission helper
+    const payload = { ...data, fields: sanitizedFields }
+    if (method === 'put') {
+      router.put(submitUrl, payload, options)
+    } else {
+      router.post(submitUrl, payload, options)
+    }
   }
 
   return (
@@ -285,7 +311,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                           <div className="flex items-center gap-3">
                             <label className="flex items-center gap-1.5 cursor-pointer select-none">
                               <Checkbox
-                                checked={f.required}
+                                checked={!!f.required}
                                 disabled={f.kind === 'builtin' && f.key === 'first_name'}
                                 onCheckedChange={v => updateField(f.key, { required: !!v })}
                               />
@@ -334,7 +360,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                         {f.kind === 'custom' && (
                           <button
                             type="button"
-                            className="text-slate-400 hover:text-rose-500 p-1.5 rounded hover:bg-slate-50 shrink-0"
+                            className="text-slate-400 hover:text-rose-500 p-1.5 rounded hover:bg-slate-55 shrink-0"
                             onClick={() => removeField(f.key)}
                           >
                             <Trash2 size={14} />
@@ -345,104 +371,6 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                   </div>
                 </div>
 
-                {/* Inline custom field creator */}
-                {newField && (
-                  <div className="border border-violet-200 bg-violet-50/10 rounded-xl p-4 space-y-3 animate-scale">
-                    <div className="flex justify-between items-center border-b border-violet-100 pb-1">
-                      <span className="text-[10px] font-black uppercase text-violet-600 tracking-wider">New Custom Field</span>
-                      <button type="button" onClick={() => setNewField(null)} className="text-slate-400 hover:text-slate-600">
-                        <X size={14} />
-                      </button>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <FieldWrapper label="Field Label">
-                        <Input
-                          value={newField.label}
-                          onChange={e => setNewField({ ...newField, label: e.target.value })}
-                          className="h-8 text-xs bg-white"
-                          placeholder="e.g. Budget range"
-                        />
-                      </FieldWrapper>
-
-                      <FieldWrapper label="Field Type">
-                        <Select
-                          value={newField.type}
-                          onValueChange={v => setNewField({ ...newField, type: v, options: v === 'dropdown' ? [''] : newField.options })}
-                        >
-                          <SelectTrigger className="h-8 text-xs bg-white"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {CUSTOM_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </FieldWrapper>
-                    </div>
-
-                    {newField.type === 'dropdown' && (
-                      <div className="space-y-1.5 p-3 bg-white border border-slate-100 rounded-lg">
-                        <Label className="text-[10px] font-bold text-slate-400 uppercase">Dropdown Options</Label>
-                        <div className="flex flex-wrap gap-1.5">
-                          {newField.options.map((opt, oi) => (
-                            <div key={oi} className="flex items-center gap-1">
-                              <Input
-                                value={opt}
-                                className="h-7 text-[11px] bg-slate-50 w-24"
-                                placeholder={`Option ${oi + 1}`}
-                                onChange={e => {
-                                  const opts = [...newField.options]; opts[oi] = e.target.value
-                                  setNewField({ ...newField, options: opts })
-                                }}
-                              />
-                              <button
-                                type="button"
-                                className="text-slate-400 hover:text-rose-500"
-                                onClick={() => setNewField({ ...newField, options: newField.options.filter((_, x) => x !== oi) })}
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          ))}
-                          <button
-                            type="button"
-                            className="text-[11px] font-bold text-violet-600 hover:text-violet-700 flex items-center gap-0.5 px-2"
-                            onClick={() => setNewField({ ...newField, options: [...newField.options, ''] })}
-                          >
-                            <Plus size={10} /> Option
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between items-center border-t border-slate-100 pt-3">
-                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                        <Checkbox
-                          checked={newField.required}
-                          onCheckedChange={v => setNewField({ ...newField, required: !!v })}
-                        />
-                        <span className="text-[11px] text-slate-500 font-bold">Required</span>
-                      </label>
-                      <div className="flex gap-1.5">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-xs font-bold"
-                          onClick={() => setNewField(null)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          className="h-7 text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white"
-                          onClick={saveCustomField}
-                        >
-                          Add Field
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -620,6 +548,110 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
           </div>
         </div>
       </div>
+
+      {/* MODAL DIALOG: ADD CUSTOM FIELD */}
+      <Dialog open={!!newField} onOpenChange={open => !open && setNewField(null)}>
+        <DialogContent className="max-w-md bg-white border border-slate-250 rounded-2xl p-6 gap-4">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold text-slate-800 uppercase tracking-wider">Configure Custom Field</DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Customize label, field type, options, and validation rules.
+            </DialogDescription>
+          </DialogHeader>
+
+          {newField && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <FieldWrapper label="Field Label">
+                  <Input
+                    value={newField.label}
+                    onChange={e => setNewField({ ...newField, label: e.target.value })}
+                    className="h-9 text-xs bg-slate-50/50"
+                    placeholder="e.g. Budget range"
+                  />
+                </FieldWrapper>
+
+                <FieldWrapper label="Field Type">
+                  <Select
+                    value={newField.type}
+                    onValueChange={v => setNewField({ ...newField, type: v, options: v === 'dropdown' ? [''] : newField.options })}
+                  >
+                    <SelectTrigger className="h-9 text-xs bg-slate-50/50"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {CUSTOM_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </FieldWrapper>
+              </div>
+
+              {newField.type === 'dropdown' && (
+                <div className="space-y-2 p-3.5 bg-slate-50 border border-slate-100 rounded-xl">
+                  <Label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Dropdown Options</Label>
+                  <div className="grid grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                    {newField.options.map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-1.5">
+                        <Input
+                          value={opt}
+                          className="h-8 text-xs bg-white"
+                          placeholder={`Option ${oi + 1}`}
+                          onChange={e => {
+                            const opts = [...newField.options]; opts[oi] = e.target.value
+                            setNewField({ ...newField, options: opts })
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="text-slate-400 hover:text-rose-500"
+                          onClick={() => setNewField({ ...newField, options: newField.options.filter((_, x) => x !== oi) })}
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    className="text-xs font-bold text-violet-600 hover:text-violet-750 flex items-center gap-0.5 mt-1"
+                    onClick={() => setNewField({ ...newField, options: [...newField.options, ''] })}
+                  >
+                    <Plus size={12} /> Add option
+                  </button>
+                </div>
+              )}
+
+              <div className="flex items-center pt-2">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <Checkbox
+                    checked={newField.required}
+                    onCheckedChange={v => setNewField({ ...newField, required: !!v })}
+                  />
+                  <span className="text-xs text-slate-600 font-bold">Mark field as Required</span>
+                </label>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="mt-4 border-t border-slate-100 pt-4 gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-8.5 text-xs font-bold"
+              onClick={() => setNewField(null)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="h-8.5 text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white"
+              onClick={saveCustomField}
+            >
+              Add Field
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </div>
   )

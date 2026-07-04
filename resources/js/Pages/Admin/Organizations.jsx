@@ -88,25 +88,48 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedOrg, setSelectedOrg] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState([])
+  const [deleteMode, setDeleteMode] = useState('single') // 'single' | 'bulk'
 
   const requestDeleteOrg = (org) => {
+    setDeleteMode('single')
     setSelectedOrg(org)
     setIsDeleteDialogOpen(true)
   }
 
+  const requestBulkDelete = () => {
+    if (selectedIds.length === 0) return
+    setDeleteMode('bulk')
+    setIsDeleteDialogOpen(true)
+  }
+
   const confirmDeleteOrg = () => {
-    if (!selectedOrg) return
     setDeleting(true)
-    router.delete(`/admin/organizations/${selectedOrg.id}`, {
-      onSuccess: () => {
-        setIsDeleteDialogOpen(false)
-        setSelectedOrg(null)
-        toast.success('Workspace deleted successfully.')
-      },
-      onFinish: () => {
-        setDeleting(false)
-      }
-    })
+    if (deleteMode === 'single') {
+      if (!selectedOrg) return
+      router.delete(`/admin/organizations/${selectedOrg.id}`, {
+        onSuccess: () => {
+          setIsDeleteDialogOpen(false)
+          setSelectedOrg(null)
+          setSelectedIds(prev => prev.filter(id => id !== selectedOrg.id))
+          toast.success('Workspace deleted successfully.')
+        },
+        onFinish: () => {
+          setDeleting(false)
+        }
+      })
+    } else {
+      router.post('/admin/organizations/bulk-delete', { ids: selectedIds }, {
+        onSuccess: () => {
+          setIsDeleteDialogOpen(false)
+          setSelectedIds([])
+          toast.success('Selected workspaces have been deleted.')
+        },
+        onFinish: () => {
+          setDeleting(false)
+        }
+      })
+    }
   }
 
   useEffect(() => {
@@ -126,6 +149,38 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
   }, [filters])
 
   const columns = [
+    {
+      id: 'selection',
+      header: () => (
+        <input
+          type="checkbox"
+          checked={selectedIds.length === rows.length && rows.length > 0}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedIds(rows.map(r => r.id))
+            } else {
+              setSelectedIds([])
+            }
+          }}
+          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer animate-in fade-in duration-200"
+        />
+      ),
+      size: 40,
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={selectedIds.includes(row.original.id)}
+          onChange={(e) => {
+            if (e.target.checked) {
+              setSelectedIds(prev => [...prev, row.original.id])
+            } else {
+              setSelectedIds(prev => prev.filter(id => id !== row.original.id))
+            }
+          }}
+          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer"
+        />
+      ),
+    },
     {
       id: 'organization',
       header: 'Organization',
@@ -226,13 +281,22 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
           description={`${pagination.total ?? 0} workspaces on the platform`}
         />
 
-        <div className="mb-4">
+        <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <SearchInput
             value={filters?.search ?? ''}
             onChange={handleSearch}
             placeholder="Search by name or URL…"
             className="w-full sm:w-72"
           />
+          {selectedIds.length > 0 && (
+            <button
+              onClick={requestBulkDelete}
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-red-500/10 transition-colors cursor-pointer self-start sm:self-auto animate-in fade-in slide-in-from-top-1 duration-200"
+            >
+              <Trash2 size={14} />
+              Delete Selected ({selectedIds.length})
+            </button>
+          )}
         </div>
 
         <DataTable
@@ -254,8 +318,11 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
         <ConfirmDialog
           open={isDeleteDialogOpen}
           onOpenChange={setIsDeleteDialogOpen}
-          title="Delete Workspace"
-          description={`Are you sure you want to delete the workspace "${selectedOrg?.name}"? This will permanently delete all associated users, leads, settings, campaigns, and workspace data. This action cannot be undone.`}
+          title={deleteMode === 'single' ? 'Delete Workspace' : 'Delete Selected Workspaces'}
+          description={deleteMode === 'single'
+            ? `Are you sure you want to delete the workspace "${selectedOrg?.name}"? This will permanently delete all associated users, leads, settings, campaigns, and workspace data. This action cannot be undone.`
+            : `Are you sure you want to delete the ${selectedIds.length} selected workspaces? This will permanently delete all associated users, leads, settings, campaigns, and workspace data for these workspaces. This action cannot be undone.`
+          }
           onConfirm={confirmDeleteOrg}
           loading={deleting}
           confirmText="Delete"

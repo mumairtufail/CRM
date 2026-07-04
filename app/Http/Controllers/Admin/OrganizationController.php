@@ -69,4 +69,16 @@ class OrganizationController extends Controller
 
         return back()->with('success', "Workspace {$organization->name} has been deleted successfully.");
     }
+
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'ids'   => 'required|array',
+            'ids.*' => 'exists:organizations,id',
+        ]);
+
+        Organization::whereIn('id', $validated['ids'])->delete();
+
+        return back()->with('success', 'Selected workspaces have been deleted successfully.');
+    }
 }

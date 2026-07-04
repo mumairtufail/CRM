@@ -116,6 +116,40 @@ class SystemSetting extends Model
         }
     }
 
+    // ── Chatbot helpers ───────────────────────────────────────────────────────
+
+    public static function getChatbot(): array
+    {
+        return [
+            'enabled'         => (bool) static::getCached('chatbot_enabled', false),
+            'agent_name'      => static::getCached('chatbot_agent_name', 'Sarah'),
+            'welcome_message' => static::getCached('chatbot_welcome_message', "Hey there! I'm Sarah from the team. How can I help you today?"),
+            'system_prompt'   => static::getCached('chatbot_system_prompt'),
+        ];
+    }
+
+    public static function saveChatbot(array $data): void
+    {
+        $fields = ['enabled', 'agent_name', 'welcome_message', 'system_prompt'];
+        foreach ($fields as $field) {
+            if (array_key_exists($field, $data)) {
+                $val = $data[$field];
+                if ($field === 'enabled') {
+                    $val = $val ? '1' : '0';
+                }
+                static::set("chatbot_{$field}", $val);
+            }
+        }
+    }
+
+    public static function clearChatbotCache(): void
+    {
+        $fields = ['enabled', 'agent_name', 'welcome_message', 'system_prompt'];
+        foreach ($fields as $field) {
+            Cache::forget("system_setting:chatbot_{$field}");
+        }
+    }
+
     // ── SEO helpers ───────────────────────────────────────────────────────────
 
     public static function getSeo(): array

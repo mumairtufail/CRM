@@ -1,4 +1,4 @@
-import { Head, Link, useForm, usePage } from '@inertiajs/react'
+import { Head, Link, useForm, usePage, router } from '@inertiajs/react'
 import { useState, useEffect, useRef } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
 import { Input } from '@/Components/ui/input'
@@ -18,7 +18,8 @@ import { cn } from '@/lib/utils'
 import {
   Search, User, Mail, ChevronRight, Image as ImageIcon, Cpu, Globe,
   Lock, CheckCircle2, AlertCircle, Eye, EyeOff, Send, Loader2, Zap,
-  Upload, RefreshCw, Download, FileText, ShieldAlert, Key, Trash2
+  Upload, RefreshCw, Download, FileText, ShieldAlert, Key, Trash2,
+  Bot, Plus, MessageSquare, RotateCcw, Pencil
 } from 'lucide-react'
 
 // SMTP presets definition
@@ -164,6 +165,13 @@ const SETTINGS_FIELDS = [
   { id: 'ai_active', label: 'AI Active Status', description: 'Enable or disable AI capabilities', tab: 'ai', keywords: ['ai', 'active', 'status', 'enable'] },
   { id: 'ai_test', label: 'AI Connection Test', description: 'Run connection diagnostics to verify API settings', tab: 'ai', keywords: ['ai', 'test', 'diagnostic', 'verify'] },
   
+  { id: 'chatbot_enabled', label: 'Chatbot Enabled', description: 'Show the live chat widget on the public landing page', tab: 'chatbot', keywords: ['chatbot', 'chat', 'bot', 'widget', 'enable', 'live'] },
+  { id: 'chatbot_agent_name', label: 'Agent Name', description: 'Display name the chat agent introduces itself with', tab: 'chatbot', keywords: ['chatbot', 'agent', 'name', 'persona'] },
+  { id: 'chatbot_welcome', label: 'Welcome Message', description: 'First message shown when a visitor opens the chat', tab: 'chatbot', keywords: ['chatbot', 'welcome', 'greeting', 'message'] },
+  { id: 'chatbot_prompt', label: 'System Prompt', description: 'Persona and behavior instructions for the chat agent', tab: 'chatbot', keywords: ['chatbot', 'prompt', 'system', 'persona', 'instructions', 'behavior'] },
+  { id: 'chatbot_knowledge', label: 'Knowledge Base', description: 'Docs and answers the chatbot replies from', tab: 'chatbot', keywords: ['chatbot', 'knowledge', 'base', 'docs', 'faq', 'training'] },
+  { id: 'chatbot_conversations', label: 'Recorded Conversations', description: 'Browse every visitor chat transcript', tab: 'chatbot', keywords: ['chatbot', 'conversations', 'transcripts', 'history', 'recorded'] },
+
   { id: 'seo_title', label: 'SEO Meta Title', description: 'Default HTML meta title tag', tab: 'seo', keywords: ['seo', 'title', 'meta', 'header'] },
   { id: 'seo_description', label: 'SEO Meta Description', description: 'Default HTML meta description tag', tab: 'seo', keywords: ['seo', 'description', 'meta'] },
   { id: 'seo_keywords', label: 'SEO Keywords', description: 'Default fallback SEO keywords list', tab: 'seo', keywords: ['seo', 'keywords', 'meta', 'tags'] },
@@ -171,7 +179,7 @@ const SETTINGS_FIELDS = [
   { id: 'seo_sitemap', label: 'Sitemap Status', description: 'Dynamic sitemap.xml validation link', tab: 'seo', keywords: ['seo', 'sitemap', 'xml', 'google', 'crawl'] },
 ]
 
-export default function AdminSettings({ user, custom_logo_url, setting, models, seo, app_url, smtp, configured }) {
+export default function AdminSettings({ user, custom_logo_url, setting, models, seo, app_url, smtp, configured, chatbot, chatbot_default_prompt, chatbot_knowledge = [] }) {
   const { props } = usePage()
   const flash = props?.flash
 
@@ -220,6 +228,20 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
     meta_keywords: seo?.meta_keywords || '',
     robots_txt: seo?.robots_txt || "User-agent: *\nDisallow:",
   })
+
+  const chatbotForm = useForm({
+    enabled: !!chatbot?.enabled,
+    agent_name: chatbot?.agent_name || 'Sarah',
+    welcome_message: chatbot?.welcome_message || '',
+    system_prompt: chatbot?.system_prompt || '',
+  })
+
+  // Chatbot knowledge base states
+  const [kbDialogOpen, setKbDialogOpen] = useState(false)
+  const [kbEditing, setKbEditing] = useState(null) // null = create mode
+  const [kbTitle, setKbTitle] = useState('')
+  const [kbContent, setKbContent] = useState('')
+  const [kbSaving, setKbSaving] = useState(false)
 
   const smtpForm = useForm({
     host: smtp?.host ?? '',
@@ -469,6 +491,71 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
     })
   }
 
+  // Handlers for Chatbot
+  const saveChatbot = (e) => {
+    e.preventDefault()
+    chatbotForm.post(route('admin.settings.chatbot.update'), {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Chatbot settings saved!'),
+      onError: () => toast.error('Failed to save chatbot settings.'),
+    })
+  }
+
+  const resetChatbotPrompt = () => {
+    chatbotForm.setData('system_prompt', '')
+    toast.info('Prompt cleared — the built-in default will be used. Save to apply.')
+  }
+
+  const openKbDialog = (entry = null) => {
+    setKbEditing(entry)
+    setKbTitle(entry?.title || '')
+    setKbContent(entry?.content || '')
+    setKbDialogOpen(true)
+  }
+
+  const saveKbEntry = () => {
+    if (!kbTitle.trim() || !kbContent.trim()) {
+      toast.error('Both a title and content are required.')
+      return
+    }
+    setKbSaving(true)
+    const opts = {
+      preserveScroll: true,
+      onSuccess: () => {
+        setKbDialogOpen(false)
+        toast.success(kbEditing ? 'Entry updated.' : 'Entry added to the knowledge base.')
+      },
+      onError: () => toast.error('Failed to save the entry.'),
+      onFinish: () => setKbSaving(false),
+    }
+    if (kbEditing) {
+      router.patch(route('admin.settings.chatbot.knowledge.update', kbEditing.id), {
+        title: kbTitle, content: kbContent, is_active: kbEditing.is_active,
+      }, opts)
+    } else {
+      router.post(route('admin.settings.chatbot.knowledge.store'), {
+        title: kbTitle, content: kbContent,
+      }, opts)
+    }
+  }
+
+  const toggleKbEntry = (entry) => {
+    router.patch(route('admin.settings.chatbot.knowledge.update', entry.id), {
+      title: entry.title, content: entry.content, is_active: !entry.is_active,
+    }, {
+      preserveScroll: true,
+      onSuccess: () => toast.success(entry.is_active ? 'Entry deactivated.' : 'Entry activated.'),
+    })
+  }
+
+  const deleteKbEntry = (entry) => {
+    if (!confirm(`Delete "${entry.title}" from the knowledge base?`)) return
+    router.delete(route('admin.settings.chatbot.knowledge.destroy', entry.id), {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Entry deleted.'),
+    })
+  }
+
   // Handlers for SEO
   const saveSeo = (e) => {
     e.preventDefault()
@@ -490,6 +577,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
     { id: 'smtp', label: 'SMTP / Email', icon: Mail, bg: 'bg-blue-50 text-blue-600' },
     { id: 'branding', label: 'Branding & Logo', icon: ImageIcon, bg: 'bg-emerald-50 text-emerald-600' },
     { id: 'ai', label: 'AI Configuration', icon: Cpu, bg: 'bg-purple-50 text-purple-600' },
+    { id: 'chatbot', label: 'AI Chatbot', icon: Bot, bg: 'bg-rose-50 text-rose-600' },
     { id: 'seo', label: 'SEO & Indexing', icon: Globe, bg: 'bg-indigo-50 text-indigo-600' },
   ]
 

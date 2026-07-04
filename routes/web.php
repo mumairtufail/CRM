@@ -50,12 +50,19 @@ use Illuminate\Support\Facades\Route;
 
 // Landing page — default public route
 Route::get('/', function () {
+    $chatbot = \App\Models\SystemSetting::getChatbot();
+
     return inertia('Welcome', [
         'appUrl' => preg_replace('#^https?://#', '', rtrim(config('app.url'), '/')),
         'plans'  => \App\Models\Plan::where('is_active', true)
             ->with('modules:id,key,name')
             ->orderBy('sort_order')
             ->get(['id', 'name', 'tagline', 'price_monthly', 'is_featured', 'cta_text']),
+        'chatbot' => [
+            'enabled'         => $chatbot['enabled'],
+            'agent_name'      => $chatbot['agent_name'],
+            'welcome_message' => $chatbot['welcome_message'],
+        ],
     ]);
 })->name('home');
 
@@ -66,6 +73,10 @@ Route::get('/sitemap.xml',       [\App\Http\Controllers\SitemapController::class
 
 // Public contact form submission (no auth required)
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
+
+// Public landing-page chatbot (no auth required, throttled per IP)
+Route::post('/chatbot/message', [\App\Http\Controllers\ChatbotController::class, 'message'])
+    ->middleware('throttle:20,1')->name('chatbot.message');
 
 // Public lead capture forms (no auth required) — looked up by the form's own slug.
 Route::get('/f/{form:slug}',  [PublicFormController::class, 'show'])->name('forms.public.show');
@@ -160,6 +171,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
             'app_url' => config('app.url'),
             'smtp' => \App\Models\SystemSetting::getSmtp(),
             'configured' => \App\Models\SystemSetting::isSmtpConfigured(),
+            'chatbot' => \App\Models\SystemSetting::getChatbot(),
+            'chatbot_default_prompt' => \App\Services\ChatbotService::defaultSystemPrompt(),
+            'chatbot_knowledge' => \App\Models\ChatbotKnowledgeEntry::orderBy('sort_order')->orderBy('id')->get(),
         ]);
     })->name('settings');
 
@@ -175,6 +189,16 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::delete('/settings/ai',               [\App\Http\Controllers\Admin\AiSettingsController::class, 'destroy'])->name('settings.ai.destroy');
     Route::get('/settings/seo',                 fn () => redirect()->route('settings', ['tab' => 'seo']))->name('settings.seo');
     Route::post('/settings/seo',                [\App\Http\Controllers\Admin\SeoSettingsController::class, 'update'])->name('settings.seo.update');
+
+    // Chatbot — settings tab, knowledge base CRUD, and recorded conversations
+    Route::get('/settings/chatbot',                       fn () => redirect()->route('settings', ['tab' => 'chatbot']))->name('settings.chatbot');
+    Route::post('/settings/chatbot',                      [\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'update'])->name('settings.chatbot.update');
+    Route::post('/settings/chatbot/knowledge',            [\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'storeKnowledge'])->name('settings.chatbot.knowledge.store');
+    Route::patch('/settings/chatbot/knowledge/{entry}',   [\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'updateKnowledge'])->name('settings.chatbot.knowledge.update');
+    Route::delete('/settings/chatbot/knowledge/{entry}',  [\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'destroyKnowledge'])->name('settings.chatbot.knowledge.destroy');
+    Route::get('/chatbot-conversations',                  [\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'conversations'])->name('chatbot.conversations');
+    Route::get('/chatbot-conversations/{conversation}',   [\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'showConversation'])->name('chatbot.conversations.show');
+    Route::delete('/chatbot-conversations/{conversation}',[\App\Http\Controllers\Admin\ChatbotSettingsController::class, 'destroyConversation'])->name('chatbot.conversations.destroy');
 
     Route::get('/smtp-settings',                 fn () => redirect()->route('settings', ['tab' => 'smtp']))->name('smtp.edit');
     Route::post('/smtp-settings',                [AdminSmtpSettingsController::class, 'update'])->name('smtp.update');
@@ -434,4 +458,8 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/settings/mail',                [SmtpCredentialController::class, 'updateMailSettings'])->name('settings.mail');
 });
 
+// Public tools routes for lead generation and traffic acquisition
+require __DIR__.'/public_tools.php';
+
 require __DIR__.'/auth.php';
+

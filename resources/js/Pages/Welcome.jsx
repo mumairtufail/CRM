@@ -8,7 +8,7 @@ import {
     Cpu, LayoutDashboard, CheckCircle2,
     Upload, ArrowRight, Bell, MessageSquare,
     Phone, Send, MapPin,
-    MailOpen, Sparkles, Clock, AlertCircle, Activity,
+    MailOpen, Sparkles, Clock, AlertCircle, Activity, PenTool, Link2
 } from 'lucide-react';
 import { LogoMark } from '@/Components/Common/Logo';
 import { cn } from '@/lib/utils';
@@ -1380,7 +1380,7 @@ export default function Welcome({ appUrl, plans = [] }) {
 
             {/* ── Free Tools Showcase ────────────────────────────────────── */}
             <section id="free-tools" className="py-24 border-t border-slate-100 bg-[#F8F9FD]">
-                <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="text-center max-w-xl mx-auto mb-16">
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100/50 mb-4">
                             <Sparkles className="w-3.5 h-3.5 text-violet-600 fill-violet-600" />
@@ -1390,27 +1390,27 @@ export default function Welcome({ appUrl, plans = [] }) {
                             Free Sales & Lead Generation Tools
                         </h2>
                         <p className="text-sm text-slate-500 mt-3 font-normal leading-relaxed">
-                            Generate beautiful professional brand assets, HTML email signatures, and PDF invoices on the fly with no account required.
+                            Generate beautiful professional brand assets, HTML email signatures, B2B proposals, UTM campaign links, and PDF invoices on the fly.
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ duration: 0.5 }}
-                            className="bg-white border border-slate-200 p-8 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
+                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
                         >
                             <div>
-                                <div className="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit mb-6">
-                                    <Mail className="w-6 h-6" />
+                                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl w-fit mb-5">
+                                    <Mail className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
-                                    Email Signature Generator
+                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
+                                    Email Signature
                                 </h3>
                                 <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
-                                    Design responsive, HTML-formatted email signatures for Gmail, Outlook, and Apple Mail. Custom themes, avatars, and social icons.
+                                    Design HTML email signatures for Gmail, Outlook, and Apple Mail. Custom themes, avatars, and social icons.
                                 </p>
                             </div>
                             <Link
@@ -1426,15 +1426,15 @@ export default function Welcome({ appUrl, plans = [] }) {
                             initial={{ opacity: 0, y: 20 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
-                            className="bg-white border border-slate-200 p-8 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
+                            transition={{ duration: 0.5, delay: 0.05 }}
+                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
                         >
                             <div>
-                                <div className="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit mb-6">
-                                    <FileText className="w-6 h-6" />
+                                <div className="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit mb-5">
+                                    <FileText className="w-5 h-5" />
                                 </div>
-                                <h3 className="text-lg font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
-                                    Standalone Invoice Generator
+                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
+                                    Invoice Generator
                                 </h3>
                                 <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
                                     Build, brand, and download professional PDF invoices on the fly. Auto tax calculations and custom line items.
@@ -1445,6 +1445,60 @@ export default function Welcome({ appUrl, plans = [] }) {
                                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
                             >
                                 Build Invoice Free
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
+                        >
+                            <div>
+                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl w-fit mb-5">
+                                    <PenTool className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
+                                    Proposal Writer
+                                </h3>
+                                <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
+                                    Draft professional commercial offers and contracts. Add deliverables, services scope, and print to PDF.
+                                </p>
+                            </div>
+                            <Link
+                                href="/tools/proposal-writer"
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
+                            >
+                                Write Proposal
+                                <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                        </motion.div>
+
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.5, delay: 0.15 }}
+                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
+                        >
+                            <div>
+                                <div className="p-3 bg-sky-50 text-sky-600 rounded-xl w-fit mb-5">
+                                    <Link2 className="w-5 h-5" />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
+                                    UTM Link Builder
+                                </h3>
+                                <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
+                                    Construct trackable campaign links with UTM tags for analytics and conversion funnel attribution.
+                                </p>
+                            </div>
+                            <Link
+                                href="/tools/utm-builder"
+                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
+                            >
+                                Build UTM Link
                                 <ArrowRight className="w-3.5 h-3.5" />
                             </Link>
                         </motion.div>
@@ -1882,7 +1936,7 @@ export default function Welcome({ appUrl, plans = [] }) {
 
                         {[
                             { heading: 'Product', links: [{ label: 'Features', href: '#features' }, { label: 'Pricing', href: '#pricing' }, { label: 'FAQ', href: '#faq' }, { label: 'Changelog', href: '#' }] },
-                            { heading: 'Free Tools', links: [{ label: 'Email Signature', href: '/tools/email-signature-generator', internal: true }, { label: 'Invoice Generator', href: '/tools/invoice-generator', internal: true }, { label: 'All Free Tools', href: '/tools', internal: true }] },
+                            { heading: 'Free Tools', links: [{ label: 'Email Signature', href: '/tools/email-signature-generator', internal: true }, { label: 'Invoice Generator', href: '/tools/invoice-generator', internal: true }, { label: 'Proposal Writer', href: '/tools/proposal-writer', internal: true }, { label: 'UTM Builder', href: '/tools/utm-builder', internal: true }, { label: 'All Free Tools', href: '/tools', internal: true }] },
                             { heading: 'Account', links: [{ label: 'Sign In', href: '/login', internal: true }, { label: 'Register', href: '/register', internal: true }, { label: 'Support', href: '#' }, { label: 'Contact', href: '#' }] },
                             { heading: 'Legal',   links: [{ label: 'Privacy Policy', href: '#' }, { label: 'Terms of Service', href: '#' }, { label: 'Security', href: '#' }] },
                         ].map(({ heading, links }) => (

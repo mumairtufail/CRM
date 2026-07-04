@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react'
 import { useState } from 'react'
-import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Zap, Menu, X } from 'lucide-react'
+import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Zap, Menu, X, PenTool, Link2 } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 
 export default function Hub({ latestBlogs = [] }) {
@@ -35,6 +35,26 @@ export default function Hub({ latestBlogs = [] }) {
       badge: 'New',
       badgeColor: 'bg-violet-50 text-violet-700 border-violet-100',
       cta: 'Create Free Invoice',
+    },
+    {
+      id: 'proposal-writer',
+      title: 'B2B Proposal & Contract Writer',
+      description: 'Draft premium client proposals, commercial offers, and freelance contracts in your browser. Outline project deliverables, pricing, and download print-ready PDFs.',
+      icon: PenTool,
+      href: '/tools/proposal-writer',
+      badge: 'Bestseller',
+      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      cta: 'Write Proposal',
+    },
+    {
+      id: 'utm-builder',
+      title: 'Campaign UTM Link Builder',
+      description: 'Build trackable marketing campaign URLs with utm_source, utm_medium, and utm_campaign tags for precise Google Analytics and CRM lead tracking.',
+      icon: Link2,
+      href: '/tools/utm-builder',
+      badge: 'Marketing',
+      badgeColor: 'bg-sky-50 text-sky-700 border-sky-100',
+      cta: 'Generate Link',
     },
     {
       id: 'aeo-grader',

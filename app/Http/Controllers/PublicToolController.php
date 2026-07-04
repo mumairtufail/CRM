@@ -30,4 +30,20 @@ class PublicToolController extends Controller
     {
         return Inertia::render('Tools/InvoiceGenerator');
     }
+
+    /**
+     * Display the free B2B proposal and contract writer.
+     */
+    public function proposalWriter(): Response
+    {
+        return Inertia::render('Tools/ProposalWriter');
+    }
+
+    /**
+     * Display the free UTM campaign URL builder.
+     */
+    public function utmBuilder(): Response
+    {
+        return Inertia::render('Tools/UtmBuilder');
+    }
 }

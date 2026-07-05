@@ -162,7 +162,7 @@ export default function LeadEdit({ lead, tags = [] }) {
                     <div className="flex items-center justify-between">
                       <Label className="text-[12px] font-semibold text-slate-600">Social media handles</Label>
                       <button type="button" onClick={addSocial}
-                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        className="flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 transition-colors">
                         <Plus size={11} /> Add
                       </button>
                     </div>
@@ -198,10 +198,10 @@ export default function LeadEdit({ lead, tags = [] }) {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
-                        <Mail size={12} className="text-violet-500" /> Email Addresses
+                        <Mail size={12} className="text-brand-500" /> Email Addresses
                       </Label>
                       <button type="button" onClick={addEmail}
-                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        className="flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 transition-colors">
                         <Plus size={11} /> Add Email
                       </button>
                     </div>
@@ -253,10 +253,10 @@ export default function LeadEdit({ lead, tags = [] }) {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label className="text-[12px] font-semibold text-slate-600 flex items-center gap-1.5">
-                        <Phone size={12} className="text-violet-500" /> Phone Numbers
+                        <Phone size={12} className="text-brand-500" /> Phone Numbers
                       </Label>
                       <button type="button" onClick={addPhone}
-                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        className="flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 transition-colors">
                         <Plus size={11} /> Add Phone
                       </button>
                     </div>
@@ -358,18 +358,18 @@ export default function LeadEdit({ lead, tags = [] }) {
 
               {/* Right Column - Tips & Help */}
               <div className="xl:col-span-1 flex flex-col space-y-6">
-                <SectionCard title="Tips & Guidance" className="bg-gradient-to-b from-indigo-50/50 to-white h-full">
+                <SectionCard title="Tips & Guidance" className="bg-gradient-to-b from-brand2-50/50 to-white h-full">
                   <div className="text-[12.5px] text-slate-600 space-y-4">
                     <div>
-                      <h4 className="font-semibold text-indigo-900 mb-1">Qualifying Leads</h4>
+                      <h4 className="font-semibold text-brand2-900 mb-1">Qualifying Leads</h4>
                       <p>Ensure you add as much detail as possible to help the sales team qualify this lead effectively. Phone numbers and LinkedIn URLs are highly recommended.</p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-indigo-900 mb-1">Deal Value</h4>
+                      <h4 className="font-semibold text-brand2-900 mb-1">Deal Value</h4>
                       <p>If the exact deal value is unknown, leave it blank or enter a conservative estimate based on company size.</p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-indigo-900 mb-1">Source Tracking</h4>
+                      <h4 className="font-semibold text-brand2-900 mb-1">Source Tracking</h4>
                       <p>Correctly tagging the lead source helps our marketing team understand which channels are performing best.</p>
                     </div>
                   </div>

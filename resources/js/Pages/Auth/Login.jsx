@@ -163,7 +163,7 @@ export default function Login({ status }) {
           justify-content: center;
           min-height: 100vh;
           padding: 24px;
-          background: #F4F2FF;
+          background: rgb(var(--brand-tint));
           position: relative;
           font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
@@ -179,7 +179,7 @@ export default function Login({ status }) {
           border-radius: 20px;
           padding: 40px 36px;
           box-shadow: 
-            0 20px 40px -15px rgba(124, 58, 237, 0.08),
+            0 20px 40px -15px rgb(var(--brand-600) / 0.08),
             0 2px 10px rgba(0, 0, 0, 0.02);
           position: relative;
           z-index: 10;
@@ -247,13 +247,13 @@ export default function Login({ status }) {
 
         .forgot-link {
           font-size: 12px;
-          color: #7c3aed;
+          color: rgb(var(--brand-600));
           font-weight: 500;
           transition: color 0.15s ease;
           text-decoration: none;
         }
         .forgot-link:hover {
-          color: #6d28d9;
+          color: rgb(var(--brand-700));
         }
 
         /* Input styling */
@@ -288,12 +288,12 @@ export default function Login({ status }) {
           border-color: #cbd5e1 !important;
         }
         .login-input:focus {
-          border-color: #7c3aed !important;
+          border-color: rgb(var(--brand-600)) !important;
           background: #ffffff !important;
-          box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12) !important;
+          box-shadow: 0 0 0 3px rgb(var(--brand-600) / 0.12) !important;
         }
         .input-wrapper:focus-within .input-icon {
-          color: #7c3aed;
+          color: rgb(var(--brand-600));
         }
 
         .password-toggle {
@@ -336,7 +336,7 @@ export default function Login({ status }) {
         .remember-checkbox {
           width: 15px;
           height: 15px;
-          accent-color: #7c3aed;
+          accent-color: rgb(var(--brand-600));
           border-radius: 4px;
           background: #ffffff;
           border: 1px solid #cbd5e1;
@@ -351,18 +351,18 @@ export default function Login({ status }) {
           font-weight: 600;
           font-size: 14px;
           letter-spacing: -0.2px;
-          background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+          background: linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.18);
+          box-shadow: 0 4px 12px rgb(var(--brand-600) / 0.18);
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .submit-btn:not(:disabled):hover {
-          background: linear-gradient(135deg, #8b5cf6 0%, #5b52f9 100%);
-          box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);
+          background: linear-gradient(135deg, rgb(var(--brand-500)) 0%, #5b52f9 100%);
+          box-shadow: 0 6px 16px rgb(var(--brand-600) / 0.25);
           transform: translateY(-1px);
         }
         .submit-btn:not(:disabled):active {
@@ -394,13 +394,13 @@ export default function Login({ status }) {
           color: #64748b;
         }
         .signup-link {
-          color: #7c3aed;
+          color: rgb(var(--brand-600));
           font-weight: 600;
           text-decoration: none;
           transition: color 0.15s ease;
         }
         .signup-link:hover {
-          color: #6d28d9;
+          color: rgb(var(--brand-700));
         }
 
         @media (max-width: 480px) {

@@ -12,7 +12,7 @@ import { LifeBuoy, Send, Plus, ChevronLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const STATUS_CFG = {
-  open:    { label: 'Open',    cls: 'bg-violet-50 text-violet-700 border-violet-200' },
+  open:    { label: 'Open',    cls: 'bg-brand-50 text-brand-700 border-brand-200' },
   pending: { label: 'Pending', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
   closed:  { label: 'Closed',  cls: 'bg-slate-100 text-slate-500 border-slate-200' },
 }
@@ -124,7 +124,7 @@ function SupportCaseThread({ caseSummary, onBack }) {
           <ChevronLeft size={18} />
         </button>
         <div className="w-8 h-8 rounded-full flex items-center justify-center text-white shrink-0"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
           <LifeBuoy size={14} />
         </div>
         <div className="min-w-0 flex-1">
@@ -141,7 +141,7 @@ function SupportCaseThread({ caseSummary, onBack }) {
           <div key={msg.id} className={cn('flex', msg.sender_type === 'user' ? 'justify-end' : 'justify-start')}>
             <div className={cn(
               'max-w-[85%] sm:max-w-[75%] px-3 py-2 rounded-xl text-[13px] shadow-sm',
-              msg.sender_type === 'user' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-white rounded-tl-none'
+              msg.sender_type === 'user' ? 'bg-brand-600 text-white rounded-tr-none' : 'bg-white rounded-tl-none'
             )}>
               {msg.sender_type === 'admin' && (
                 <p className="text-[10px] text-emerald-600 font-semibold mb-0.5 flex items-center gap-0.5">
@@ -207,7 +207,7 @@ export default function SupportIndex({ cases }) {
                   onClick={() => openCase(c)}
                   className={cn(
                     'w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors',
-                    activeCase?.id === c.id ? 'bg-violet-50 border-l-2 border-l-violet-500' : ''
+                    activeCase?.id === c.id ? 'bg-brand-50 border-l-2 border-l-brand-500' : ''
                   )}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[13px] font-medium text-slate-800 truncate">{c.subject}</p>

@@ -136,7 +136,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
         `}</style>
       </Head>
 
-      <div className="min-h-screen bg-[#F8F9FD] font-sans antialiased text-slate-800 flex flex-col justify-between print:bg-white print:p-0">
+      <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between print:bg-white print:p-0">
         
         {/* Header/Nav - hide on print */}
         <nav className="fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all duration-300 print:hidden">
@@ -152,7 +152,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                     <div className="hidden md:flex items-center gap-8">
                         {navLinks.map(({ label, href }) => (
                             <a key={label} href={href}
-                               className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
+                               className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-500">{label}</a>
                         ))}
                     </div>
 
@@ -163,7 +163,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -189,7 +189,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="block py-3 rounded-xl text-center text-sm font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -232,28 +232,28 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                   type="text"
                   value={invoice.companyName}
                   onChange={(e) => handleInvoiceChange('companyName', e.target.value)}
-                  className="text-2xl font-black text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-violet-500 w-full focus:outline-none py-1"
+                  className="text-2xl font-black text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-brand-500 w-full focus:outline-none py-1"
                 />
                 <div className="space-y-1.5 text-sm text-slate-500">
                   <input
                     type="email"
                     value={invoice.companyEmail}
                     onChange={(e) => handleInvoiceChange('companyEmail', e.target.value)}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"
                     placeholder="email@company.com"
                   />
                   <input
                     type="text"
                     value={invoice.companyPhone}
                     onChange={(e) => handleInvoiceChange('companyPhone', e.target.value)}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"
                     placeholder="Phone"
                   />
                   <textarea
                     value={invoice.companyAddress}
                     onChange={(e) => handleInvoiceChange('companyAddress', e.target.value)}
                     rows={2}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5 resize-none"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 resize-none"
                     placeholder="Address"
                   />
                 </div>
@@ -268,7 +268,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                     type="text"
                     value={invoice.invoiceNumber}
                     onChange={(e) => handleInvoiceChange('invoiceNumber', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5 text-right font-bold text-slate-700 w-32"
+                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right font-bold text-slate-700 w-32"
                   />
 
                   <span className="font-semibold text-slate-400">Date:</span>
@@ -276,7 +276,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                     type="date"
                     value={invoice.date}
                     onChange={(e) => handleInvoiceChange('date', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5 text-right w-32"
+                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-32"
                   />
 
                   <span className="font-semibold text-slate-400">Due Date:</span>
@@ -284,14 +284,14 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                     type="date"
                     value={invoice.dueDate}
                     onChange={(e) => handleInvoiceChange('dueDate', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5 text-right w-32"
+                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-32"
                   />
 
                   <span className="font-semibold text-slate-400">Currency:</span>
                   <select
                     value={invoice.currency}
                     onChange={(e) => handleInvoiceChange('currency', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5 text-right w-16 bg-white"
+                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-16 bg-white"
                   >
                     <option value="$">USD ($)</option>
                     <option value="€">EUR (€)</option>
@@ -310,7 +310,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                   type="text"
                   value={invoice.clientName}
                   onChange={(e) => handleInvoiceChange('clientName', e.target.value)}
-                  className="text-lg font-bold text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-1 w-full"
+                  className="text-lg font-bold text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-1 w-full"
                   placeholder="Client Name"
                 />
                 <div className="space-y-1.5 text-sm text-slate-500">
@@ -318,14 +318,14 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                     type="email"
                     value={invoice.clientEmail}
                     onChange={(e) => handleInvoiceChange('clientEmail', e.target.value)}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"
                     placeholder="client@email.com"
                   />
                   <textarea
                     value={invoice.clientAddress}
                     onChange={(e) => handleInvoiceChange('clientAddress', e.target.value)}
                     rows={2}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-violet-500 focus:outline-none py-0.5 resize-none"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 resize-none"
                     placeholder="Client Address"
                   />
                 </div>
@@ -352,7 +352,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                           type="text"
                           value={item.description}
                           onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                          className="w-full border-b border-transparent hover:border-slate-100 focus:border-violet-500 focus:outline-none py-1 text-sm text-slate-800"
+                          className="w-full border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-sm text-slate-800"
                         />
                       </td>
                       <td className="py-4 text-center">
@@ -360,7 +360,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                           type="number"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
-                          className="w-16 border-b border-transparent hover:border-slate-100 focus:border-violet-500 focus:outline-none py-1 text-center text-sm text-slate-800"
+                          className="w-16 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-center text-sm text-slate-800"
                           min="1"
                         />
                       </td>
@@ -369,7 +369,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                           type="number"
                           value={item.price}
                           onChange={(e) => handleItemChange(item.id, 'price', e.target.value)}
-                          className="w-20 border-b border-transparent hover:border-slate-100 focus:border-violet-500 focus:outline-none py-1 text-right text-sm text-slate-800"
+                          className="w-20 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-right text-sm text-slate-800"
                           min="0"
                         />
                       </td>
@@ -407,7 +407,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                 <textarea
                   value={invoice.notes}
                   onChange={(e) => handleInvoiceChange('notes', e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl p-4 text-xs text-slate-500 focus:outline-none focus:border-violet-500 resize-none h-24 print:border-0 print:p-0 print:text-slate-600"
+                  className="w-full border border-slate-200 rounded-xl p-4 text-xs text-slate-500 focus:outline-none focus:border-brand-500 resize-none h-24 print:border-0 print:p-0 print:text-slate-600"
                   placeholder="Payment details, IBAN, bank name, etc."
                 />
               </div>
@@ -426,7 +426,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                       type="number"
                       value={invoice.taxRate}
                       onChange={(e) => handleInvoiceChange('taxRate', Number(e.target.value) || 0)}
-                      className="w-10 border-b border-transparent hover:border-slate-100 focus:border-violet-500 focus:outline-none text-center font-semibold text-slate-700 bg-white print:hidden"
+                      className="w-10 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none text-center font-semibold text-slate-700 bg-white print:hidden"
                     />
                     <span className="hidden print:inline-block font-semibold">({invoice.taxRate}%)</span>
                     <span>%</span>
@@ -436,7 +436,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
 
                 <div className="flex justify-between items-center border-t border-slate-200 pt-4 text-base font-extrabold text-slate-800">
                   <span>Total Amount Due:</span>
-                  <span className="text-xl text-violet-700">{invoice.currency}{total.toLocaleString()}</span>
+                  <span className="text-xl text-brand-700">{invoice.currency}{total.toLocaleString()}</span>
                 </div>
               </div>
             </div>
@@ -454,16 +454,16 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
           </div>
 
           {/* Upsell box - hide on print */}
-          <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 rounded-2xl text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 print:hidden mt-8">
+          <div className="bg-gradient-to-r from-brand-600 to-brand2-600 p-6 rounded-2xl text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 print:hidden mt-8">
             <div>
               <h3 className="font-extrabold text-base">Want automated invoice tracking and payments?</h3>
-              <p className="text-xs text-violet-100/90 leading-relaxed max-w-lg mt-1 font-normal">
+              <p className="text-xs text-brand-100/90 leading-relaxed max-w-lg mt-1 font-normal">
                 Generate professional PDF invoices directly from client pages. Auto-track payment dates, integrate online payment processors, and get automated system follow-up alerts when accounts go overdue.
               </p>
             </div>
             <Link
               href="/register"
-              className="px-5 py-3 bg-white hover:bg-slate-50 text-violet-700 rounded-xl text-xs font-extrabold shadow-sm whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="px-5 py-3 bg-white hover:bg-slate-50 text-brand-700 rounded-xl text-xs font-extrabold shadow-sm whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               Get Lumenia CRM Free
             </Link>
@@ -493,10 +493,10 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                   <div key={index} className="border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                     <button
                       onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                      className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
+                      className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-brand-600 transition-colors"
                     >
                       <span>{faq.q}</span>
-                      <ChevronRight className={`text-slate-400 w-5 h-5 transition-transform duration-200 ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`} />
+                      <ChevronRight className={`text-slate-400 w-5 h-5 transition-transform duration-200 ${activeFaq === index ? 'rotate-90 text-brand-500' : ''}`} />
                     </button>
                     {activeFaq === index && (
                       <div className="px-6 pb-5 pt-2 text-slate-500 text-sm leading-relaxed border-t border-slate-100 font-normal">

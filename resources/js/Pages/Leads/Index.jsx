@@ -65,7 +65,7 @@ function InlineSelect({ icon, placeholder, value, options, onChange }) {
       <SelectTrigger
         className={`h-9 w-auto gap-1.5 text-sm transition-colors ${
           active
-            ? 'border-violet-300 bg-violet-50 text-violet-700 font-medium'
+            ? 'border-brand-300 bg-brand-50 text-brand-700 font-medium'
             : 'bg-white text-slate-600'
         }`}
       >
@@ -90,7 +90,7 @@ const PLATFORM_META = {
   youtube:   { label: 'yt',  bg: '#FF0000', title: 'YouTube' },
   tiktok:    { label: 'tk',  bg: '#010101', title: 'TikTok' },
   github:    { label: 'gh',  bg: '#24292e', title: 'GitHub' },
-  website:   { label: 'www', bg: '#6366f1', title: 'Website' },
+  website:   { label: 'www', bg: 'rgb(var(--brand2-500))', title: 'Website' },
 }
 
 function normalizeUrl(url) {
@@ -180,7 +180,7 @@ function Checkbox({ checked, indeterminate, onChange, onClick }) {
       checked={checked}
       onChange={onChange}
       onClick={onClick}
-      className="w-[15px] h-[15px] rounded cursor-pointer accent-violet-600"
+      className="w-[15px] h-[15px] rounded cursor-pointer accent-brand-600"
     />
   )
 }
@@ -368,7 +368,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
           <div className="min-w-0">
             <Link
               href={`/leads/${row.original.id}`}
-              className="font-medium text-gray-900 hover:text-blue-600 text-sm leading-none block truncate"
+              className="font-medium text-gray-900 hover:text-brand-600 text-sm leading-none block truncate"
             >
               {row.original.full_name}
             </Link>
@@ -402,12 +402,12 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
             <span
               className="inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full border"
               style={{
-                background: (first.color ?? '#6366f1') + '18',
-                borderColor: (first.color ?? '#6366f1') + '40',
-                color: first.color ?? '#6366f1',
+                background: (first.color ?? 'rgb(var(--brand2-500))') + '18',
+                borderColor: (first.color ?? 'rgb(var(--brand2-500))') + '40',
+                color: first.color ?? 'rgb(var(--brand2-500))',
               }}
             >
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: first.color ?? '#6366f1' }} />
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: first.color ?? 'rgb(var(--brand2-500))' }} />
               {first.name}
             </span>
             {extra > 0 && <span className="text-[10px] text-slate-400">+{extra}</span>}
@@ -459,7 +459,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
       cell: ({ row }) => (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-indigo-600 transition-colors">
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-brand2-600 transition-colors">
               <MoreHorizontal size={14} />
             </Button>
           </DropdownMenuTrigger>
@@ -588,14 +588,14 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 size="sm"
                 className={`h-9 gap-1.5 text-sm transition-colors ${
                   reached.length
-                    ? 'border-violet-300 bg-violet-50 text-violet-700 font-medium hover:bg-violet-50'
+                    ? 'border-brand-300 bg-brand-50 text-brand-700 font-medium hover:bg-brand-50'
                     : 'bg-white text-slate-600'
                 }`}
               >
                 <Send size={13} className="opacity-60" />
                 Reached on
                 {reached.length > 0 && (
-                  <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-violet-600 text-white text-[10px] font-semibold">
+                  <span className="ml-0.5 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-brand-600 text-white text-[10px] font-semibold">
                     {reached.length}
                   </span>
                 )}
@@ -618,7 +618,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                       type="button"
                       onClick={() => toggleReached(ch.key)}
                       className={`flex items-center gap-2 h-9 px-2.5 rounded-lg border text-left transition-colors ${
-                        active ? 'border-violet-300 bg-violet-50' : 'border-slate-200 hover:bg-slate-50'
+                        active ? 'border-brand-300 bg-brand-50' : 'border-slate-200 hover:bg-slate-50'
                       }`}
                     >
                       <span
@@ -630,7 +630,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                       <span className={`text-xs flex-1 truncate ${active ? 'font-medium text-slate-800' : 'text-slate-500'}`}>
                         {ch.label}
                       </span>
-                      {active && <Check size={13} className="text-violet-600 shrink-0" />}
+                      {active && <Check size={13} className="text-brand-600 shrink-0" />}
                     </button>
                   )
                 })}
@@ -709,7 +709,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                   onClick={() => setChosenGroupId(g.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
                     chosenGroupId === g.id
-                      ? 'border-violet-300 bg-violet-50'
+                      ? 'border-brand-300 bg-brand-50'
                       : 'border-slate-100 hover:border-slate-200'
                   }`}
                 >
@@ -717,7 +717,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                   <span className="text-[13px] font-medium text-slate-700 flex-1 truncate">{g.name}</span>
                   <span className="text-[11px] text-slate-400">{g.leads_count} leads</span>
                   {chosenGroupId === g.id && (
-                    <div className="w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
+                    <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center shrink-0">
                       <span className="text-white text-[9px]">✓</span>
                     </div>
                   )}
@@ -784,14 +784,14 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
             onClick={openAddToGroup}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
-              background: '#7c3aed',
+              background: 'rgb(var(--brand-600))',
               border: 'none',
               borderRadius: 7, padding: '4px 12px',
               color: 'white', fontSize: 12.5, fontWeight: 600,
               cursor: 'pointer', transition: 'background 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.background = '#6d28d9'}
-            onMouseLeave={e => e.currentTarget.style.background = '#7c3aed'}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgb(var(--brand-700))'}
+            onMouseLeave={e => e.currentTarget.style.background = 'rgb(var(--brand-600))'}
           >
             <UsersRound size={12} /> Add to Group
           </button>

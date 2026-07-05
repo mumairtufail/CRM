@@ -86,7 +86,7 @@ export default function InvoiceShow({ invoice }) {
                   size="sm"
                   onClick={() => setSendDialog(true)}
                   className="gap-1.5"
-                  style={{ background: 'linear-gradient(135deg, #6366F1, #7C3AED)' }}
+                  style={{ background: 'linear-gradient(135deg, rgb(var(--brand2-500)), rgb(var(--brand-600)))' }}
                 >
                   <Send size={13} /> {invoice.status === 'sent' ? 'Resend' : 'Send Invoice'}
                 </Button>
@@ -107,7 +107,7 @@ export default function InvoiceShow({ invoice }) {
 
           {/* Flash success */}
           {flash.success && (
-            <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl bg-violet-50 border border-violet-200 text-violet-700 text-[12.5px] font-medium">
+            <div className="flex items-center gap-2 px-4 py-3 mb-4 rounded-xl bg-brand-50 border border-brand-200 text-brand-700 text-[12.5px] font-medium">
               <Check size={14} className="shrink-0" /> {flash.success}
             </div>
           )}
@@ -115,7 +115,7 @@ export default function InvoiceShow({ invoice }) {
           {/* Invoice card */}
           <div id="invoice-print-area" className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="px-8 py-6 border-b border-slate-100" style={{ background: 'linear-gradient(135deg, #6366F1 0%, #7C3AED 100%)' }}>
+            <div className="px-8 py-6 border-b border-slate-100" style={{ background: 'linear-gradient(135deg, rgb(var(--brand2-500)) 0%, rgb(var(--brand-600)) 100%)' }}>
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-white/60 text-[10px] font-semibold uppercase tracking-widest mb-0.5">Invoice</p>
@@ -214,7 +214,7 @@ export default function InvoiceShow({ invoice }) {
                 <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
                   <Link
                     href={`/leads/${invoice.lead.id}`}
-                    className="inline-flex items-center gap-1.5 text-[12px] text-violet-600 hover:text-violet-800 font-medium transition-colors"
+                    className="inline-flex items-center gap-1.5 text-[12px] text-brand-600 hover:text-brand-800 font-medium transition-colors"
                   >
                     <ExternalLink size={12} /> View Lead Profile
                   </Link>
@@ -253,7 +253,7 @@ export default function InvoiceShow({ invoice }) {
               <Button type="button" variant="outline" size="sm" onClick={() => setSendDialog(false)}>Cancel</Button>
               <Button
                 type="submit" size="sm" disabled={processing}
-                className="gap-1.5" style={{ background: 'linear-gradient(135deg, #6366F1, #7C3AED)' }}
+                className="gap-1.5" style={{ background: 'linear-gradient(135deg, rgb(var(--brand2-500)), rgb(var(--brand-600)))' }}
               >
                 <Send size={13} /> Confirm Send
               </Button>

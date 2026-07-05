@@ -32,12 +32,12 @@ export default function ErrorPage({ status, message }) {
 
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-          style={{ background: 'rgba(124,58,237,0.15)' }}
+          style={{ background: 'rgb(var(--brand-600) / 0.15)' }}
         >
-          <Icon className="w-8 h-8 text-violet-400" />
+          <Icon className="w-8 h-8 text-brand-400" />
         </div>
 
-        <p className="text-violet-400 text-xs font-bold uppercase tracking-widest mb-2">Error {status}</p>
+        <p className="text-brand-400 text-xs font-bold uppercase tracking-widest mb-2">Error {status}</p>
         <h1 className="text-2xl font-black text-white mb-3">
           {isPlanGate ? 'Upgrade Required' : cfg.title}
         </h1>
@@ -48,8 +48,8 @@ export default function ErrorPage({ status, message }) {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/dashboard"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-2xl hover:shadow-violet-500/25"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90 hover:shadow-2xl hover:shadow-brand-500/25"
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
           >
             <ArrowLeft className="w-4 h-4" /> Back to Dashboard
           </Link>

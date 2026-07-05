@@ -7,26 +7,60 @@
 
 @layer base {
   :root {
-    --background: 248 100% 98%;
-    --foreground: 251 25% 12%;
+    /* "Amethyst Haze" palette: 8978ab / e0daec / 3c3b4e / f7f6f9 / e6a3b7 / 4c2f37 */
+    --background: 260 20% 97%;
+    --foreground: 243 14% 27%;
     --card: 0 0% 100%;
-    --card-foreground: 251 25% 12%;
+    --card-foreground: 243 14% 27%;
     --popover: 0 0% 100%;
-    --popover-foreground: 251 25% 12%;
-    --primary: 262 83% 58%;
+    --popover-foreground: 243 14% 27%;
+    --primary: 260 23% 57%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 248 60% 96%;
-    --secondary-foreground: 251 25% 12%;
-    --muted: 248 40% 95%;
-    --muted-foreground: 250 10% 50%;
-    --accent: 340 60% 58%;
-    --accent-foreground: 0 0% 100%;
+    --secondary: 260 32% 89%;
+    --secondary-foreground: 243 14% 27%;
+    --muted: 260 32% 89%;
+    --muted-foreground: 243 10% 50%;
+    --accent: 342 57% 77%;
+    --accent-foreground: 343 24% 24%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 248 40% 92%;
-    --input: 248 40% 92%;
-    --ring: 262 83% 58%;
+    --border: 260 32% 89%;
+    --input: 260 32% 89%;
+    --ring: 260 23% 57%;
     --radius: 0.75rem;
+
+    /* ── Public site theme ──────────────────────────────────────────────
+       "Amethyst Haze" palette: 8978ab / e0daec / 3c3b4e / f7f6f9 / e6a3b7 / 4c2f37
+       Brand palette for every public-facing page: landing page, blog,
+       free tools, legal pages, and the shared site header/footer/chat
+       widget. Change the values below to re-skin the whole public site
+       from one place. (Separate from the app/dashboard theme above.) */
+    --brand-50:  247 246 249;
+    --brand-100: 224 218 236;
+    --brand-200: 207 198 223;
+    --brand-300: 189 179 210;
+    --brand-400: 172 159 197;
+    --brand-500: 154 140 184;
+    --brand-600: 137 120 171;
+    --brand-700: 111 100 140;
+    --brand-800: 86 79 109;
+    --brand-900: 60 59 78;
+
+    --brand2-50:  253 243 246;
+    --brand2-100: 250 234 239;
+    --brand2-200: 245 216 225;
+    --brand2-300: 240 199 211;
+    --brand2-400: 235 181 197;
+    --brand2-500: 230 163 183;
+    --brand2-600: 192 134 151;
+    --brand2-700: 153 105 119;
+
+    --brand-ink:  76 47 55;    /* dark section background (dusty maroon) */
+    --brand-ink2: 60 59 78;    /* dark section background gradient start (slate-purple) */
+    --brand-tint: 247 246 249; /* light alternating section / page background */
+
+    --brand-gradient: linear-gradient(135deg, rgb(var(--brand-600)), rgb(var(--brand2-600)));
+    --brand-gradient-dark: linear-gradient(155deg, rgb(var(--brand-ink2)) 0%, rgb(var(--brand-ink)) 100%);
   }
 
   * {
@@ -51,8 +85,8 @@
 /* Scrollbar */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(124,58,237,0.18); border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.32); }
+::-webkit-scrollbar-thumb { background: rgb(var(--brand-600) / 0.18); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--brand-600) / 0.32); }
 
 @layer utilities {
   .skeleton {
@@ -71,11 +105,11 @@
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.95);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(124,58,237,0.04);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 16px rgba(var(--brand-600) / 0.04);
   }
 
   .sidebar-bg {
-    background: linear-gradient(180deg, #0D0B18 0%, #130F22 50%, #0F0D1C 100%);
+    background: linear-gradient(180deg, rgb(var(--brand-ink2)) 0%, rgb(var(--brand-900)) 50%, rgb(var(--brand-ink)) 100%);
   }
 
   .hover-lift {

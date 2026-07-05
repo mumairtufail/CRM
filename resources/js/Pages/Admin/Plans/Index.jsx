@@ -88,7 +88,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
               value={form.data.name}
               onChange={e => form.setData('name', e.target.value)}
               placeholder="e.g. Pro"
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
             {form.errors.name && <p className="text-xs text-red-500 mt-1">{form.errors.name}</p>}
           </div>
@@ -99,7 +99,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
               value={form.data.tagline}
               onChange={e => form.setData('tagline', e.target.value)}
               placeholder="One line describing this plan"
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
           </div>
 
@@ -121,7 +121,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
                 value={form.data.price_monthly_original}
                 onChange={e => form.setData('price_monthly_original', e.target.value)}
                 placeholder="e.g. 49"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
             <div>
@@ -131,7 +131,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
                 value={form.data.price_monthly}
                 onChange={e => form.setData('price_monthly', e.target.value)}
                 placeholder="e.g. 29"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
           </div>
@@ -144,7 +144,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
                 value={form.data.price_yearly_original}
                 onChange={e => form.setData('price_yearly_original', e.target.value)}
                 placeholder="e.g. 490"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
             <div>
@@ -154,7 +154,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
                 value={form.data.price_yearly}
                 onChange={e => form.setData('price_yearly', e.target.value)}
                 placeholder="e.g. 290"
-                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
               />
             </div>
           </div>
@@ -165,7 +165,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
               value={form.data.cta_text}
               onChange={e => form.setData('cta_text', e.target.value)}
               placeholder="Sign up free"
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
             />
           </div>
 
@@ -208,7 +208,7 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
             onClick={submit}
             disabled={form.processing}
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
           >
             {form.processing ? 'Saving…' : editing ? 'Save changes' : 'Create plan'}
           </button>
@@ -232,11 +232,11 @@ function PlanCard({ plan, modules, onEdit, onDelete }) {
   return (
     <Card className={cn(
       'relative p-6 flex flex-col rounded-2xl border-slate-100 shadow-sm transition-all',
-      plan.is_featured && 'border-violet-300 ring-1 ring-violet-200'
+      plan.is_featured && 'border-brand-300 ring-1 ring-brand-200'
     )}>
       {plan.is_featured && (
         <div className="absolute -top-3 left-6 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold text-white"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
           <Star size={11} className="fill-white" /> Most Popular
         </div>
       )}
@@ -282,7 +282,7 @@ function PlanCard({ plan, modules, onEdit, onDelete }) {
         </span>
         <div className="flex gap-1.5">
           <button onClick={() => onEdit(plan)}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition-colors">
+            className="p-1.5 rounded-lg text-slate-400 hover:text-brand-600 hover:bg-brand-50 transition-colors">
             <Pencil size={14} />
           </button>
           <button
@@ -326,7 +326,7 @@ export default function AdminPlans({ plans, modules }) {
             <button
               onClick={openCreate}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
             >
               <Plus size={15} /> New Plan
             </button>

@@ -20,7 +20,7 @@ function Field({ label, error, children }) {
   )
 }
 
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition placeholder:text-slate-300"
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition placeholder:text-slate-300"
 
 export default function ClientCreate() {
   const { data, setData, post, processing, errors } = useForm({
@@ -54,7 +54,7 @@ export default function ClientCreate() {
           <div className="w-px h-4 bg-slate-200" />
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               <Briefcase size={13} className="text-white" />
             </div>
             <h1 className="text-[18px] font-bold text-slate-900">New Client</h1>
@@ -163,7 +163,7 @@ export default function ClientCreate() {
                   <select
                     value={data.currency}
                     onChange={e => setData('currency', e.target.value)}
-                    className="h-10 px-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition">
+                    className="h-10 px-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition">
                     {['USD', 'EUR', 'GBP', 'PKR', 'AED', 'INR', 'CAD', 'AUD'].map(c => (
                       <option key={c} value={c}>{c}</option>
                     ))}
@@ -180,7 +180,7 @@ export default function ClientCreate() {
 
               <button type="submit" disabled={processing}
                 className="w-full h-11 rounded-xl text-[13.5px] font-semibold text-white transition-all disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                 {processing ? 'Creating…' : 'Create Client'}
               </button>
             </div>

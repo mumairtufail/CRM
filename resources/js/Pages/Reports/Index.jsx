@@ -37,7 +37,7 @@ function GCard({ children, className = '' }) {
   )
 }
 
-function SHead({ title, icon: Icon, color = 'text-violet-500' }) {
+function SHead({ title, icon: Icon, color = 'text-brand-500' }) {
   return (
     <div className="flex items-center gap-2 px-5 pt-4 pb-3 border-b border-slate-100/80">
       {Icon && <Icon size={13} className={color} strokeWidth={2} />}
@@ -68,7 +68,7 @@ function ChipMini({ channel }) {
 const BarTip = ({ active, payload }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl px-3 py-2 shadow-xl" style={{ background: '#1A1628', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="rounded-xl px-3 py-2 shadow-xl" style={{ background: 'rgb(var(--brand-ink))', border: '1px solid rgba(255,255,255,0.1)' }}>
       <p className="text-[11px] font-bold text-white capitalize">{payload[0].payload.name}</p>
       <p className="text-[11px] text-white/60">{payload[0].value} leads</p>
     </div>
@@ -84,7 +84,7 @@ export default function ReportsIndex({
   }
 
   const chipChannels = channelBreakdown.filter(c => c.name !== 'email_sends' && c.name !== 'whatsapp_sends')
-  const chartColors  = ['#7C3AED', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#14B8A6', '#F97316']
+  const chartColors  = ['rgb(var(--brand-600))', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899', '#14B8A6', '#F97316']
   const topCountriesByAgent = geo?.top_countries_by_agent ?? {}
 
   return (
@@ -143,15 +143,15 @@ export default function ReportsIndex({
             <AreaChart data={leadsTrend ?? []} margin={{ top: 6, right: 4, left: -24, bottom: 0 }}>
               <defs>
                 <linearGradient id="reportsTrendGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7C3AED" stopOpacity={0.22} />
-                  <stop offset="100%" stopColor="#7C3AED" stopOpacity={0} />
+                  <stop offset="0%" stopColor="rgb(var(--brand-600))" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="rgb(var(--brand-600))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 6" stroke="rgba(0,0,0,0.05)" vertical={false} />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip cursor={{ stroke: 'rgba(124,58,237,0.15)', strokeWidth: 1 }} />
-              <Area type="monotone" dataKey="count" stroke="#7C3AED" strokeWidth={2} fill="url(#reportsTrendGradient)" dot={false} />
+              <Tooltip cursor={{ stroke: 'rgb(var(--brand-600) / 0.15)', strokeWidth: 1 }} />
+              <Area type="monotone" dataKey="count" stroke="rgb(var(--brand-600))" strokeWidth={2} fill="url(#reportsTrendGradient)" dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -184,7 +184,7 @@ export default function ReportsIndex({
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                 <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <Tooltip content={<BarTip />} cursor={{ fill: 'rgba(124,58,237,0.04)' }} />
+                <Tooltip content={<BarTip />} cursor={{ fill: 'rgb(var(--brand-600) / 0.04)' }} />
                 <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={14}>
                   {chipChannels.map((_, i) => <Cell key={i} fill={chartColors[i % chartColors.length]} />)}
                 </Bar>
@@ -244,7 +244,7 @@ export default function ReportsIndex({
                       <Link
                         href={`/leads?assigned_to=${row.id}`}
                         title={topCountries ? `Top territories: ${topCountries}` : undefined}
-                        className="text-violet-600 hover:underline"
+                        className="text-brand-600 hover:underline"
                       >
                         {row.name}
                       </Link>
@@ -285,8 +285,8 @@ export default function ReportsIndex({
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
                 <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                <Tooltip cursor={{ fill: 'rgba(124,58,237,0.04)' }} />
-                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={12} fill="#7C3AED" />
+                <Tooltip cursor={{ fill: 'rgb(var(--brand-600) / 0.04)' }} />
+                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={12} fill="rgb(var(--brand-600))" />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -336,7 +336,7 @@ export default function ReportsIndex({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     {act.lead_id && (
-                      <Link href={`/leads/${act.lead_id}`} className="text-[11px] font-semibold text-violet-600 hover:underline truncate">
+                      <Link href={`/leads/${act.lead_id}`} className="text-[11px] font-semibold text-brand-600 hover:underline truncate">
                         {act.lead?.first_name ? `${act.lead.first_name} ${act.lead.last_name ?? ''}`.trim() : 'Lead'}
                       </Link>
                     )}

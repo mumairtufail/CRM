@@ -130,7 +130,7 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
         <div className="relative flex items-center gap-3 px-4 py-4 shrink-0 border-b border-slate-100">
           <div className="relative shrink-0">
             <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-white"
-                 style={{ boxShadow: '0 2px 8px rgba(124,58,237,0.25)' }}>
+                 style={{ boxShadow: '0 2px 8px rgb(var(--brand-600) / 0.25)' }}>
               <LogoMark size={36} />
             </div>
             <span className="absolute -bottom-px -right-px w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
@@ -155,7 +155,7 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
           {grouped.length === 0 && (
             <div className="h-full flex flex-col items-center justify-center text-center px-6">
               <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-3"
-                   style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                   style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                 <Sparkles className="w-5 h-5 text-white" />
               </div>
               <p className="text-slate-400 text-[12.5px] leading-relaxed">
@@ -182,7 +182,7 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
                     : cn('text-white rounded-l-[16px]', msg.isFirstOfGroup ? 'rounded-tr-[16px]' : 'rounded-tr-[4px]', msg.isLastOfGroup ? 'rounded-br-[4px]' : 'rounded-br-[16px]')
                 )}
                   style={msg.role === 'visitor'
-                    ? { background: 'linear-gradient(135deg, #7C3AED, #6425D0)', boxShadow: '0 1px 2px rgba(124,58,237,0.25)' }
+                    ? { background: 'linear-gradient(135deg, rgb(var(--brand-600)), rgb(var(--brand-800)))', boxShadow: '0 1px 2px rgb(var(--brand-600) / 0.25)' }
                     : undefined
                   }
                 >
@@ -222,13 +222,13 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
             placeholder="Type your message..."
             maxLength={2000}
-            className="flex-1 rounded-full px-4 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-350 outline-none transition-all bg-slate-100 border border-transparent focus:bg-white focus:border-violet-300"
+            className="flex-1 rounded-full px-4 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-350 outline-none transition-all bg-slate-100 border border-transparent focus:bg-white focus:border-brand-300"
           />
           <button
             onClick={send}
             disabled={!input.trim() || sending}
             className="w-9 h-9 rounded-full flex items-center justify-center text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 hover:scale-105 active:scale-95"
-            style={{ background: 'linear-gradient(135deg, #8B5CF6, #6425D0)' }}
+            style={{ background: 'linear-gradient(135deg, rgb(var(--brand-500)), rgb(var(--brand-800)))' }}
             aria-label="Send message"
           >
             <Send size={14} strokeWidth={2.4} className="-ml-px" />
@@ -253,8 +253,8 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
               : 'opacity-0 translate-y-3 scale-90 pointer-events-none'
         )}
         style={{
-          background: 'linear-gradient(150deg, #8B5CF6, #6425D0 55%, #4F46E5)',
-          boxShadow: '0 10px 28px -8px rgba(124,58,237,0.5), 0 2px 8px rgba(0,0,0,0.18)',
+          background: 'linear-gradient(150deg, rgb(var(--brand-500)), rgb(var(--brand-800)) 55%, rgb(var(--brand2-600)))',
+          boxShadow: '0 10px 28px -8px rgb(var(--brand-600) / 0.5), 0 2px 8px rgba(0,0,0,0.18)',
         }}
       >
         <MessageCircle size={23} strokeWidth={2.1} />

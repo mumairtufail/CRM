@@ -70,7 +70,7 @@ export default function VerifyEmail({ status }) {
           border-radius: 20px;
           padding: 36px 32px;
           box-shadow: 
-            0 20px 40px -15px rgba(124, 58, 237, 0.08),
+            0 20px 40px -15px rgb(var(--brand-600) / 0.08),
             0 2px 10px rgba(0, 0, 0, 0.02);
         }
 
@@ -117,18 +117,18 @@ export default function VerifyEmail({ status }) {
           font-weight: 600;
           font-size: 14px;
           letter-spacing: -0.2px;
-          background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+          background: linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%);
           display: flex;
           align-items: center;
           justify-content: center;
           gap: 8px;
           cursor: pointer;
-          box-shadow: 0 4px 12px rgba(124, 58, 237, 0.18);
+          box-shadow: 0 4px 12px rgb(var(--brand-600) / 0.18);
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .submit-btn:not(:disabled):hover {
-          background: linear-gradient(135deg, #8b5cf6 0%, #5b52f9 100%);
-          box-shadow: 0 6px 16px rgba(124, 58, 237, 0.25);
+          background: linear-gradient(135deg, rgb(var(--brand-500)) 0%, #5b52f9 100%);
+          box-shadow: 0 6px 16px rgb(var(--brand-600) / 0.25);
           transform: translateY(-1px);
         }
         .submit-btn:not(:disabled):active {
@@ -159,7 +159,7 @@ export default function VerifyEmail({ status }) {
           font-size: 13px;
         }
         .back-link {
-          color: #7c3aed;
+          color: rgb(var(--brand-600));
           font-weight: 600;
           text-decoration: underline;
           transition: color 0.15s ease;
@@ -168,7 +168,7 @@ export default function VerifyEmail({ status }) {
           gap: 6px;
         }
         .back-link:hover {
-          color: #6d28d9;
+          color: rgb(var(--brand-700));
         }
       `}</style>
     </>

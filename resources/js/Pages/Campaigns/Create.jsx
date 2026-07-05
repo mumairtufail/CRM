@@ -90,7 +90,7 @@ function TokenPill({ token, onClick }) {
       type="button"
       onClick={() => onClick(token.label)}
       title={token.desc}
-      className="text-[11px] text-violet-600 hover:text-white hover:bg-violet-600 font-medium px-2 py-0.5 rounded border border-violet-200 hover:border-violet-600 transition-all"
+      className="text-[11px] text-brand-600 hover:text-white hover:bg-brand-600 font-medium px-2 py-0.5 rounded border border-brand-200 hover:border-brand-600 transition-all"
     >
       {token.label}
     </button>
@@ -126,7 +126,7 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
         <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Recipients</p>
-        <div className="flex items-center gap-1.5 text-[12px] font-semibold text-violet-700">
+        <div className="flex items-center gap-1.5 text-[12px] font-semibold text-brand-700">
           <Users size={12} />
           {recipientCount} leads
         </div>
@@ -142,7 +142,7 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
             className={cn(
               'flex items-center gap-1.5 px-3 py-2.5 text-[12px] font-medium border-b-2 -mb-px transition-colors',
               tab === id
-                ? 'border-violet-600 text-violet-700'
+                ? 'border-brand-600 text-brand-700'
                 : 'border-transparent text-slate-400 hover:text-slate-600'
             )}
           >
@@ -156,8 +156,8 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
       <div className="px-4 py-4">
         {tab === 'all' && (
           <div className="flex items-center gap-3 py-1">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center">
-              <Users size={18} className="text-violet-600" />
+            <div className="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center">
+              <Users size={18} className="text-brand-600" />
             </div>
             <div>
               <p className="text-[13px] font-semibold text-slate-800">All Leads</p>
@@ -183,8 +183,8 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
                       className={cn(
                         'text-[12px] px-3 py-1 rounded-full border font-medium capitalize transition-all',
                         active
-                          ? 'bg-violet-600 text-white border-violet-600'
-                          : 'border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-600'
+                          ? 'bg-brand-600 text-white border-brand-600'
+                          : 'border-slate-200 text-slate-500 hover:border-brand-300 hover:text-brand-600'
                       )}
                     >
                       {s}
@@ -231,7 +231,7 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
             {groups.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-[12.5px] text-slate-500">No groups yet.</p>
-                <Link href="/groups" className="text-[12px] text-violet-600 hover:underline">
+                <Link href="/groups" className="text-[12px] text-brand-600 hover:underline">
                   Create a group first →
                 </Link>
               </div>
@@ -246,21 +246,21 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
                     className={cn(
                       'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all',
                       active
-                        ? 'border-violet-300 bg-violet-50'
+                        ? 'border-brand-300 bg-brand-50'
                         : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                     )}
                   >
                     <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: g.color }} />
                     <div className="flex-1 min-w-0">
-                      <p className={cn('text-[13px] font-semibold truncate', active ? 'text-violet-800' : 'text-slate-700')}>
+                      <p className={cn('text-[13px] font-semibold truncate', active ? 'text-brand-800' : 'text-slate-700')}>
                         {g.name}
                       </p>
                     </div>
-                    <span className={cn('text-[11px] font-medium shrink-0', active ? 'text-violet-600' : 'text-slate-400')}>
+                    <span className={cn('text-[11px] font-medium shrink-0', active ? 'text-brand-600' : 'text-slate-400')}>
                       {g.leads_count} leads
                     </span>
                     {active && (
-                      <div className="w-4 h-4 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
+                      <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center shrink-0">
                         <span className="text-white text-[9px]">✓</span>
                       </div>
                     )}
@@ -298,7 +298,7 @@ function EmailPreviewModal({ open, onClose, subject, fromName, fromEmail, body, 
           <div className="px-4 py-3 space-y-2" style={{ background: '#f8f8f8', borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
             <div className="flex items-center gap-2.5">
               <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                 {fromName?.charAt(0)?.toUpperCase() ?? 'S'}
               </div>
               <div>
@@ -341,7 +341,7 @@ function FollowUpStepCard({ stepNumber, step, prevDelayHours, errors, onUpdate, 
       {/* Step header */}
       <div className="flex items-center gap-2.5 px-3 py-2.5 bg-white border-b border-slate-100">
         <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 text-white text-[10px] font-bold"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
           {stepNumber}
         </div>
         <p className="text-[12px] font-semibold text-slate-700 flex-1">Follow-up #{stepNumber}</p>
@@ -402,7 +402,7 @@ function FollowUpStepCard({ stepNumber, step, prevDelayHours, errors, onUpdate, 
             <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
             {TOKENS.map(t => (
               <span key={t.label} title={t.desc}
-                className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
+                className="text-[10.5px] text-brand-500 font-mono bg-brand-50 px-1.5 py-0.5 rounded">
                 {t.label}
               </span>
             ))}
@@ -553,7 +553,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                   <Field label="From">
                     <div className="flex items-center gap-2.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-bold shrink-0"
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                         {sender?.from_name?.charAt(0)?.toUpperCase() ?? 'S'}
                       </div>
                       <div className="min-w-0">
@@ -564,7 +564,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                           {sender?.from_email || 'Set up an SMTP account in Settings'}
                         </p>
                       </div>
-                      <Link href="/profile" className="ml-auto text-[11px] text-violet-600 hover:underline shrink-0">
+                      <Link href="/profile" className="ml-auto text-[11px] text-brand-600 hover:underline shrink-0">
                         Change
                       </Link>
                     </div>
@@ -620,7 +620,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                           key={key}
                           type="button"
                           onClick={() => setData('body_html', t.body)}
-                          className="text-[11px] text-violet-600 hover:text-violet-800 font-medium underline underline-offset-2 transition-colors"
+                          className="text-[11px] text-brand-600 hover:text-brand-800 font-medium underline underline-offset-2 transition-colors"
                         >
                           {t.name}
                         </button>
@@ -628,9 +628,9 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                     </div>
                   </div>
                   <div className="px-4 py-3">
-                    <div className="flex items-start gap-1.5 mb-2.5 rounded-lg bg-violet-50 border border-violet-100 px-2.5 py-2">
-                      <Layers size={13} className="text-violet-500 mt-0.5 shrink-0" />
-                      <p className="text-[11px] text-violet-700 leading-relaxed">
+                    <div className="flex items-start gap-1.5 mb-2.5 rounded-lg bg-brand-50 border border-brand-100 px-2.5 py-2">
+                      <Layers size={13} className="text-brand-500 mt-0.5 shrink-0" />
+                      <p className="text-[11px] text-brand-700 leading-relaxed">
                         {activeTemplate
                           ? <>Your sign-off and signature (regards, name, company, website, phone &amp; email) are added automatically by the <span className="font-semibold">{activeTemplate}</span> template — just write the message itself.</>
                           : <>No active email template. Activate one in <Link href="/profile" className="font-semibold underline">Settings → Templates</Link> to add a signature automatically, or include your sign-off in the body below.</>}
@@ -653,7 +653,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                       <span className="text-[10.5px] text-slate-400 self-center">Tokens:</span>
                       {TOKENS.map(t => (
                         <span key={t.label} title={t.desc}
-                          className="text-[10.5px] text-violet-500 font-mono bg-violet-50 px-1.5 py-0.5 rounded">
+                          className="text-[10.5px] text-brand-500 font-mono bg-brand-50 px-1.5 py-0.5 rounded">
                           {t.label}
                         </span>
                       ))}
@@ -675,12 +675,12 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                     {/* Card header + master toggle */}
                     <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                       <div className="flex items-center gap-2">
-                        <RefreshCw size={13} className="text-violet-500" />
+                        <RefreshCw size={13} className="text-brand-500" />
                         <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                           Automated Follow-up Sequence
                         </p>
                         {data.followup_enabled && data.followup_steps.length > 0 && (
-                          <span className="text-[10px] font-semibold text-violet-600 bg-violet-50 border border-violet-100 px-1.5 py-0.5 rounded-full">
+                          <span className="text-[10px] font-semibold text-brand-600 bg-brand-50 border border-brand-100 px-1.5 py-0.5 rounded-full">
                             {data.followup_steps.length} step{data.followup_steps.length !== 1 ? 's' : ''}
                           </span>
                         )}
@@ -690,7 +690,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                         onClick={() => setData('followup_enabled', !data.followup_enabled)}
                         className={cn(
                           'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
-                          data.followup_enabled ? 'bg-violet-600' : 'bg-slate-200'
+                          data.followup_enabled ? 'bg-brand-600' : 'bg-slate-200'
                         )}
                         role="switch"
                         aria-checked={data.followup_enabled}
@@ -746,7 +746,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                             <button
                               type="button"
                               onClick={addStep}
-                              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-[12px] font-medium text-slate-400 hover:border-violet-300 hover:text-violet-500 transition-colors"
+                              className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-[12px] font-medium text-slate-400 hover:border-brand-300 hover:text-brand-500 transition-colors"
                             >
                               <Plus size={13} />
                               Add Follow-up Step
@@ -782,7 +782,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                     type="submit"
                     disabled={processing}
                     className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 3px 12px rgba(124,58,237,0.3)' }}
+                    style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))', boxShadow: '0 3px 12px rgb(var(--brand-600) / 0.3)' }}
                   >
                     {processing ? 'Saving…' : (isEdit ? 'Update Campaign' : 'Save Campaign')}
                   </button>

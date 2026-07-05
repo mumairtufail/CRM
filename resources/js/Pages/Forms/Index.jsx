@@ -61,8 +61,8 @@ export default function FormsIndex({ forms }) {
               <div key={f.id} className="form-card relative px-4 py-3.5 border border-transparent hover:border-slate-200 hover:shadow-md transition-all">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm bg-violet-100 border-[1.5px] border-violet-200">
-                      <ClipboardList size={16} className="text-violet-600" />
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm bg-brand-100 border-[1.5px] border-brand-200">
+                      <ClipboardList size={16} className="text-brand-600" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">

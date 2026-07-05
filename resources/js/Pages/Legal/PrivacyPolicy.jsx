@@ -12,11 +12,11 @@ export default function PrivacyPolicy() {
                 <meta name="description" content="How Lumenia Lab Pvt. Ltd. collects, uses, stores, and protects data for Lumenia CRM customers and website visitors." />
             </Head>
 
-            <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+            <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />
 
                 <main className="max-w-3xl mx-auto px-6 py-16">
-                    <p className="text-violet-600 text-xs font-bold uppercase tracking-widest mb-3">Legal</p>
+                    <p className="text-brand-600 text-xs font-bold uppercase tracking-widest mb-3">Legal</p>
                     <h1 className="text-4xl font-black text-slate-900 mb-3">Privacy Policy</h1>
                     <p className="text-slate-500 text-sm mb-12">Effective date: {EFFECTIVE_DATE}</p>
 
@@ -90,7 +90,7 @@ export default function PrivacyPolicy() {
                             <p>
                                 You can review, correct, export, or delete the data in your workspace at any time from
                                 your account settings. To request a full export or deletion of your account, email{' '}
-                                <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline">hello@lumenialab.com</a>{' '}
+                                <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a>{' '}
                                 and we'll act on it within a reasonable timeframe.
                             </p>
                         </section>
@@ -116,8 +116,8 @@ export default function PrivacyPolicy() {
                             <h2 className="text-xl font-bold text-slate-900 mb-3">9. Contact us</h2>
                             <p>
                                 Lumenia Lab Pvt. Ltd. — Lahore, Punjab, Pakistan<br />
-                                Email: <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline">hello@lumenialab.com</a><br />
-                                Phone: <a href="tel:+923354455494" className="text-violet-600 hover:underline">+92 335 445 5494</a>
+                                Email: <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a><br />
+                                Phone: <a href="tel:+923354455494" className="text-brand-600 hover:underline">+92 335 445 5494</a>
                             </p>
                         </section>
                     </div>

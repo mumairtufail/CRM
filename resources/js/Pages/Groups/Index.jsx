@@ -16,7 +16,7 @@ import { UsersRound, Plus, MoreHorizontal, Pencil, Trash2, X, Check } from 'luci
 import { toast } from 'sonner'
 
 const PRESET_COLORS = [
-  '#6366f1', '#8b5cf6', '#ec4899', '#ef4444',
+  'rgb(var(--brand2-500))', 'rgb(var(--brand-500))', '#ec4899', '#ef4444',
   '#f59e0b', '#10b981', '#06b6d4', '#3b82f6',
   '#14b8a6', '#84cc16', '#0ea5e9', '#f97316',
 ]
@@ -24,7 +24,7 @@ const PRESET_COLORS = [
 function GroupFormDialog({ open, onClose, initial = null, onSaved }) {
   const [name, setName]         = useState(initial?.name ?? '')
   const [description, setDesc]  = useState(initial?.description ?? '')
-  const [color, setColor]       = useState(initial?.color ?? '#6366f1')
+  const [color, setColor]       = useState(initial?.color ?? 'rgb(var(--brand2-500))')
   const [saving, setSaving]     = useState(false)
 
   const isEdit = !!initial
@@ -184,7 +184,7 @@ export default function GroupsIndex({ groups }) {
               >
                 <div className={`form-card relative px-4 py-3.5 transition-all cursor-pointer border ${
                   selected
-                    ? 'border-violet-300 ring-1 ring-violet-200 bg-violet-50/40'
+                    ? 'border-brand-300 ring-1 ring-brand-200 bg-brand-50/40'
                     : 'border-transparent hover:border-slate-200 hover:shadow-md'
                 }`}>
                   {/* Selection checkbox */}
@@ -192,7 +192,7 @@ export default function GroupsIndex({ groups }) {
                     type="button"
                     onClick={e => { e.preventDefault(); e.stopPropagation(); toggleSelect(g.id) }}
                     className={`absolute top-2 left-2 z-10 w-[18px] h-[18px] rounded-md border flex items-center justify-center shadow-sm transition-all ${
-                      selected ? 'border-violet-600 bg-violet-600' : 'border-slate-300 bg-white'
+                      selected ? 'border-brand-600 bg-brand-600' : 'border-slate-300 bg-white'
                     } ${(selected || selectionActive) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     title={selected ? 'Deselect' : 'Select'}
                   >

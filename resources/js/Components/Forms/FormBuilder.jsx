@@ -240,7 +240,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                           onClick={() => toggleBuiltin(c)}
                           className={`px-3 py-1 rounded-full text-[11px] font-bold border transition-all ${
                             on
-                              ? 'bg-violet-600 text-white border-violet-600'
+                              ? 'bg-brand-600 text-white border-brand-600'
                               : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                           } ${c.always_required ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
@@ -347,7 +347,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                                 ))}
                                 <button
                                   type="button"
-                                  className="text-[11px] font-bold text-violet-600 hover:text-violet-700 flex items-center gap-0.5 px-2"
+                                  className="text-[11px] font-bold text-brand-600 hover:text-brand-700 flex items-center gap-0.5 px-2"
                                   onClick={() => updateField(f.key, { options: [...(f.options ?? []), ''] })}
                                 >
                                   <Plus size={10} /> Option
@@ -403,7 +403,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                     value={data.description}
                     onChange={e => setData('description', e.target.value)}
                     rows={2}
-                    className="w-full rounded-lg border border-slate-200 text-xs p-2.5 focus:outline-none focus:border-violet-500 resize-none bg-white"
+                    className="w-full rounded-lg border border-slate-200 text-xs p-2.5 focus:outline-none focus:border-brand-500 resize-none bg-white"
                     placeholder="What is this form used for?"
                   />
                 </FieldWrapper>
@@ -477,7 +477,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
               <Button
                 type="submit"
                 disabled={processing}
-                className="h-9 text-xs font-bold px-5 bg-violet-600 hover:bg-violet-700 text-white"
+                className="h-9 text-xs font-bold px-5 bg-brand-600 hover:bg-brand-700 text-white"
               >
                 {processing ? (
                   <>
@@ -503,7 +503,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
         
         <div className="w-full max-w-sm bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4">
           <div className="text-center space-y-1">
-            <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg shadow-sm" style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
+            <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg shadow-sm" style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}>
               <LogoMark size={16} className="opacity-95 text-white" />
             </div>
             <h3 className="text-sm font-black text-slate-900 tracking-tight leading-tight">
@@ -543,7 +543,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
               ))
             )}
 
-            <button type="button" disabled className="w-full h-8 rounded-lg text-[10.5px] font-bold text-white uppercase tracking-wider mt-2" style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)', opacity: 0.85 }}>
+            <button type="button" disabled className="w-full h-8 rounded-lg text-[10.5px] font-bold text-white uppercase tracking-wider mt-2" style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)', opacity: 0.85 }}>
               Submit Details
             </button>
           </div>
@@ -612,7 +612,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                   </div>
                   <button
                     type="button"
-                    className="text-xs font-bold text-violet-600 hover:text-violet-750 flex items-center gap-0.5 mt-1"
+                    className="text-xs font-bold text-brand-600 hover:text-brand-750 flex items-center gap-0.5 mt-1"
                     onClick={() => setNewField({ ...newField, options: [...newField.options, ''] })}
                   >
                     <Plus size={12} /> Add option
@@ -645,7 +645,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
             <Button
               type="button"
               size="sm"
-              className="h-8.5 text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white"
+              className="h-8.5 text-xs font-bold bg-brand-600 hover:bg-brand-700 text-white"
               onClick={saveCustomField}
             >
               Add Field

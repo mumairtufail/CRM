@@ -53,6 +53,33 @@ export default {
           text: 'hsl(var(--sidebar-text))',
           accent: 'hsl(var(--sidebar-accent))',
         },
+        // Public site theme (landing page, blog, tools, legal pages, header/footer/chat).
+        // Re-skin the whole public site by editing the --brand-* vars in resources/css/app.css.
+        brand: {
+          50:  'rgb(var(--brand-50) / <alpha-value>)',
+          100: 'rgb(var(--brand-100) / <alpha-value>)',
+          200: 'rgb(var(--brand-200) / <alpha-value>)',
+          300: 'rgb(var(--brand-300) / <alpha-value>)',
+          400: 'rgb(var(--brand-400) / <alpha-value>)',
+          500: 'rgb(var(--brand-500) / <alpha-value>)',
+          600: 'rgb(var(--brand-600) / <alpha-value>)',
+          700: 'rgb(var(--brand-700) / <alpha-value>)',
+          800: 'rgb(var(--brand-800) / <alpha-value>)',
+          900: 'rgb(var(--brand-900) / <alpha-value>)',
+          ink: 'rgb(var(--brand-ink) / <alpha-value>)',
+          ink2: 'rgb(var(--brand-ink2) / <alpha-value>)',
+          tint: 'rgb(var(--brand-tint) / <alpha-value>)',
+        },
+        brand2: {
+          50:  'rgb(var(--brand2-50) / <alpha-value>)',
+          100: 'rgb(var(--brand2-100) / <alpha-value>)',
+          200: 'rgb(var(--brand2-200) / <alpha-value>)',
+          300: 'rgb(var(--brand2-300) / <alpha-value>)',
+          400: 'rgb(var(--brand2-400) / <alpha-value>)',
+          500: 'rgb(var(--brand2-500) / <alpha-value>)',
+          600: 'rgb(var(--brand2-600) / <alpha-value>)',
+          700: 'rgb(var(--brand2-700) / <alpha-value>)',
+        },
       },
       keyframes: {
         'accordion-down': {

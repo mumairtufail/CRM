@@ -92,7 +92,7 @@ export default function ChatbotConversations({ conversations, filters }) {
                 placeholder="Search by name, email, or session…"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 bg-white text-[12.5px] text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-violet-500/10 focus:border-violet-400 transition"
+                className="w-full pl-9 pr-4 py-1.5 rounded-xl border border-slate-200 bg-white text-[12.5px] text-slate-700 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-brand-500/10 focus:border-brand-400 transition"
               />
             </div>
           </div>
@@ -115,8 +115,8 @@ export default function ChatbotConversations({ conversations, filters }) {
                     onClick={() => openConversation(c)}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50/80 transition-colors text-left"
                   >
-                    <div className="w-9 h-9 rounded-xl bg-violet-50 border border-violet-100 flex items-center justify-center shrink-0">
-                      <User size={15} className="text-violet-500" />
+                    <div className="w-9 h-9 rounded-xl bg-brand-50 border border-brand-100 flex items-center justify-center shrink-0">
+                      <User size={15} className="text-brand-500" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ export default function ChatbotConversations({ conversations, filters }) {
                   className={cn(
                     'px-2.5 py-1 rounded-lg text-[11.5px] font-semibold border transition-colors',
                     link.active
-                      ? 'bg-violet-600 text-white border-violet-600'
+                      ? 'bg-brand-600 text-white border-brand-600'
                       : link.url
                         ? 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                         : 'bg-white text-slate-300 border-slate-100 cursor-default'
@@ -177,7 +177,7 @@ export default function ChatbotConversations({ conversations, filters }) {
         <DialogContent className="sm:max-w-xl max-h-[85vh] flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-[14px] font-bold text-slate-800 flex items-center gap-2">
-              <MessageSquare size={14} className="text-violet-600" />
+              <MessageSquare size={14} className="text-brand-600" />
               {viewing?.visitor_name || viewing?.visitor_email || `Visitor ${viewing?.session_id?.slice(0, 8)}`}
             </DialogTitle>
             {viewing && (
@@ -199,20 +199,20 @@ export default function ChatbotConversations({ conversations, filters }) {
               messages.map(msg => (
                 <div key={msg.id} className={cn('flex gap-2', msg.role === 'agent' ? 'justify-start' : 'justify-end')}>
                   {msg.role === 'agent' && (
-                    <div className="w-6 h-6 rounded-lg bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
-                      <Bot size={12} className="text-violet-600" />
+                    <div className="w-6 h-6 rounded-lg bg-brand-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <Bot size={12} className="text-brand-600" />
                     </div>
                   )}
                   <div className={cn(
                     'max-w-[78%] px-3 py-2 rounded-2xl text-[12px] leading-relaxed whitespace-pre-wrap',
                     msg.role === 'agent'
                       ? 'bg-slate-100 text-slate-700 rounded-tl-sm'
-                      : 'bg-violet-600 text-white rounded-tr-sm'
+                      : 'bg-brand-600 text-white rounded-tr-sm'
                   )}>
                     {msg.content}
                     <div className={cn(
                       'text-[9px] mt-1 opacity-60',
-                      msg.role === 'agent' ? 'text-slate-500' : 'text-violet-100'
+                      msg.role === 'agent' ? 'text-slate-500' : 'text-brand-100'
                     )}>
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>

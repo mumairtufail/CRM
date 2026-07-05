@@ -10,7 +10,7 @@ import { Eye } from 'lucide-react'
 import { toast } from 'sonner'
 
 const ROLE_STYLES = {
-  owner:  'bg-violet-50 text-violet-600',
+  owner:  'bg-brand-50 text-brand-600',
   member: 'bg-slate-100 text-slate-500',
 }
 

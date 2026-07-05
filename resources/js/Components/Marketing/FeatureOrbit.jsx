@@ -23,12 +23,12 @@ export default function FeatureOrbit() {
     const [activeId, setActiveId] = useState(null);
 
     return (
-        <div className="relative rounded-3xl border border-slate-100 bg-white px-4 py-10 sm:px-10 sm:py-14">
+        <div className="relative rounded-3xl border border-slate-100 bg-white px-4 py-10 sm:px-10 sm:py-10">
             <div aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
                 <div
                     className="absolute inset-0"
                     style={{
-                        backgroundImage: 'radial-gradient(circle, #ddd6fe 1.5px, transparent 1.5px)',
+                        backgroundImage: 'radial-gradient(circle, rgb(var(--brand-200)) 1.5px, transparent 1.5px)',
                         backgroundSize: '22px 22px',
                         maskImage: 'radial-gradient(ellipse 75% 65% at 50% 40%, black 35%, transparent 85%)',
                         WebkitMaskImage: 'radial-gradient(ellipse 75% 65% at 50% 40%, black 35%, transparent 85%)',
@@ -37,8 +37,8 @@ export default function FeatureOrbit() {
             </div>
 
             <div className="relative">
-                <div className="max-w-lg mx-auto text-center mb-10">
-                    <div className="text-violet-600 text-xs font-bold uppercase tracking-widest mb-2">One connected flow</div>
+                <div className="max-w-lg mx-auto text-center mb-8">
+                    <div className="text-brand-600 text-xs font-bold uppercase tracking-widest mb-2">One connected flow</div>
                     <h3 className="text-slate-900 text-xl sm:text-2xl font-black leading-snug mb-3">
                         Eight tools, working off the same lead record.
                     </h3>
@@ -54,7 +54,7 @@ export default function FeatureOrbit() {
                 <div className="mt-10 pt-6 border-t border-slate-100 flex flex-wrap justify-center gap-x-8 gap-y-3">
                     {HIGHLIGHTS.map((line) => (
                         <div key={line} className="flex items-center gap-2 text-slate-600 text-sm">
-                            <CheckCircle2 className="w-4 h-4 text-violet-500 shrink-0" />
+                            <CheckCircle2 className="w-4 h-4 text-brand-500 shrink-0" />
                             {line}
                         </div>
                     ))}

@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils'
 
 const STATUS_CFG = {
-  open:    { label: 'Open',    cls: 'bg-violet-50 text-violet-700 border-violet-200' },
+  open:    { label: 'Open',    cls: 'bg-brand-50 text-brand-700 border-brand-200' },
   pending: { label: 'Pending', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
   closed:  { label: 'Closed',  cls: 'bg-slate-100 text-slate-500 border-slate-200' },
 }
@@ -130,7 +130,7 @@ function AdminCaseThread({ caseSummary, onBack, onStatusChanged }) {
           <div key={msg.id} className={cn('flex', msg.sender_type === 'admin' ? 'justify-end' : 'justify-start')}>
             <div className={cn(
               'max-w-[85%] sm:max-w-[75%] px-3 py-2 rounded-xl text-[13px] shadow-sm',
-              msg.sender_type === 'admin' ? 'bg-violet-600 text-white rounded-tr-none' : 'bg-white rounded-tl-none'
+              msg.sender_type === 'admin' ? 'bg-brand-600 text-white rounded-tr-none' : 'bg-white rounded-tl-none'
             )}>
               <p className={cn('text-[10px] font-semibold mb-0.5', msg.sender_type === 'admin' ? 'text-white/70' : 'text-slate-400')}>
                 {msg.sender_name}
@@ -188,8 +188,8 @@ export default function AdminSupportCases({ cases, filters, stats }) {
       <PageHeader title="Support Cases" description="Cases raised by workspaces across the platform" />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={LifeBuoy}       label="Total cases" value={stats.total}   color="#7C3AED" bg="#F5F3FF" />
-        <StatCard icon={Inbox}          label="Open"         value={stats.open}    color="#7C3AED" bg="#F5F3FF" />
+        <StatCard icon={LifeBuoy}       label="Total cases" value={stats.total}   color="rgb(var(--brand-600))" bg="rgb(var(--brand-50))" />
+        <StatCard icon={Inbox}          label="Open"         value={stats.open}    color="rgb(var(--brand-600))" bg="rgb(var(--brand-50))" />
         <StatCard icon={Clock3}         label="Pending"      value={stats.pending} color="#D97706" bg="#FFFBEB" />
         <StatCard icon={CheckCircle2}   label="Closed"       value={stats.closed}  color="#059669" bg="#ECFDF5" />
       </div>
@@ -201,7 +201,7 @@ export default function AdminSupportCases({ cases, filters, stats }) {
               <button key={value} onClick={() => applyFilter(value)}
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors',
-                  (filters.status ?? '') === value ? 'bg-violet-600 text-white' : 'text-slate-500 hover:bg-slate-100'
+                  (filters.status ?? '') === value ? 'bg-brand-600 text-white' : 'text-slate-500 hover:bg-slate-100'
                 )}>
                 {label}
                 <span className={cn(
@@ -230,7 +230,7 @@ export default function AdminSupportCases({ cases, filters, stats }) {
                 <button key={c.id} onClick={() => openCase(c)}
                   className={cn(
                     'w-full text-left px-4 py-3 border-b border-slate-50 hover:bg-slate-50 transition-colors',
-                    activeCase?.id === c.id ? 'bg-violet-50 border-l-2 border-l-violet-500' : ''
+                    activeCase?.id === c.id ? 'bg-brand-50 border-l-2 border-l-brand-500' : ''
                   )}>
                   <div className="flex items-center justify-between gap-2">
                     <p className="text-[13px] font-medium text-slate-800 truncate">{c.subject}</p>

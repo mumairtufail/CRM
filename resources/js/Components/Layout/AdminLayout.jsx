@@ -20,7 +20,7 @@ export default function AdminLayout({ children, title }) {
   })
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#F4F2FF' }}>
+    <div className="flex h-screen overflow-hidden" style={{ background: 'rgb(var(--brand-tint))' }}>
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"

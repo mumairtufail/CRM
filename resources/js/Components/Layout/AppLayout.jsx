@@ -9,7 +9,7 @@ function ImpersonationBanner({ name }) {
   return (
     <div
       className="flex items-center justify-center gap-3 px-4 py-2 text-white text-[12.5px] font-medium shrink-0"
-      style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}
+      style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}
     >
       <Eye size={14} className="shrink-0" />
       <span className="truncate">
@@ -54,7 +54,7 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
   })
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden" style={{ background: '#F4F2FF' }}>
+    <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'rgb(var(--brand-tint))' }}>
       {impersonating && <ImpersonationBanner name={impersonating.name} />}
 
       <div className="flex flex-1 overflow-hidden min-h-0">

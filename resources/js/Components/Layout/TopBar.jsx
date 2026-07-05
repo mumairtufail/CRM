@@ -127,10 +127,10 @@ export default function TopBar({ title, onMenuClick }) {
               onMouseEnter={() => setHighlight(i)}
               onClick={() => onPick(p.href)}
               className={`flex items-center gap-2.5 w-full px-3 py-2 rounded-[8px] text-left transition-colors ${
-                i === highlight ? 'bg-violet-50 text-violet-700' : 'text-slate-700 hover:bg-slate-50'
+                i === highlight ? 'bg-brand-50 text-brand-700' : 'text-slate-700 hover:bg-slate-50'
               }`}
             >
-              <Icon size={14} className={i === highlight ? 'text-violet-500' : 'text-slate-400'} />
+              <Icon size={14} className={i === highlight ? 'text-brand-500' : 'text-slate-400'} />
               <span className="text-[12.5px] font-medium">{p.label}</span>
               <span className="ml-auto text-[10px] text-slate-300">{p.href}</span>
             </button>
@@ -236,7 +236,7 @@ export default function TopBar({ title, onMenuClick }) {
             {unread > 0 && (
               <span
                 className="absolute -top-0.5 -right-0.5 min-w-[15px] h-[15px] px-1 rounded-full text-white text-[9px] font-bold flex items-center justify-center border border-white"
-                style={{ background: 'linear-gradient(135deg, #7C3AED, #4F46E5)' }}
+                style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)), rgb(var(--brand2-600)))' }}
               >
                 {unread > 9 ? '9+' : unread}
               </span>
@@ -248,11 +248,11 @@ export default function TopBar({ title, onMenuClick }) {
               style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <p className="text-[12.5px] font-semibold text-slate-800">
-                  Notifications {unread > 0 && <span className="text-violet-600">({unread})</span>}
+                  Notifications {unread > 0 && <span className="text-brand-600">({unread})</span>}
                 </p>
                 {unread > 0 && (
                   <button onClick={markAllRead}
-                    className="flex items-center gap-1 text-[11px] font-semibold text-violet-600 hover:text-violet-700">
+                    className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 hover:text-brand-700">
                     <Check size={12} /> Mark all read
                   </button>
                 )}
@@ -269,11 +269,11 @@ export default function TopBar({ title, onMenuClick }) {
                     <div
                       key={n.id}
                       className={`group flex items-start gap-2.5 w-full px-4 py-3 border-b border-slate-50 transition-colors hover:bg-slate-50 ${
-                        n.read_at ? '' : 'bg-violet-50/40'
+                        n.read_at ? '' : 'bg-brand-50/40'
                       }`}
                     >
                       <button onClick={() => openNotification(n)} className="flex items-start gap-2.5 min-w-0 flex-1 text-left">
-                        <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${n.read_at ? 'bg-transparent' : 'bg-violet-500'}`} />
+                        <span className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${n.read_at ? 'bg-transparent' : 'bg-brand-500'}`} />
                         <div className="min-w-0 flex-1">
                           <p className="text-[12.5px] font-semibold text-slate-700 truncate">{n.title}</p>
                           {n.body && <p className="text-[11.5px] text-slate-500 truncate">{n.body}</p>}
@@ -296,7 +296,7 @@ export default function TopBar({ title, onMenuClick }) {
               <Link
                 href="/notifications"
                 onClick={() => setNotifOpen(false)}
-                className="block text-center py-2.5 text-[12px] font-semibold text-violet-600 hover:bg-slate-50 border-t border-slate-100 transition-colors"
+                className="block text-center py-2.5 text-[12px] font-semibold text-brand-600 hover:bg-slate-50 border-t border-slate-100 transition-colors"
               >
                 View all
               </Link>
@@ -315,7 +315,7 @@ export default function TopBar({ title, onMenuClick }) {
           >
             <div
               className="w-7 h-7 rounded-[8px] flex items-center justify-center text-white text-xs font-bold shrink-0"
-              style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}
+              style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}
             >
               {initial}
             </div>

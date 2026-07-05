@@ -19,7 +19,7 @@ const FRAGMENTS = [
 ];
 
 const CARDS = [
-    { id: 'c1', name: 'Ahmed Karim',   company: 'Techstars PK', value: '$1,500', accent: '#7C3AED', due: 'Thu' },
+    { id: 'c1', name: 'Ahmed Karim',   company: 'Techstars PK', value: '$1,500', accent: 'rgb(var(--brand-600))', due: 'Thu' },
     { id: 'c2', name: 'Sara Qureshi',  company: 'Cloudify.io',  value: '$950',   accent: '#F59E0B', due: 'Mon' },
     { id: 'c3', name: 'Omar Siddiqui', company: 'Nexara Pvt',   value: '$2,000', accent: '#10B981', due: 'Wed' },
     { id: 'c4', name: 'Priya Anand',   company: 'Orion Labs',   value: '$2,400', accent: '#3B82F6', due: 'Fri' },
@@ -101,7 +101,7 @@ export default function ChaosIntoOrder({ variant = 'full' }) {
                         <div className="flex items-center gap-2 mb-1.5">
                             <div
                                 className="w-5 h-5 rounded-full flex items-center justify-center text-white text-[9px] font-bold shrink-0"
-                                style={{ background: `linear-gradient(135deg, ${accent}, #4F46E5)` }}
+                                style={{ background: `linear-gradient(135deg, ${accent}, rgb(var(--brand2-600)))` }}
                             >
                                 {name[0]}
                             </div>

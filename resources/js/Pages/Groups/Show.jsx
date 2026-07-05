@@ -88,7 +88,7 @@ function AddLeadsModal({ open, onClose, groupId }) {
         </div>
 
         {selected.length > 0 && (
-          <p className="text-[11px] text-violet-600 font-semibold">
+          <p className="text-[11px] text-brand-600 font-semibold">
             {selected.length} lead{selected.length !== 1 ? 's' : ''} selected
           </p>
         )}
@@ -220,7 +220,7 @@ export default function GroupShow({ group, members }) {
                           <div className="min-w-0">
                             <Link
                               href={`/leads/${m.id}`}
-                              className="font-medium text-slate-800 hover:text-violet-600 truncate block transition-colors"
+                              className="font-medium text-slate-800 hover:text-brand-600 truncate block transition-colors"
                             >
                               {m.full_name}
                             </Link>

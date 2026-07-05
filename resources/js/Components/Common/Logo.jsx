@@ -34,8 +34,8 @@ export function LogoMark({ size = 32, className = '' }) {
     >
       <defs>
         <linearGradient id="lf-mark-bg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#8B5CF6" />
-          <stop offset="1" stopColor="#4338CA" />
+          <stop stopColor="rgb(var(--brand-600))" />
+          <stop offset="1" stopColor="rgb(var(--brand2-600))" />
         </linearGradient>
         <linearGradient id="lf-mark-shine" x1="0" y1="0" x2="0" y2="20" gradientUnits="userSpaceOnUse">
           <stop stopColor="#ffffff" stopOpacity="0.10" />
@@ -49,27 +49,10 @@ export function LogoMark({ size = 32, className = '' }) {
       {/* Inner top-shine for depth */}
       <rect width="40" height="20" rx="11" fill="url(#lf-mark-shine)" />
 
-      {/* L-Flow mark — vertical bar, rounded corner, horizontal run, curve up */}
-      <path
-        d="M 13 8.5 L 13 26.5 Q 13 30 16.5 30 L 25.5 30 Q 31 30 31 24.5 L 31 19.5"
-        stroke="white"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        opacity="0.93"
-      />
-
-      {/* Arrowhead at the top of the path — indicates upward flow/growth */}
-      <path
-        d="M 28 22.5 L 31 18 L 34 22.5"
-        stroke="white"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        fill="none"
-        opacity="0.92"
-      />
+      {/* Bloom mark — two soft overlapping circles, evoking "Lumenia" (light) and
+          two things meeting in one place. Abstract on purpose: reads clean at 16px. */}
+      <circle cx="15.5" cy="16" r="9" fill="white" opacity="0.95" />
+      <circle cx="25" cy="25" r="7.5" fill="white" opacity="0.5" />
     </svg>
   )
 }
@@ -80,7 +63,7 @@ export function LogoMark({ size = 32, className = '' }) {
  * Props:
  *   size        — icon size in px (default 32)
  *   showText    — whether to render the wordmark (default true)
- *   text        — wordmark text (default 'LeadFlow')
+ *   text        — wordmark text (default 'Lumenia CRM')
  *   className   — container classes
  *   textClassName — text classes
  *   textColor   — tailwind text color class; defaults to slate-900 for light bg

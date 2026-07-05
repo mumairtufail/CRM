@@ -39,7 +39,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
     facebook: '',
     instagram: '',
     // Design
-    themeColor: '#7C3AED',
+    themeColor: 'rgb(var(--brand-600))',
     textColor: '#1E293B',
     accentColor: '#64748B',
     fontFamily: 'Arial, sans-serif',
@@ -57,8 +57,8 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
 
   // Pre-configured color swatches
   const colorSwatches = [
-    '#7C3AED', // Violet
-    '#4F46E5', // Indigo
+    'rgb(var(--brand-600))', // Violet
+    'rgb(var(--brand2-600))', // Indigo
     '#0EA5E9', // Sky Blue
     '#10B981', // Emerald
     '#F59E0B', // Amber
@@ -247,7 +247,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
         <meta property="og:title" content="Free Email Signature Generator - Lumenia CRM" />
       </Head>
 
-      <div className="min-h-screen bg-[#F8F9FD] font-sans antialiased text-slate-800 flex flex-col justify-between">
+      <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between">
         {/* Header/Nav */}
         <nav className="fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -262,7 +262,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                     <div className="hidden md:flex items-center gap-8">
                         {navLinks.map(({ label, href }) => (
                             <a key={label} href={href}
-                               className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
+                               className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-500">{label}</a>
                         ))}
                     </div>
 
@@ -273,7 +273,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -299,7 +299,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="block py-3 rounded-xl text-center text-sm font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -338,7 +338,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-4 text-xs font-bold border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-violet-600 text-violet-600 bg-white'
+                      ? 'border-brand-600 text-brand-600 bg-white'
                       : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -360,7 +360,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                         placeholder="Sarah"
                       />
                     </div>
@@ -371,7 +371,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                         placeholder="Conner"
                       />
                     </div>
@@ -384,7 +384,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="sarah@company.com"
                     />
                   </div>
@@ -397,7 +397,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         name="jobTitle"
                         value={formData.jobTitle}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                         placeholder="Head of Growth"
                       />
                     </div>
@@ -408,7 +408,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         name="department"
                         value={formData.department}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                         placeholder="Sales"
                       />
                     </div>
@@ -421,7 +421,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="avatar"
                       value={formData.avatar}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="https://image-url.com/avatar.jpg"
                     />
                     <p className="text-[10px] text-slate-400 mt-1 font-normal">Must be a link to a public image hosting site.</p>
@@ -438,7 +438,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="company"
                       value={formData.company}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="Apex Digital"
                     />
                   </div>
@@ -451,7 +451,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         name="phone"
                         value={formData.phone}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                         placeholder="+92 300 1234567"
                       />
                     </div>
@@ -462,7 +462,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                         name="website"
                         value={formData.website}
                         onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                        className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                         placeholder="https://apexdigital.com"
                       />
                     </div>
@@ -475,7 +475,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="Lahore, Pakistan"
                     />
                   </div>
@@ -491,7 +491,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="linkedin"
                       value={formData.linkedin}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="https://linkedin.com/in/username"
                     />
                   </div>
@@ -502,7 +502,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="twitter"
                       value={formData.twitter}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="https://twitter.com/username"
                     />
                   </div>
@@ -513,7 +513,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="facebook"
                       value={formData.facebook}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="https://facebook.com/username"
                     />
                   </div>
@@ -524,7 +524,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="instagram"
                       value={formData.instagram}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                       placeholder="https://instagram.com/username"
                     />
                   </div>
@@ -547,7 +547,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                           onClick={() => setFormData(p => ({ ...p, layout: lay.id }))}
                           className={`px-3 py-2 border text-[11px] font-bold rounded-lg transition-all ${
                             formData.layout === lay.id
-                              ? 'border-violet-600 bg-violet-50/20 text-violet-700'
+                              ? 'border-brand-600 bg-brand-50/20 text-brand-700'
                               : 'border-slate-200 text-slate-600 hover:bg-slate-50'
                           }`}
                         >
@@ -564,7 +564,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="fontFamily"
                       value={formData.fontFamily}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500 bg-white"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500 bg-white"
                     >
                       <option value="Arial, sans-serif">Arial (Recommended)</option>
                       <option value="Georgia, serif">Georgia</option>
@@ -606,7 +606,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                       name="includeBranding"
                       checked={formData.includeBranding}
                       onChange={handleInputChange}
-                      className="rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                      className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                     />
                     <label htmlFor="includeBranding" className="text-xs text-slate-600 font-medium">
                       Include a tiny "Powered by Lumenia CRM" badge (supports free tool)
@@ -660,7 +660,7 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                 </button>
                 <button
                   onClick={copySignatureHtml}
-                  className="px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all min-w-[210px] justify-center"
+                  className="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all min-w-[210px] justify-center"
                 >
                   {copiedHtml ? (
                     <>
@@ -678,16 +678,16 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
             </div>
 
             {/* Growth / Upsell Banner */}
-            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 rounded-2xl text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="bg-gradient-to-r from-brand-600 to-brand2-600 p-6 rounded-2xl text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6">
               <div>
                 <h3 className="font-extrabold text-base">Want to send email campaigns with this signature?</h3>
-                <p className="text-xs text-violet-100/90 leading-relaxed max-w-md mt-1 font-normal">
+                <p className="text-xs text-brand-100/90 leading-relaxed max-w-md mt-1 font-normal">
                   Connect your SMTP server, design automated follow-up sequences, and track your open/click analytics inside a free Lumenia CRM workspace.
                 </p>
               </div>
               <Link
                 href="/register"
-                className="px-5 py-3 bg-white hover:bg-slate-50 text-violet-700 rounded-xl text-xs font-extrabold shadow-sm whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="px-5 py-3 bg-white hover:bg-slate-50 text-brand-700 rounded-xl text-xs font-extrabold shadow-sm whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Create Free Workspace
               </Link>
@@ -718,10 +718,10 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
                   <div key={index} className="border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                     <button
                       onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                      className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
+                      className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-brand-600 transition-colors"
                     >
                       <span>{faq.q}</span>
-                      <ChevronRight className={`text-slate-400 w-5 h-5 transition-transform duration-200 ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`} />
+                      <ChevronRight className={`text-slate-400 w-5 h-5 transition-transform duration-200 ${activeFaq === index ? 'rotate-90 text-brand-500' : ''}`} />
                     </button>
                     {activeFaq === index && (
                       <div className="px-6 pb-5 pt-2 text-slate-500 text-sm leading-relaxed border-t border-slate-100 font-normal whitespace-pre-line">

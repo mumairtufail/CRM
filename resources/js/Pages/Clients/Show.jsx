@@ -29,7 +29,7 @@ const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
 function avatarLetter(name) { return (name ?? '?').trim()[0]?.toUpperCase() ?? '?' }
 
 const GRADIENTS = [
-  'from-violet-500 to-indigo-500', 'from-emerald-500 to-teal-500',
+  'from-brand-500 to-brand2-500', 'from-emerald-500 to-teal-500',
   'from-blue-500 to-cyan-500', 'from-rose-500 to-pink-500', 'from-amber-500 to-orange-500',
 ]
 function avatarGradient(str) {
@@ -74,19 +74,19 @@ function EditableField({ label, value, onSave, textarea = false, icon: Icon }) {
             value={draft}
             onChange={e => setDraft(e.target.value)}
             rows={4}
-            className="w-full px-3 py-2 rounded-xl border border-violet-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200 resize-none"
+            className="w-full px-3 py-2 rounded-xl border border-brand-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200 resize-none"
           />
         ) : (
           <input
             autoFocus
             value={draft}
             onChange={e => setDraft(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-violet-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200"
+            className="w-full px-3 py-2 rounded-xl border border-brand-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
           />
         )}
         <div className="flex gap-1.5 mt-1.5">
           <button onClick={save}
-            className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-violet-600 text-white text-[11.5px] font-medium hover:bg-violet-700 transition-colors">
+            className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-brand-600 text-white text-[11.5px] font-medium hover:bg-brand-700 transition-colors">
             <Check size={11} /> Save
           </button>
           <button onClick={() => { setDraft(value ?? ''); setEditing(false) }}
@@ -112,7 +112,7 @@ function EditableField({ label, value, onSave, textarea = false, icon: Icon }) {
           {value || 'Click to add…'}
         </p>
       </div>
-      <Pencil size={11} className="text-slate-300 group-hover:text-violet-400 mt-1.5 shrink-0 transition-colors" />
+      <Pencil size={11} className="text-slate-300 group-hover:text-brand-400 mt-1.5 shrink-0 transition-colors" />
     </button>
   )
 }
@@ -163,9 +163,9 @@ function UploadDocForm({ clientId, onUploaded }) {
 
   return (
     <form onSubmit={handleSubmit}
-      className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-300 transition-colors p-4 bg-slate-50/50">
+      className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-brand-300 transition-colors p-4 bg-slate-50/50">
       <div className="flex items-center gap-2 mb-3">
-        <FilePlus size={15} className="text-violet-500" />
+        <FilePlus size={15} className="text-brand-500" />
         <p className="text-[12.5px] font-semibold text-slate-700">Upload document</p>
       </div>
       <div className="space-y-2">
@@ -174,24 +174,24 @@ function UploadDocForm({ clientId, onUploaded }) {
           onChange={e => setName(e.target.value)}
           placeholder="Document name *"
           required
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition"
         />
         <textarea
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="Notes or instructions (optional)"
           rows={2}
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition resize-none"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition resize-none"
         />
         <div className="flex items-center gap-2">
-          <label className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-violet-300 transition-colors">
+          <label className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-brand-300 transition-colors">
             <Upload size={13} className="text-slate-400 shrink-0" />
             <span className="text-[12.5px] text-slate-500 truncate">{file ? file.name : 'Choose file…'}</span>
             <input ref={fileRef} type="file" className="hidden" onChange={e => setFile(e.target.files[0] ?? null)} />
           </label>
           <button type="submit" disabled={loading || !file || !name.trim()}
             className="h-9 px-4 rounded-xl text-[12.5px] font-semibold text-white transition-all disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
             {loading ? 'Uploading…' : 'Upload'}
           </button>
         </div>
@@ -248,7 +248,7 @@ function DocRow({ doc, clientId, onDeleted }) {
         </div>
         <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
           <a href={doc.url} download target="_blank" rel="noopener noreferrer"
-            className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-violet-300 hover:text-violet-600 transition-colors text-slate-500">
+            className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-brand-300 hover:text-brand-600 transition-colors text-slate-500">
             <Download size={13} />
           </a>
           <button onClick={() => setConfirmOpen(true)} disabled={deleting}

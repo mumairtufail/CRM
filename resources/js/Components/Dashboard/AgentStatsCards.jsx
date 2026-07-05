@@ -21,7 +21,7 @@ const PALETTE = {
   blue:   { bar: '#3B82F6', icon: 'bg-blue-50 text-blue-600' },
   green:  { bar: '#10B981', icon: 'bg-emerald-50 text-emerald-600' },
   amber:  { bar: '#F59E0B', icon: 'bg-amber-50 text-amber-600' },
-  purple: { bar: '#7C3AED', icon: 'bg-violet-50 text-violet-600' },
+  purple: { bar: 'rgb(var(--brand-600))', icon: 'bg-brand-50 text-brand-600' },
   teal:   { bar: '#14B8A6', icon: 'bg-teal-50 text-teal-600' },
 }
 

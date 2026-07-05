@@ -12,8 +12,8 @@ function Section({ icon: Icon, title, children }) {
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-slate-100">
-        <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-          <Icon size={14} className="text-violet-600" />
+        <div className="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center">
+          <Icon size={14} className="text-brand-600" />
         </div>
         <h2 className="text-[13.5px] font-semibold text-slate-800">{title}</h2>
       </div>
@@ -56,7 +56,7 @@ export default function AdminSettingsAccount({ user }) {
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-1.5 text-[12px] text-slate-400 mb-5">
-            <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>
+            <Link href="/admin/settings" className="hover:text-brand-600 transition-colors">Settings</Link>
             <ChevronRight size={11} />
             <span className="text-slate-600 font-medium">Account</span>
           </nav>
@@ -97,7 +97,7 @@ export default function AdminSettingsAccount({ user }) {
                 </div>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={profileForm.processing} size="sm"
-                    className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12.5px]">
+                    className="bg-brand-600 hover:bg-brand-700 text-white h-8 px-4 text-[12.5px]">
                     {profileForm.processing ? 'Saving…' : 'Save changes'}
                   </Button>
                 </div>
@@ -147,7 +147,7 @@ export default function AdminSettingsAccount({ user }) {
                 </div>
                 <div className="flex justify-end">
                   <Button type="submit" disabled={passwordForm.processing} size="sm"
-                    className="bg-violet-600 hover:bg-violet-700 text-white h-8 px-4 text-[12.5px]">
+                    className="bg-brand-600 hover:bg-brand-700 text-white h-8 px-4 text-[12.5px]">
                     {passwordForm.processing ? 'Saving…' : 'Update password'}
                   </Button>
                 </div>

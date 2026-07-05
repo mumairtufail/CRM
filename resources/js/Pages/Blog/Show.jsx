@@ -17,20 +17,20 @@ export default function Show({ blog }) {
         <meta property="og:type" content="article" />
       </Head>
 
-      <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+      <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
         {/* Simple Navbar */}
-        <header className="sticky top-0 z-50 bg-[#F4F2FF]/85 backdrop-blur-md border-b border-slate-100">
+        <header className="sticky top-0 z-50 bg-[rgb(var(--brand-tint))]/85 backdrop-blur-md border-b border-slate-100">
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Logo size={32} showText={true} text="LumeniaCRM" textClassName="text-[17px] font-extrabold" />
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-[14px] font-semibold text-slate-600">
-              <Link href="/" className="hover:text-violet-600 transition-colors">Home</Link>
-              <Link href="/blog" className="text-violet-600">Blog</Link>
-              <Link href="/login" className="hover:text-violet-600 transition-colors">Sign in</Link>
+              <Link href="/" className="hover:text-brand-600 transition-colors">Home</Link>
+              <Link href="/blog" className="text-brand-600">Blog</Link>
+              <Link href="/login" className="hover:text-brand-600 transition-colors">Sign in</Link>
               <Link
                 href="/register"
-                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-violet-500/10 transition-all"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-brand-500/10 transition-all"
               >
                 Get Started
               </Link>
@@ -42,7 +42,7 @@ export default function Show({ blog }) {
         <div className="max-w-3xl mx-auto px-6 pt-10">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-400 hover:text-violet-600 transition-colors"
+            className="inline-flex items-center gap-1.5 text-[13px] font-bold text-slate-400 hover:text-brand-600 transition-colors"
           >
             <ArrowLeft size={14} /> Back to articles
           </Link>
@@ -57,7 +57,7 @@ export default function Show({ blog }) {
                 {blog.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="px-2.5 py-0.5 rounded bg-violet-50 text-violet-700 text-[10px] font-bold uppercase tracking-wider border border-violet-100"
+                    className="px-2.5 py-0.5 rounded bg-brand-50 text-brand-700 text-[10px] font-bold uppercase tracking-wider border border-brand-100"
                   >
                     {tag}
                   </span>
@@ -169,18 +169,18 @@ export default function Show({ blog }) {
         }
 
         .blog-content a {
-          color: #7c3aed; /* Violet 600 */
+          color: rgb(var(--brand-600)); /* Violet 600 */
           text-decoration: underline;
           font-weight: 500;
         }
 
         .blog-content a:hover {
-          color: #6d28d9;
+          color: rgb(var(--brand-700));
         }
 
         .blog-content blockquote {
           font-style: italic;
-          border-left: 4px solid #7c3aed;
+          border-left: 4px solid rgb(var(--brand-600));
           padding-left: 1.25rem;
           color: #475569;
           margin: 1.5rem 0;

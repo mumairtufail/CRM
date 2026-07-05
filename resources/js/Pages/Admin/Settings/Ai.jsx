@@ -110,7 +110,7 @@ export default function Ai({ setting, models }) {
         <div className="max-w-7xl mx-auto py-6 px-4 w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[12px] text-slate-400 mb-3">
-            <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>
+            <Link href="/admin/settings" className="hover:text-brand-600 transition-colors">Settings</Link>
             <span>/</span>
             <span className="text-slate-600 font-medium">AI Configuration</span>
           </div>
@@ -118,7 +118,7 @@ export default function Ai({ setting, models }) {
           <div className="mb-6 flex items-start justify-between">
             <div>
               <h1 className="text-[17px] font-bold text-slate-800 mb-0.5 flex items-center gap-2">
-                <Cpu size={18} className="text-violet-600" />
+                <Cpu size={18} className="text-brand-600" />
                 AI Configuration
               </h1>
               <p className="text-[12px] text-slate-400 font-normal leading-snug">
@@ -159,7 +159,7 @@ export default function Ai({ setting, models }) {
                           onClick={() => setData('provider', p.id)}
                           className={`py-2 px-3 rounded-lg border text-center font-bold text-[12.5px] transition-all flex items-center justify-center gap-1 ${
                             data.provider === p.id
-                              ? 'border-violet-600 bg-violet-50/50 text-violet-700'
+                              ? 'border-brand-600 bg-brand-50/50 text-brand-700'
                               : 'border-slate-200 hover:border-slate-300 text-slate-600 bg-white'
                           }`}
                         >
@@ -183,7 +183,7 @@ export default function Ai({ setting, models }) {
                         value={data.api_key}
                         onChange={e => setData('api_key', e.target.value)}
                         placeholder="sk-..."
-                        className="w-full h-9 pl-9 pr-9 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                        className="w-full h-9 pl-9 pr-9 text-[13px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none"
                       />
                       <button
                         type="button"
@@ -204,7 +204,7 @@ export default function Ai({ setting, models }) {
                     <select
                       value={data.model}
                       onChange={e => setData('model', e.target.value)}
-                      className="w-full h-9 px-3 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none bg-white"
+                      className="w-full h-9 px-3 text-[13px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none bg-white"
                     >
                       <option value="">Select a model...</option>
                       {currentModels.map(m => (
@@ -219,7 +219,7 @@ export default function Ai({ setting, models }) {
                         value={data.model === 'custom' ? '' : data.model}
                         onChange={e => setData('model', e.target.value)}
                         placeholder="Enter custom model identifier (e.g. gpt-4-32k)"
-                        className="w-full h-9 px-3 mt-2 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                        className="w-full h-9 px-3 mt-2 text-[13px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none"
                       />
                     )}
                     {errors.model && <p className="text-red-500 text-[11px] mt-1">{errors.model}</p>}
@@ -235,7 +235,7 @@ export default function Ai({ setting, models }) {
                       value={data.base_url}
                       onChange={e => setData('base_url', e.target.value)}
                       placeholder="e.g. https://api.openai.com/v1"
-                      className="w-full h-9 px-3 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                      className="w-full h-9 px-3 text-[13px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none"
                     />
                     <p className="text-[10.5px] text-slate-400 mt-1">
                       Leave empty to use the provider's default endpoint. Override this when using proxies or custom endpoints.
@@ -262,7 +262,7 @@ export default function Ai({ setting, models }) {
                       type="checkbox"
                       checked={data.is_active}
                       onChange={e => setData('is_active', e.target.checked)}
-                      className="w-4.5 h-4.5 accent-violet-600 rounded cursor-pointer"
+                      className="w-4.5 h-4.5 accent-brand-600 rounded cursor-pointer"
                     />
                   </div>
 
@@ -337,7 +337,7 @@ export default function Ai({ setting, models }) {
               <button
                 type="submit"
                 disabled={processing}
-                className="px-4 py-2 rounded-lg bg-violet-600 text-[12.5px] font-bold text-white hover:bg-violet-700 flex items-center gap-1.5 transition-colors shadow-sm shadow-violet-500/10 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-brand-600 text-[12.5px] font-bold text-white hover:bg-brand-700 flex items-center gap-1.5 transition-colors shadow-sm shadow-brand-500/10 disabled:opacity-50"
               >
                 Save Settings
               </button>

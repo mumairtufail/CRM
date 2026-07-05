@@ -12,11 +12,11 @@ export default function TermsAndConditions() {
                 <meta name="description" content="The terms that govern use of Lumenia CRM, provided by Lumenia Lab Pvt. Ltd." />
             </Head>
 
-            <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+            <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />
 
                 <main className="max-w-3xl mx-auto px-6 py-16">
-                    <p className="text-violet-600 text-xs font-bold uppercase tracking-widest mb-3">Legal</p>
+                    <p className="text-brand-600 text-xs font-bold uppercase tracking-widest mb-3">Legal</p>
                     <h1 className="text-4xl font-black text-slate-900 mb-3">Terms & Conditions</h1>
                     <p className="text-slate-500 text-sm mb-12">Effective date: {EFFECTIVE_DATE}</p>
 
@@ -35,8 +35,8 @@ export default function TermsAndConditions() {
                             <p>
                                 Lumenia CRM is sold as a subscription (SaaS). Your workspace and the features available to
                                 it depend on the plan you choose — Basic, Pro, or Premium — as described on our{' '}
-                                <a href="/#pricing" className="text-violet-600 hover:underline">pricing page</a> and our{' '}
-                                <a href="/products" className="text-violet-600 hover:underline">Products & Services page</a>.
+                                <a href="/#pricing" className="text-brand-600 hover:underline">pricing page</a> and our{' '}
+                                <a href="/products" className="text-brand-600 hover:underline">Products & Services page</a>.
                                 We may add, change, or retire individual features as the product evolves; we won't remove
                                 a feature you're actively paying for without reasonable notice.
                             </p>
@@ -57,7 +57,7 @@ export default function TermsAndConditions() {
                                 <li>Paid plans are billed monthly or yearly in advance, in the currency and amount shown at checkout.</li>
                                 <li>Subscriptions renew automatically until cancelled from your account settings.</li>
                                 <li>Prices may change; we'll notify active subscribers at least 30 days before a price increase takes effect on their next renewal.</li>
-                                <li>Refunds are handled under our <a href="/refund-policy" className="text-violet-600 hover:underline">Refund & Return Policy</a>.</li>
+                                <li>Refunds are handled under our <a href="/refund-policy" className="text-brand-600 hover:underline">Refund & Return Policy</a>.</li>
                             </ul>
                         </section>
 
@@ -80,7 +80,7 @@ export default function TermsAndConditions() {
                             <p>
                                 You own the leads, contacts, invoices, and other content you store in your workspace. We
                                 process it only to provide the service, as described in our{' '}
-                                <a href="/privacy-policy" className="text-violet-600 hover:underline">Privacy Policy</a>.
+                                <a href="/privacy-policy" className="text-brand-600 hover:underline">Privacy Policy</a>.
                                 You're responsible for having the right to collect and store the data you put into the CRM
                                 (for example, consent for the leads and contacts you import).
                             </p>
@@ -135,8 +135,8 @@ export default function TermsAndConditions() {
                             <h2 className="text-xl font-bold text-slate-900 mb-3">11. Contact us</h2>
                             <p>
                                 Lumenia Lab Pvt. Ltd. — Lahore, Punjab, Pakistan<br />
-                                Email: <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline">hello@lumenialab.com</a><br />
-                                Phone: <a href="tel:+923354455494" className="text-violet-600 hover:underline">+92 335 445 5494</a>
+                                Email: <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a><br />
+                                Phone: <a href="tel:+923354455494" className="text-brand-600 hover:underline">+92 335 445 5494</a>
                             </p>
                         </section>
                     </div>

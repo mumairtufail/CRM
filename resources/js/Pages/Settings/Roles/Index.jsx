@@ -52,7 +52,7 @@ export default function RolesIndex({ roles }) {
                   <td className="px-4 py-2.5">
                     <span className="font-medium text-slate-800">{r.name}</span>
                     {r.is_default && (
-                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-violet-50 text-violet-600">Default</span>
+                      <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold bg-brand-50 text-brand-600">Default</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5 text-slate-600">{r.permission_count} permission{r.permission_count === 1 ? '' : 's'}</td>

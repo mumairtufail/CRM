@@ -58,7 +58,7 @@ function InvoicePreview({ data, items, companyName }) {
   return (
     <div id="invoice-print-area" className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden text-[12px] text-slate-700">
       {/* Header */}
-      <div className="px-7 py-6 border-b border-slate-100" style={{ background: 'linear-gradient(135deg, #6366F1 0%, #7C3AED 100%)' }}>
+      <div className="px-7 py-6 border-b border-slate-100" style={{ background: 'linear-gradient(135deg, rgb(var(--brand2-500)) 0%, rgb(var(--brand-600)) 100%)' }}>
         <div className="flex items-start justify-between">
           <div>
             <p className="text-white/60 text-[10px] font-semibold uppercase tracking-widest mb-0.5">Invoice</p>
@@ -401,7 +401,7 @@ export default function InvoiceCreate({ leads = [], next_number, default_dates }
                 <button
                   type="button"
                   onClick={addItem}
-                  className="flex items-center gap-1.5 text-[12px] text-violet-600 hover:text-violet-800 font-medium mt-1 transition-colors"
+                  className="flex items-center gap-1.5 text-[12px] text-brand-600 hover:text-brand-800 font-medium mt-1 transition-colors"
                 >
                   <Plus size={13} /> Add line item
                 </button>
@@ -479,7 +479,7 @@ export default function InvoiceCreate({ leads = [], next_number, default_dates }
                 onClick={() => setSendDialog(true)}
                 disabled={processing}
                 className="gap-2"
-                style={{ background: 'linear-gradient(135deg, #6366F1, #7C3AED)' }}
+                style={{ background: 'linear-gradient(135deg, rgb(var(--brand2-500)), rgb(var(--brand-600)))' }}
               >
                 <Send size={14} /> Send via Email
               </Button>
@@ -522,7 +522,7 @@ export default function InvoiceCreate({ leads = [], next_number, default_dates }
                 size="sm"
                 disabled={processing}
                 className="gap-1.5"
-                style={{ background: 'linear-gradient(135deg, #6366F1, #7C3AED)' }}
+                style={{ background: 'linear-gradient(135deg, rgb(var(--brand2-500)), rgb(var(--brand-600)))' }}
               >
                 <Send size={13} /> Confirm Send
               </Button>

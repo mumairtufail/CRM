@@ -125,10 +125,10 @@ const PRESETS = [
   {
     id: 'custom',
     label: 'Custom',
-    color: '#7C3AED',
+    color: 'rgb(var(--brand-600))',
     logo: (
       <div className="w-[18px] h-[18px] rounded flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
         <Server size={10} className="text-white" />
       </div>
     ),
@@ -157,8 +157,8 @@ function SectionTitle({ icon: Icon, label, description }) {
   return (
     <div className="flex items-start gap-3 mb-4">
       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-        style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(79,70,229,0.12))' }}>
-        <Icon size={15} className="text-violet-600" />
+        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600) / 0.12),rgb(var(--brand2-600) / 0.12))' }}>
+        <Icon size={15} className="text-brand-600" />
       </div>
       <div>
         <p className="text-[13.5px] font-semibold text-slate-800">{label}</p>
@@ -312,13 +312,13 @@ export default function SmtpSettings({ smtp, configured }) {
                       className={cn(
                         'relative flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl border-2 transition-all duration-150',
                         activePreset === preset.id
-                          ? 'border-violet-400 bg-violet-50 shadow-sm'
-                          : 'border-slate-200 bg-white hover:border-violet-200 hover:bg-slate-50'
+                          ? 'border-brand-400 bg-brand-50 shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-brand-200 hover:bg-slate-50'
                       )}
                     >
                       {activePreset === preset.id && (
                         <div className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full flex items-center justify-center"
-                          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                           <CheckCircle2 size={9} className="text-white" />
                         </div>
                       )}
@@ -327,7 +327,7 @@ export default function SmtpSettings({ smtp, configured }) {
                       </div>
                       <span className={cn(
                         'text-[11px] font-semibold leading-none',
-                        activePreset === preset.id ? 'text-violet-700' : 'text-slate-600'
+                        activePreset === preset.id ? 'text-brand-700' : 'text-slate-600'
                       )}>
                         {preset.label}
                       </span>
@@ -488,7 +488,7 @@ export default function SmtpSettings({ smtp, configured }) {
                   type="submit"
                   disabled={processing}
                   className="flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                  style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                 >
                   {processing
                     ? <><Loader2 size={13} className="animate-spin" /> Saving…</>
@@ -501,7 +501,7 @@ export default function SmtpSettings({ smtp, configured }) {
                     type="button"
                     onClick={openTestDialog}
                     disabled={testLoading}
-                    className="flex items-center gap-2 h-9 px-4 text-[13px] font-semibold text-violet-700 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all disabled:opacity-50"
+                    className="flex items-center gap-2 h-9 px-4 text-[13px] font-semibold text-brand-700 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-all disabled:opacity-50"
                   >
                     {testLoading
                       ? <><Loader2 size={13} className="animate-spin" /> Sending…</>
@@ -610,7 +610,7 @@ export default function SmtpSettings({ smtp, configured }) {
               onClick={sendTest}
               disabled={!testTo || testLoading}
               className="flex items-center gap-1.5 h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
             >
               {testLoading ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
               Send test

@@ -113,7 +113,7 @@ function ConversationThread({ lead, templates, onBack }) {
                 : 'bg-white rounded-tl-none'
             )}>
               {msg.is_bot_reply && (
-                <p className="text-[10px] text-violet-500 font-semibold mb-0.5 flex items-center gap-0.5">
+                <p className="text-[10px] text-brand-500 font-semibold mb-0.5 flex items-center gap-0.5">
                   <Bot size={10} /> AI Assistant
                 </p>
               )}

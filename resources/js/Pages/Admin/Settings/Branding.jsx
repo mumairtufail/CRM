@@ -109,7 +109,7 @@ export default function Branding({ custom_logo_url }) {
         <div className="max-w-7xl mx-auto py-6 px-4 w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[12px] text-slate-400 mb-3">
-            <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>
+            <Link href="/admin/settings" className="hover:text-brand-600 transition-colors">Settings</Link>
             <span>/</span>
             <span className="text-slate-600 font-medium">Branding & Logo</span>
           </div>
@@ -133,7 +133,7 @@ export default function Branding({ custom_logo_url }) {
             {/* Card 1: Custom Logo Upload */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
               <h2 className="text-[13.5px] font-bold text-slate-800 mb-1 flex items-center gap-2">
-                <ImageIcon size={15} className="text-violet-500" />
+                <ImageIcon size={15} className="text-brand-500" />
                 System Custom Logo
               </h2>
               <p className="text-[11.5px] text-slate-400 mb-3 leading-snug">
@@ -190,14 +190,14 @@ export default function Branding({ custom_logo_url }) {
               </div>
 
               {uploadForm.data.logo && (
-                <form onSubmit={handleUploadSubmit} className="flex items-center justify-between p-2.5 rounded-lg border border-violet-100 bg-violet-50/50">
-                  <span className="text-[12px] text-violet-700 truncate max-w-[65%] font-medium">
+                <form onSubmit={handleUploadSubmit} className="flex items-center justify-between p-2.5 rounded-lg border border-brand-100 bg-brand-50/50">
+                  <span className="text-[12px] text-brand-700 truncate max-w-[65%] font-medium">
                     Selected: {uploadForm.data.logo.name}
                   </span>
                   <button
                     type="submit"
                     disabled={uploadForm.processing}
-                    className="px-3 py-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white text-[12px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50 shadow-sm shadow-violet-500/10"
+                    className="px-3 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-[12px] font-semibold flex items-center gap-1 transition-all disabled:opacity-50 shadow-sm shadow-brand-500/10"
                   >
                     {uploadForm.processing ? 'Uploading…' : 'Upload Logo'}
                   </button>

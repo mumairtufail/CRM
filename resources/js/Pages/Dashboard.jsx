@@ -17,8 +17,8 @@ import { usePage } from '@inertiajs/react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 
-const PIE_COLORS  = ['#7C3AED','#3B82F6','#10B981','#F59E0B','#EF4444','#EC4899','#14B8A6','#F97316']
-const SRC_COLORS  = { manual:'#7C3AED', csv:'#3B82F6', google_sheet:'#10B981', claude_ai:'#F59E0B', apollo:'#EF4444', facebook:'#1877F2', instagram:'#E1306C' }
+const PIE_COLORS  = ['rgb(var(--brand-600))','#3B82F6','#10B981','#F59E0B','#EF4444','#EC4899','#14B8A6','#F97316']
+const SRC_COLORS  = { manual:'rgb(var(--brand-600))', csv:'#3B82F6', google_sheet:'#10B981', claude_ai:'#F59E0B', apollo:'#EF4444', facebook:'#1877F2', instagram:'#E1306C' }
 const ACT_ICONS   = { note: MessageSquare, email_sent: Send, call: PhoneCall, status_change: Star, import: Tag }
 const ACT_COLORS  = { note:'text-slate-500 bg-slate-100', email_sent:'text-blue-500 bg-blue-50', call:'text-green-500 bg-green-50', status_change:'text-amber-500 bg-amber-50', import:'text-purple-500 bg-purple-50' }
 
@@ -45,7 +45,7 @@ function GCard({ children, className = '', style = {}, onClick }) {
   )
 }
 
-function SHead({ title, icon: Icon, href, color = 'text-violet-500' }) {
+function SHead({ title, icon: Icon, href, color = 'text-brand-500' }) {
   return (
     <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-slate-100/80">
       <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ function SHead({ title, icon: Icon, href, color = 'text-violet-500' }) {
         <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400">{title}</h3>
       </div>
       {href && (
-        <Link href={href} className="flex items-center gap-1 text-[11px] text-violet-500 hover:text-violet-700 font-semibold">
+        <Link href={href} className="flex items-center gap-1 text-[11px] text-brand-500 hover:text-brand-700 font-semibold">
           View all <ArrowRight size={10} />
         </Link>
       )}
@@ -64,7 +64,7 @@ function SHead({ title, icon: Icon, href, color = 'text-violet-500' }) {
 const AreaTip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl px-3 py-2 shadow-xl" style={{ background: '#1A1628', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="rounded-xl px-3 py-2 shadow-xl" style={{ background: 'rgb(var(--brand-ink))', border: '1px solid rgba(255,255,255,0.1)' }}>
       <p className="text-[10px] text-white/40 mb-0.5">{label}</p>
       <p className="text-[13px] font-bold text-white">{payload[0].value} leads</p>
     </div>
@@ -74,7 +74,7 @@ const AreaTip = ({ active, payload, label }) => {
 const BarTip = ({ active, payload }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl px-3 py-2 shadow-xl" style={{ background: '#1A1628', border: '1px solid rgba(255,255,255,0.1)' }}>
+    <div className="rounded-xl px-3 py-2 shadow-xl" style={{ background: 'rgb(var(--brand-ink))', border: '1px solid rgba(255,255,255,0.1)' }}>
       <p className="text-[11px] font-bold text-white capitalize">{payload[0].payload.name}</p>
       <p className="text-[11px] text-white/60">{payload[0].value} leads</p>
     </div>
@@ -86,7 +86,7 @@ function StatCard({ title, value, change, icon: Icon, color, href, index }) {
     blue:   { bar: '#3B82F6', icon: 'bg-blue-50 text-blue-600',       glow: 'rgba(59,130,246,0.08)' },
     green:  { bar: '#10B981', icon: 'bg-emerald-50 text-emerald-600', glow: 'rgba(16,185,129,0.08)' },
     amber:  { bar: '#F59E0B', icon: 'bg-amber-50 text-amber-600',     glow: 'rgba(245,158,11,0.08)' },
-    purple: { bar: '#7C3AED', icon: 'bg-violet-50 text-violet-600',   glow: 'rgba(124,58,237,0.08)' },
+    purple: { bar: 'rgb(var(--brand-600))', icon: 'bg-brand-50 text-brand-600',   glow: 'rgb(var(--brand-600) / 0.08)' },
     teal:   { bar: '#14B8A6', icon: 'bg-teal-50 text-teal-600',       glow: 'rgba(20,184,166,0.08)' },
   }
   const c = palette[color] || palette.blue
@@ -136,7 +136,7 @@ function FunnelBar({ name, value, max, color }) {
 }
 
 const FUNNEL_ORDER = ['new','contacted','qualified','proposal','negotiation','won','lost']
-const FUNNEL_COLORS = ['#7C3AED','#6366F1','#3B82F6','#0EA5E9','#10B981','#22C55E','#EF4444']
+const FUNNEL_COLORS = ['rgb(var(--brand-600))','rgb(var(--brand2-500))','#3B82F6','#0EA5E9','#10B981','#22C55E','#EF4444']
 
 function WelcomeBanner({ name, children }) {
   return (
@@ -145,17 +145,17 @@ function WelcomeBanner({ name, children }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="relative overflow-hidden rounded-2xl px-6 py-5 mb-5"
-      style={{ background: 'linear-gradient(135deg, #1A1628 0%, #2D1B6B 50%, #1A1628 100%)', boxShadow: '0 4px 30px rgba(124,58,237,0.25)' }}
+      style={{ background: 'linear-gradient(135deg, rgb(var(--brand-ink)) 0%, rgb(var(--brand-800)) 50%, rgb(var(--brand-ink)) 100%)', boxShadow: '0 4px 30px rgb(var(--brand-600) / 0.25)' }}
     >
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none opacity-[0.15]"
-        style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', transform: 'translate(30%,-55%)' }} />
+        style={{ background: 'radial-gradient(circle, rgb(var(--brand-600)) 0%, transparent 70%)', transform: 'translate(30%,-55%)' }} />
       <div className="absolute -bottom-16 left-1/4 w-48 h-48 rounded-full pointer-events-none opacity-[0.08]"
-        style={{ background: 'radial-gradient(circle, #4F46E5 0%, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, rgb(var(--brand2-600)) 0%, transparent 70%)' }} />
       <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Sparkles size={12} className="text-violet-300" />
-            <span className="text-violet-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
+            <Sparkles size={12} className="text-brand-300" />
+            <span className="text-brand-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
           </div>
           <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''}</h2>
           <p className="text-white/40 text-[12.5px] mt-0.5">Here's your pipeline snapshot for today.</p>
@@ -175,15 +175,15 @@ function AgentDashboard({ agentStats, myLeads, upcomingFollowUps, recentActiviti
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.35 }}>
           <GCard className="h-full">
-            <SHead title="My leads" icon={Target} href="/leads" iconColor="text-violet-500" />
+            <SHead title="My leads" icon={Target} href="/leads" iconColor="text-brand-500" />
             <div className="px-3 py-2">
               {myLeads?.length ? myLeads.map(lead => (
                 <Link key={lead.id} href={`/leads/${lead.id}`}
-                  className="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-violet-50/60 transition-colors group">
+                  className="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-brand-50/60 transition-colors group">
                   <div className="flex items-center gap-2.5">
                     <LeadAvatar name={lead.full_name} size="sm" />
                     <div className="min-w-0">
-                      <p className="text-[12px] font-semibold text-slate-800 group-hover:text-violet-700 truncate leading-none">{lead.full_name}</p>
+                      <p className="text-[12px] font-semibold text-slate-800 group-hover:text-brand-700 truncate leading-none">{lead.full_name}</p>
                       <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">{lead.company || 'No company'}</p>
                     </div>
                   </div>
@@ -214,7 +214,7 @@ function AgentDashboard({ agentStats, myLeads, upcomingFollowUps, recentActiviti
                     <div className="min-w-0">
                       {act.lead_id && (
                         <Link href={`/leads/${act.lead_id}`}
-                          className="text-[11px] font-semibold text-violet-600 hover:underline truncate block leading-none mb-0.5">
+                          className="text-[11px] font-semibold text-brand-600 hover:underline truncate block leading-none mb-0.5">
                           {act.lead_name}
                         </Link>
                       )}
@@ -332,16 +332,16 @@ export default function Dashboard({
                   <AreaChart data={leadsOverTime ?? []} margin={{ top:6, right:4, left:-24, bottom:0 }}>
                     <defs>
                       <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%"   stopColor="#7C3AED" stopOpacity={0.22} />
-                        <stop offset="100%" stopColor="#7C3AED" stopOpacity={0}   />
+                        <stop offset="0%"   stopColor="rgb(var(--brand-600))" stopOpacity={0.22} />
+                        <stop offset="100%" stopColor="rgb(var(--brand-600))" stopOpacity={0}   />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 6" stroke="rgba(0,0,0,0.05)" vertical={false} />
                     <XAxis dataKey="date" tick={{ fontSize:10, fill:'#94A3B8' }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize:10, fill:'#94A3B8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                    <Tooltip content={<AreaTip />} cursor={{ stroke:'rgba(124,58,237,0.15)', strokeWidth:1 }} />
-                    <Area type="monotone" dataKey="count" stroke="#7C3AED" strokeWidth={2} fill="url(#ag)"
-                      dot={false} activeDot={{ r:4, fill:'#7C3AED', stroke:'#fff', strokeWidth:2 }} />
+                    <Tooltip content={<AreaTip />} cursor={{ stroke:'rgb(var(--brand-600) / 0.15)', strokeWidth:1 }} />
+                    <Area type="monotone" dataKey="count" stroke="rgb(var(--brand-600))" strokeWidth={2} fill="url(#ag)"
+                      dot={false} activeDot={{ r:4, fill:'rgb(var(--brand-600))', stroke:'#fff', strokeWidth:2 }} />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -374,7 +374,7 @@ export default function Dashboard({
                     <BarChart data={sourceBreakdown} layout="vertical" margin={{ top:0, right:16, left:4, bottom:0 }}>
                       <XAxis type="number" tick={{ fontSize:9, fill:'#94A3B8' }} axisLine={false} tickLine={false} allowDecimals={false} />
                       <YAxis type="category" dataKey="name" tick={{ fontSize:10, fill:'#64748B' }} axisLine={false} tickLine={false} width={70} />
-                      <Tooltip content={<BarTip />} cursor={{ fill:'rgba(124,58,237,0.04)' }} />
+                      <Tooltip content={<BarTip />} cursor={{ fill:'rgb(var(--brand-600) / 0.04)' }} />
                       <Bar dataKey="value" radius={[0,4,4,0]}>
                         {sourceBreakdown.map((entry, i) => (
                           <Cell key={i} fill={SRC_COLORS[entry.name] || PIE_COLORS[i % PIE_COLORS.length]} opacity={0.85} />
@@ -426,15 +426,15 @@ export default function Dashboard({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <motion.div initial={{ opacity:0, y:12 }} animate={{ opacity:1, y:0 }} transition={{ delay:0.38, duration:0.35 }}>
             <GCard className="h-full">
-              <SHead title="Recent leads" icon={Target} href="/leads" iconColor="text-violet-500" />
+              <SHead title="Recent leads" icon={Target} href="/leads" iconColor="text-brand-500" />
               <div className="px-3 py-2">
                 {recentLeads?.length ? recentLeads.map(lead => (
                   <Link key={lead.id} href={`/leads/${lead.id}`}
-                    className="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-violet-50/60 transition-colors group">
+                    className="flex items-center justify-between px-2 py-2 rounded-xl hover:bg-brand-50/60 transition-colors group">
                     <div className="flex items-center gap-2.5">
                       <LeadAvatar name={lead.full_name} size="sm" />
                       <div className="min-w-0">
-                        <p className="text-[12px] font-semibold text-slate-800 group-hover:text-violet-700 truncate leading-none">{lead.full_name}</p>
+                        <p className="text-[12px] font-semibold text-slate-800 group-hover:text-brand-700 truncate leading-none">{lead.full_name}</p>
                         <p className="text-[10.5px] text-slate-400 mt-0.5 truncate">{lead.company || 'No company'}</p>
                       </div>
                     </div>
@@ -465,7 +465,7 @@ export default function Dashboard({
                       <div className="min-w-0">
                         {act.lead_id && (
                           <Link href={`/leads/${act.lead_id}`}
-                            className="text-[11px] font-semibold text-violet-600 hover:underline truncate block leading-none mb-0.5">
+                            className="text-[11px] font-semibold text-brand-600 hover:underline truncate block leading-none mb-0.5">
                             {act.lead_name}
                           </Link>
                         )}

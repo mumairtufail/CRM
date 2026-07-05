@@ -66,7 +66,7 @@ export default function Index({ blogs }) {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
               <h1 className="text-[20px] font-bold text-slate-800 mb-1 flex items-center gap-2">
-                <BookOpen size={22} className="text-violet-600" />
+                <BookOpen size={22} className="text-brand-600" />
                 Blog Posts
               </h1>
               <p className="text-[13px] text-slate-400 font-normal leading-relaxed">
@@ -89,7 +89,7 @@ export default function Index({ blogs }) {
               </button>
               <Link
                 href="/admin/blogs/create"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-violet-500/10 transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-brand-500/10 transition-colors"
               >
                 <Plus size={15} /> Write Post
               </Link>
@@ -131,7 +131,7 @@ export default function Index({ blogs }) {
                               )}
                             </div>
                             <div className="min-w-0">
-                              <span className="block font-bold text-slate-700 truncate hover:text-violet-600 transition-colors">
+                              <span className="block font-bold text-slate-700 truncate hover:text-brand-600 transition-colors">
                                 {blog.title}
                               </span>
                               <span className="block text-[11.5px] text-slate-400 truncate mt-0.5">
@@ -244,7 +244,7 @@ export default function Index({ blogs }) {
                       dangerouslySetInnerHTML={{ __html: link.label }}
                       className={`px-3 py-1 rounded-lg border text-[12.5px] transition-colors ${
                         link.active
-                          ? 'bg-violet-600 border-violet-600 text-white font-bold'
+                          ? 'bg-brand-600 border-brand-600 text-white font-bold'
                           : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                       } ${!link.url && 'opacity-50 cursor-not-allowed hover:bg-white'}`}
                     />

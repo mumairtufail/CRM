@@ -138,7 +138,7 @@ export default function WhatsappCampaignShow({ campaign: initial, sends: initial
           {[
             { label: 'Sent',      value: campaign.sent_count,      icon: Send,      color: 'text-blue-600' },
             { label: 'Delivered', value: campaign.delivered_count, icon: CheckCheck, color: 'text-emerald-600' },
-            { label: 'Read',      value: campaign.read_count,      icon: Eye,       color: 'text-violet-600' },
+            { label: 'Read',      value: campaign.read_count,      icon: Eye,       color: 'text-brand-600' },
             { label: 'Failed',    value: campaign.failed_count,    icon: AlertCircle, color: 'text-red-500' },
           ].map(({ label, value, icon: Icon, color }) => (
             <div key={label} className="bg-white rounded-xl border border-slate-200 px-4 py-3">
@@ -223,7 +223,7 @@ export default function WhatsappCampaignShow({ campaign: initial, sends: initial
                     <td className="px-4 py-2 font-medium text-slate-700">{s.lead_name}</td>
                     <td className="px-4 py-2 text-slate-500 font-mono">{s.to_number}</td>
                     <td className="px-4 py-2">
-                      <span className={`font-medium ${s.status === 'failed' || s.status === 'undelivered' ? 'text-red-500' : s.status === 'read' ? 'text-violet-600' : s.status === 'delivered' ? 'text-emerald-600' : 'text-slate-600'}`}>
+                      <span className={`font-medium ${s.status === 'failed' || s.status === 'undelivered' ? 'text-red-500' : s.status === 'read' ? 'text-brand-600' : s.status === 'delivered' ? 'text-emerald-600' : 'text-slate-600'}`}>
                         {STATUS_ICON[s.status] ?? '?'} {s.status}
                       </span>
                       {s.error_message && (

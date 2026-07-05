@@ -177,7 +177,7 @@ export default function WhatsappCampaignsIndex({ campaigns, enabled }) {
                     <td className="px-4 py-3">
                       <button className="text-left"
                         onClick={() => router.get(route('whatsapp.campaigns.show', c.id))}>
-                        <p className="font-medium text-slate-800 hover:text-violet-700 transition-colors">{c.name}</p>
+                        <p className="font-medium text-slate-800 hover:text-brand-700 transition-colors">{c.name}</p>
                         <p className="text-[11px] text-slate-400 mt-0.5">
                           <Users size={10} className="inline mr-0.5" />
                           {c.total_recipients} recipients

@@ -71,12 +71,12 @@ function ModeTab({ active, onClick, icon: Icon, label, description }) {
       className={cn(
         'flex-1 flex flex-col items-center gap-1.5 px-4 py-3.5 rounded-xl border-2 transition-all text-center',
         active
-          ? 'border-violet-500 bg-violet-50'
+          ? 'border-brand-500 bg-brand-50'
           : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
       )}
     >
-      <Icon size={20} className={active ? 'text-violet-600' : 'text-slate-400'} />
-      <span className={cn('text-[13px] font-semibold', active ? 'text-violet-700' : 'text-slate-700')}>{label}</span>
+      <Icon size={20} className={active ? 'text-brand-600' : 'text-slate-400'} />
+      <span className={cn('text-[13px] font-semibold', active ? 'text-brand-700' : 'text-slate-700')}>{label}</span>
       <span className="text-[11px] text-slate-400 leading-snug">{description}</span>
     </button>
   )
@@ -102,21 +102,21 @@ function DropZone({ onFile, uploading }) {
       onDrop={handleDrop}
       className={cn(
         'border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors',
-        drag ? 'border-violet-400 bg-violet-50' : 'border-slate-200 hover:border-violet-300 hover:bg-violet-50/40'
+        drag ? 'border-brand-400 bg-brand-50' : 'border-slate-200 hover:border-brand-300 hover:bg-brand-50/40'
       )}
     >
       <input ref={inputRef} type="file" accept=".csv,.txt" className="hidden"
         onChange={e => e.target.files[0] && onFile(e.target.files[0])} />
       <div className={cn(
         'w-12 h-12 rounded-xl mx-auto mb-3 flex items-center justify-center',
-        drag ? 'bg-violet-100' : 'bg-slate-100'
+        drag ? 'bg-brand-100' : 'bg-slate-100'
       )}>
-        <Upload size={20} className={drag ? 'text-violet-600' : 'text-slate-400'} />
+        <Upload size={20} className={drag ? 'text-brand-600' : 'text-slate-400'} />
       </div>
       <p className="text-[13px] font-semibold text-slate-700">Drop your CSV here or click to browse</p>
       <p className="text-[12px] text-slate-400 mt-1">Max 500 rows · .csv or .txt</p>
       {uploading && (
-        <div className="flex items-center justify-center gap-1.5 mt-2 text-violet-600">
+        <div className="flex items-center justify-center gap-1.5 mt-2 text-brand-600">
           <Loader2 size={13} className="animate-spin" />
           <span className="text-[12px] font-medium">Uploading & parsing…</span>
         </div>
@@ -293,7 +293,7 @@ export default function Import({ importJob }) {
                   'inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full',
                   importJob.source === 'google_sheet'
                     ? 'bg-emerald-50 text-emerald-700'
-                    : 'bg-violet-50 text-violet-700'
+                    : 'bg-brand-50 text-brand-700'
                 )}>
                   {importJob.source === 'google_sheet' ? <Sheet size={11} /> : <FileText size={11} />}
                   {importJob.source === 'google_sheet' ? 'Google Sheets' : 'CSV Upload'}
@@ -304,7 +304,7 @@ export default function Import({ importJob }) {
               <div className="form-card">
                 <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                   <div className="flex items-center gap-2">
-                    <FileText size={13} className="text-violet-500" />
+                    <FileText size={13} className="text-brand-500" />
                     <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                       Preview — {previewRows.length} rows detected
                     </p>
@@ -329,7 +329,7 @@ export default function Import({ importJob }) {
               {/* Detected columns */}
               <div className="form-card px-4 py-3">
                 <div className="flex items-start gap-2.5">
-                  <AlertCircle size={13} className="text-violet-400 mt-0.5 shrink-0" />
+                  <AlertCircle size={13} className="text-brand-400 mt-0.5 shrink-0" />
                   <p className="text-[12px] text-slate-500">
                     <span className="font-semibold text-slate-700">Detected columns: </span>
                     {headers.join(', ')}
@@ -343,7 +343,7 @@ export default function Import({ importJob }) {
                   onClick={handleConfirm}
                   disabled={confirming || missingCols.length > 0}
                   className="h-9 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                  style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                 >
                   {confirming ? 'Importing…' : `Import ${previewRows.length} leads`}
                 </button>
@@ -384,7 +384,7 @@ export default function Import({ importJob }) {
                       <button
                         type="button"
                         onClick={downloadTemplate}
-                        className="flex items-center gap-1.5 text-[11px] font-semibold text-violet-600 hover:text-violet-700 transition-colors"
+                        className="flex items-center gap-1.5 text-[11px] font-semibold text-brand-600 hover:text-brand-700 transition-colors"
                       >
                         <Download size={12} /> Download template
                       </button>
@@ -394,7 +394,7 @@ export default function Import({ importJob }) {
                         <div key={group.label} className="flex items-start gap-3">
                           <span className={cn(
                             'shrink-0 text-[9.5px] font-bold uppercase tracking-wider w-16 pt-0.5',
-                            group.label === 'Required' ? 'text-violet-600' : 'text-slate-400'
+                            group.label === 'Required' ? 'text-brand-600' : 'text-slate-400'
                           )}>
                             {group.label}
                           </span>
@@ -403,7 +403,7 @@ export default function Import({ importJob }) {
                               <span key={c} className={cn(
                                 'text-[10.5px] px-2 py-0.5 rounded-full font-mono leading-snug',
                                 group.label === 'Required'
-                                  ? 'bg-violet-100 text-violet-700 font-bold ring-1 ring-violet-200'
+                                  ? 'bg-brand-100 text-brand-700 font-bold ring-1 ring-brand-200'
                                   : 'bg-slate-100 text-slate-500'
                               )}>
                                 {c}
@@ -413,7 +413,7 @@ export default function Import({ importJob }) {
                         </div>
                       ))}
                       <p className="text-[11px] text-slate-400 pt-1 border-t border-slate-100">
-                        Only <span className="text-violet-600 font-semibold">first_name</span> is required.
+                        Only <span className="text-brand-600 font-semibold">first_name</span> is required.
                         Social columns (twitter, instagram, etc.) accept full URLs.
                         Column names are case-insensitive.
                       </p>
@@ -433,7 +433,7 @@ export default function Import({ importJob }) {
                   {/* Instructions */}
                   <div className="form-card px-4 py-3">
                     <div className="flex items-start gap-2.5">
-                      <Info size={13} className="text-violet-400 mt-0.5 shrink-0" />
+                      <Info size={13} className="text-brand-400 mt-0.5 shrink-0" />
                       <p className="text-[12px] text-slate-500">
                         Make sure your Google Sheet is shared as <span className="font-semibold text-slate-700">"Anyone with the link can view"</span>.
                         Open the sheet → Share → change to Anyone with the link.
@@ -461,7 +461,7 @@ export default function Import({ importJob }) {
                           className="h-9 px-4 shrink-0"
                           disabled={!isGSUrl || gsFetching}
                           onClick={fetchSheetNames}
-                          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                         >
                           {gsFetching ? (
                             <span className="flex items-center gap-1.5 text-white">
@@ -522,7 +522,7 @@ export default function Import({ importJob }) {
                             disabled={!gsSheet.trim() || gsImporting}
                             onClick={importFromSheets}
                             className="h-9 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-                            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                           >
                             {gsImporting ? (
                               <><Loader2 size={13} className="animate-spin" /> Importing…</>

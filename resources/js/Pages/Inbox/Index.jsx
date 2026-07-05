@@ -31,7 +31,7 @@ function avatarLetter(name, email) {
 }
 
 const AVATAR_COLORS = [
-  'from-violet-500 to-indigo-500',
+  'from-brand-500 to-brand2-500',
   'from-blue-500 to-cyan-500',
   'from-emerald-500 to-teal-500',
   'from-rose-500 to-pink-500',
@@ -51,8 +51,8 @@ function SetupBanner({ hasSmtp }) {
     <div className="flex-1 flex items-center justify-center p-8">
       <div className="max-w-sm text-center">
         <div className="w-16 h-16 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-          style={{ background: 'linear-gradient(135deg,#7C3AED22,#4F46E522)', border: '1px solid rgba(124,58,237,0.15)' }}>
-          <AlertCircle size={28} className="text-violet-500" />
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600))22,rgb(var(--brand2-600))22)', border: '1px solid rgb(var(--brand-600) / 0.15)' }}>
+          <AlertCircle size={28} className="text-brand-500" />
         </div>
         <h3 className="text-[15px] font-semibold text-slate-800 mb-1.5">
           {hasSmtp ? 'IMAP not configured' : 'No email account connected'}
@@ -66,7 +66,7 @@ function SetupBanner({ hasSmtp }) {
         <button
           onClick={() => router.visit('/profile')}
           className="inline-flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-white rounded-xl transition-all hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
           <Settings size={14} /> Go to Settings
         </button>
       </div>
@@ -93,7 +93,7 @@ function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChan
         <button
           onClick={onCompose}
           className="w-full flex items-center justify-center gap-2 h-9 rounded-xl text-[12.5px] font-semibold text-white transition-all hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 3px 10px rgba(124,58,237,0.25)' }}
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))', boxShadow: '0 3px 10px rgb(var(--brand-600) / 0.25)' }}
         >
           <PenLine size={13} /> Compose
         </button>
@@ -134,13 +134,13 @@ function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChan
               )}
             >
               <Icon size={14} strokeWidth={active ? 2.2 : 1.8}
-                className={active ? 'text-violet-600' : 'text-slate-400'} />
+                className={active ? 'text-brand-600' : 'text-slate-400'} />
               <span className="flex-1">{label}</span>
               {count > 0 && (
                 <span className={cn(
                   'text-[10.5px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-none',
                   key === 'inbox' && counts.unread > 0
-                    ? 'bg-violet-600 text-white'
+                    ? 'bg-brand-600 text-white'
                     : 'bg-slate-200 text-slate-600'
                 )}>
                   {key === 'inbox' && counts.unread > 0 ? counts.unread : count}
@@ -160,7 +160,7 @@ function FolderPanel({ folder, counts, credential, syncing, onSync, onFolderChan
             'w-full flex items-center justify-center gap-2 h-8 rounded-xl text-[12px] font-semibold transition-all',
             syncing || !credential
               ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : 'bg-white border border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600 hover:bg-violet-50/50'
+              : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-300 hover:text-brand-600 hover:bg-brand-50/50'
           )}
         >
           <RefreshCw size={12} className={syncing ? 'animate-spin' : ''} />
@@ -184,7 +184,7 @@ function MobileTopBar({ folder, counts, syncing, onSync, onFolderChange, onCompo
         <button
           onClick={onCompose}
           className="shrink-0 h-8 w-8 rounded-xl flex items-center justify-center text-white"
-          style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
           aria-label="Compose"
         >
           <PenLine size={14} />
@@ -199,7 +199,7 @@ function MobileTopBar({ folder, counts, syncing, onSync, onFolderChange, onCompo
                 onClick={() => onFolderChange(key)}
                 className={cn(
                   'shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-medium transition-all whitespace-nowrap',
-                  active ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-500'
+                  active ? 'bg-brand-600 text-white' : 'bg-slate-100 text-slate-500'
                 )}
               >
                 <Icon size={12} className={active ? 'text-white' : 'text-slate-400'} />
@@ -246,7 +246,7 @@ const EmailListItem = memo(function EmailListItem({ email, active, onSelect }) {
       className={cn(
         'w-full text-left px-3 py-3 border-b border-slate-100 transition-all relative group',
         active
-          ? 'bg-violet-50 border-l-2 border-l-violet-500'
+          ? 'bg-brand-50 border-l-2 border-l-brand-500'
           : 'hover:bg-slate-50/80',
         !email.is_read && !active && 'bg-white'
       )}
@@ -290,7 +290,7 @@ const EmailListItem = memo(function EmailListItem({ email, active, onSelect }) {
 
       {/* Unread dot */}
       {!email.is_read && (
-        <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-violet-600" />
+        <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-brand-600" />
       )}
 
       {/* Star indicator */}
@@ -328,11 +328,11 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
-          style={{ background: 'rgba(124,58,237,0.07)' }}>
-          {folder === 'starred' ? <Star size={22} className="text-violet-400" />
-            : folder === 'trash' ? <Trash2 size={22} className="text-violet-400" />
-            : folder === 'sent' ? <Send size={22} className="text-violet-400" />
-            : <Inbox size={22} className="text-violet-400" />}
+          style={{ background: 'rgb(var(--brand-600) / 0.07)' }}>
+          {folder === 'starred' ? <Star size={22} className="text-brand-400" />
+            : folder === 'trash' ? <Trash2 size={22} className="text-brand-400" />
+            : folder === 'sent' ? <Send size={22} className="text-brand-400" />
+            : <Inbox size={22} className="text-brand-400" />}
         </div>
         <p className="text-[13px] font-medium text-slate-600 mb-1">
           {folder === 'starred' ? 'No starred emails'
@@ -363,14 +363,14 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
           <button
             disabled={emails.current_page <= 1}
             onClick={() => router.get('/inbox', { folder, page: emails.current_page - 1 }, { preserveState: true })}
-            className="text-[11.5px] text-slate-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed">
+            className="text-[11.5px] text-slate-500 hover:text-brand-600 disabled:opacity-30 disabled:cursor-not-allowed">
             ← Prev
           </button>
           <span className="text-[11px] text-slate-400">{emails.current_page} / {emails.last_page}</span>
           <button
             disabled={emails.current_page >= emails.last_page}
             onClick={() => router.get('/inbox', { folder, page: emails.current_page + 1 }, { preserveState: true })}
-            className="text-[11.5px] text-slate-500 hover:text-violet-600 disabled:opacity-30 disabled:cursor-not-allowed">
+            className="text-[11.5px] text-slate-500 hover:text-brand-600 disabled:opacity-30 disabled:cursor-not-allowed">
             Next →
           </button>
         </div>
@@ -392,8 +392,8 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
     return (
       <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-400 select-none">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-3"
-          style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.1)' }}>
-          <MailOpen size={26} className="text-violet-300" />
+          style={{ background: 'rgb(var(--brand-600) / 0.06)', border: '1px solid rgb(var(--brand-600) / 0.1)' }}>
+          <MailOpen size={26} className="text-brand-300" />
         </div>
         <p className="text-[13px] font-medium text-slate-500">Select an email to read</p>
         <p className="text-[11.5px] text-slate-400 mt-1">Your emails will appear here</p>
@@ -551,16 +551,16 @@ function ComposeDialog({ open, onClose, activeTemplate }) {
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="text-[14px] font-semibold flex items-center gap-2">
-            <PenLine size={14} className="text-violet-600" /> New Message
+            <PenLine size={14} className="text-brand-600" /> New Message
           </DialogTitle>
         </DialogHeader>
 
         {activeTemplate && (
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11.5px] text-violet-700 font-medium"
-            style={{ background: 'rgba(124,58,237,0.07)', border: '1px solid rgba(124,58,237,0.12)' }}>
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11.5px] text-brand-700 font-medium"
+            style={{ background: 'rgb(var(--brand-600) / 0.07)', border: '1px solid rgb(var(--brand-600) / 0.12)' }}>
             <span>Template:</span>
             <span className="font-semibold">{activeTemplate.name}</span>
-            <span className="text-violet-400 ml-0.5">will wrap this email</span>
+            <span className="text-brand-400 ml-0.5">will wrap this email</span>
           </div>
         )}
 
@@ -592,7 +592,7 @@ function ComposeDialog({ open, onClose, activeTemplate }) {
               onChange={e => setBody(e.target.value)}
               placeholder="Write your message…"
               rows={8}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-400 resize-none"
+              className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 resize-none"
             />
           </div>
         </div>
@@ -610,7 +610,7 @@ function ComposeDialog({ open, onClose, activeTemplate }) {
             disabled={sending}
             onClick={handleSend}
             className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
           >
             {sending ? 'Sending…' : 'Send Email'}
           </button>
@@ -837,7 +837,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
               <h3 className="text-[13px] font-semibold text-slate-800 capitalize">{folder}</h3>
               <div className="flex items-center gap-2">
                 {syncing && (
-                  <span className="flex items-center gap-1 text-[10.5px] text-violet-500 font-medium">
+                  <span className="flex items-center gap-1 text-[10.5px] text-brand-500 font-medium">
                     <RefreshCw size={10} className="animate-spin" />
                     Syncing…
                   </span>
@@ -868,8 +868,8 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
             {notReady ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
-                  style={{ background: 'rgba(124,58,237,0.06)' }}>
-                  <Mail size={28} className="text-violet-300" />
+                  style={{ background: 'rgb(var(--brand-600) / 0.06)' }}>
+                  <Mail size={28} className="text-brand-300" />
                 </div>
               </div>
             ) : (

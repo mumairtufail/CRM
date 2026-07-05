@@ -33,7 +33,7 @@ import { cn } from '@/lib/utils'
 const STATUS_META = {
   new:          { label: 'New',          dot: 'bg-slate-400',   hex: '#94a3b8' },
   contacted:    { label: 'Contacted',    dot: 'bg-blue-400',    hex: '#60a5fa' },
-  qualified:    { label: 'Qualified',    dot: 'bg-indigo-400',  hex: '#818cf8' },
+  qualified:    { label: 'Qualified',    dot: 'bg-brand2-400',  hex: 'rgb(var(--brand2-400))' },
   proposal:     { label: 'Proposal',     dot: 'bg-amber-400',   hex: '#fbbf24' },
   negotiation:  { label: 'Negotiation',  dot: 'bg-orange-400',  hex: '#fb923c' },
   won:          { label: 'Won',          dot: 'bg-emerald-400', hex: '#34d399' },
@@ -447,7 +447,7 @@ export default function Pipeline({ columns }) {
       enableSorting: false,
       size: 60,
       cell: ({ row: { original: l } }) => (
-        <Link href={`/leads/${l.id}`} className="text-xs text-blue-500 hover:text-blue-700 font-medium">
+        <Link href={`/leads/${l.id}`} className="text-xs text-brand-600 hover:text-brand-700 font-medium">
           View →
         </Link>
       ),

@@ -24,7 +24,7 @@ class ErrorBoundary extends Component {
                 <div style={{
                     display: 'flex', flexDirection: 'column', alignItems: 'center',
                     justifyContent: 'center', height: '100vh', gap: '16px',
-                    background: '#F4F2FF',
+                    background: 'rgb(var(--brand-tint))',
                 }}>
                     <p style={{ color: '#64748b', fontSize: '14px', margin: 0 }}>
                         Something went wrong loading this page.
@@ -33,7 +33,7 @@ class ErrorBoundary extends Component {
                         onClick={() => window.location.reload()}
                         style={{
                             padding: '8px 20px', borderRadius: '10px',
-                            background: 'linear-gradient(135deg,#7C3AED,#4F46E5)',
+                            background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))',
                             color: 'white', fontSize: '13px', fontWeight: 600,
                             cursor: 'pointer', border: 'none',
                         }}

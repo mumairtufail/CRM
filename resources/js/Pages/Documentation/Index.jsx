@@ -27,7 +27,7 @@ function Steps({ items }) {
     <ol className="space-y-2 mt-2">
       {items.map((item, i) => (
         <li key={i} className="flex gap-3">
-          <span className="shrink-0 w-5 h-5 rounded-full bg-violet-100 text-violet-700 text-[11px] font-bold flex items-center justify-center mt-0.5">
+          <span className="shrink-0 w-5 h-5 rounded-full bg-brand-100 text-brand-700 text-[11px] font-bold flex items-center justify-center mt-0.5">
             {i + 1}
           </span>
           <span className="text-[13px] text-slate-600 leading-relaxed">{item}</span>
@@ -42,7 +42,7 @@ function Bullets({ items }) {
     <ul className="space-y-1.5 mt-2">
       {items.map((item, i) => (
         <li key={i} className="flex gap-2.5 text-[13px] text-slate-600 leading-relaxed">
-          <ChevronRight size={14} className="shrink-0 mt-0.5 text-violet-400" />
+          <ChevronRight size={14} className="shrink-0 mt-0.5 text-brand-400" />
           <span>{item}</span>
         </li>
       ))}
@@ -51,7 +51,7 @@ function Bullets({ items }) {
 }
 
 const CALLOUT_STYLES = {
-  tip:     { wrap: 'bg-violet-50 border-violet-100 text-violet-800', icon: Lightbulb,     iconColor: 'text-violet-500' },
+  tip:     { wrap: 'bg-brand-50 border-brand-100 text-brand-800', icon: Lightbulb,     iconColor: 'text-brand-500' },
   note:    { wrap: 'bg-blue-50 border-blue-100 text-blue-800',       icon: Info,          iconColor: 'text-blue-500' },
   warning: { wrap: 'bg-amber-50 border-amber-100 text-amber-800',    icon: AlertTriangle, iconColor: 'text-amber-500' },
 }
@@ -69,7 +69,7 @@ function Callout({ type = 'tip', children }) {
 
 function Token({ children }) {
   return (
-    <code className="px-1.5 py-0.5 rounded-md bg-slate-100 text-violet-700 text-[12px] font-mono border border-slate-200">
+    <code className="px-1.5 py-0.5 rounded-md bg-slate-100 text-brand-700 text-[12px] font-mono border border-slate-200">
       {children}
     </code>
   )
@@ -585,7 +585,7 @@ export default function Documentation() {
         <div className="px-6 pt-5 pb-4 border-b border-slate-100 bg-white shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               <BookOpen size={18} className="text-white" />
             </div>
             <div>
@@ -607,7 +607,7 @@ export default function Documentation() {
                   value={query}
                   onChange={e => setQuery(e.target.value)}
                   placeholder="Search the guide…"
-                  className="w-full h-8 pl-7 pr-2 text-[12.5px] rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-violet-300 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+                  className="w-full h-8 pl-7 pr-2 text-[12.5px] rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-brand-300 focus:ring-2 focus:ring-brand-100 outline-none transition-all"
                 />
               </div>
             </div>
@@ -623,9 +623,9 @@ export default function Documentation() {
                   <button key={id} onClick={() => scrollTo(id)}
                     className={cn(
                       'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0',
-                      isActive ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-100'
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100'
                     )}>
-                    <Icon size={13} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+                    <Icon size={13} className={isActive ? 'text-brand-500' : 'text-slate-400'} />
                     {title}
                   </button>
                 )
@@ -643,9 +643,9 @@ export default function Documentation() {
                   <button key={id} onClick={() => scrollTo(id)}
                     className={cn(
                       'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12.5px] font-medium text-left transition-all',
-                      isActive ? 'bg-violet-50 text-violet-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
+                      isActive ? 'bg-brand-50 text-brand-700' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                     )}>
-                    <Icon size={14} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+                    <Icon size={14} className={isActive ? 'text-brand-500' : 'text-slate-400'} />
                     <span className="flex-1 truncate">{title}</span>
                   </button>
                 )
@@ -664,8 +664,8 @@ export default function Documentation() {
                   className="scroll-mt-4 rounded-2xl border border-slate-200 bg-white p-5"
                 >
                   <div className="flex items-center gap-2.5 mb-3 pb-3 border-b border-slate-100">
-                    <div className="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
-                      <Icon size={15} className="text-violet-600" />
+                    <div className="w-7 h-7 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
+                      <Icon size={15} className="text-brand-600" />
                     </div>
                     <h2 className="text-[15px] font-bold text-slate-800">{title}</h2>
                   </div>
@@ -682,7 +682,7 @@ export default function Documentation() {
 
             {/* Back to top */}
             <button onClick={scrollTop}
-              className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-[12px] font-medium text-slate-600 hover:text-violet-700 hover:border-violet-200 transition-all">
+              className="sticky bottom-4 ml-auto mr-4 flex items-center gap-1.5 px-3 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-[12px] font-medium text-slate-600 hover:text-brand-700 hover:border-brand-200 transition-all">
               <ArrowUp size={13} /> Top
             </button>
           </div>

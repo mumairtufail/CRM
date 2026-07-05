@@ -158,7 +158,7 @@ export default function LeadCreate({ tags = [] }) {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label className="text-[12.5px] font-medium text-slate-700">Emails</Label>
-                        <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-[10px] px-2 text-indigo-600 hover:text-indigo-700" onClick={addEmail}>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-[10px] px-2 text-brand2-600 hover:text-brand2-700" onClick={addEmail}>
                           <Plus size={12} /> Add Email
                         </Button>
                       </div>
@@ -193,7 +193,7 @@ export default function LeadCreate({ tags = [] }) {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <Label className="text-[12.5px] font-medium text-slate-700">Phones</Label>
-                        <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-[10px] px-2 text-indigo-600 hover:text-indigo-700" onClick={addPhone}>
+                        <Button type="button" variant="ghost" size="sm" className="h-6 gap-1 text-[10px] px-2 text-brand2-600 hover:text-brand2-700" onClick={addPhone}>
                           <Plus size={12} /> Add Phone
                         </Button>
                       </div>
@@ -229,7 +229,7 @@ export default function LeadCreate({ tags = [] }) {
                     <div className="flex items-center justify-between">
                       <Label className="text-[12px] font-semibold text-slate-600">Social media handles</Label>
                       <button type="button" onClick={addSocial}
-                        className="flex items-center gap-1 text-[11px] font-medium text-violet-600 hover:text-violet-800 transition-colors">
+                        className="flex items-center gap-1 text-[11px] font-medium text-brand-600 hover:text-brand-800 transition-colors">
                         <Plus size={11} /> Add
                       </button>
                     </div>
@@ -340,18 +340,18 @@ export default function LeadCreate({ tags = [] }) {
 
               {/* Right Column - Tips & Help */}
               <div className="xl:col-span-1 flex flex-col space-y-6">
-                <SectionCard title="Tips & Guidance" className="bg-gradient-to-b from-indigo-50/50 to-white">
+                <SectionCard title="Tips & Guidance" className="bg-gradient-to-b from-brand2-50/50 to-white">
                   <div className="text-[12.5px] text-slate-600 space-y-4">
                     <div>
-                      <h4 className="font-semibold text-indigo-900 mb-1">Qualifying Leads</h4>
+                      <h4 className="font-semibold text-brand2-900 mb-1">Qualifying Leads</h4>
                       <p>Ensure you add as much detail as possible to help the sales team qualify this lead effectively. Phone numbers and LinkedIn URLs are highly recommended.</p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-indigo-900 mb-1">Deal Value</h4>
+                      <h4 className="font-semibold text-brand2-900 mb-1">Deal Value</h4>
                       <p>If the exact deal value is unknown, leave it blank or enter a conservative estimate based on company size.</p>
                     </div>
                     <div>
-                      <h4 className="font-semibold text-indigo-900 mb-1">Source Tracking</h4>
+                      <h4 className="font-semibold text-brand2-900 mb-1">Source Tracking</h4>
                       <p>Correctly tagging the lead source helps our marketing team understand which channels are performing best.</p>
                     </div>
                   </div>
@@ -359,10 +359,10 @@ export default function LeadCreate({ tags = [] }) {
 
                 <SectionCard title="Quick Actions" className="bg-slate-50/50">
                   <div className="text-[12.5px] text-slate-600 space-y-3">
-                    <button type="button" onClick={() => setData({ ...data, source: 'linkedin', status: 'new' })} className="w-full text-left px-3 py-2 rounded-md hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-indigo-600 font-medium">
+                    <button type="button" onClick={() => setData({ ...data, source: 'linkedin', status: 'new' })} className="w-full text-left px-3 py-2 rounded-md hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-brand2-600 font-medium">
                       Set as LinkedIn Lead
                     </button>
-                    <button type="button" onClick={() => setData({ ...data, priority: 'high', status: 'qualified' })} className="w-full text-left px-3 py-2 rounded-md hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-indigo-600 font-medium">
+                    <button type="button" onClick={() => setData({ ...data, priority: 'high', status: 'qualified' })} className="w-full text-left px-3 py-2 rounded-md hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all text-brand2-600 font-medium">
                       Mark as High Priority
                     </button>
 
@@ -371,7 +371,7 @@ export default function LeadCreate({ tags = [] }) {
                     {/* Primary actions */}
                     <button type="submit" disabled={processing}
                       className="w-full h-10 text-[13.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
-                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)', boxShadow: '0 4px 14px rgba(124,58,237,0.3)' }}>
+                      style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))', boxShadow: '0 4px 14px rgb(var(--brand-600) / 0.3)' }}>
                       {processing ? 'Saving…' : (<><Plus size={15} /> Create Lead</>)}
                     </button>
                     <Link href="/leads" className="block">

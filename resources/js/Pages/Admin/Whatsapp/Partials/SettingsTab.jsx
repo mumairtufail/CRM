@@ -30,8 +30,8 @@ function SectionTitle({ icon: Icon, label, description }) {
   return (
     <div className="flex items-start gap-3 mb-4">
       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-        style={{ background: 'linear-gradient(135deg,rgba(124,58,237,0.12),rgba(79,70,229,0.12))' }}>
-        <Icon size={15} className="text-violet-600" />
+        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600) / 0.12),rgb(var(--brand2-600) / 0.12))' }}>
+        <Icon size={15} className="text-brand-600" />
       </div>
       <div>
         <p className="text-[13.5px] font-semibold text-slate-800">{label}</p>
@@ -159,7 +159,7 @@ export default function SettingsTab({ credential, auditLog }) {
               <SectionTitle icon={Lock} label="Credentials" description="Edit requires re-entering your password" />
               <button
                 onClick={requestEdit}
-                className="flex items-center gap-2 h-9 px-4 text-[13px] font-semibold text-violet-700 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-all"
+                className="flex items-center gap-2 h-9 px-4 text-[13px] font-semibold text-brand-700 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-all"
               >
                 <ShieldAlert size={13} /> Edit Credentials
               </button>
@@ -201,7 +201,7 @@ export default function SettingsTab({ credential, auditLog }) {
                     type="submit"
                     disabled={processing}
                     className="flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-                    style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                    style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                   >
                     {processing ? <><Loader2 size={13} className="animate-spin" /> Verifying &amp; saving…</> : <>Save &amp; Verify</>}
                   </button>
@@ -268,7 +268,7 @@ export default function SettingsTab({ credential, auditLog }) {
             </button>
             <button type="button" onClick={confirmEdit} disabled={!password}
               className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-40"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               Continue
             </button>
           </DialogFooter>

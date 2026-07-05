@@ -12,11 +12,11 @@ export default function RefundPolicy() {
                 <meta name="description" content="Refund, cancellation, and return terms for Lumenia CRM subscriptions." />
             </Head>
 
-            <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+            <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />
 
                 <main className="max-w-3xl mx-auto px-6 py-16">
-                    <p className="text-violet-600 text-xs font-bold uppercase tracking-widest mb-3">Legal</p>
+                    <p className="text-brand-600 text-xs font-bold uppercase tracking-widest mb-3">Legal</p>
                     <h1 className="text-4xl font-black text-slate-900 mb-3">Refund & Return Policy</h1>
                     <p className="text-slate-500 text-sm mb-12">Effective date: {EFFECTIVE_DATE}</p>
 
@@ -32,7 +32,7 @@ export default function RefundPolicy() {
                             <h2 className="text-xl font-bold text-slate-900 mb-3">1. First-time subscribers — 7-day guarantee</h2>
                             <p>
                                 If you subscribe to a paid plan (Basic, Pro, or Premium) for the first time and decide it's
-                                not right for you, email <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline">hello@lumenialab.com</a>{' '}
+                                not right for you, email <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a>{' '}
                                 within 7 days of your first payment and we'll refund that charge in full to your original
                                 payment method. This guarantee applies once per organization.
                             </p>
@@ -87,8 +87,8 @@ export default function RefundPolicy() {
                         <section>
                             <h2 className="text-xl font-bold text-slate-900 mb-3">7. Requesting a refund</h2>
                             <p>
-                                Email <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline">hello@lumenialab.com</a>{' '}
-                                or call <a href="tel:+923354455494" className="text-violet-600 hover:underline">+92 335 445 5494</a>{' '}
+                                Email <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a>{' '}
+                                or call <a href="tel:+923354455494" className="text-brand-600 hover:underline">+92 335 445 5494</a>{' '}
                                 with your workspace name, the email on the account, and the reason for the request. We
                                 reply to every refund request within one business day.
                             </p>
@@ -98,8 +98,8 @@ export default function RefundPolicy() {
                             <h2 className="text-xl font-bold text-slate-900 mb-3">8. Contact us</h2>
                             <p>
                                 Lumenia Lab Pvt. Ltd. — Lahore, Punjab, Pakistan<br />
-                                Email: <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline">hello@lumenialab.com</a><br />
-                                Phone: <a href="tel:+923354455494" className="text-violet-600 hover:underline">+92 335 445 5494</a>
+                                Email: <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a><br />
+                                Phone: <a href="tel:+923354455494" className="text-brand-600 hover:underline">+92 335 445 5494</a>
                             </p>
                         </section>
                     </div>

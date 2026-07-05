@@ -72,7 +72,7 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
             onClick={submit}
             disabled={saving}
             className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
           >
             {saving ? 'Saving…' : 'Save'}
           </button>
@@ -162,7 +162,7 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
               setSelectedIds([])
             }
           }}
-          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer animate-in fade-in duration-200"
+          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer animate-in fade-in duration-200"
         />
       ),
       size: 40,
@@ -177,7 +177,7 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
               setSelectedIds(prev => prev.filter(id => id !== row.original.id))
             }
           }}
-          className="rounded border-slate-300 text-violet-600 focus:ring-violet-500 w-4 h-4 cursor-pointer"
+          className="rounded border-slate-300 text-brand-600 focus:ring-brand-500 w-4 h-4 cursor-pointer"
         />
       ),
     },
@@ -188,7 +188,7 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
       cell: ({ row }) => (
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[12px] font-bold shrink-0"
-            style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
+            style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}>
             {row.original.name.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0">
@@ -238,9 +238,9 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
       cell: ({ row }) => (
         <button
           onClick={() => setPlanTarget(row.original)}
-          className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-lg hover:bg-violet-50 transition-colors"
+          className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-lg hover:bg-brand-50 transition-colors"
         >
-          <CreditCard size={13} className="text-violet-400 shrink-0" />
+          <CreditCard size={13} className="text-brand-400 shrink-0" />
           <span className="text-sm text-gray-700 font-medium">{row.original.plan?.name ?? 'No plan'}</span>
           <span className={cn(
             'w-1.5 h-1.5 rounded-full shrink-0',

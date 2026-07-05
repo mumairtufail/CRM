@@ -155,11 +155,11 @@ export default function Sidebar({ open, onToggle }) {
     >
       {/* Top accent line */}
       <div className="absolute top-0 inset-x-0 h-px"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.5), transparent)' }} />
+        style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--brand-600) / 0.5), transparent)' }} />
 
       {/* Background orb */}
       <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full opacity-[0.06] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #7C3AED, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, rgb(var(--brand-600)), transparent 70%)' }} />
 
       {/* ── Brand ─────────────────────────────── */}
       <div className={cn(
@@ -170,7 +170,7 @@ export default function Sidebar({ open, onToggle }) {
           {logoUrl
             ? (
               <div className="w-7 h-7 rounded-[9px] flex items-center justify-center shrink-0 shadow-lg overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
+                style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}>
                 <img src={logoUrl} alt="logo" className="w-full h-full rounded-[9px] object-contain" />
               </div>
             )
@@ -194,7 +194,7 @@ export default function Sidebar({ open, onToggle }) {
           <span className="text-[10.5px] font-semibold text-white/40 uppercase tracking-wider">Your plan</span>
           <span className={cn(
             'text-[11px] font-bold px-2 py-0.5 rounded-full',
-            plan.status === 'active' ? 'text-violet-300 bg-violet-500/20' : 'text-white/40 bg-white/10'
+            plan.status === 'active' ? 'text-brand-300 bg-brand-500/20' : 'text-white/40 bg-white/10'
           )}>
             {plan.name}
           </span>
@@ -230,12 +230,12 @@ export default function Sidebar({ open, onToggle }) {
                     onClick={() => { onToggle(); setGroupsOpen(prev => ({ ...prev, [label]: true })) }}
                     className={cn(
                       'relative w-full flex justify-center p-[11px] rounded-[10px] transition-all duration-150 group/nav',
-                      groupActive ? 'bg-violet-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                      groupActive ? 'bg-brand-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
                     )}
                   >
-                    {groupActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />}
+                    {groupActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />}
                     <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
-                      className={cn('shrink-0 transition-colors', groupActive ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
+                      className={cn('shrink-0 transition-colors', groupActive ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
                   </button>
                 )
               }
@@ -249,7 +249,7 @@ export default function Sidebar({ open, onToggle }) {
                     )}
                   >
                     <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
-                      className={cn('shrink-0 transition-colors', groupActive ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
+                      className={cn('shrink-0 transition-colors', groupActive ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
                     <span className="text-[13px] font-medium truncate flex-1 text-left">{label}</span>
                     <ChevronDown size={12} className={cn('shrink-0 text-white/30 transition-transform duration-200', groupsOpen[label] && 'rotate-180')} />
                   </button>
@@ -266,13 +266,13 @@ export default function Sidebar({ open, onToggle }) {
                           <Link key={href} href={href} onClick={closeMobile}
                             className={cn(
                               'relative flex items-center gap-2.5 px-2.5 py-[7px] rounded-[8px] transition-all duration-150 group/child',
-                              active ? 'bg-violet-600/[0.18] text-white' : 'text-white/35 hover:text-white/70 hover:bg-white/[0.05]'
+                              active ? 'bg-brand-600/[0.18] text-white' : 'text-white/35 hover:text-white/70 hover:bg-white/[0.05]'
                             )}
                           >
                             <CIcon size={13} strokeWidth={active ? 2.2 : 1.8}
-                              className={cn('shrink-0', active ? 'text-violet-300' : 'group-hover/child:text-white/70')} />
+                              className={cn('shrink-0', active ? 'text-brand-300' : 'group-hover/child:text-white/70')} />
                             <span className="text-[12.5px] font-medium truncate">{childLabel}</span>
-                            {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400 opacity-80" />}
+                            {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 opacity-80" />}
                           </Link>
                         )
                       })}
@@ -290,16 +290,16 @@ export default function Sidebar({ open, onToggle }) {
                 className={cn(
                   'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
                   open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
-                  active ? 'bg-violet-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                  active ? 'bg-brand-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
                 )}
               >
-                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />}
+                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />}
                 <Icon size={15} strokeWidth={active ? 2.2 : 1.8}
-                  className={cn('shrink-0 transition-colors', active ? 'text-violet-300' : 'group-hover/nav:text-white/75')} />
+                  className={cn('shrink-0 transition-colors', active ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
                 {open && (
                   <>
                     <span className="text-[13px] font-medium truncate">{label}</span>
-                    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400 opacity-80" />}
+                    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 opacity-80" />}
                   </>
                 )}
               </Link>
@@ -314,7 +314,7 @@ export default function Sidebar({ open, onToggle }) {
               <div className="flex gap-1.5">
                 {quickActions.map(({ label, href, icon: Icon }) => (
                   <Link key={href} href={href}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/50 hover:text-white transition-all text-[11px] font-semibold">
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-brand-500/25 text-white/50 hover:text-white transition-all text-[11px] font-semibold">
                     <Plus size={10} strokeWidth={2.5} />
                     {label.replace('New ', '')}
                   </Link>
@@ -326,7 +326,7 @@ export default function Sidebar({ open, onToggle }) {
           {!open && (
             <div className="flex flex-col items-center gap-1 px-2 pt-2 pb-1">
               <Link href="/leads/create" title="New Lead"
-                className="p-[9px] rounded-lg bg-white/[0.06] hover:bg-violet-500/25 text-white/40 hover:text-white transition-all">
+                className="p-[9px] rounded-lg bg-white/[0.06] hover:bg-brand-500/25 text-white/40 hover:text-white transition-all">
                 <Plus size={13} strokeWidth={2.5} />
               </Link>
             </div>
@@ -356,7 +356,7 @@ export default function Sidebar({ open, onToggle }) {
       <div className="px-2 pb-3 border-t border-white/[0.055] pt-2 space-y-0.5">
         {open && user && (
           <div className="flex items-center gap-2.5 px-3 py-2 mb-0.5">
-            <div className="w-6 h-6 rounded-full bg-violet-600/60 flex items-center justify-center shrink-0 text-[10px] font-bold text-white">
+            <div className="w-6 h-6 rounded-full bg-brand-600/60 flex items-center justify-center shrink-0 text-[10px] font-bold text-white">
               {user.name?.[0]?.toUpperCase() ?? '?'}
             </div>
             <div className="min-w-0">

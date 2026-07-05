@@ -6,7 +6,7 @@ const palette = {
   blue:   { orb: '#3B82F6', icon: 'bg-blue-50 text-blue-600',     bar: '#3B82F6', glow: 'rgba(59,130,246,0.1)' },
   green:  { orb: '#10B981', icon: 'bg-emerald-50 text-emerald-600', bar: '#10B981', glow: 'rgba(16,185,129,0.1)' },
   amber:  { orb: '#F59E0B', icon: 'bg-amber-50 text-amber-600',    bar: '#F59E0B', glow: 'rgba(245,158,11,0.1)' },
-  purple: { orb: '#7C3AED', icon: 'bg-violet-50 text-violet-600',  bar: '#7C3AED', glow: 'rgba(124,58,237,0.1)' },
+  purple: { orb: 'rgb(var(--brand-600))', icon: 'bg-brand-50 text-brand-600',  bar: 'rgb(var(--brand-600))', glow: 'rgb(var(--brand-600) / 0.1)' },
   red:    { orb: '#EF4444', icon: 'bg-red-50 text-red-600',        bar: '#EF4444', glow: 'rgba(239,68,68,0.1)' },
   teal:   { orb: '#14B8A6', icon: 'bg-teal-50 text-teal-600',      bar: '#14B8A6', glow: 'rgba(20,184,166,0.1)' },
 }

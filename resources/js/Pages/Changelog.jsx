@@ -25,11 +25,11 @@ export default function Changelog() {
                 <meta name="description" content="Recent product updates and improvements to Lumenia CRM." />
             </Head>
 
-            <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+            <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />
 
                 <main className="max-w-2xl mx-auto px-6 py-16">
-                    <p className="text-violet-600 text-xs font-bold uppercase tracking-widest mb-3">Product updates</p>
+                    <p className="text-brand-600 text-xs font-bold uppercase tracking-widest mb-3">Product updates</p>
                     <h1 className="text-4xl font-black text-slate-900 mb-4">Changelog</h1>
                     <p className="text-slate-500 text-lg mb-14">
                         What's shipped recently in Lumenia CRM. Bug fixes and small polish passes aren't listed
@@ -40,13 +40,13 @@ export default function Changelog() {
                         {RELEASES.map(({ period, items }) => (
                             <section key={period}>
                                 <h2 className="text-lg font-bold text-slate-900 mb-5 flex items-center gap-3">
-                                    <span className="h-px w-8 bg-violet-400" />
+                                    <span className="h-px w-8 bg-brand-400" />
                                     {period}
                                 </h2>
                                 <ul className="space-y-4">
                                     {items.map((item, idx) => (
                                         <li key={idx} className="flex gap-3 text-slate-700 leading-relaxed">
-                                            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-violet-500 shrink-0" />
+                                            <span className="mt-2 w-1.5 h-1.5 rounded-full bg-brand-500 shrink-0" />
                                             <span>{item}</span>
                                         </li>
                                     ))}

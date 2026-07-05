@@ -7,7 +7,7 @@ const STATUSES = [
   { value: 'planning',  label: 'Planning',  color: 'bg-blue-50 text-blue-700 border-blue-200',       dot: 'bg-blue-400' },
   { value: 'active',    label: 'Active',    color: 'bg-emerald-50 text-emerald-700 border-emerald-200', dot: 'bg-emerald-400' },
   { value: 'on_hold',   label: 'On Hold',   color: 'bg-amber-50 text-amber-700 border-amber-200',    dot: 'bg-amber-400' },
-  { value: 'completed', label: 'Completed', color: 'bg-violet-50 text-violet-700 border-violet-200', dot: 'bg-violet-400' },
+  { value: 'completed', label: 'Completed', color: 'bg-brand-50 text-brand-700 border-brand-200', dot: 'bg-brand-400' },
   { value: 'cancelled', label: 'Cancelled', color: 'bg-red-50 text-red-700 border-red-200',          dot: 'bg-red-400' },
 ]
 
@@ -21,7 +21,7 @@ function Field({ label, error, children }) {
   )
 }
 
-const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition placeholder:text-slate-300"
+const inputCls = "w-full px-3 py-2.5 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition placeholder:text-slate-300"
 
 export default function ProjectCreate({ clients }) {
   const { data, setData, post, processing, errors } = useForm({
@@ -54,7 +54,7 @@ export default function ProjectCreate({ clients }) {
           <div className="w-px h-4 bg-slate-200" />
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               <FolderKanban size={13} className="text-white" />
             </div>
             <h1 className="text-[18px] font-bold text-slate-900">New Project</h1>
@@ -151,7 +151,7 @@ export default function ProjectCreate({ clients }) {
                   <select
                     value={data.currency}
                     onChange={e => setData('currency', e.target.value)}
-                    className="h-10 px-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition">
+                    className="h-10 px-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition">
                     {['USD', 'EUR', 'GBP', 'PKR', 'AED', 'INR', 'CAD', 'AUD'].map(c => (
                       <option key={c} value={c}>{c}</option>
                     ))}
@@ -168,7 +168,7 @@ export default function ProjectCreate({ clients }) {
 
               <button type="submit" disabled={processing}
                 className="w-full h-11 rounded-xl text-[13.5px] font-semibold text-white transition-all disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                 {processing ? 'Creating…' : 'Create Project'}
               </button>
             </div>

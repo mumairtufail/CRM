@@ -5,7 +5,7 @@ import StatCard from '@/Components/Common/StatCard'
 import { Building2, Users, UserCircle, FileText, ArrowRight } from 'lucide-react'
 
 const ROLE_STYLES = {
-  owner:  'bg-violet-50 text-violet-600',
+  owner:  'bg-brand-50 text-brand-600',
   member: 'bg-slate-100 text-slate-500',
 }
 
@@ -32,7 +32,7 @@ export default function AdminDashboard({ stats, recentOrganizations, recentUsers
           <div className="glass-card rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[14px] font-bold text-slate-800">Recent Organizations</h3>
-              <Link href="/admin/organizations" className="text-[12px] font-semibold text-violet-600 hover:text-violet-700 flex items-center gap-1">
+              <Link href="/admin/organizations" className="text-[12px] font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
                 View all <ArrowRight size={12} />
               </Link>
             </div>
@@ -43,7 +43,7 @@ export default function AdminDashboard({ stats, recentOrganizations, recentUsers
               {recentOrganizations.map(org => (
                 <div key={org.id} className="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-slate-50 transition-colors">
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[12px] font-bold shrink-0"
-                    style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)' }}>
+                    style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}>
                     {org.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -63,7 +63,7 @@ export default function AdminDashboard({ stats, recentOrganizations, recentUsers
           <div className="glass-card rounded-2xl p-5">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-[14px] font-bold text-slate-800">Recent Users</h3>
-              <Link href="/admin/users" className="text-[12px] font-semibold text-violet-600 hover:text-violet-700 flex items-center gap-1">
+              <Link href="/admin/users" className="text-[12px] font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
                 View all <ArrowRight size={12} />
               </Link>
             </div>

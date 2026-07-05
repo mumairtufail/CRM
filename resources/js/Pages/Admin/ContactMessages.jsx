@@ -11,7 +11,7 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 const STATUS_CONFIG = {
-    new:     { label: 'New',     color: 'bg-violet-50 text-violet-700 border-violet-200',  dot: 'bg-violet-500' },
+    new:     { label: 'New',     color: 'bg-brand-50 text-brand-700 border-brand-200',  dot: 'bg-brand-500' },
     read:    { label: 'Read',    color: 'bg-blue-50 text-blue-700 border-blue-200',         dot: 'bg-blue-400'   },
     replied: { label: 'Replied', color: 'bg-green-50 text-green-700 border-green-200',      dot: 'bg-green-500'  },
 }
@@ -77,7 +77,7 @@ function MessagePanel({ message, onClose, onUpdate }) {
                 {/* Sender info */}
                 <div className="px-6 py-5 border-b border-slate-50 bg-slate-50/60">
                     <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center text-violet-700 font-bold text-sm shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-brand-100 flex items-center justify-center text-brand-700 font-bold text-sm shrink-0">
                             {message.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -132,7 +132,7 @@ function MessagePanel({ message, onClose, onUpdate }) {
                                 value={form.data.status}
                                 onChange={e => form.setData('status', e.target.value)}
                                 className="w-full appearance-none px-3 py-2.5 rounded-xl border border-slate-200 bg-white
-                                           text-slate-800 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent"
+                                           text-slate-800 text-sm pr-8 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                             >
                                 <option value="new">New</option>
                                 <option value="read">Read</option>
@@ -152,7 +152,7 @@ function MessagePanel({ message, onClose, onUpdate }) {
                             onChange={e => form.setData('admin_notes', e.target.value)}
                             placeholder="Add private notes visible only to admins…"
                             className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 text-sm
-                                       placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent resize-none"
+                                       placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent resize-none"
                         />
                     </div>
 
@@ -161,7 +161,7 @@ function MessagePanel({ message, onClose, onUpdate }) {
                         disabled={form.processing}
                         className="w-full py-2.5 rounded-xl text-white text-sm font-semibold transition-all
                                    hover:opacity-90 disabled:opacity-60"
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                     >
                         {form.processing ? 'Saving…' : 'Save Changes'}
                     </button>
@@ -233,7 +233,7 @@ export default function AdminContactMessages({ messages, filters, stats }) {
 
             {/* ── Stats ── */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <StatCard icon={MessageSquare} label="Total messages" value={stats.total}   color="#7C3AED" bg="#F5F3FF" />
+                <StatCard icon={MessageSquare} label="Total messages" value={stats.total}   color="rgb(var(--brand-600))" bg="rgb(var(--brand-50))" />
                 <StatCard icon={Mail}          label="Unread"         value={stats.new}     color="#2563EB" bg="#EFF6FF" />
                 <StatCard icon={Eye}           label="Read"           value={stats.read}    color="#D97706" bg="#FFFBEB" />
                 <StatCard icon={CheckCircle2}  label="Replied"        value={stats.replied} color="#059669" bg="#ECFDF5" />
@@ -251,7 +251,7 @@ export default function AdminContactMessages({ messages, filters, stats }) {
                                 className={cn(
                                     'px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors',
                                     activeStatus === value
-                                        ? 'bg-violet-600 text-white'
+                                        ? 'bg-brand-600 text-white'
                                         : 'text-slate-500 hover:bg-slate-100'
                                 )}
                             >
@@ -299,13 +299,13 @@ export default function AdminContactMessages({ messages, filters, stats }) {
                                     onClick={() => openMessage(msg)}
                                     className={cn(
                                         'hover:bg-slate-50/80 cursor-pointer transition-colors',
-                                        msg.status === 'new' && 'bg-violet-50/30'
+                                        msg.status === 'new' && 'bg-brand-50/30'
                                     )}
                                 >
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-2.5">
                                             {msg.status === 'new' && (
-                                                <div className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />
+                                                <div className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />
                                             )}
                                             <div className="min-w-0">
                                                 <div className={cn('font-semibold text-slate-900 text-[13px] truncate max-w-[160px]', msg.status === 'new' && 'font-bold')}>
@@ -358,7 +358,7 @@ export default function AdminContactMessages({ messages, filters, stats }) {
                                     className={cn(
                                         'w-8 h-8 rounded-lg text-xs font-semibold transition-colors',
                                         p === pagination.current_page
-                                            ? 'bg-violet-600 text-white'
+                                            ? 'bg-brand-600 text-white'
                                             : 'text-slate-500 hover:bg-slate-100'
                                     )}
                                 >

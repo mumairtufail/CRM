@@ -167,7 +167,7 @@ function Card({ title, children, className = '' }) {
   )
 }
 
-function MiniStat({ icon: Icon, label, value, color = 'text-violet-600', bg = 'bg-violet-50' }) {
+function MiniStat({ icon: Icon, label, value, color = 'text-brand-600', bg = 'bg-brand-50' }) {
   return (
     <div className="rounded-xl p-3 flex items-center gap-2.5" style={glass}>
       <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', bg)}>
@@ -198,7 +198,7 @@ function QuickAction({ icon: Icon, label, href, onClick, color = 'text-slate-600
 const EMAIL_STATUS_CFG = {
   sent:         { label: 'Sent',         cls: 'bg-blue-50 text-blue-700',      dot: 'bg-blue-500' },
   opened:       { label: 'Opened',       cls: 'bg-green-50 text-green-700',    dot: 'bg-green-500' },
-  clicked:      { label: 'Clicked',      cls: 'bg-violet-50 text-violet-700',  dot: 'bg-violet-500' },
+  clicked:      { label: 'Clicked',      cls: 'bg-brand-50 text-brand-700',  dot: 'bg-brand-500' },
   bounced:      { label: 'Bounced',      cls: 'bg-red-50 text-red-700',        dot: 'bg-red-400' },
   unsubscribed: { label: 'Unsubscribed', cls: 'bg-amber-50 text-amber-700',    dot: 'bg-amber-400' },
   pending:      { label: 'Pending',      cls: 'bg-slate-100 text-slate-500',   dot: 'bg-slate-300' },
@@ -250,14 +250,14 @@ function EmailTimeline({ emailSends }) {
       {campaigns.map(({ campaign, sends, campaignId }) => (
         <div key={campaignId}
           className="rounded-2xl overflow-hidden"
-          style={{ ...glass, border: '1px solid rgba(99,102,241,0.1)' }}>
+          style={{ ...glass, border: '1px solid rgb(var(--brand2-500) / 0.1)' }}>
 
           {/* Campaign header */}
           <div className="px-4 py-3 border-b border-slate-100/80"
-            style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.06) 0%,transparent 100%)' }}>
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand2-500) / 0.06) 0%,transparent 100%)' }}>
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand2-500)),rgb(var(--brand-500)))' }}>
                 <Mail size={14} className="text-white" />
               </div>
               <div className="min-w-0 flex-1">
@@ -285,7 +285,7 @@ function EmailTimeline({ emailSends }) {
                 <div className="absolute left-[13px] top-7 w-px"
                   style={{
                     bottom: '28px',
-                    background: 'linear-gradient(to bottom, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%)',
+                    background: 'linear-gradient(to bottom, rgb(var(--brand2-500)) 0%, rgb(var(--brand-500)) 50%, rgb(var(--brand-400)) 100%)',
                     opacity: 0.25,
                   }} />
               )}
@@ -333,7 +333,7 @@ function EmailTimeline({ emailSends }) {
                             {preview && (
                               <button
                                 onClick={() => setExpanded(p => ({ ...p, [es.id]: !p[es.id] }))}
-                                className="shrink-0 mt-0.5 text-[10.5px] text-indigo-500 hover:text-indigo-700 font-medium transition-colors"
+                                className="shrink-0 mt-0.5 text-[10.5px] text-brand2-500 hover:text-brand2-700 font-medium transition-colors"
                               >
                                 {isExpanded ? '▲ Hide' : '▼ Preview'}
                               </button>
@@ -358,7 +358,7 @@ function EmailTimeline({ emailSends }) {
                               </span>
                             )}
                             {es.clicked_at ? (
-                              <span className="flex items-center gap-1 text-[10.5px] font-medium text-violet-600">
+                              <span className="flex items-center gap-1 text-[10.5px] font-medium text-brand-600">
                                 <MousePointerClick size={9} /> Clicked {formatDistanceToNow(new Date(es.clicked_at), { addSuffix: true })}
                               </span>
                             ) : (
@@ -415,13 +415,13 @@ function FormSessionTimeline({ formSessions }) {
       {groups.map(({ formId, formName, sessions }) => (
         <div key={formId}
           className="rounded-2xl overflow-hidden"
-          style={{ ...glass, border: '1px solid rgba(99,102,241,0.1)' }}>
+          style={{ ...glass, border: '1px solid rgb(var(--brand2-500) / 0.1)' }}>
 
           <div className="px-4 py-3 border-b border-slate-100/80"
-            style={{ background: 'linear-gradient(135deg,rgba(99,102,241,0.06) 0%,transparent 100%)' }}>
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand2-500) / 0.06) 0%,transparent 100%)' }}>
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand2-500)),rgb(var(--brand-500)))' }}>
                 <ClipboardList size={14} className="text-white" />
               </div>
               <div className="min-w-0 flex-1">
@@ -548,10 +548,10 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [],
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
           className="relative overflow-hidden rounded-2xl px-6 py-5 mb-4"
-          style={{ background: 'linear-gradient(135deg, #1A1628 0%, #2D1B6B 55%, #1A1628 100%)', boxShadow: '0 4px 30px rgba(124,58,237,0.2)' }}
+          style={{ background: 'linear-gradient(135deg, rgb(var(--brand-ink)) 0%, rgb(var(--brand-800)) 55%, rgb(var(--brand-ink)) 100%)', boxShadow: '0 4px 30px rgb(var(--brand-600) / 0.2)' }}
         >
           <div className="absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none opacity-[0.12]"
-            style={{ background: 'radial-gradient(circle, #7C3AED 0%, transparent 70%)', transform: 'translate(35%,-55%)' }} />
+            style={{ background: 'radial-gradient(circle, rgb(var(--brand-600)) 0%, transparent 70%)', transform: 'translate(35%,-55%)' }} />
 
           <div className="relative flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
             {/* Left — avatar + info */}
@@ -617,7 +617,7 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [],
             color="text-blue-600" bg="bg-blue-50" />
           <MiniStat icon={Activity} label="Activities"
             value={leadStats?.activities_total ?? 0}
-            color="text-violet-600" bg="bg-violet-50" />
+            color="text-brand-600" bg="bg-brand-50" />
           <MiniStat icon={Calendar} label="Days in CRM"
             value={`${leadStats?.days_known ?? 0} days`}
             color="text-amber-600" bg="bg-amber-50" />
@@ -719,7 +719,7 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [],
               <div className="px-2 py-1.5">
                 {primaryEmail && <QuickAction icon={Mail} label="Send email" href={`mailto:${primaryEmail}`} color="text-blue-500" />}
                 {primaryPhone && <QuickAction icon={PhoneCall} label="Call" href={`tel:${primaryPhone}`} color="text-green-500" />}
-                <QuickAction icon={Pencil} label="Edit lead" href={`/leads/${lead.id}/edit`} color="text-violet-500" />
+                <QuickAction icon={Pencil} label="Edit lead" href={`/leads/${lead.id}/edit`} color="text-brand-500" />
                 <QuickAction icon={Briefcase} label="View pipeline" href="/pipeline" color="text-teal-500" />
                 <QuickAction icon={Users} label="All leads" href="/leads" color="text-slate-400" />
               </div>
@@ -781,7 +781,7 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [],
               <div className="px-4 py-2.5 border-b border-slate-100/80">
                 <p className="text-[10.5px] font-bold uppercase tracking-[0.12em] text-slate-400">
                   Activity timeline
-                  {activities?.length > 0 && <span className="ml-1.5 text-violet-500">({activities.length})</span>}
+                  {activities?.length > 0 && <span className="ml-1.5 text-brand-500">({activities.length})</span>}
                 </p>
               </div>
               <div className="px-4 py-2.5">

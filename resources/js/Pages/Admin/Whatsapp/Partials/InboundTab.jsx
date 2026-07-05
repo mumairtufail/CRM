@@ -71,7 +71,7 @@ export default function InboundTab({ inbound }) {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => openAssign(row)}
-                  className="flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold text-violet-700 border border-violet-200 bg-violet-50 hover:bg-violet-100 rounded-lg transition-colors">
+                  className="flex items-center gap-1.5 h-8 px-3 text-[12px] font-semibold text-brand-700 border border-brand-200 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors">
                   <UserPlus size={13} /> Assign
                 </button>
                 <button onClick={() => ignore(row)}
@@ -113,7 +113,7 @@ export default function InboundTab({ inbound }) {
             </button>
             <button type="button" onClick={submitAssign}
               className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               Assign
             </button>
           </DialogFooter>

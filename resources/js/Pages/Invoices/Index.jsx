@@ -33,8 +33,8 @@ function StatPill({ label, value, active, onClick }) {
       onClick={onClick}
       className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
         active
-          ? 'bg-violet-600 text-white shadow-sm'
-          : 'bg-white text-slate-600 border border-slate-200 hover:border-violet-300 hover:text-violet-600'
+          ? 'bg-brand-600 text-white shadow-sm'
+          : 'bg-white text-slate-600 border border-slate-200 hover:border-brand-300 hover:text-brand-600'
       }`}
     >
       {label} <span className={`ml-1 text-[11px] ${active ? 'opacity-75' : 'text-slate-400'}`}>({value})</span>
@@ -131,7 +131,7 @@ export default function InvoicesIndex({ invoices, filters, totals }) {
                 {data.map(inv => (
                   <tr key={inv.id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-4 py-3">
-                      <Link href={`/invoices/${inv.id}`} className="font-semibold text-violet-600 hover:text-violet-800 transition-colors">
+                      <Link href={`/invoices/${inv.id}`} className="font-semibold text-brand-600 hover:text-brand-800 transition-colors">
                         {inv.invoice_number}
                       </Link>
                       <p className="text-[11px] text-slate-400 mt-0.5">{inv.created_at}</p>

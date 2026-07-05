@@ -18,7 +18,7 @@ const STATUS_STYLE = {
   planning:  { dot: 'bg-blue-400',    badge: 'bg-blue-50 text-blue-700 border-blue-200',       stripe: 'linear-gradient(90deg,#3b82f6,#60a5fa)' },
   active:    { dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', stripe: 'linear-gradient(90deg,#10b981,#34d399)' },
   on_hold:   { dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-700 border-amber-200',    stripe: 'linear-gradient(90deg,#f59e0b,#fbbf24)' },
-  completed: { dot: 'bg-violet-400',  badge: 'bg-violet-50 text-violet-700 border-violet-200', stripe: 'linear-gradient(90deg,#7c3aed,#a78bfa)' },
+  completed: { dot: 'bg-brand-400',  badge: 'bg-brand-50 text-brand-700 border-brand-200', stripe: 'linear-gradient(90deg,rgb(var(--brand-600)),rgb(var(--brand-400)))' },
   cancelled: { dot: 'bg-red-400',     badge: 'bg-red-50 text-red-700 border-red-200',          stripe: 'linear-gradient(90deg,#ef4444,#f87171)' },
 }
 
@@ -34,7 +34,7 @@ const PRIORITY_STYLE = {
 const TASK_STATUS_CYCLE = { todo: 'in_progress', in_progress: 'done', done: 'todo' }
 
 const AVATAR_GRADIENTS = [
-  'from-violet-500 to-indigo-500', 'from-emerald-500 to-teal-500',
+  'from-brand-500 to-brand2-500', 'from-emerald-500 to-teal-500',
   'from-blue-500 to-cyan-500', 'from-rose-500 to-pink-500', 'from-amber-500 to-orange-500',
 ]
 function avatarGradient(str) {
@@ -78,14 +78,14 @@ function EditableField({ label, value, onSave, textarea = false, icon: Icon, typ
         <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">{label}</p>
         {textarea ? (
           <textarea autoFocus value={draft} onChange={e => setDraft(e.target.value)} rows={4}
-            className="w-full px-3 py-2 rounded-xl border border-violet-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200 resize-none" />
+            className="w-full px-3 py-2 rounded-xl border border-brand-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200 resize-none" />
         ) : (
           <input autoFocus type={type} value={draft} onChange={e => setDraft(e.target.value)}
-            className="w-full px-3 py-2 rounded-xl border border-violet-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200" />
+            className="w-full px-3 py-2 rounded-xl border border-brand-300 text-[13px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200" />
         )}
         <div className="flex gap-1.5 mt-1.5">
           <button onClick={save}
-            className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-violet-600 text-white text-[11.5px] font-medium hover:bg-violet-700 transition-colors">
+            className="flex items-center gap-1 h-7 px-2.5 rounded-lg bg-brand-600 text-white text-[11.5px] font-medium hover:bg-brand-700 transition-colors">
             <Check size={11} /> Save
           </button>
           <button onClick={() => { setDraft(value ?? ''); setEditing(false) }}
@@ -111,7 +111,7 @@ function EditableField({ label, value, onSave, textarea = false, icon: Icon, typ
           {value || 'Click to add…'}
         </p>
       </div>
-      <Pencil size={11} className="text-slate-300 group-hover:text-violet-400 mt-1.5 shrink-0 transition-colors" />
+      <Pencil size={11} className="text-slate-300 group-hover:text-brand-400 mt-1.5 shrink-0 transition-colors" />
     </button>
   )
 }
@@ -191,9 +191,9 @@ function TaskRow({ task, projectId, onUpdated, onDeleted }) {
         isDone && 'opacity-60'
       )}>
         <button onClick={toggleStatus} disabled={toggling}
-          className="mt-0.5 shrink-0 text-slate-400 hover:text-violet-500 transition-colors">
+          className="mt-0.5 shrink-0 text-slate-400 hover:text-brand-500 transition-colors">
           {isDone
-            ? <CheckSquare size={17} className="text-violet-500" />
+            ? <CheckSquare size={17} className="text-brand-500" />
             : task.status === 'in_progress'
               ? <Circle size={17} className="text-amber-400" />
               : <Square size={17} />
@@ -205,10 +205,10 @@ function TaskRow({ task, projectId, onUpdated, onDeleted }) {
             <div className="flex items-center gap-1.5">
               <input autoFocus value={draft} onChange={e => setDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') saveTitle(); if (e.key === 'Escape') { setEditingTitle(false); setDraft(task.title) } }}
-                className="flex-1 px-2 py-1 rounded-lg border border-violet-300 text-[12.5px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                className="flex-1 px-2 py-1 rounded-lg border border-brand-300 text-[12.5px] text-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-200"
               />
               <button onClick={saveTitle}
-                className="h-7 w-7 rounded-lg bg-violet-600 text-white flex items-center justify-center hover:bg-violet-700 transition-colors">
+                className="h-7 w-7 rounded-lg bg-brand-600 text-white flex items-center justify-center hover:bg-brand-700 transition-colors">
                 <Check size={11} />
               </button>
               <button onClick={() => { setEditingTitle(false); setDraft(task.title) }}
@@ -239,7 +239,7 @@ function TaskRow({ task, projectId, onUpdated, onDeleted }) {
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
           <button onClick={() => setEditingTitle(true)}
-            className="h-6 w-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-violet-500 hover:bg-slate-100 transition-colors">
+            className="h-6 w-6 rounded-lg flex items-center justify-center text-slate-400 hover:text-brand-500 hover:bg-slate-100 transition-colors">
             <Pencil size={11} />
           </button>
           <button onClick={() => setConfirmOpen(true)}
@@ -284,7 +284,7 @@ function AddTaskForm({ projectId, onAdded }) {
   if (!open) {
     return (
       <button onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-[12.5px] text-slate-400 hover:border-violet-300 hover:text-violet-500 hover:bg-violet-50/40 transition-colors">
+        className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 border-dashed border-slate-200 text-[12.5px] text-slate-400 hover:border-brand-300 hover:text-brand-500 hover:bg-brand-50/40 transition-colors">
         <Plus size={14} /> Add task…
       </button>
     )
@@ -292,25 +292,25 @@ function AddTaskForm({ projectId, onAdded }) {
 
   return (
     <form onSubmit={submit}
-      className="rounded-xl border-2 border-violet-300 bg-violet-50/30 p-3 space-y-2">
+      className="rounded-xl border-2 border-brand-300 bg-brand-50/30 p-3 space-y-2">
       <input autoFocus value={title} onChange={e => setTitle(e.target.value)}
         placeholder="Task title…"
-        className="w-full px-3 py-2 rounded-lg border border-violet-300 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200"
+        className="w-full px-3 py-2 rounded-lg border border-brand-300 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200"
       />
       <div className="flex items-center gap-2">
         <select value={priority} onChange={e => setPriority(e.target.value)}
-          className="h-8 px-2 rounded-lg border border-slate-200 text-[12px] text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200">
+          className="h-8 px-2 rounded-lg border border-slate-200 text-[12px] text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200">
           <option value="low">Low priority</option>
           <option value="medium">Medium priority</option>
           <option value="high">High priority</option>
         </select>
         <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-          className="h-8 px-2 rounded-lg border border-slate-200 text-[12px] text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 flex-1"
+          className="h-8 px-2 rounded-lg border border-slate-200 text-[12px] text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 flex-1"
         />
       </div>
       <div className="flex gap-2">
         <button type="submit" disabled={saving || !title.trim()}
-          className="h-8 px-4 rounded-lg bg-violet-600 text-white text-[12px] font-semibold hover:bg-violet-700 transition-colors disabled:opacity-50">
+          className="h-8 px-4 rounded-lg bg-brand-600 text-white text-[12px] font-semibold hover:bg-brand-700 transition-colors disabled:opacity-50">
           {saving ? 'Adding…' : 'Add Task'}
         </button>
         <button type="button" onClick={() => { setOpen(false); setTitle('') }}
@@ -364,27 +364,27 @@ function UploadDocForm({ projectId, onUploaded }) {
 
   return (
     <form onSubmit={handleSubmit}
-      className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-violet-300 transition-colors p-4 bg-slate-50/50">
+      className="rounded-2xl border-2 border-dashed border-slate-200 hover:border-brand-300 transition-colors p-4 bg-slate-50/50">
       <div className="flex items-center gap-2 mb-3">
-        <FilePlus size={15} className="text-violet-500" />
+        <FilePlus size={15} className="text-brand-500" />
         <p className="text-[12.5px] font-semibold text-slate-700">Upload document</p>
       </div>
       <div className="space-y-2">
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Document name *" required
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition"
         />
         <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)" rows={2}
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-200 focus:border-violet-400 transition resize-none"
+          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-400 transition resize-none"
         />
         <div className="flex items-center gap-2">
-          <label className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-violet-300 transition-colors">
+          <label className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white cursor-pointer hover:border-brand-300 transition-colors">
             <Upload size={13} className="text-slate-400 shrink-0" />
             <span className="text-[12.5px] text-slate-500 truncate">{file ? file.name : 'Choose file…'}</span>
             <input ref={fileRef} type="file" className="hidden" onChange={e => setFile(e.target.files[0] ?? null)} />
           </label>
           <button type="submit" disabled={loading || !file || !name.trim()}
             className="h-9 px-4 rounded-xl text-[12.5px] font-semibold text-white transition-all disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
             {loading ? 'Uploading…' : 'Upload'}
           </button>
         </div>
@@ -452,7 +452,7 @@ function DocRow({ doc, projectId, onDeleted }) {
           </div>
           <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
             <a href={doc.url} download target="_blank" rel="noopener noreferrer"
-              className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-violet-300 hover:text-violet-600 transition-colors text-slate-500">
+              className="h-7 w-7 rounded-lg flex items-center justify-center bg-white border border-slate-200 hover:border-brand-300 hover:text-brand-600 transition-colors text-slate-500">
               <Download size={13} />
             </a>
             <button onClick={() => setConfirmOpen(true)} disabled={deleting}
@@ -529,7 +529,7 @@ export default function ProjectShow({ project: initialProject }) {
         <div className="relative overflow-hidden rounded-2xl px-6 py-5 mb-5"
           style={{ background: 'linear-gradient(135deg,#0f172a 0%,#1e293b 60%,#0f172a 100%)', boxShadow: '0 4px 30px rgba(0,0,0,0.15)' }}>
           <div className="absolute top-0 right-0 w-56 h-56 rounded-full pointer-events-none opacity-[0.08]"
-            style={{ background: 'radial-gradient(circle,#7c3aed 0%,transparent 70%)', transform: 'translate(30%,-50%)' }} />
+            style={{ background: 'radial-gradient(circle,rgb(var(--brand-600)) 0%,transparent 70%)', transform: 'translate(30%,-50%)' }} />
 
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -642,14 +642,14 @@ export default function ProjectShow({ project: initialProject }) {
                     {avatarLetter(project.client.name)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-slate-800 group-hover:text-violet-700 transition-colors truncate">
+                    <p className="text-[13px] font-semibold text-slate-800 group-hover:text-brand-700 transition-colors truncate">
                       {project.client.name}
                     </p>
                     {project.client.company && (
                       <p className="text-[11px] text-slate-400 truncate">{project.client.company}</p>
                     )}
                   </div>
-                  <ChevronLeft size={13} className="text-slate-300 group-hover:text-violet-400 rotate-180 transition-colors" />
+                  <ChevronLeft size={13} className="text-slate-300 group-hover:text-brand-400 rotate-180 transition-colors" />
                 </Link>
               </div>
             )}
@@ -687,7 +687,7 @@ export default function ProjectShow({ project: initialProject }) {
               {totalTasks > 0 && (
                 <div className="h-1 bg-slate-100 mx-4 mt-3 rounded-full overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${(doneTasks / totalTasks) * 100}%`, background: 'linear-gradient(90deg,#7c3aed,#4f46e5)' }} />
+                    style={{ width: `${(doneTasks / totalTasks) * 100}%`, background: 'linear-gradient(90deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }} />
                 </div>
               )}
 

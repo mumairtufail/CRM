@@ -149,7 +149,7 @@ function FilterRow({ filterKey, values, onRemove, onAdd }) {
             // Pick-from-list — the user never has to guess a format (e.g. "51–200").
             <Select value="" onValueChange={addValue}>
               <SelectTrigger
-                className="h-6 w-auto gap-1 border-dashed px-2 text-[11px] text-muted-foreground hover:text-violet-600"
+                className="h-6 w-auto gap-1 border-dashed px-2 text-[11px] text-muted-foreground hover:text-brand-600"
               >
                 <Plus size={10} /> {cfg.placeholder}
               </SelectTrigger>
@@ -181,7 +181,7 @@ function FilterRow({ filterKey, values, onRemove, onAdd }) {
                 {cfg.suggestions.map(s => <option key={s} value={s} />)}
               </datalist>
             )}
-            <button onClick={commitText} className="text-violet-600 hover:text-violet-800">
+            <button onClick={commitText} className="text-brand-600 hover:text-brand-800">
               <Plus size={12} />
             </button>
             <button onClick={() => { setAdding(false); setNewVal('') }} className="text-muted-foreground hover:text-foreground">
@@ -191,7 +191,7 @@ function FilterRow({ filterKey, values, onRemove, onAdd }) {
         ) : (
           <button
             onClick={() => setAdding(true)}
-            className="flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-violet-600 transition-colors"
+            className="flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-brand-600 transition-colors"
           >
             <Plus size={10} /> Add
           </button>
@@ -208,14 +208,14 @@ function ResultRow({ contact, selected, onToggle, importing }) {
   const location = [contact.city, contact.country].filter(Boolean).join(', ')
 
   return (
-    <TableRow className={selected ? 'bg-violet-50/60' : ''}>
+    <TableRow className={selected ? 'bg-brand-50/60' : ''}>
       <TableCell className="w-10">
         <Checkbox checked={selected} onCheckedChange={onToggle} disabled={importing} />
       </TableCell>
       <TableCell>
         <div className="flex items-center gap-2.5">
           <Avatar className="h-8 w-8 shrink-0">
-            <AvatarFallback className="text-[11px] font-semibold bg-violet-100 text-violet-700">
+            <AvatarFallback className="text-[11px] font-semibold bg-brand-100 text-brand-700">
               {initials}
             </AvatarFallback>
           </Avatar>
@@ -257,7 +257,7 @@ function ResultRow({ contact, selected, onToggle, importing }) {
             href={contact.linkedin_url.startsWith('http') ? contact.linkedin_url : `https://${contact.linkedin_url}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-xs text-violet-600 hover:text-violet-800 transition-colors"
+            className="inline-flex items-center gap-1 text-xs text-brand-600 hover:text-brand-800 transition-colors"
           >
             <Link2 size={12} /> View
           </a>
@@ -295,7 +295,7 @@ function NotConfigured() {
           </p>
           <Button
             onClick={() => router.visit('/profile')}
-            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
             className="text-white w-full gap-2"
           >
             <Sparkles size={14} /> Go to Settings
@@ -434,7 +434,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
 
   // ── Render ───────────────────────────────────────────────────────────────
 
-  const gradientStyle = { background: 'linear-gradient(135deg, #7C3AED, #4F46E5)' }
+  const gradientStyle = { background: 'linear-gradient(135deg, rgb(var(--brand-600)), rgb(var(--brand2-600)))' }
 
   if (!configured) {
     return (
@@ -518,7 +518,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
                   <Badge
                     key={ex}
                     variant="outline"
-                    className="cursor-pointer hover:bg-violet-50 hover:border-violet-300 text-xs py-1 font-normal"
+                    className="cursor-pointer hover:bg-brand-50 hover:border-brand-300 text-xs py-1 font-normal"
                     onClick={() => setPrompt(ex)}
                   >
                     {ex}
@@ -529,7 +529,7 @@ export default function LeadGenerationIndex({ configured, providerName }) {
 
             {isParsing && (
               <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Spinner className="border-violet-300 border-t-violet-600" />
+                <Spinner className="border-brand-300 border-t-brand-600" />
                 AI is interpreting your search…
               </p>
             )}

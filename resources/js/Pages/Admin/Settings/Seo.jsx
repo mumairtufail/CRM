@@ -34,7 +34,7 @@ export default function Seo({ seo, app_url }) {
         <div className="max-w-7xl mx-auto py-6 px-4 w-full">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[12px] text-slate-400 mb-3">
-            <Link href="/admin/settings" className="hover:text-violet-600 transition-colors">Settings</Link>
+            <Link href="/admin/settings" className="hover:text-brand-600 transition-colors">Settings</Link>
             <span>/</span>
             <span className="text-slate-600 font-medium">SEO & Indexing</span>
           </div>
@@ -42,7 +42,7 @@ export default function Seo({ seo, app_url }) {
           <div className="mb-4 flex items-start justify-between">
             <div>
               <h1 className="text-[17px] font-bold text-slate-800 mb-0.5 flex items-center gap-2">
-                <Globe size={18} className="text-violet-600" />
+                <Globe size={18} className="text-brand-600" />
                 SEO & Indexing Configuration
               </h1>
               <p className="text-[12px] text-slate-400 font-normal leading-snug">
@@ -62,7 +62,7 @@ export default function Seo({ seo, app_url }) {
               {/* Card 1: Default Meta Tags */}
               <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
                 <h2 className="text-[13.5px] font-bold text-slate-800 mb-1 flex items-center gap-2">
-                  <Search size={15} className="text-violet-500" />
+                  <Search size={15} className="text-brand-500" />
                   Global Meta Tags
                 </h2>
                 <p className="text-[11.5px] text-slate-400 mb-3 leading-snug">
@@ -80,7 +80,7 @@ export default function Seo({ seo, app_url }) {
                       value={data.meta_title}
                       onChange={e => setData('meta_title', e.target.value)}
                       placeholder="LumeniaCRM - Turn Leads into Revenue"
-                      className="w-full h-9 px-3 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-750"
+                      className="w-full h-9 px-3 text-[12.5px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-slate-750"
                     />
                     {errors.meta_title && <p className="text-red-500 text-[11px] mt-1">{errors.meta_title}</p>}
                   </div>
@@ -95,7 +95,7 @@ export default function Seo({ seo, app_url }) {
                       onChange={e => setData('meta_description', e.target.value)}
                       placeholder="Describe your platform in under 160 characters..."
                       rows="3"
-                      className="w-full p-2.5 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-600 resize-none leading-normal"
+                      className="w-full p-2.5 text-[12.5px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-slate-600 resize-none leading-normal"
                     />
                     {errors.meta_description && <p className="text-red-500 text-[11px] mt-1">{errors.meta_description}</p>}
                   </div>
@@ -110,7 +110,7 @@ export default function Seo({ seo, app_url }) {
                       value={data.meta_keywords}
                       onChange={e => setData('meta_keywords', e.target.value)}
                       placeholder="crm, pipeline tracking, lead generation"
-                      className="w-full h-9 px-3 text-[12.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-750"
+                      className="w-full h-9 px-3 text-[12.5px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-slate-750"
                     />
                     {errors.meta_keywords && <p className="text-red-500 text-[11px] mt-1">{errors.meta_keywords}</p>}
                   </div>
@@ -135,7 +135,7 @@ export default function Seo({ seo, app_url }) {
                       onChange={e => setData('robots_txt', e.target.value)}
                       placeholder="User-agent: *..."
                       rows="5"
-                      className="w-full p-2.5 font-mono text-[12px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none bg-slate-50 text-slate-700 leading-normal"
+                      className="w-full p-2.5 font-mono text-[12px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none bg-slate-50 text-slate-700 leading-normal"
                     />
                     <div className="mt-2.5 p-2.5 bg-slate-50 border border-slate-100 rounded-lg text-[11px] text-slate-400 space-y-1">
                       <p>• <span className="font-mono bg-white px-1.5 py-0.5 rounded border border-slate-150 text-slate-600">User-agent: *</span> targets all spiders.</p>
@@ -161,7 +161,7 @@ export default function Seo({ seo, app_url }) {
                       <a
                         href="/sitemap.xml"
                         target="_blank"
-                        className="inline-block text-[11.5px] text-violet-600 hover:text-violet-800 font-semibold underline mt-1 break-all"
+                        className="inline-block text-[11.5px] text-brand-600 hover:text-brand-800 font-semibold underline mt-1 break-all"
                       >
                         {sitemapUrl}
                       </a>
@@ -179,7 +179,7 @@ export default function Seo({ seo, app_url }) {
               <button
                 type="submit"
                 disabled={processing}
-                className="px-3.5 py-2 rounded-lg bg-violet-600 text-[12.5px] font-bold text-white hover:bg-violet-700 flex items-center gap-1.5 transition-colors shadow-sm shadow-violet-500/10 disabled:opacity-50"
+                className="px-3.5 py-2 rounded-lg bg-brand-600 text-[12.5px] font-bold text-white hover:bg-brand-700 flex items-center gap-1.5 transition-colors shadow-sm shadow-brand-500/10 disabled:opacity-50"
               >
                 <Save size={13} /> Save Configuration
               </button>

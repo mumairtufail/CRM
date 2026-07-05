@@ -33,7 +33,7 @@ export default function Hub({ latestBlogs = [] }) {
       icon: FileText,
       href: '/tools/invoice-generator',
       badge: 'New',
-      badgeColor: 'bg-violet-50 text-violet-700 border-violet-100',
+      badgeColor: 'bg-brand-50 text-brand-700 border-brand-100',
       cta: 'Create Free Invoice',
     },
     {
@@ -43,7 +43,7 @@ export default function Hub({ latestBlogs = [] }) {
       icon: PenTool,
       href: '/tools/proposal-writer',
       badge: 'Bestseller',
-      badgeColor: 'bg-indigo-50 text-indigo-700 border-indigo-100',
+      badgeColor: 'bg-brand2-50 text-brand2-700 border-brand2-100',
       cta: 'Write Proposal',
     },
     {
@@ -94,7 +94,7 @@ export default function Hub({ latestBlogs = [] }) {
         <meta property="og:type" content="website" />
       </Head>
 
-      <div className="min-h-screen bg-[#F8F9FD] font-sans antialiased text-slate-800 flex flex-col justify-between">
+      <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between">
         {/* Header/Nav */}
         <nav className="fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all duration-300">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -109,7 +109,7 @@ export default function Hub({ latestBlogs = [] }) {
                     <div className="hidden md:flex items-center gap-8">
                         {navLinks.map(({ label, href }) => (
                             <a key={label} href={href}
-                               className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
+                               className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-500">{label}</a>
                         ))}
                     </div>
 
@@ -120,7 +120,7 @@ export default function Hub({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -146,7 +146,7 @@ export default function Hub({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="block py-3 rounded-xl text-center text-sm font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -159,11 +159,11 @@ export default function Hub({ latestBlogs = [] }) {
 
         {/* Hero */}
         <section className="py-16 md:py-24 bg-gradient-to-b from-white to-transparent relative overflow-hidden">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full opacity-[0.03] pointer-events-none blur-3xl bg-violet-600" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full opacity-[0.03] pointer-events-none blur-3xl bg-brand-600" />
           <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-6">
-                Free Sales & Growth <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Power Tools</span>
+                Free Sales & Growth <span className="bg-gradient-to-r from-brand-600 to-brand2-600 bg-clip-text text-transparent">Power Tools</span>
               </h1>
               <p className="text-lg text-slate-500 max-w-xl leading-relaxed">
                 Accelerate your sales workflow, create professional brand assets, and optimize your organic outreach with zero cost.
@@ -195,7 +195,7 @@ export default function Hub({ latestBlogs = [] }) {
                   <div>
                     {/* Header line */}
                     <div className="flex items-center justify-between mb-6">
-                      <div className={`p-3.5 rounded-xl ${tool.disabled ? 'bg-slate-50 text-slate-400' : 'bg-violet-50 text-violet-600'}`}>
+                      <div className={`p-3.5 rounded-xl ${tool.disabled ? 'bg-slate-50 text-slate-400' : 'bg-brand-50 text-brand-600'}`}>
                         <Icon size={24} />
                       </div>
                       <span className={`px-2.5 py-0.5 rounded-full border text-[10px] font-extrabold uppercase tracking-wider ${tool.badgeColor}`}>
@@ -203,7 +203,7 @@ export default function Hub({ latestBlogs = [] }) {
                       </span>
                     </div>
 
-                    <h2 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-violet-600 transition-colors">
+                    <h2 className="text-xl font-bold text-slate-800 mb-3 group-hover:text-brand-600 transition-colors">
                       {tool.title}
                     </h2>
                     <p className="text-sm text-slate-500 leading-relaxed font-normal mb-8">
@@ -219,7 +219,8 @@ export default function Hub({ latestBlogs = [] }) {
                     ) : (
                       <Link
                         href={tool.href}
-                        className="w-full py-3 bg-slate-900 hover:bg-violet-600 text-white rounded-xl text-[13px] font-bold inline-flex items-center justify-center gap-1.5 shadow-sm transition-all hover:scale-[1.01] active:scale-[0.99]"
+                        className="w-full py-3 text-white rounded-xl text-[13px] font-bold inline-flex items-center justify-center gap-1.5 shadow-sm transition-all hover:opacity-90 hover:scale-[1.01] active:scale-[0.99]"
+                        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                       >
                         {tool.cta}
                         <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
@@ -242,10 +243,10 @@ export default function Hub({ latestBlogs = [] }) {
                 <div key={index} className="bg-white border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                   <button
                     onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                    className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
+                    className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-brand-600 transition-colors"
                   >
                     <span>{faq.q}</span>
-                    <ChevronRight size={18} className={`text-slate-400 transition-transform ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`} />
+                    <ChevronRight size={18} className={`text-slate-400 transition-transform ${activeFaq === index ? 'rotate-90 text-brand-500' : ''}`} />
                   </button>
                   {activeFaq === index && (
                     <div className="px-6 pb-5 pt-1 text-slate-500 text-sm leading-relaxed border-t border-slate-100 font-normal">

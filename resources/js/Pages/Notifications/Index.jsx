@@ -9,7 +9,7 @@ import { formatDistanceToNow } from 'date-fns'
 
 const TYPE_META = {
   'lead.created':        { icon: UserPlus,           color: 'text-emerald-600 bg-emerald-50' },
-  'lead.email_received': { icon: Mail,               color: 'text-violet-600 bg-violet-50'   },
+  'lead.email_received': { icon: Mail,               color: 'text-brand-600 bg-brand-50'   },
   'lead.email_replied':  { icon: Reply,              color: 'text-blue-600 bg-blue-50'       },
   'lead.email_opened':   { icon: MailOpen,           color: 'text-amber-600 bg-amber-50'     },
   'lead.email_clicked':  { icon: MousePointerClick,  color: 'text-pink-600 bg-pink-50'       },
@@ -83,7 +83,7 @@ export default function NotificationsIndex({ notifications, unread }) {
                 <div
                   key={n.id}
                   className={`group flex items-start gap-3 w-full px-4 sm:px-5 py-3.5 border-b border-gray-50 last:border-0 transition-colors hover:bg-slate-50 ${
-                    n.read_at ? '' : 'bg-violet-50/40'
+                    n.read_at ? '' : 'bg-brand-50/40'
                   }`}
                 >
                   <button onClick={() => openNotification(n)} className="flex items-start gap-3 min-w-0 flex-1 text-left">
@@ -93,7 +93,7 @@ export default function NotificationsIndex({ notifications, unread }) {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <p className="text-[13.5px] font-semibold text-slate-800 truncate">{n.title}</p>
-                        {!n.read_at && <span className="w-2 h-2 rounded-full bg-violet-500 shrink-0" />}
+                        {!n.read_at && <span className="w-2 h-2 rounded-full bg-brand-500 shrink-0" />}
                       </div>
                       {n.body && <p className="text-[12.5px] text-slate-500 truncate mt-0.5">{n.body}</p>}
                       <p className="text-[11px] text-slate-400 mt-1">{timeAgo(n.created_at)}</p>

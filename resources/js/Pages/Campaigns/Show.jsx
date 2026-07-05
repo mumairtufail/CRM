@@ -28,7 +28,7 @@ const SEND_STATUS = {
   pending:  { label: 'Pending',  bg: 'bg-amber-50 text-amber-600' },
   sent:     { label: 'Sent',     bg: 'bg-blue-50 text-blue-600' },
   opened:   { label: 'Opened',   bg: 'bg-emerald-50 text-emerald-700' },
-  clicked:  { label: 'Clicked',  bg: 'bg-violet-50 text-violet-700' },
+  clicked:  { label: 'Clicked',  bg: 'bg-brand-50 text-brand-700' },
   failed:   { label: 'Failed',   bg: 'bg-red-50 text-red-600' },
   bounced:  { label: 'Bounced',  bg: 'bg-orange-50 text-orange-600' },
   skipped:  { label: 'Skipped',  bg: 'bg-slate-100 text-slate-500' },
@@ -547,8 +547,8 @@ export default function CampaignShow({ campaign, sends }) {
               <Card className="border-slate-200 shadow-none">
                 <CardContent className="px-4 py-3 flex items-center justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0">
-                      <FileText size={15} className="text-violet-600" />
+                    <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center shrink-0">
+                      <FileText size={15} className="text-brand-600" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[12.5px] font-semibold text-slate-800 truncate">{campaign.form.name}</p>
@@ -655,7 +655,7 @@ export default function CampaignShow({ campaign, sends }) {
                                 <LeadAvatar name={s.lead_name} size="sm" />
                                 <div className="min-w-0">
                                   <Link href={`/leads/${s.lead_id}`}
-                                    className="font-medium text-slate-700 hover:text-violet-600 transition-colors truncate max-w-[130px] block">
+                                    className="font-medium text-slate-700 hover:text-brand-600 transition-colors truncate max-w-[130px] block">
                                     {s.lead_name || '—'}
                                   </Link>
                                   <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-widest">

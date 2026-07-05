@@ -132,7 +132,7 @@ export default function WhatsappCampaignCreate({
                 {TOKENS.map(t => (
                   <button key={t} type="button"
                     onClick={() => insertToken(t)}
-                    className="px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 text-[11px] font-mono hover:bg-violet-100 transition-colors">
+                    className="px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 text-[11px] font-mono hover:bg-brand-100 transition-colors">
                     {t}
                   </button>
                 ))}

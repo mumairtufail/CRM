@@ -102,7 +102,7 @@ export default function TenantsTab({ organizations, filters, platformCredentialA
           min={0}
           defaultValue={row.original.monthly_message_quota ?? ''}
           placeholder="Unlimited"
-          className="h-8 w-24 text-[12.5px] px-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-200"
+          className="h-8 w-24 text-[12.5px] px-2 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-brand-200"
           onBlur={(e) => {
             const value = e.target.value === '' ? null : parseInt(e.target.value, 10)
             if (value !== row.original.monthly_message_quota) {

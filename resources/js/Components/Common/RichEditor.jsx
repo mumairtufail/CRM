@@ -217,7 +217,7 @@ export default function RichEditor({
             width: '100%',
             padding: '8px 12px',
             textAlign: 'left',
-            background: i === menu.selectedIdx ? 'rgba(124,58,237,0.06)' : 'transparent',
+            background: i === menu.selectedIdx ? 'rgb(var(--brand-600) / 0.06)' : 'transparent',
             border: 'none',
             cursor: 'pointer',
             transition: 'background 0.1s',
@@ -227,8 +227,8 @@ export default function RichEditor({
           <code style={{
             fontSize: 11,
             fontFamily: 'ui-monospace, monospace',
-            background: 'rgba(124,58,237,0.1)',
-            color: '#6d28d9',
+            background: 'rgb(var(--brand-600) / 0.1)',
+            color: 'rgb(var(--brand-700))',
             padding: '2px 6px',
             borderRadius: 5,
             whiteSpace: 'nowrap',
@@ -280,7 +280,7 @@ export default function RichEditor({
         <div className="flex-1" />
         <span className="text-[10px] text-slate-400 pr-1 hidden sm:block">
           Type{' '}
-          <code className="bg-slate-100 text-violet-600 px-1 rounded text-[10px]">{'{{'}</code>
+          <code className="bg-slate-100 text-brand-600 px-1 rounded text-[10px]">{'{{'}</code>
           {' '}to insert a variable
         </span>
       </div>

@@ -70,12 +70,12 @@ export default function Products() {
                 <meta name="description" content="The products and services Lumenia Lab offers as part of Lumenia CRM: lead management, pipelines, invoicing, campaigns, WhatsApp automation, and free business tools." />
             </Head>
 
-            <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+            <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />
 
                 <main className="max-w-6xl mx-auto px-6 py-16">
                     <div className="max-w-2xl mb-14">
-                        <p className="text-violet-600 text-xs font-bold uppercase tracking-widest mb-3">What we offer</p>
+                        <p className="text-brand-600 text-xs font-bold uppercase tracking-widest mb-3">What we offer</p>
                         <h1 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4">Products & Services</h1>
                         <p className="text-slate-500 text-lg">
                             Lumenia CRM is sold by Lumenia Lab Pvt. Ltd. as a monthly or yearly subscription. Every
@@ -86,12 +86,12 @@ export default function Products() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-20">
                         {PRODUCTS.map(({ icon: Icon, title, plan, description }) => (
                             <div key={title} className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-3">
-                                <div className="w-11 h-11 rounded-xl bg-violet-50 text-violet-600 flex items-center justify-center">
+                                <div className="w-11 h-11 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center">
                                     <Icon className="w-5 h-5" />
                                 </div>
                                 <div>
                                     <h2 className="text-[15px] font-bold text-slate-900">{title}</h2>
-                                    <span className="text-[11px] font-bold uppercase tracking-wider text-violet-500">{plan}</span>
+                                    <span className="text-[11px] font-bold uppercase tracking-wider text-brand-500">{plan}</span>
                                 </div>
                                 <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
                             </div>
@@ -101,17 +101,17 @@ export default function Products() {
                     <div className="border-t border-slate-200 pt-14">
                         <h2 className="text-2xl font-black text-slate-900 mb-2">Subscription plans</h2>
                         <p className="text-slate-500 mb-8">Cancel any time. See full plan details on our{' '}
-                            <a href="/#pricing" className="text-violet-600 hover:underline">pricing section</a>.
+                            <a href="/#pricing" className="text-brand-600 hover:underline">pricing section</a>.
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                             {PLANS.map(({ name, price, blurb }) => (
                                 <div key={name} className="bg-white border border-slate-200 rounded-2xl p-6">
                                     <div className="flex items-baseline justify-between mb-2">
                                         <h3 className="font-bold text-slate-900">{name}</h3>
-                                        <span className="text-violet-600 font-extrabold">{price}</span>
+                                        <span className="text-brand-600 font-extrabold">{price}</span>
                                     </div>
                                     <p className="text-slate-500 text-sm leading-relaxed mb-4">{blurb}</p>
-                                    <Link href="/register" className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-600 hover:underline">
+                                    <Link href="/register" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
                                         <Check className="w-4 h-4" /> Get started
                                     </Link>
                                 </div>

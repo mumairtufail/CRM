@@ -2,8 +2,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar'
 import { cn } from '@/lib/utils'
 
 const avatarColors = [
-  'bg-blue-500', 'bg-violet-500', 'bg-green-500',
-  'bg-amber-500', 'bg-rose-500', 'bg-teal-500', 'bg-indigo-500',
+  'bg-blue-500', 'bg-brand-500', 'bg-green-500',
+  'bg-amber-500', 'bg-rose-500', 'bg-teal-500', 'bg-brand2-500',
 ]
 
 export default function LeadAvatar({ name, url, size = 'default' }) {

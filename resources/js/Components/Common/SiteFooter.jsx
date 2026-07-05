@@ -58,7 +58,7 @@ export default function SiteFooter({ className = '' }) {
     ];
 
     return (
-        <footer style={{ background: '#030208' }} className={`border-t border-white/5 w-full ${className}`}>
+        <footer style={{ background: 'rgb(var(--brand-ink))' }} className={`border-t border-white/5 w-full ${className}`}>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
                 <div className="grid grid-cols-2 md:grid-cols-6 gap-10 mb-12">
                     <div className="col-span-2 md:col-span-1">
@@ -66,7 +66,7 @@ export default function SiteFooter({ className = '' }) {
                             <LogoMark size={32} />
                             <span className="font-extrabold text-white text-[17px] tracking-tight leading-none">Lumenia CRM</span>
                         </div>
-                        <p className="text-slate-600 text-sm leading-relaxed">
+                        <p className="text-brand-100/70 text-sm leading-relaxed">
                             A CRM for sales teams that actually want to use their CRM. By Lumenia Lab Pvt. Ltd.
                         </p>
                     </div>
@@ -78,9 +78,9 @@ export default function SiteFooter({ className = '' }) {
                                 {links.map(({ label, href, internal }) => (
                                     <li key={label}>
                                         {internal ? (
-                                            <Link href={href} className="text-slate-600 hover:text-white text-sm transition-colors">{label}</Link>
+                                            <Link href={href} className="text-brand-100/65 hover:text-white text-sm transition-colors">{label}</Link>
                                         ) : (
-                                            <a href={href} className="text-slate-600 hover:text-white text-sm transition-colors">{label}</a>
+                                            <a href={href} className="text-brand-100/65 hover:text-white text-sm transition-colors">{label}</a>
                                         )}
                                     </li>
                                 ))}
@@ -92,31 +92,31 @@ export default function SiteFooter({ className = '' }) {
                         <div className="text-white font-semibold text-sm mb-4">Latest Blogs</div>
                         <ul className="space-y-2.5">
                             <li>
-                                <Link href="/blog" className="text-violet-400 hover:text-white text-sm font-semibold transition-colors block mb-1">Our Blog</Link>
+                                <Link href="/blog" className="text-brand-400 hover:text-white text-sm font-semibold transition-colors block mb-1">Our Blog</Link>
                             </li>
                             {latestBlogs && latestBlogs.length > 0 ? (
                                 latestBlogs.map((b) => (
                                     <li key={b.slug}>
-                                        <Link href={`/blog/${b.slug}`} className="text-slate-600 hover:text-white text-sm transition-colors block truncate max-w-[185px]" title={b.title}>
+                                        <Link href={`/blog/${b.slug}`} className="text-brand-100/65 hover:text-white text-sm transition-colors block truncate max-w-[185px]" title={b.title}>
                                             {b.title}
                                         </Link>
                                     </li>
                                 ))
                             ) : (
-                                <li className="text-slate-700 text-sm italic">No articles yet</li>
+                                <li className="text-brand-100/40 text-sm italic">No articles yet</li>
                             )}
                         </ul>
                     </div>
                 </div>
 
-                <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <p className="text-slate-700 text-sm">
+                <div className="border-t border-white/10 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p className="text-brand-100/50 text-sm">
                         © {new Date().getFullYear()} Lumenia Lab Pvt. Ltd. All rights reserved.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center sm:text-left">
-                        <span className="text-slate-700 text-sm">Lahore, Pakistan</span>
-                        <a href="tel:+923354455494" className="text-slate-700 hover:text-white text-sm transition-colors">+92 335 445 5494</a>
-                        <a href="mailto:hello@lumenialab.com" className="text-slate-700 hover:text-white text-sm transition-colors">
+                        <span className="text-brand-100/50 text-sm">Lahore, Pakistan</span>
+                        <a href="tel:+923354455494" className="text-brand-100/50 hover:text-white text-sm transition-colors">+92 335 445 5494</a>
+                        <a href="mailto:hello@lumenialab.com" className="text-brand-100/50 hover:text-white text-sm transition-colors">
                             hello@lumenialab.com
                         </a>
                     </div>

@@ -149,7 +149,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
         `}</style>
       </Head>
 
-      <div className="min-h-screen bg-[#F8F9FD] font-sans antialiased text-slate-800 flex flex-col justify-between print:bg-white print:p-0">
+      <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between print:bg-white print:p-0">
         
         {/* Header/Nav - hide on print */}
         <nav className="fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100 transition-all duration-300 print:hidden">
@@ -165,7 +165,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                     <div className="hidden md:flex items-center gap-8">
                         {navLinks.map(({ label, href }) => (
                             <a key={label} href={href}
-                               className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
+                               className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-500">{label}</a>
                         ))}
                     </div>
 
@@ -176,7 +176,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -202,7 +202,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                         </Link>
                         <Link href="/register"
                               className="block py-3 rounded-xl text-center text-sm font-bold text-white"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                             Get Started
                         </Link>
                     </div>
@@ -240,7 +240,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-4 text-xs font-bold border-b-2 transition-colors ${
                     activeTab === tab.id
-                      ? 'border-violet-600 text-violet-600 bg-white'
+                      ? 'border-brand-600 text-brand-600 bg-white'
                       : 'border-transparent text-slate-500 hover:text-slate-800'
                   }`}
                 >
@@ -261,7 +261,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-violet-500"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-brand-500"
                     />
                   </div>
 
@@ -360,7 +360,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                       <h4 className="text-xs font-bold text-slate-700 font-sans">Scope & Deliverables</h4>
                       <button
                         onClick={addService}
-                        className="text-violet-600 hover:text-violet-700 text-xs font-bold flex items-center gap-1"
+                        className="text-brand-600 hover:text-brand-700 text-xs font-bold flex items-center gap-1"
                       >
                         <Plus size={14} /> Add Line
                       </button>
@@ -380,7 +380,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                             type="text"
                             value={service.name}
                             onChange={(e) => handleServiceChange(service.id, 'name', e.target.value)}
-                            className="w-[85%] bg-transparent border-b border-transparent hover:border-slate-300 focus:border-violet-500 focus:outline-none text-xs font-bold text-slate-800"
+                            className="w-[85%] bg-transparent border-b border-transparent hover:border-slate-300 focus:border-brand-500 focus:outline-none text-xs font-bold text-slate-800"
                             placeholder="Service Name"
                           />
                           
@@ -388,7 +388,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                             value={service.desc}
                             onChange={(e) => handleServiceChange(service.id, 'desc', e.target.value)}
                             rows={2}
-                            className="w-full bg-transparent border border-transparent hover:border-slate-300 focus:border-violet-500 focus:outline-none text-xs text-slate-500 resize-none"
+                            className="w-full bg-transparent border border-transparent hover:border-slate-300 focus:border-brand-500 focus:outline-none text-xs text-slate-500 resize-none"
                             placeholder="Description"
                           />
                           
@@ -398,7 +398,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                               type="number"
                               value={service.cost}
                               onChange={(e) => handleServiceChange(service.id, 'cost', e.target.value)}
-                              className="w-20 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-violet-500 focus:outline-none text-xs font-bold text-slate-700"
+                              className="w-20 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-brand-500 focus:outline-none text-xs font-bold text-slate-700"
                             />
                           </div>
                         </div>
@@ -486,7 +486,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
 
                   <div className="border-t-2 border-slate-900 pt-4 flex justify-between items-center text-sm font-black font-sans text-slate-900">
                     <span>Total Proposed Budget:</span>
-                    <span className="text-lg text-violet-700">{formData.currency}{totalCost.toLocaleString()}</span>
+                    <span className="text-lg text-brand-700">{formData.currency}{totalCost.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -525,7 +525,7 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                 </button>
                 <button
                   onClick={handlePrint}
-                  className="px-5 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all"
+                  className="px-5 py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition-all"
                 >
                   <Printer size={14} />
                   Print Proposal / Save PDF
@@ -534,16 +534,16 @@ export default function ProposalWriter({ latestBlogs = [] }) {
             </div>
 
             {/* Upsell Box - hide on print */}
-            <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-6 rounded-2xl text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 print:hidden">
+            <div className="bg-gradient-to-r from-brand-600 to-brand2-600 p-6 rounded-2xl text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6 print:hidden">
               <div>
                 <h3 className="font-extrabold text-base">Tired of drafting proposals manually?</h3>
-                <p className="text-xs text-violet-100/90 leading-relaxed max-w-md mt-1 font-normal">
+                <p className="text-xs text-brand-100/90 leading-relaxed max-w-md mt-1 font-normal">
                   Create and send commercial proposals directly from CRM deals. Allow clients to e-sign agreements securely and auto-convert deals to project task lists instantly.
                 </p>
               </div>
               <Link
                 href="/register"
-                className="px-5 py-3 bg-white hover:bg-slate-50 text-violet-700 rounded-xl text-xs font-extrabold shadow-sm whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="px-5 py-3 bg-white hover:bg-slate-50 text-brand-700 rounded-xl text-xs font-extrabold shadow-sm whitespace-nowrap transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Create Free Account
               </Link>
@@ -574,10 +574,10 @@ export default function ProposalWriter({ latestBlogs = [] }) {
                   <div key={index} className="border border-slate-200/60 rounded-xl overflow-hidden shadow-sm">
                     <button
                       onClick={() => setActiveFaq(activeFaq === index ? null : index)}
-                      className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-violet-600 transition-colors"
+                      className="w-full px-6 py-4 text-left font-bold text-slate-800 flex items-center justify-between hover:text-brand-600 transition-colors"
                     >
                       <span>{faq.q}</span>
-                      <ChevronRight size={18} className={`text-slate-400 transition-transform ${activeFaq === index ? 'rotate-90 text-violet-500' : ''}`} />
+                      <ChevronRight size={18} className={`text-slate-400 transition-transform ${activeFaq === index ? 'rotate-90 text-brand-500' : ''}`} />
                     </button>
                     {activeFaq === index && (
                       <div className="px-6 pb-5 pt-2 text-slate-500 text-sm leading-relaxed border-t border-slate-100 font-normal">

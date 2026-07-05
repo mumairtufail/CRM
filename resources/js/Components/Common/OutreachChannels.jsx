@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 
 // Keep in sync with LeadController::CONTACT_CHANNELS (PHP).
 export const CONTACT_CHANNELS = [
-  { key: 'mail',      label: 'Email',      verb: 'via', letter: '@',  bg: '#6366f1' },
+  { key: 'mail',      label: 'Email',      verb: 'via', letter: '@',  bg: 'rgb(var(--brand2-500))' },
   { key: 'call',      label: 'Phone Call', verb: 'via', letter: 'ph', bg: '#0d9488' },
   { key: 'linkedin',  label: 'LinkedIn',   verb: 'on',  letter: 'in', bg: '#0A66C2' },
   { key: 'instagram', label: 'Instagram',  verb: 'on',  letter: 'ig', bg: '#E1306C' },
@@ -95,7 +95,7 @@ export default function OutreachChannels({ lead, variant = 'cell' }) {
             </span>
             <span
               className={`w-3.5 h-3.5 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                active ? 'bg-violet-600 border-violet-600' : 'border-slate-300'
+                active ? 'bg-brand-600 border-brand-600' : 'border-slate-300'
               }`}
             >
               {active && <Check size={10} className="text-white" />}

@@ -144,7 +144,7 @@ export default function Form({ blog }) {
         <div className="py-6 px-4 max-w-4xl mx-auto">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-[13px] text-slate-400 mb-6">
-            <Link href="/admin/blogs" className="hover:text-violet-600 transition-colors">Blogs</Link>
+            <Link href="/admin/blogs" className="hover:text-brand-600 transition-colors">Blogs</Link>
             <span>/</span>
             <span className="text-slate-600 font-medium">{isEdit ? 'Edit Post' : 'Write New Post'}</span>
           </div>
@@ -152,7 +152,7 @@ export default function Form({ blog }) {
           <div className="mb-6 flex items-start justify-between">
             <div>
               <h1 className="text-[20px] font-bold text-slate-800 mb-1 flex items-center gap-2">
-                <FileText size={22} className="text-violet-600" />
+                <FileText size={22} className="text-brand-600" />
                 {isEdit ? 'Edit Blog Post' : 'Compose Blog Post'}
               </h1>
               <p className="text-[13px] text-slate-400 font-normal leading-relaxed">
@@ -181,7 +181,7 @@ export default function Form({ blog }) {
                     value={data.title}
                     onChange={e => setData('title', e.target.value)}
                     placeholder="Enter an attention-grabbing title..."
-                    className="w-full h-10 px-3.5 text-[13.5px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none font-semibold text-slate-800"
+                    className="w-full h-10 px-3.5 text-[13.5px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none font-semibold text-slate-800"
                   />
                   {errors.title && <p className="text-red-500 text-[11.5px] mt-1">{errors.title}</p>}
                 </div>
@@ -196,7 +196,7 @@ export default function Form({ blog }) {
                     value={data.subtitle}
                     onChange={e => setData('subtitle', e.target.value)}
                     placeholder="A brief subtitle explaining the post..."
-                    className="w-full h-10 px-3.5 text-[13px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-600"
+                    className="w-full h-10 px-3.5 text-[13px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-slate-600"
                   />
                   {errors.subtitle && <p className="text-red-500 text-[11.5px] mt-1">{errors.subtitle}</p>}
                 </div>
@@ -234,14 +234,14 @@ export default function Form({ blog }) {
                     type="checkbox"
                     checked={data.is_published}
                     onChange={e => setData('is_published', e.target.checked)}
-                    className="w-4.5 h-4.5 accent-violet-600 rounded cursor-pointer"
+                    className="w-4.5 h-4.5 accent-brand-600 rounded cursor-pointer"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={processing}
-                  className="w-full py-2.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-[13px] font-bold text-white flex items-center justify-center gap-1.5 shadow-sm shadow-violet-500/10 transition-all disabled:opacity-50"
+                  className="w-full py-2.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-[13px] font-bold text-white flex items-center justify-center gap-1.5 shadow-sm shadow-brand-500/10 transition-all disabled:opacity-50"
                 >
                   <Save size={14} /> Save Post
                 </button>
@@ -250,7 +250,7 @@ export default function Form({ blog }) {
               {/* Thumbnail Image Card */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
                 <h3 className="text-[13.5px] font-bold text-slate-800 pb-2 border-b border-slate-100 flex items-center gap-1.5">
-                  <ImageIcon size={15} className="text-violet-500" /> Cover Thumbnail
+                  <ImageIcon size={15} className="text-brand-500" /> Cover Thumbnail
                 </h3>
 
                 {imagePreview ? (
@@ -267,10 +267,10 @@ export default function Form({ blog }) {
                 ) : (
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="border-2 border-dashed border-slate-200 hover:border-violet-400 rounded-lg p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 group"
+                    className="border-2 border-dashed border-slate-200 hover:border-brand-400 rounded-lg p-6 text-center cursor-pointer transition-colors flex flex-col items-center justify-center gap-2 group"
                   >
-                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-150 group-hover:bg-violet-50 transition-colors">
-                      <ImageIcon size={16} className="text-slate-400 group-hover:text-violet-500" />
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center border border-slate-150 group-hover:bg-brand-50 transition-colors">
+                      <ImageIcon size={16} className="text-slate-400 group-hover:text-brand-500" />
                     </div>
                     <div>
                       <span className="block text-[12px] font-bold text-slate-700">Upload Image</span>
@@ -310,7 +310,7 @@ export default function Form({ blog }) {
                       }
                     }}
                     placeholder="https://images.unsplash.com/photo-..."
-                    className="w-full h-8 px-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                    className="w-full h-8 px-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none"
                   />
                   {errors.image_url_link && <p className="text-red-500 text-[11.5px] mt-1">{errors.image_url_link}</p>}
                 </div>
@@ -326,7 +326,7 @@ export default function Form({ blog }) {
                     type="button"
                     onClick={suggestSeo}
                     disabled={suggesting}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-violet-600 hover:text-violet-850 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 text-[11px] font-bold text-brand-600 hover:text-brand-850 transition-colors disabled:opacity-50"
                   >
                     <Sparkles size={12} className={suggesting ? 'animate-pulse' : ''} />
                     {suggesting ? 'Suggesting...' : 'AI Suggest'}
@@ -343,7 +343,7 @@ export default function Form({ blog }) {
                     onChange={e => setData('description', e.target.value)}
                     placeholder="Short description for SEO snippets (Google searches)..."
                     rows="3"
-                    className="w-full p-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none text-slate-600 resize-none leading-normal"
+                    className="w-full p-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none text-slate-600 resize-none leading-normal"
                   />
                   <p className="text-[10px] text-slate-400 mt-1">
                     Ideal length: 150-160 characters.
@@ -360,11 +360,11 @@ export default function Form({ blog }) {
                     {data.tags.map((tag, idx) => (
                       <span
                         key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-violet-50 text-violet-700 text-[11.5px] font-medium border border-violet-100"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-brand-50 text-brand-700 text-[11.5px] font-medium border border-brand-100"
                       >
                         {tag}
                         <button type="button" onClick={() => removeTag(idx)}>
-                          <X size={11} className="text-violet-400 hover:text-violet-600" />
+                          <X size={11} className="text-brand-400 hover:text-brand-600" />
                         </button>
                       </span>
                     ))}
@@ -375,7 +375,7 @@ export default function Form({ blog }) {
                     onChange={e => setTagInput(e.target.value)}
                     onKeyDown={handleAddTag}
                     placeholder="Add tag and press Enter"
-                    className="w-full h-8 px-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-violet-600 focus:ring-2 focus:ring-violet-100 transition-all outline-none"
+                    className="w-full h-8 px-2.5 text-[12px] rounded-lg border border-slate-200 focus:border-brand-600 focus:ring-2 focus:ring-brand-100 transition-all outline-none"
                   />
                 </div>
               </div>

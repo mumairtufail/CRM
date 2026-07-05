@@ -19,20 +19,20 @@ export default function Index({ blogs }) {
         <meta property="og:type" content="website" />
       </Head>
 
-      <div className="min-h-screen bg-[#F4F2FF] font-sans antialiased text-slate-800">
+      <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
         {/* Simple Navbar */}
-        <header className="sticky top-0 z-50 bg-[#F4F2FF]/85 backdrop-blur-md border-b border-slate-100">
+        <header className="sticky top-0 z-50 bg-[rgb(var(--brand-tint))]/85 backdrop-blur-md border-b border-slate-100">
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
               <Logo size={32} showText={true} text="LumeniaCRM" textClassName="text-[17px] font-extrabold" />
             </Link>
             <nav className="hidden md:flex items-center gap-6 text-[14px] font-semibold text-slate-600">
-              <Link href="/" className="hover:text-violet-600 transition-colors">Home</Link>
-              <Link href="/blog" className="text-violet-600">Blog</Link>
-              <Link href="/login" className="hover:text-violet-600 transition-colors">Sign in</Link>
+              <Link href="/" className="hover:text-brand-600 transition-colors">Home</Link>
+              <Link href="/blog" className="text-brand-600">Blog</Link>
+              <Link href="/login" className="hover:text-brand-600 transition-colors">Sign in</Link>
               <Link
                 href="/register"
-                className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-violet-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-brand-500/10 transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
                 Get Started
               </Link>
@@ -44,11 +44,11 @@ export default function Index({ blogs }) {
         {/* Hero Section */}
         <section className="py-16 md:py-24 border-b border-slate-200/50 relative overflow-hidden bg-gradient-to-b from-white to-transparent">
           {/* Subtle background glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full opacity-[0.04] pointer-events-none blur-3xl bg-violet-600" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full opacity-[0.04] pointer-events-none blur-3xl bg-brand-600" />
           
           <div className="max-w-4xl mx-auto px-6 text-center">
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-6">
-              The <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">LumeniaCRM</span> Blog
+              The <span className="bg-gradient-to-r from-brand-600 to-brand2-600 bg-clip-text text-transparent">LumeniaCRM</span> Blog
             </h1>
             <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed font-normal">
               Practical advice, design system deep dives, and expert pipeline tips to help you build relationships and win more sales.
@@ -83,7 +83,7 @@ export default function Index({ blogs }) {
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-violet-50 text-violet-500">
+                      <div className="w-full h-full flex items-center justify-center bg-brand-50 text-brand-500">
                         <BookOpen size={24} />
                       </div>
                     )}
@@ -106,7 +106,7 @@ export default function Index({ blogs }) {
 
                       {/* Title */}
                       <Link href={`/blog/${post.slug}`} className="block">
-                        <h2 className="text-[17px] font-bold text-slate-800 leading-snug group-hover:text-violet-600 transition-colors line-clamp-2">
+                        <h2 className="text-[17px] font-bold text-slate-800 leading-snug group-hover:text-brand-600 transition-colors line-clamp-2">
                           {post.title}
                         </h2>
                       </Link>
@@ -153,7 +153,7 @@ export default function Index({ blogs }) {
                   dangerouslySetInnerHTML={{ __html: link.label }}
                   className={`px-3.5 py-1.5 rounded-lg border text-[13px] transition-colors ${
                     link.active
-                      ? 'bg-violet-600 border-violet-600 text-white font-bold'
+                      ? 'bg-brand-600 border-brand-600 text-white font-bold'
                       : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                   } ${!link.url && 'opacity-50 cursor-not-allowed hover:bg-white'}`}
                 />

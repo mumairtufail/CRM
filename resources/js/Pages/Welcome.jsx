@@ -13,6 +13,7 @@ import SiteFooter from '@/Components/Common/SiteFooter';
 import FeatureOrbit from '@/Components/Marketing/FeatureOrbit';
 import ActivityShowcase from '@/Components/Marketing/ActivityShowcase';
 import ModuleShowcase, { MODULES } from '@/Components/Marketing/ModuleShowcase';
+import HeroVisual from '@/Components/Marketing/HeroVisual';
 import { cn } from '@/lib/utils';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
@@ -49,9 +50,15 @@ const WHY_CHOOSE_US = [
 ];
 
 const TESTIMONIALS = [
-    { name: 'Marcus Reid',     role: 'Sales Manager, USA', avatar: 'MR', text: 'Our WhatsApp number used to get messages that just sat there until someone had time. Now the bot answers from the FAQ we wrote ourselves, and about a third of those chats turn into a real lead before I even see them.' },
-    { name: 'Dana Whitfield',  role: 'Growth Lead, USA',   avatar: 'DW', text: 'Turned on automated follow ups in April and picked up 11 deals that month from people who never replied to the first email. That is money we were just leaving on the table before.' },
-    { name: 'Julien Marchand', role: 'Founder, Canada',    avatar: 'JM', text: 'I used to run three spreadsheets just to remember who I had called that week. Now it is one board. Drag a card and it is done. Gets me back a solid afternoon every week I used to lose untangling my own mess.' },
+    { name: 'Marcus Reid',     role: 'Sales Manager, USA',        avatar: 'MR', text: 'Our WhatsApp number used to get messages that just sat there until someone had time. Now the bot answers from the FAQ we wrote ourselves, and about a third of those chats turn into a real lead before I even see them.' },
+    { name: 'Priya Nair',      role: 'Founder, India',            avatar: 'PN', text: 'I typed "marketing directors at Shopify stores under 50 employees, UK" and had 40 verified people with emails in under a minute. I used to pay a VA a week to build that same list by hand.' },
+    { name: 'Dana Whitfield',  role: 'Growth Lead, USA',          avatar: 'DW', text: 'Turned on automated follow ups in April and picked up 11 deals that month from people who never replied to the first email. That is money we were just leaving on the table before.' },
+    { name: 'Julien Marchand', role: 'Founder, Canada',           avatar: 'JM', text: 'I used to run three spreadsheets just to remember who I had called that week. Now it is one board. Drag a card and it is done. Gets me back a solid afternoon every week I used to lose untangling my own mess.' },
+    { name: 'Tom Hendricks',   role: 'BDR, Australia',            avatar: 'TH', text: 'I was sure the AI search would just hand me scraped junk. Every contact it has pulled so far has had a working email and the right title attached. It quietly replaced two paid tools we were stacking on top of each other.' },
+    { name: 'Sofia Delgado',   role: 'Marketing Coordinator, Spain', avatar: 'SD', text: 'Opens, clicks, and replies all sit on one timeline per contact, so I stopped exporting CSVs into a separate analytics tool just to know who to chase next. Campaign tracking here is genuinely that easy.' },
+    { name: 'Ben Foster',      role: 'Sales Manager, UK',         avatar: 'BF', text: 'Any lead that goes quiet for five days gets a follow up drafted automatically in my own voice, I just review and hit send. That alone closed four deals last quarter that would have gone cold otherwise.' },
+    { name: 'Ryan Ostrowski',  role: 'Sales Ops, USA',            avatar: 'RO', text: 'Set up a four step email campaign in fifteen minutes and had reply rates per step visible by the next morning. Our old platform took a full day just to render that same report.' },
+    { name: 'Helena Brandt',   role: 'Ops Manager, Germany',      avatar: 'HB', text: 'We moved off three separate tools in an afternoon and support answered every question we had within the hour. Nothing about switching over felt risky.' },
 ];
 
 const FAQS = [
@@ -101,7 +108,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans antialiased">
+        <div className="min-h-screen bg-brand-tint font-sans antialiased">
             <Head>
                 <title>{seo.meta_title || 'LumeniaCRM'}</title>
                 <meta name="description" content={seo.meta_description || ''} />
@@ -167,7 +174,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         <div className="hidden md:flex items-center gap-8">
                             {navLinks.map(({ label, href }) => (
                                 <a key={label} href={href}
-                                   className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
+                                   className="text-sm font-medium text-slate-600 transition-colors hover:text-brand-500">{label}</a>
                             ))}
                         </div>
 
@@ -178,7 +185,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             </Link>
                             <Link href="/register"
                                   className="px-4 py-2 rounded-lg text-sm font-semibold text-white hover:opacity-90 transition-opacity"
-                                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                  style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                                 Get Started
                             </Link>
                         </div>
@@ -203,7 +210,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             </Link>
                             <Link href="/register"
                                   className="block py-3 rounded-xl text-center text-sm font-semibold text-white"
-                                  style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                  style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                                 Get Started
                             </Link>
                         </div>
@@ -212,14 +219,14 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </nav>
 
             {/* ── Hero ─────────────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden pt-16 bg-white">
+            <section className="relative overflow-hidden pt-16 bg-brand-tint">
                 <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
                     <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
 
                         <motion.div variants={stagger} initial="hidden" animate="show">
                             <motion.div variants={fadeUp} className="flex items-center gap-3 mb-6">
-                                <div className="h-px w-10 bg-violet-400" />
-                                <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Lumenia CRM</span>
+                                <div className="h-px w-10 bg-brand-400" />
+                                <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Lumenia CRM</span>
                             </motion.div>
 
                             <motion.h1 variants={fadeUp}
@@ -238,8 +245,8 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                 <Link href="/register"
                                       className="group relative overflow-hidden inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-base
                                                  font-semibold text-white transition-all
-                                                 hover:shadow-xl hover:shadow-violet-500/20 hover:-translate-y-px"
-                                      style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                                 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-px"
+                                      style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                                     <span className="relative">Create Free Account</span>
                                     <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                                 </Link>
@@ -253,11 +260,11 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-x-8 gap-y-3">
                                 <div className="flex items-center gap-3">
                                     <div className="flex -space-x-2.5">
-                                        {TESTIMONIALS.map(({ avatar }, i) => (
+                                        {TESTIMONIALS.slice(0, 3).map(({ avatar }, i) => (
                                             <div key={avatar}
                                                  className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white
                                                             border-2 border-white shadow-sm"
-                                                 style={{ background: `linear-gradient(135deg, ${['#7C3AED','#3B82F6','#10B981'][i]}, #4F46E5)` }}>
+                                                 style={{ background: `linear-gradient(135deg, ${['rgb(var(--brand-600))','#3B82F6','#10B981'][i]}, rgb(var(--brand2-600)))` }}>
                                                 {avatar}
                                             </div>
                                         ))}
@@ -272,7 +279,10 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                 </div>
                                 <div className="flex items-center gap-5 text-slate-400 text-xs">
                                     <span><span className="text-slate-800 font-bold">500+</span> workspaces</span>
-                                    <span><span className="text-slate-800 font-bold">50k+</span> leads tracked</span>
+                                    <span className="flex items-center gap-1.5">
+                                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0866FF] fill-[#0866FF]/10" />
+                                        <span className="text-slate-800 font-semibold">Meta Verified</span>
+                                    </span>
                                 </div>
                             </motion.div>
                         </motion.div>
@@ -283,32 +293,14 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
                             className="relative"
                         >
-                            <img
-                                src="/images/marketing/hero-team.jpg"
-                                alt="A sales team meeting and smiling together in a modern office"
-                                className="w-full aspect-[4/3] object-cover rounded-3xl shadow-xl"
-                            />
-                            <div className="absolute -bottom-5 -left-5 sm:-left-8 bg-white rounded-2xl shadow-lg border border-slate-100 px-4 py-3 flex items-center gap-3 max-w-[240px]">
-                                <div className="flex -space-x-2 shrink-0">
-                                    {TESTIMONIALS.map(({ avatar }, i) => (
-                                        <div key={avatar}
-                                             className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white border-2 border-white"
-                                             style={{ background: `linear-gradient(135deg, ${['#7C3AED','#3B82F6','#10B981'][i]}, #4F46E5)` }}>
-                                            {avatar}
-                                        </div>
-                                    ))}
-                                </div>
-                                <p className="text-slate-700 text-xs font-medium leading-snug">
-                                    Trusted by 500+ sales teams
-                                </p>
-                            </div>
+                            <HeroVisual />
                         </motion.div>
                     </div>
                 </div>
             </section>
 
             {/* ── Works with strip ─────────────────────────────────────────── */}
-            <section className="py-7 border-y border-slate-100 bg-white">
+            <section className="py-7 border-y border-slate-100 bg-brand-tint">
                 <div className="max-w-5xl mx-auto px-4">
                     <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10">
                         <span className="text-slate-300 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
@@ -327,12 +319,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Why choose us ────────────────────────────────────────────── */}
-            <section id="why-us" className="py-24 bg-white">
+            <section id="why-us" className="py-24 bg-brand-tint">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14 max-w-2xl">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Why choose us</span>
+                            <div className="h-px w-10 bg-brand-400" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Why choose us</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-4">
                             Built to replace the mess, not add to it.
@@ -343,17 +335,22 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                     </motion.div>
 
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                                className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {WHY_CHOOSE_US.map(({ icon: Icon, title, description }) => (
+                                className="grid grid-cols-1 sm:grid-cols-2 rounded-3xl border border-slate-200 bg-white overflow-hidden divide-y divide-slate-200 sm:divide-y-0">
+                        {WHY_CHOOSE_US.map(({ icon: Icon, title, description }, i) => (
                             <motion.div key={title} variants={fadeUp}
-                                        className="rounded-2xl border border-slate-100 p-6 flex gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-violet-50">
-                                    <Icon className="w-5 h-5 text-violet-600" />
+                                        className={cn(
+                                            'group relative p-8 sm:p-10 transition-colors duration-300 hover:bg-brand-50/40',
+                                            i % 2 === 0 && 'sm:border-r sm:border-slate-200',
+                                            i < 2 && 'sm:border-b sm:border-slate-200',
+                                        )}>
+                                <span className="absolute top-7 right-8 text-6xl font-black leading-none text-slate-100 group-hover:text-brand-100 transition-colors duration-300 select-none tabular-nums">
+                                    {String(i + 1).padStart(2, '0')}
+                                </span>
+                                <div className="relative w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-brand-50 mb-5">
+                                    <Icon className="w-5 h-5 text-brand-600" />
                                 </div>
-                                <div>
-                                    <h3 className="text-[15px] font-bold text-slate-900 mb-1.5">{title}</h3>
-                                    <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
-                                </div>
+                                <h3 className="relative text-[15px] font-bold text-slate-900 mb-1.5 pr-14">{title}</h3>
+                                <p className="relative text-slate-500 text-sm leading-relaxed max-w-sm">{description}</p>
                             </motion.div>
                         ))}
                     </motion.div>
@@ -361,45 +358,19 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Modules in depth ─────────────────────────────────────────── */}
-            <section id="modules" className="py-24 bg-white border-t border-slate-100">
+            <section id="modules" className="py-24 bg-brand-tint border-t border-slate-100">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-10 lg:gap-16 items-start">
-                        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                                    className="lg:sticky lg:top-28 rounded-3xl border border-slate-100 bg-slate-50/60 p-6 sm:p-8">
-                            <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                                <div className="h-px w-10 bg-violet-400" />
-                                <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Features</span>
-                            </motion.div>
-                            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
-                                Every module, explained.
-                            </motion.h2>
-                            <motion.p variants={fadeUp} className="text-slate-500 text-lg mt-3 mb-8">
-                                What each part actually does, and how it fits with the rest.
-                            </motion.p>
-
-                            <motion.div variants={fadeUp} className="space-y-0.5">
-                                {MODULES.map(({ tag }) => (
-                                    <div key={tag}
-                                         className="flex items-center gap-2.5 py-2.5 border-t border-slate-200/70 first:border-t-0 text-sm font-semibold text-slate-700">
-                                        <Check className="w-3.5 h-3.5 text-violet-500 shrink-0" />
-                                        {tag}
-                                    </div>
-                                ))}
-                            </motion.div>
-                        </motion.div>
-
-                        <ModuleShowcase />
-                    </div>
+                    <ModuleShowcase />
                 </div>
             </section>
 
             {/* ── The Flow ─────────────────────────────────────────────────── */}
-            <section id="flow" className="py-24" style={{ background: '#F7F6FE' }}>
+            <section id="flow" className="py-24" style={{ background: 'rgb(var(--brand-tint))' }}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14 max-w-2xl">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-500" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">How it works</span>
+                            <div className="h-px w-10 bg-brand-500" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">How it works</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-4">
                             From a first hello to a closed deal, in one place.
@@ -421,12 +392,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Secondary tools ──────────────────────────────────────────── */}
-            <section id="tools" className="py-24 bg-white border-t border-slate-100">
+            <section id="tools" className="py-24 bg-brand-tint border-t border-slate-100">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Also included</span>
+                            <div className="h-px w-10 bg-brand-400" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Also included</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
                             A few more things, so nothing needs a second tool.
@@ -438,8 +409,8 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         {SECONDARY_FEATURES.map(({ icon: Icon, title, description }) => (
                             <motion.div key={title} variants={fadeUp}
                                         className="rounded-2xl border border-slate-100 p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-violet-50">
-                                    <Icon className="w-[18px] h-[18px] text-violet-600" />
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-brand-50">
+                                    <Icon className="w-[18px] h-[18px] text-brand-600" />
                                 </div>
                                 <h3 className="text-[15px] font-bold text-slate-900 mb-2">{title}</h3>
                                 <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
@@ -450,12 +421,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Free Tools ───────────────────────────────────────────────── */}
-            <section id="free-tools" className="py-24 border-t border-slate-100" style={{ background: '#F8F9FD' }}>
+            <section id="free-tools" className="py-24 border-t border-slate-100" style={{ background: 'rgb(var(--brand-tint))' }}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12 max-w-xl">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Free tools</span>
+                            <div className="h-px w-10 bg-brand-400" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Free tools</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-3">
                             A few things you can use right now, free, no account needed.
@@ -470,21 +441,21 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                            divide-y divide-slate-200 sm:divide-y-0 sm:divide-x overflow-hidden bg-white">
                         {FREE_TOOLS.map(({ icon: Icon, title, description, href, cta }, i) => (
                             <motion.div key={title} variants={fadeUp}
-                                        className="group relative p-7 sm:p-8 flex flex-col hover:bg-violet-50/50 transition-colors">
+                                        className="group relative p-7 sm:p-8 flex flex-col hover:bg-brand-50/50 transition-colors">
                                 <div className="flex items-start justify-between mb-8">
-                                    <span className="text-6xl font-black leading-none text-violet-100 group-hover:text-violet-200 transition-colors select-none">
+                                    <span className="text-6xl font-black leading-none text-brand-100 group-hover:text-brand-200 transition-colors select-none">
                                         {String(i + 1).padStart(2, '0')}
                                     </span>
-                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-violet-50 group-hover:bg-violet-600 transition-colors shrink-0">
-                                        <Icon className="w-4 h-4 text-violet-600 group-hover:text-white transition-colors" />
+                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-brand-50 group-hover:bg-brand-600 transition-colors shrink-0">
+                                        <Icon className="w-4 h-4 text-brand-600 group-hover:text-white transition-colors" />
                                     </div>
                                 </div>
-                                <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-violet-700 transition-colors">
+                                <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-brand-700 transition-colors">
                                     {title}
                                 </h3>
                                 <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-1">{description}</p>
                                 <Link href={href}
-                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900 group-hover:text-violet-600 transition-colors">
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900 group-hover:text-brand-600 transition-colors">
                                     {cta}
                                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                                 </Link>
@@ -495,12 +466,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Testimonials ─────────────────────────────────────────────── */}
-            <section className="py-24 border-t border-slate-100" style={{ background: '#F8F9FD' }}>
+            <section className="py-24 border-t border-slate-100" style={{ background: 'rgb(var(--brand-tint))' }}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">What people say</span>
+                            <div className="h-px w-10 bg-brand-400" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">What people say</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
                             From teams that actually use it.
@@ -508,20 +479,20 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                     </motion.div>
 
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                                className="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-5 lg:h-[560px]">
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                         {TESTIMONIALS.map(({ name, role, avatar, text }, i) => {
                             const featured = i === 0;
                             return (
                                 <motion.div key={name} variants={fadeUp}
                                             className={cn(
                                                 'relative rounded-3xl p-8 flex flex-col justify-between overflow-hidden',
-                                                featured ? 'lg:col-span-2 lg:row-span-2 min-h-[280px]' : 'min-h-[220px]',
+                                                featured ? 'sm:col-span-2 min-h-[280px]' : 'min-h-[220px]',
                                             )}
                                             style={featured
-                                                ? { background: 'linear-gradient(155deg,#1B1030 0%,#0F0A1F 100%)' }
+                                                ? { background: 'linear-gradient(155deg,rgb(var(--brand-ink2)) 0%,rgb(var(--brand-ink)) 100%)' }
                                                 : { background: '#fff', border: '1px solid #F1F5F9' }}>
                                     <Quote
-                                        className={cn('absolute -top-4 -right-4 w-32 h-32 pointer-events-none', featured ? 'text-white/[0.04]' : 'text-violet-50')}
+                                        className={cn('absolute -top-4 -right-4 w-32 h-32 pointer-events-none', featured ? 'text-white/[0.04]' : 'text-brand-50')}
                                         fill="currentColor" strokeWidth={0}
                                     />
                                     <div className="relative">
@@ -534,7 +505,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                     </div>
                                     <div className="relative flex items-center gap-2.5 mt-6">
                                         <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
-                                             style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                             style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                                             {avatar}
                                         </div>
                                         <div>
@@ -550,13 +521,13 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Pricing ──────────────────────────────────────────────────── */}
-            <section id="pricing" className="py-24" style={{ background: '#0A0812' }}>
+            <section id="pricing" className="py-24" style={{ background: 'linear-gradient(155deg,rgb(var(--brand-ink2)) 0%,rgb(var(--brand-ink)) 100%)' }}>
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center">
                         <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-5">
-                            <div className="h-px w-10 bg-violet-500" />
-                            <span className="text-violet-400 text-xs font-bold uppercase tracking-widest">Pricing</span>
-                            <div className="h-px w-10 bg-violet-500" />
+                            <div className="h-px w-10 bg-brand-500" />
+                            <span className="text-brand-400 text-xs font-bold uppercase tracking-widest">Pricing</span>
+                            <div className="h-px w-10 bg-brand-500" />
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">
                             Pricing that fits your team.
@@ -577,13 +548,13 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                     variants={fadeUp}
                                     className="relative rounded-2xl p-8 flex flex-col border"
                                     style={{
-                                        background: plan.is_featured ? 'rgba(124,58,237,0.08)' : 'rgba(255,255,255,0.025)',
-                                        borderColor: plan.is_featured ? 'rgba(124,58,237,0.5)' : 'rgba(255,255,255,0.08)',
+                                        background: plan.is_featured ? 'rgb(var(--brand-600) / 0.08)' : 'rgba(255,255,255,0.025)',
+                                        borderColor: plan.is_featured ? 'rgb(var(--brand-600) / 0.5)' : 'rgba(255,255,255,0.08)',
                                     }}
                                 >
                                     {plan.is_featured && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold text-white whitespace-nowrap"
-                                            style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                                             <Star className="w-3 h-3 fill-white" /> Most Popular
                                         </div>
                                     )}
@@ -608,12 +579,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                         ) : (
                                             <>
                                                 <div className="flex items-start gap-2.5 text-white/70 text-sm">
-                                                    <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                                    <Check className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
                                                     Core CRM, leads, pipeline, invoicing, reports, team
                                                 </div>
                                                 {plan.modules.map((m) => (
                                                     <div key={m.id} className="flex items-start gap-2.5 text-white/70 text-sm">
-                                                        <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
+                                                        <Check className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
                                                         {m.name}
                                                     </div>
                                                 ))}
@@ -625,10 +596,10 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                         className={cn(
                                             'group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-px',
                                             plan.is_featured
-                                                ? 'text-white hover:opacity-90 hover:shadow-2xl hover:shadow-violet-500/25'
+                                                ? 'text-white hover:opacity-90 hover:shadow-2xl hover:shadow-brand-500/25'
                                                 : 'text-white/70 border border-white/15 hover:bg-white/5 hover:text-white'
                                         )}
-                                        style={plan.is_featured ? { background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' } : undefined}
+                                        style={plan.is_featured ? { background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' } : undefined}
                                     >
                                         {plan.cta_text || 'Get started'}
                                         <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
@@ -644,26 +615,26 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Live Timeline ─────────────────────────────────────────────── */}
-            <section className="py-20 bg-white">
+            <section className="py-20 bg-brand-tint">
                 <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <ActivityShowcase />
                 </div>
             </section>
 
             {/* ── FAQ ──────────────────────────────────────────────────────── */}
-            <section id="faq" className="py-24 bg-white">
+            <section id="faq" className="py-24 bg-brand-tint">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">FAQ</span>
+                            <div className="h-px w-10 bg-brand-400" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">FAQ</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 mb-4">
                             Questions.
                         </motion.h2>
                         <motion.p variants={fadeUp} className="text-slate-500 text-lg">
                             Still unsure?{' '}
-                            <a href="mailto:hello@lumenialab.com" className="text-violet-600 hover:underline font-medium">
+                            <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline font-medium">
                                 Email us directly.
                             </a>
                         </motion.p>
@@ -687,7 +658,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                         animate={{ rotate: openFaq === idx ? 180 : 0 }}
                                         transition={{ duration: 0.22 }}
                                         className="flex-shrink-0">
-                                        <ChevronDown className="w-5 h-5 text-violet-500" />
+                                        <ChevronDown className="w-5 h-5 text-brand-500" />
                                     </motion.span>
                                 </button>
                                 <AnimatePresence initial={false}>
@@ -711,13 +682,13 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Contact ──────────────────────────────────────────────────── */}
-            <section id="contact" className="py-24" style={{ background: '#F8F9FD' }}>
+            <section id="contact" className="py-24" style={{ background: 'rgb(var(--brand-tint))' }}>
                 <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Get in touch</span>
+                            <div className="h-px w-10 bg-brand-400" />
+                            <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Get in touch</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-4">
                             Let's talk.
@@ -738,9 +709,9 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             className="lg:col-span-2 space-y-8">
 
                             {[
-                                { icon: Mail,    title: 'Email us',      value: 'hello@lumenialab.com',   sub: 'We reply within 24 hours', color: '#7C3AED', bg: '#F5F3FF' },
-                                { icon: Phone,   title: 'Call us',       value: '+92 335 445 5494',       sub: 'Available 24 hours',        color: '#059669', bg: '#ECFDF5' },
-                                { icon: MapPin,  title: 'Headquarters',  value: 'Lahore, Pakistan',        sub: 'Lumenia Lab Pvt. Ltd.',     color: '#D97706', bg: '#FFFBEB' },
+                                { icon: Mail,    title: 'Email us',      value: 'hello@lumenialab.com',   sub: 'We reply within 24 hours', color: 'rgb(var(--brand-600))', bg: 'rgb(var(--brand-50))' },
+                                { icon: Phone,   title: 'Call us',       value: '+92 335 445 5494',       sub: 'Available 24 hours',        color: 'rgb(var(--brand2-600))', bg: 'rgb(var(--brand2-50))' },
+                                { icon: MapPin,  title: 'Headquarters',  value: 'Lahore, Pakistan',        sub: 'Lumenia Lab Pvt. Ltd.',     color: '#475569', bg: '#F1F5F9' },
                             ].map(({ icon: Icon, title, value, sub, color, bg }) => (
                                 <div key={title} className="flex items-start gap-4">
                                     <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: bg }}>
@@ -773,7 +744,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                     </p>
                                     <button
                                         onClick={() => setContactSent(false)}
-                                        className="mt-6 text-violet-600 text-sm font-semibold hover:underline"
+                                        className="mt-6 text-brand-600 text-sm font-semibold hover:underline"
                                     >
                                         Send another message
                                     </button>
@@ -794,7 +765,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                                 value={contact.data.name}
                                                 onChange={e => contact.setData('name', e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900
-                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
                                             />
                                             {contact.errors.name && <p className="text-red-500 text-xs mt-1">{contact.errors.name}</p>}
                                         </div>
@@ -809,7 +780,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                                 value={contact.data.email}
                                                 onChange={e => contact.setData('email', e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900
-                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
                                             />
                                             {contact.errors.email && <p className="text-red-500 text-xs mt-1">{contact.errors.email}</p>}
                                         </div>
@@ -826,7 +797,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                                 value={contact.data.company}
                                                 onChange={e => contact.setData('company', e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900
-                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
                                             />
                                         </div>
                                         <div>
@@ -839,7 +810,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                                 value={contact.data.phone}
                                                 onChange={e => contact.setData('phone', e.target.value)}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900
-                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                                                           text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
                                             />
                                         </div>
                                     </div>
@@ -855,7 +826,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                             value={contact.data.subject}
                                             onChange={e => contact.setData('subject', e.target.value)}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900
-                                                       text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition"
+                                                       text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition"
                                         />
                                         {contact.errors.subject && <p className="text-red-500 text-xs mt-1">{contact.errors.subject}</p>}
                                     </div>
@@ -871,7 +842,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                             value={contact.data.message}
                                             onChange={e => contact.setData('message', e.target.value)}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-900
-                                                       text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-transparent transition resize-none"
+                                                       text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent transition resize-none"
                                         />
                                         {contact.errors.message && <p className="text-red-500 text-xs mt-1">{contact.errors.message}</p>}
                                     </div>
@@ -881,7 +852,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                         disabled={contact.processing}
                                         className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-white
                                                    text-sm font-semibold transition-all hover:opacity-90 disabled:opacity-60"
-                                        style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                                        style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}
                                     >
                                         {contact.processing ? (
                                             <>
@@ -907,10 +878,10 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
 
             {/* ── Final CTA ────────────────────────────────────────────────── */}
             <section className="py-28 relative overflow-hidden"
-                     style={{ background: 'linear-gradient(155deg,#08060F 0%,#130F24 100%)' }}>
+                     style={{ background: 'linear-gradient(155deg,rgb(var(--brand-ink2)) 0%,rgb(var(--brand-ink)) 100%)' }}>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-[700px] h-[500px] rounded-full"
-                         style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.2) 0%, transparent 65%)', filter: 'blur(60px)' }} />
+                         style={{ background: 'radial-gradient(ellipse, rgb(var(--brand-600) / 0.2) 0%, transparent 65%)', filter: 'blur(60px)' }} />
                 </div>
 
                 <motion.div
@@ -931,8 +902,8 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         <Link href="/register"
                               className="group flex items-center justify-center gap-2 px-10 py-4 rounded-xl text-base
                                          font-semibold text-white transition-all hover:opacity-90
-                                         hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5"
-                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                                         hover:shadow-2xl hover:shadow-brand-500/30 hover:-translate-y-0.5"
+                              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                             Create Free Account
                             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                         </Link>

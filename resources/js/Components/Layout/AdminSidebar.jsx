@@ -42,11 +42,11 @@ export default function AdminSidebar({ open, onToggle }) {
     >
       {/* Top accent line */}
       <div className="absolute top-0 inset-x-0 h-px"
-        style={{ background: 'linear-gradient(90deg, transparent, rgba(124,58,237,0.5), transparent)' }} />
+        style={{ background: 'linear-gradient(90deg, transparent, rgb(var(--brand-600) / 0.5), transparent)' }} />
 
       {/* Background orb */}
       <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full opacity-[0.06] pointer-events-none"
-        style={{ background: 'radial-gradient(circle, #7C3AED, transparent 70%)' }} />
+        style={{ background: 'radial-gradient(circle, rgb(var(--brand-600)), transparent 70%)' }} />
 
       {/* ── Brand ── */}
       <div className={cn(
@@ -57,8 +57,8 @@ export default function AdminSidebar({ open, onToggle }) {
           <LogoMark size={28} />
           {open && (
             <div className="min-w-0">
-              <span className="block font-extrabold text-[13.5px] text-white truncate tracking-tight leading-none">LeadFlow</span>
-              <span className="block text-[10px] text-violet-300/80 font-semibold uppercase tracking-[0.12em] mt-1">Super Admin</span>
+              <span className="block font-extrabold text-[13.5px] text-white truncate tracking-tight leading-none">Lumenia CRM</span>
+              <span className="block text-[10px] text-brand-300/80 font-semibold uppercase tracking-[0.12em] mt-1">Super Admin</span>
             </div>
           )}
         </div>
@@ -92,21 +92,21 @@ export default function AdminSidebar({ open, onToggle }) {
                   'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
                   open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
                   active
-                    ? 'bg-violet-600/[0.18] text-white'
+                    ? 'bg-brand-600/[0.18] text-white'
                     : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
                 )}
               >
                 {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />
                 )}
                 <Icon
                   size={15} strokeWidth={active ? 2.2 : 1.8}
-                  className={cn('shrink-0 transition-colors', active ? 'text-violet-300' : 'group-hover/nav:text-white/75')}
+                  className={cn('shrink-0 transition-colors', active ? 'text-brand-300' : 'group-hover/nav:text-white/75')}
                 />
                 {open && (
                   <>
                     <span className="text-[13px] font-medium truncate">{label}</span>
-                    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400 opacity-80" />}
+                    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 opacity-80" />}
                   </>
                 )}
               </Link>
@@ -131,17 +131,17 @@ export default function AdminSidebar({ open, onToggle }) {
             'relative flex items-center rounded-[10px] transition-all group/settings',
             open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
             url.startsWith('/admin/settings')
-              ? 'bg-violet-600/[0.18] text-white'
+              ? 'bg-brand-600/[0.18] text-white'
               : 'text-white/35 hover:text-white/65 hover:bg-white/[0.06]'
           )}
         >
           {url.startsWith('/admin/settings') && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-violet-400" />
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />
           )}
           <Settings
             size={15}
             strokeWidth={url.startsWith('/admin/settings') ? 2.2 : 1.8}
-            className={cn('shrink-0 transition-colors', url.startsWith('/admin/settings') ? 'text-violet-300' : 'group-hover/settings:text-white/65')}
+            className={cn('shrink-0 transition-colors', url.startsWith('/admin/settings') ? 'text-brand-300' : 'group-hover/settings:text-white/65')}
           />
           {open && <span className="text-[13px] font-medium">Settings</span>}
         </Link>

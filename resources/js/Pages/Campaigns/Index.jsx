@@ -19,7 +19,7 @@ import { toast } from 'sonner'
 const STATUS_STYLE = {
   draft:     'bg-slate-100 text-slate-600',
   scheduled: 'bg-blue-50 text-blue-600',
-  sending:   'bg-violet-50 text-violet-600',
+  sending:   'bg-brand-50 text-brand-600',
   sent:      'bg-emerald-50 text-emerald-700',
   paused:    'bg-amber-50 text-amber-600',
   failed:    'bg-red-50 text-red-600',
@@ -217,7 +217,7 @@ export default function CampaignsIndex({ campaigns }) {
                   type="checkbox"
                   checked={allSelected}
                   onChange={toggleAll}
-                  className="w-4 h-4 rounded border-slate-300 text-violet-600 cursor-pointer accent-violet-600"
+                  className="w-4 h-4 rounded border-slate-300 text-brand-600 cursor-pointer accent-brand-600"
                 />
                 <span className="text-[11px] text-slate-400">
                   {allSelected ? 'Deselect all' : 'Select all'}
@@ -232,7 +232,7 @@ export default function CampaignsIndex({ campaigns }) {
                   checked={selected.has(c.id)}
                   onChange={e => toggleOne(c.id, e)}
                   onClick={e => e.stopPropagation()}
-                  className="w-4 h-4 rounded border-slate-300 text-violet-600 cursor-pointer accent-violet-600 shrink-0"
+                  className="w-4 h-4 rounded border-slate-300 text-brand-600 cursor-pointer accent-brand-600 shrink-0"
                 />
                 <Link href={`/campaigns/${c.id}`} className="block flex-1 min-w-0">
                   <div className="form-card px-4 py-3 hover:shadow-md transition-shadow cursor-pointer">

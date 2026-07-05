@@ -37,7 +37,7 @@ const CARDS = RAW_CARDS.map(({ icon: Icon, title, description, date }, i) => ({
     description,
     date,
     iconClassName: 'text-white',
-    titleClassName: 'text-violet-700',
+    titleClassName: 'text-brand-700',
     className: fanClass(i),
 }));
 
@@ -58,8 +58,8 @@ export default function ActivityShowcase() {
         >
             <div>
                 <div className="flex items-center gap-3 mb-5">
-                    <div className="h-px w-10 bg-violet-500" />
-                    <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Live on the lead's timeline</span>
+                    <div className="h-px w-10 bg-brand-500" />
+                    <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Live on the lead's timeline</span>
                 </div>
                 <h3 className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-5">
                     Every action becomes a timeline entry, automatically.
@@ -71,7 +71,7 @@ export default function ActivityShowcase() {
                 <div className="grid grid-cols-3 gap-3 max-w-md">
                     {STATS.map(({ value, sub }) => (
                         <div key={sub} className="rounded-2xl border border-slate-100 bg-white p-4 text-center">
-                            <div className="text-2xl font-black text-violet-600 mb-1">{value}</div>
+                            <div className="text-2xl font-black text-brand-600 mb-1">{value}</div>
                             <div className="text-[11px] text-slate-500 leading-snug">{sub}</div>
                         </div>
                     ))}

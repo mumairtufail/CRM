@@ -10,7 +10,7 @@ import {
 import { LogoMark } from '@/Components/Common/Logo'
 import { Check, ShieldCheck, Sparkles, Clock3 } from 'lucide-react'
 
-const BRAND_GRADIENT = 'linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)'
+const BRAND_GRADIENT = 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)'
 
 const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
 
@@ -64,7 +64,7 @@ function Field({ label, error, required, children }) {
   return (
     <div className="space-y-1.5">
       <Label className="text-[12.5px] font-medium text-slate-700">
-        {label}{required && <span className="text-violet-500 ml-0.5">*</span>}
+        {label}{required && <span className="text-brand-500 ml-0.5">*</span>}
       </Label>
       {children}
       {error && <p className="text-[11px] text-red-500">{error}</p>}
@@ -96,7 +96,7 @@ function BrandPanel({ form }) {
   return (
     <div
       className="relative hidden lg:flex flex-col justify-between p-9 text-white overflow-hidden"
-      style={{ background: 'linear-gradient(160deg, #7C3AED 0%, #4F46E5 55%, #3730A3 100%)' }}
+      style={{ background: 'linear-gradient(160deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 55%, rgb(var(--brand2-700)) 100%)' }}
     >
       {/* Decorative dot grid */}
       <div

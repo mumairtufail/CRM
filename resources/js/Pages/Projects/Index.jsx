@@ -23,7 +23,7 @@ const STATUS_STYLE = {
   planning:  { dot: 'bg-blue-400',    badge: 'bg-blue-50 text-blue-700 border-blue-200',       stripe: 'linear-gradient(90deg,#3b82f6,#60a5fa)' },
   active:    { dot: 'bg-emerald-400', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200', stripe: 'linear-gradient(90deg,#10b981,#34d399)' },
   on_hold:   { dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-700 border-amber-200',    stripe: 'linear-gradient(90deg,#f59e0b,#fbbf24)' },
-  completed: { dot: 'bg-violet-400',  badge: 'bg-violet-50 text-violet-700 border-violet-200', stripe: 'linear-gradient(90deg,#7c3aed,#a78bfa)' },
+  completed: { dot: 'bg-brand-400',  badge: 'bg-brand-50 text-brand-700 border-brand-200', stripe: 'linear-gradient(90deg,rgb(var(--brand-600)),rgb(var(--brand-400)))' },
   cancelled: { dot: 'bg-red-400',     badge: 'bg-red-50 text-red-700 border-red-200',          stripe: 'linear-gradient(90deg,#ef4444,#f87171)' },
 }
 
@@ -33,7 +33,7 @@ const STATUS_LABELS = {
 }
 
 const AVATAR_GRADIENTS = [
-  'from-violet-500 to-indigo-500', 'from-emerald-500 to-teal-500',
+  'from-brand-500 to-brand2-500', 'from-emerald-500 to-teal-500',
   'from-blue-500 to-cyan-500', 'from-rose-500 to-pink-500', 'from-amber-500 to-orange-500',
 ]
 function avatarGradient(str) {
@@ -50,7 +50,7 @@ function ProjectCard({ project }) {
 
   return (
     <Link href={`/projects/${project.id}`}
-      className="group block rounded-2xl bg-white border border-slate-100 hover:border-violet-200 hover:shadow-md transition-all duration-200 overflow-hidden">
+      className="group block rounded-2xl bg-white border border-slate-100 hover:border-brand-200 hover:shadow-md transition-all duration-200 overflow-hidden">
 
       <div className="h-1 w-full" style={{ background: st.stripe }} />
 
@@ -64,7 +64,7 @@ function ProjectCard({ project }) {
             {avatarLetter(project.name)}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-[13.5px] font-semibold text-slate-900 truncate group-hover:text-violet-700 transition-colors">
+            <p className="text-[13.5px] font-semibold text-slate-900 truncate group-hover:text-brand-700 transition-colors">
               {project.name}
             </p>
             {project.client && (
@@ -109,7 +109,7 @@ function ProjectCard({ project }) {
               <FileText size={10} /> {project.documents_count} doc{project.documents_count !== 1 ? 's' : ''}
             </span>
           </div>
-          <ChevronRight size={13} className="text-slate-300 group-hover:text-violet-400 transition-colors" />
+          <ChevronRight size={13} className="text-slate-300 group-hover:text-brand-400 transition-colors" />
         </div>
       </div>
     </Link>
@@ -162,13 +162,13 @@ export default function ProjectsIndex({ projects, counts, clients, filters }) {
           <div className="flex items-center gap-2 flex-wrap">
             <Link href="/projects/create"
               className="flex items-center gap-1.5 h-9 px-4 rounded-xl text-[13px] font-semibold text-white transition"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               <Plus size={14} strokeWidth={2.5} /> New Project
             </Link>
             {/* Client filter */}
             {clients.length > 0 && (
               <select value={clientId} onChange={handleClientChange}
-                className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 text-[12.5px] text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 transition">
+                className="h-9 pl-3 pr-8 rounded-xl border border-slate-200 text-[12.5px] text-slate-600 bg-white focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition">
                 <option value="">All Clients</option>
                 {clients.map(c => (
                   <option key={c.id} value={c.id}>{c.name}{c.company ? ` (${c.company})` : ''}</option>
@@ -183,12 +183,12 @@ export default function ProjectsIndex({ projects, counts, clients, filters }) {
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search projects…"
-                  className="pl-9 pr-4 h-9 w-48 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-400 transition"
+                  className="pl-9 pr-4 h-9 w-48 rounded-xl border border-slate-200 text-[13px] text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-brand-300 focus:border-brand-400 transition"
                 />
               </div>
               <button type="submit"
                 className="h-9 px-4 rounded-xl text-[13px] font-semibold text-white transition"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                 Search
               </button>
             </form>
@@ -205,8 +205,8 @@ export default function ProjectsIndex({ projects, counts, clients, filters }) {
                 className={cn(
                   'flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-[12.5px] font-medium whitespace-nowrap transition-all',
                   active
-                    ? 'bg-violet-600 text-white shadow-sm'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:border-violet-300 hover:text-violet-600'
+                    ? 'bg-brand-600 text-white shadow-sm'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:border-brand-300 hover:text-brand-600'
                 )}>
                 {tab.label}
                 {count > 0 && (
@@ -224,14 +224,14 @@ export default function ProjectsIndex({ projects, counts, clients, filters }) {
         {items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-              style={{ background: 'rgba(124,58,237,0.07)' }}>
-              <FolderKanban size={24} className="text-violet-400" />
+              style={{ background: 'rgb(var(--brand-600) / 0.07)' }}>
+              <FolderKanban size={24} className="text-brand-400" />
             </div>
             <p className="text-[14px] font-medium text-slate-600 mb-1">No projects yet</p>
             <p className="text-[12.5px] text-slate-400 mb-4">Create your first project to start tracking work.</p>
             <Link href="/projects/create"
               className="inline-flex items-center gap-2 h-9 px-5 text-[13px] font-semibold text-white rounded-xl"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               <Plus size={14} /> New Project
             </Link>
           </div>
@@ -248,13 +248,13 @@ export default function ProjectsIndex({ projects, counts, clients, filters }) {
           <div className="flex items-center justify-center gap-2 mt-6">
             <button disabled={projects.current_page <= 1}
               onClick={() => navigate({ page: projects.current_page - 1 })}
-              className="h-8 px-3 rounded-lg text-[12px] border border-slate-200 text-slate-600 hover:border-violet-300 disabled:opacity-30 disabled:cursor-not-allowed">
+              className="h-8 px-3 rounded-lg text-[12px] border border-slate-200 text-slate-600 hover:border-brand-300 disabled:opacity-30 disabled:cursor-not-allowed">
               ← Prev
             </button>
             <span className="text-[12px] text-slate-500">{projects.current_page} / {projects.last_page}</span>
             <button disabled={projects.current_page >= projects.last_page}
               onClick={() => navigate({ page: projects.current_page + 1 })}
-              className="h-8 px-3 rounded-lg text-[12px] border border-slate-200 text-slate-600 hover:border-violet-300 disabled:opacity-30 disabled:cursor-not-allowed">
+              className="h-8 px-3 rounded-lg text-[12px] border border-slate-200 text-slate-600 hover:border-brand-300 disabled:opacity-30 disabled:cursor-not-allowed">
               Next →
             </button>
           </div>

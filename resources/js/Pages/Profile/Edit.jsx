@@ -73,7 +73,7 @@ function SaveBtn({ processing, label = 'Save changes', loadingLabel = 'Saving…
   return (
     <button type="submit" disabled={processing}
       className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
-      style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+      style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
       {processing ? loadingLabel : label}
     </button>
   )
@@ -127,16 +127,16 @@ function SettingsNav({ active, onChange, leadGenEnabled }) {
               className={cn(
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0',
                 isActive
-                  ? 'bg-violet-50 text-violet-700'
+                  ? 'bg-brand-50 text-brand-700'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
               )}>
-              <Icon size={13} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+              <Icon size={13} className={isActive ? 'text-brand-500' : 'text-slate-400'} />
               <span>{label}</span>
             </button>
           )
         })}
         <Link href="/documentation"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0 text-slate-600 hover:bg-violet-50 hover:text-violet-700">
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[12px] font-medium whitespace-nowrap transition-all shrink-0 text-slate-600 hover:bg-brand-50 hover:text-brand-700">
           <BookOpen size={13} className="text-slate-400" />
           <span>Docs</span>
         </Link>
@@ -159,10 +159,10 @@ function SettingsNav({ active, onChange, leadGenEnabled }) {
                     className={cn(
                       'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-all text-left',
                       isActive
-                        ? 'bg-violet-50 text-violet-700'
+                        ? 'bg-brand-50 text-brand-700'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-800'
                     )}>
-                    <Icon size={14} className={isActive ? 'text-violet-500' : 'text-slate-400'} />
+                    <Icon size={14} className={isActive ? 'text-brand-500' : 'text-slate-400'} />
                     <span className="flex-1">{label}</span>
                     {id === 'leadgen' && leadGenEnabled && (
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
@@ -178,10 +178,10 @@ function SettingsNav({ active, onChange, leadGenEnabled }) {
         <div className="mt-5">
           <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">Help</p>
           <Link href="/documentation"
-            className="group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-all text-slate-600 hover:bg-violet-50 hover:text-violet-700">
-            <BookOpen size={14} className="text-slate-400 group-hover:text-violet-500" />
+            className="group w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium text-left transition-all text-slate-600 hover:bg-brand-50 hover:text-brand-700">
+            <BookOpen size={14} className="text-slate-400 group-hover:text-brand-500" />
             <span className="flex-1">Documentation</span>
-            <ChevronRight size={13} className="text-slate-300 group-hover:text-violet-400" />
+            <ChevronRight size={13} className="text-slate-300 group-hover:text-brand-400" />
           </Link>
         </div>
       </nav>
@@ -387,7 +387,7 @@ function WorkspaceTab() {
                 </div>
               ) : (
                 <div onClick={() => logoInputRef.current?.click()}
-                  className="w-12 h-12 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:border-violet-400 hover:bg-violet-50 transition-colors shrink-0">
+                  className="w-12 h-12 rounded-lg border-2 border-dashed border-slate-200 flex items-center justify-center cursor-pointer hover:border-brand-400 hover:bg-brand-50 transition-colors shrink-0">
                   <Building2 size={16} className="text-slate-300" />
                 </div>
               )}
@@ -409,7 +409,7 @@ function WorkspaceTab() {
 
           <div className="border-t border-slate-100 pt-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <PenLine size={12} className="text-violet-500" />
+              <PenLine size={12} className="text-brand-500" />
               <p className="text-[10.5px] font-semibold uppercase tracking-wider text-slate-400">Email signature</p>
             </div>
             <p className="text-[11px] text-slate-400 mb-3">
@@ -520,7 +520,7 @@ function SmtpDialog({ open, onClose, existing }) {
           <div className="flex flex-wrap gap-1.5">
             {PROVIDER_PRESETS.map(p => (
               <button key={p.label} type="button" onClick={() => applyPreset(p)}
-                className="px-2.5 py-1 rounded-lg text-[11.5px] font-medium bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors">
+                className="px-2.5 py-1 rounded-lg text-[11.5px] font-medium bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition-colors">
                 {p.label}
               </button>
             ))}
@@ -559,7 +559,7 @@ function SmtpDialog({ open, onClose, existing }) {
               {ENCRYPTION_OPTS.map(opt => (
                 <button key={opt} type="button" onClick={() => set('encryption', opt)}
                   className={cn('flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
-                    form.encryption === opt ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300')}>
+                    form.encryption === opt ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500 hover:border-slate-300')}>
                   {opt.toUpperCase()}
                 </button>
               ))}
@@ -598,7 +598,7 @@ function SmtpDialog({ open, onClose, existing }) {
                 {['ssl', 'tls', 'none'].map(opt => (
                   <button key={opt} type="button" onClick={() => set('imap_encryption', opt)}
                     className={cn('flex-1 h-8 rounded-lg text-[12px] font-medium border transition-all',
-                      form.imap_encryption === opt ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-slate-300')}>
+                      form.imap_encryption === opt ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500 hover:border-slate-300')}>
                     {opt.toUpperCase()}
                   </button>
                 ))}
@@ -610,7 +610,7 @@ function SmtpDialog({ open, onClose, existing }) {
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={onClose}>Cancel</Button>
             <button type="submit" disabled={saving}
               className="h-7 px-4 text-[12px] font-semibold text-white rounded-lg hover:opacity-90 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               {saving ? 'Saving…' : existing ? 'Update' : 'Add account'}
             </button>
           </DialogFooter>
@@ -665,14 +665,14 @@ function SmtpCard({ cred, onEdit }) {
     <>
       <div className={cn(
         'rounded-xl border p-4 transition-all',
-        cred.is_active ? 'border-violet-200 bg-violet-50/50' : 'border-slate-200 bg-white'
+        cred.is_active ? 'border-brand-200 bg-brand-50/50' : 'border-slate-200 bg-white'
       )}>
         <div className="flex items-start justify-between gap-2 mb-3">
           <div className="min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <span className="font-semibold text-[13px] text-slate-800 truncate">{cred.name}</span>
               {cred.is_active && (
-                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-600 bg-violet-100 px-1.5 py-0.5 rounded-full">Active</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-brand-600 bg-brand-100 px-1.5 py-0.5 rounded-full">Active</span>
               )}
             </div>
             <p className="text-[11.5px] text-slate-500">{cred.from_name} · {cred.from_email}</p>
@@ -686,11 +686,11 @@ function SmtpCard({ cred, onEdit }) {
 
         <div className="flex items-center gap-1.5 flex-wrap">
           {cred.is_active
-            ? <button onClick={deactivate} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Deactivate</button>
-            : <button onClick={activate}   className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-violet-100 hover:text-violet-700 transition-colors flex items-center gap-1"><Check size={10} /> Set active</button>
+            ? <button onClick={deactivate} className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-200 transition-colors">Deactivate</button>
+            : <button onClick={activate}   className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition-colors flex items-center gap-1"><Check size={10} /> Set active</button>
           }
           <button onClick={testConnection} disabled={testing}
-            className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors disabled:opacity-50">
+            className="h-6 px-2.5 text-[11px] font-medium rounded-lg bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition-colors disabled:opacity-50">
             {testing ? 'Sending…' : 'Test SMTP'}
           </button>
           {cred.imap_host && (
@@ -725,8 +725,8 @@ function SmtpCard({ cred, onEdit }) {
 // ─── Tags tab ─────────────────────────────────────────────────────────────────
 
 const TAG_PRESET_COLORS = [
-  '#7C3AED', '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B',
-  '#EF4444', '#EC4899', '#8B5CF6', '#14B8A6', '#F97316',
+  'rgb(var(--brand-600))', 'rgb(var(--brand2-600))', '#0EA5E9', '#10B981', '#F59E0B',
+  '#EF4444', '#EC4899', 'rgb(var(--brand-500))', '#14B8A6', '#F97316',
 ]
 
 function TagsTab({ tags }) {
@@ -737,20 +737,20 @@ function TagsTab({ tags }) {
   const { data, setData, post, put, processing, errors, reset, clearErrors } = useForm({
     id: null,
     name: '',
-    color: '#7C3AED',
+    color: 'rgb(var(--brand-600))',
   })
 
   const openCreateModal = () => {
     reset()
     clearErrors()
-    setData({ id: null, name: '', color: '#7C3AED' })
+    setData({ id: null, name: '', color: 'rgb(var(--brand-600))' })
     setIsModalOpen(true)
   }
 
   const openEditModal = (tag) => {
     reset()
     clearErrors()
-    setData({ id: tag.id, name: tag.name, color: tag.color || '#7C3AED' })
+    setData({ id: tag.id, name: tag.name, color: tag.color || 'rgb(var(--brand-600))' })
     setIsModalOpen(true)
   }
 
@@ -798,12 +798,12 @@ function TagsTab({ tags }) {
             {tags.map(tag => (
               <div key={tag.id} className="rounded-xl border border-slate-200 p-3 flex flex-col gap-2">
                 <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: tag.color || '#7C3AED' }} />
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: tag.color || 'rgb(var(--brand-600))' }} />
                   <span className="text-[13px] font-semibold text-slate-800 truncate">{tag.name}</span>
                 </div>
                 <p className="text-[11px] text-slate-400">{tag.leads_count ?? 0} leads</p>
                 <div className="flex items-center gap-1 mt-auto">
-                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
+                  <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-brand2-600 hover:bg-brand2-50"
                     onClick={() => openEditModal(tag)} title="Edit tag">
                     <Pencil size={11} />
                   </Button>
@@ -877,7 +877,7 @@ function TagsTab({ tags }) {
                   value={data.color}
                   onChange={(e) => setData('color', e.target.value)}
                   className="flex-1 h-8 text-[13px] font-mono"
-                  placeholder="#7C3AED"
+                  placeholder="rgb(var(--brand-600))"
                 />
                 <div className="w-8 h-8 rounded-lg shrink-0" style={{ background: data.color }} />
               </div>
@@ -892,7 +892,7 @@ function TagsTab({ tags }) {
                 type="submit"
                 disabled={processing}
                 className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
               >
                 {processing ? 'Saving…' : data.id ? 'Save Changes' : 'Create Tag'}
               </button>
@@ -1036,7 +1036,7 @@ function MailTab({ mailSettings, orgFollowupEnabled }) {
               onClick={() => setFollowupEnabled(v => !v)}
               className={cn(
                 'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
-                followupEnabled ? 'bg-violet-600' : 'bg-slate-200'
+                followupEnabled ? 'bg-brand-600' : 'bg-slate-200'
               )}
               role="switch"
               aria-checked={followupEnabled}
@@ -1055,7 +1055,7 @@ function MailTab({ mailSettings, orgFollowupEnabled }) {
               size="sm"
               disabled={savingFollowup}
               onClick={saveFollowup}
-              className="h-7 text-[12px] px-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0 hover:opacity-90"
+              className="h-7 text-[12px] px-3 bg-gradient-to-r from-brand-600 to-brand2-600 text-white border-0 hover:opacity-90"
             >
               {savingFollowup ? 'Saving…' : 'Save follow-up setting'}
             </Button>
@@ -1147,11 +1147,11 @@ function TemplateMiniPreview({ color }) {
 function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate }) {
   return (
     <div className={cn('rounded-xl border p-3 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200',
-      isActive ? 'border-violet-300 bg-violet-50/50 ring-1 ring-violet-200' : 'border-slate-200 bg-white')}>
+      isActive ? 'border-brand-300 bg-brand-50/50 ring-1 ring-brand-200' : 'border-slate-200 bg-white')}>
       <div className="mb-3 relative">
         <TemplateMiniPreview color={template.thumbnail_color} />
         {isActive && (
-          <div className="absolute top-3 right-3 flex items-center gap-1 bg-violet-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">
+          <div className="absolute top-3 right-3 flex items-center gap-1 bg-brand-600 text-white text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full shadow-sm">
             <CheckCircle2 size={9} /> Active
           </div>
         )}
@@ -1160,11 +1160,11 @@ function TemplateCard({ template, isActive, onActivate, onPreview, onDeactivate 
       {template.description && <p className="text-[11px] text-slate-400 leading-snug mb-2.5">{template.description}</p>}
       <div className="flex items-center gap-1.5">
         {isActive
-          ? <button onClick={onDeactivate} className="flex-1 h-7 text-[11px] font-medium rounded-lg bg-violet-100 text-violet-700 hover:bg-violet-200 transition-colors">Deactivate</button>
-          : <button onClick={onActivate}   className="flex-1 h-7 text-[11px] font-semibold rounded-lg bg-slate-900 text-white hover:bg-violet-700 transition-colors flex items-center justify-center gap-1"><Check size={10} /> Use template</button>
+          ? <button onClick={onDeactivate} className="flex-1 h-7 text-[11px] font-medium rounded-lg bg-brand-100 text-brand-700 hover:bg-brand-200 transition-colors">Deactivate</button>
+          : <button onClick={onActivate}   className="flex-1 h-7 text-[11px] font-semibold rounded-lg bg-slate-900 text-white hover:bg-brand-700 transition-colors flex items-center justify-center gap-1"><Check size={10} /> Use template</button>
         }
         <button onClick={onPreview} title="Preview"
-          className="h-7 w-7 shrink-0 rounded-lg bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-700 transition-colors flex items-center justify-center">
+          className="h-7 w-7 shrink-0 rounded-lg bg-slate-100 text-slate-600 hover:bg-brand-100 hover:text-brand-700 transition-colors flex items-center justify-center">
           <Eye size={12} />
         </button>
       </div>
@@ -1188,9 +1188,9 @@ function TemplatesTab({ templates, activeTemplateId, onGoToWorkspace }) {
 
   return (
     <div className="space-y-3 max-w-2xl">
-      <div className="bg-violet-50 border border-violet-100 rounded-xl px-4 py-3 text-[12px] text-violet-800">
+      <div className="bg-brand-50 border border-brand-100 rounded-xl px-4 py-3 text-[12px] text-brand-800">
         <p className="font-semibold flex items-center gap-1.5 mb-0.5"><LayoutTemplate size={13} /> Email templates</p>
-        <p className="text-[11.5px] text-violet-700">
+        <p className="text-[11.5px] text-brand-700">
           Pick one of the three built-in designs — the active template wraps every campaign email.
           {activeTemplate ? <> Currently using <strong>{activeTemplate.name}</strong>.</> : <> No template active — emails are sent as raw HTML.</>}
         </p>
@@ -1207,15 +1207,15 @@ function TemplatesTab({ templates, activeTemplateId, onGoToWorkspace }) {
       </div>
 
       <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 flex items-start gap-3">
-        <div className="w-8 h-8 rounded-lg bg-violet-50 flex items-center justify-center shrink-0 mt-0.5">
-          <PenLine size={14} className="text-violet-600" />
+        <div className="w-8 h-8 rounded-lg bg-brand-50 flex items-center justify-center shrink-0 mt-0.5">
+          <PenLine size={14} className="text-brand-600" />
         </div>
         <div className="flex-1 text-[12px]">
           <p className="font-semibold text-slate-700 mb-0.5">Built-in signature</p>
           <p className="text-[11.5px] text-slate-500 leading-relaxed">
             Every template ends with a signature showing your name, company, website, phone, and email — pulled
             automatically from your{' '}
-            <button onClick={onGoToWorkspace} className="text-violet-600 font-medium hover:underline">Workspace settings</button>.
+            <button onClick={onGoToWorkspace} className="text-brand-600 font-medium hover:underline">Workspace settings</button>.
             Empty fields are simply left out.
           </p>
         </div>
@@ -1228,7 +1228,7 @@ function TemplatesTab({ templates, activeTemplateId, onGoToWorkspace }) {
               <div className="flex items-center justify-between">
                 <DialogTitle className="text-[13.5px] font-semibold">{previewTemplate.name}</DialogTitle>
                 <a href={`/email-templates/${previewTemplate.id}/preview`} target="_blank" rel="noreferrer"
-                  className="flex items-center gap-1 text-[11px] text-violet-600 hover:text-violet-700 mr-6">
+                  className="flex items-center gap-1 text-[11px] text-brand-600 hover:text-brand-700 mr-6">
                   <ExternalLink size={11} /> Open full
                 </a>
               </div>
@@ -1375,7 +1375,7 @@ function LeadGenTab({ leadGenSettings }) {
               onClick={handleSave}
               disabled={saving || !apiKey.trim() || testResult !== 'success'}
               className="h-8 px-4 text-[12.5px] font-semibold text-white rounded-lg hover:opacity-90 disabled:opacity-40 transition-all"
-              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
               <Key size={12} className="inline mr-1.5" />
               {saving ? 'Saving…' : 'Save Provider'}
             </button>
@@ -1413,7 +1413,7 @@ function LeadGenTab({ leadGenSettings }) {
 const PROVIDERS = [
   { id: 'claude', label: 'Claude (Anthropic)', color: '#D97706', hint: 'Best for reasoning and natural conversation' },
   { id: 'openai', label: 'OpenAI',             color: '#10B981', hint: 'GPT-4o, o1, and the full OpenAI lineup' },
-  { id: 'kimi',   label: 'Kimi K2 (NVIDIA NIM)', color: '#6366F1', hint: 'Access Kimi K2, Llama 3.1, DeepSeek, and more' },
+  { id: 'kimi',   label: 'Kimi K2 (NVIDIA NIM)', color: 'rgb(var(--brand2-500))', hint: 'Access Kimi K2, Llama 3.1, DeepSeek, and more' },
 ]
 
 const PROVIDER_MODELS = {
@@ -1465,7 +1465,7 @@ function ModelCombobox({ provider, value, onChange }) {
   return (
     <div className="relative">
       <div
-        className="h-8 px-3 flex items-center justify-between rounded-md border border-slate-200 bg-white cursor-pointer text-[13px] hover:border-violet-400 transition-colors"
+        className="h-8 px-3 flex items-center justify-between rounded-md border border-slate-200 bg-white cursor-pointer text-[13px] hover:border-brand-400 transition-colors"
         onClick={() => setOpen(o => !o)}>
         <span className={value ? 'text-slate-800 font-mono text-[12px]' : 'text-slate-400'}>
           {value ? selectedLabel : 'Select or type a model…'}
@@ -1484,7 +1484,7 @@ function ModelCombobox({ provider, value, onChange }) {
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search or type custom model ID…"
-              className="w-full h-7 px-2 text-[12px] rounded border border-slate-200 focus:outline-none focus:border-violet-400"
+              className="w-full h-7 px-2 text-[12px] rounded border border-slate-200 focus:outline-none focus:border-brand-400"
             />
           </div>
 
@@ -1494,8 +1494,8 @@ function ModelCombobox({ provider, value, onChange }) {
               <button key={m.id} type="button"
                 onClick={() => pick(m.id)}
                 className={cn(
-                  'w-full text-left px-3 py-2 text-[12.5px] hover:bg-violet-50 transition-colors',
-                  value === m.id ? 'bg-violet-50 text-violet-700 font-medium' : 'text-slate-700'
+                  'w-full text-left px-3 py-2 text-[12.5px] hover:bg-brand-50 transition-colors',
+                  value === m.id ? 'bg-brand-50 text-brand-700 font-medium' : 'text-slate-700'
                 )}>
                 <span className="font-medium">{m.label}</span>
                 <span className="ml-2 font-mono text-[10px] text-slate-400">{m.id}</span>
@@ -1505,7 +1505,7 @@ function ModelCombobox({ provider, value, onChange }) {
             {filtered.length === 0 && search.trim() && (
               <button type="button"
                 onClick={() => pick(search.trim())}
-                className="w-full text-left px-3 py-2.5 text-[12.5px] text-violet-700 hover:bg-violet-50 transition-colors border-t border-slate-100">
+                className="w-full text-left px-3 py-2.5 text-[12.5px] text-brand-700 hover:bg-brand-50 transition-colors border-t border-slate-100">
                 Use custom: <span className="font-mono font-medium">"{search.trim()}"</span>
               </button>
             )}
@@ -1515,7 +1515,7 @@ function ModelCombobox({ provider, value, onChange }) {
           {search.trim() && filtered.length > 0 && (
             <div className="px-3 py-2 border-t border-slate-100">
               <button type="button" onClick={() => pick(search.trim())}
-                className="text-[11px] text-violet-600 hover:underline">
+                className="text-[11px] text-brand-600 hover:underline">
                 Use custom: <span className="font-mono">"{search.trim()}"</span>
               </button>
             </div>
@@ -1547,7 +1547,7 @@ function AiProviderTab({ aiSetting }) {
     setValidMsg('')
   }, [provider])
 
-  const providerColor = PROVIDERS.find(p => p.id === provider)?.color ?? '#7C3AED'
+  const providerColor = PROVIDERS.find(p => p.id === provider)?.color ?? 'rgb(var(--brand-600))'
 
   const validate = async () => {
     if (!apiKey.trim()) { toast.error('Enter your API key first.'); return }
@@ -1669,7 +1669,7 @@ function AiProviderTab({ aiSetting }) {
               <Button type="button" size="sm" disabled={validating || !apiKey.trim() || !model.trim()}
                 onClick={validate}
                 className="h-8 shrink-0 text-[12px] text-white"
-                style={{ background: validating ? '#94A3B8' : 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                style={{ background: validating ? '#94A3B8' : 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}>
                 {validating ? 'Testing…' : validated ? '✓ Valid' : 'Validate'}
               </Button>
             </div>
@@ -1715,7 +1715,7 @@ function AiProviderTab({ aiSetting }) {
       <Card title="Where this AI is used">
         <div className="space-y-2 text-[12.5px] text-slate-600">
           <div className="flex items-start gap-2">
-            <Sparkles size={13} className="text-violet-400 mt-0.5 shrink-0" />
+            <Sparkles size={13} className="text-brand-400 mt-0.5 shrink-0" />
             <p><span className="font-medium">AI Lead Search</span> — converts plain-English prompts into structured search filters</p>
           </div>
           <div className="flex items-start gap-2">

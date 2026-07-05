@@ -54,7 +54,7 @@ export default function DataTable({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map(hg => (
-              <TableRow key={hg.id} className="bg-gray-50/80 hover:bg-gray-50/80 border-gray-100">
+              <TableRow key={hg.id} className="bg-brand-50/50 hover:bg-brand-50/50 border-gray-100">
                 {hg.headers.map(header => (
                   <TableHead
                     key={header.id}
@@ -67,9 +67,9 @@ export default function DataTable({
                       {header.column.getCanSort() && (
                         <span className="text-gray-300">
                           {header.column.getIsSorted() === 'asc' ? (
-                            <ChevronUp size={13} className="text-blue-500" />
+                            <ChevronUp size={13} className="text-brand-600" />
                           ) : header.column.getIsSorted() === 'desc' ? (
-                            <ChevronDown size={13} className="text-blue-500" />
+                            <ChevronDown size={13} className="text-brand-600" />
                           ) : (
                             <ChevronsUpDown size={13} />
                           )}
@@ -94,7 +94,7 @@ export default function DataTable({
               ))
             ) : table.getRowModel().rows.length ? (
               table.getRowModel().rows.map(row => (
-                <TableRow key={row.id} className="hover:bg-blue-50/20 transition-colors border-gray-50 group">
+                <TableRow key={row.id} className="hover:bg-brand-50/40 transition-colors border-gray-50 group">
                   {row.getVisibleCells().map(cell => (
                     <TableCell
                       key={cell.id}

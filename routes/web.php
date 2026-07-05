@@ -72,7 +72,14 @@ Route::get('/blog/{slug}',       [\App\Http\Controllers\BlogController::class, '
 Route::get('/sitemap.xml',       [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
 // Products, changelog, and legal pages (static Inertia pages)
-Route::get('/products',               fn () => inertia('Products'))->name('products');
+Route::get('/products', function () {
+    return inertia('Products', [
+        'plans' => \App\Models\Plan::where('is_active', true)
+            ->with('modules:id,key,name')
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'tagline', 'price_monthly', 'is_featured', 'cta_text']),
+    ]);
+})->name('products');
 Route::get('/changelog',              fn () => inertia('Changelog'))->name('changelog');
 Route::get('/privacy-policy',         fn () => inertia('Legal/PrivacyPolicy'))->name('legal.privacy');
 Route::get('/terms-and-conditions',   fn () => inertia('Legal/TermsAndConditions'))->name('legal.terms');

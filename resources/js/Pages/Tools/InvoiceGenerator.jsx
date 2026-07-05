@@ -447,7 +447,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
           <div className="flex flex-wrap gap-4 justify-end mt-4 print:hidden">
             <button
               onClick={handlePrint}
-              className="px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center gap-2 transition-all"
+              className="px-6 py-3.5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl text-xs font-bold shadow-sm inline-flex items-center gap-2 transition-all"
             >
               <Printer size={16} /> Print / Save as PDF
             </button>

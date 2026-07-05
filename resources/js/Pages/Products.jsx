@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import SiteHeader from '@/Components/Common/SiteHeader';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import { cn } from '@/lib/utils';
 
 const PRODUCTS = [
     {
@@ -56,13 +57,7 @@ const PRODUCTS = [
     },
 ];
 
-const PLANS = [
-    { name: 'Basic', price: '$29/mo', blurb: 'Up to 500 leads, 1 pipeline, basic invoicing.' },
-    { name: 'Pro', price: '$79/mo', blurb: 'Unlimited leads & pipelines, email campaigns, advanced reports.' },
-    { name: 'Premium', price: '$149/mo', blurb: 'Everything in Pro, plus WhatsApp campaigns and automation.' },
-];
-
-export default function Products() {
+export default function Products({ plans = [] }) {
     return (
         <>
             <Head>
@@ -98,26 +93,35 @@ export default function Products() {
                         ))}
                     </div>
 
-                    <div className="border-t border-slate-200 pt-14">
-                        <h2 className="text-2xl font-black text-slate-900 mb-2">Subscription plans</h2>
-                        <p className="text-slate-500 mb-8">Cancel any time. See full plan details on our{' '}
-                            <a href="/#pricing" className="text-brand-600 hover:underline">pricing section</a>.
-                        </p>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            {PLANS.map(({ name, price, blurb }) => (
-                                <div key={name} className="bg-white border border-slate-200 rounded-2xl p-6">
-                                    <div className="flex items-baseline justify-between mb-2">
-                                        <h3 className="font-bold text-slate-900">{name}</h3>
-                                        <span className="text-brand-600 font-extrabold">{price}</span>
+                    {plans.length > 0 && (
+                        <div className="border-t border-slate-200 pt-14">
+                            <h2 className="text-2xl font-black text-slate-900 mb-2">Subscription plans</h2>
+                            <p className="text-slate-500 mb-8">Cancel any time. See full plan details on our{' '}
+                                <a href="/#pricing" className="text-brand-600 hover:underline">pricing section</a>.
+                            </p>
+                            <div className={cn(
+                                'grid grid-cols-1 gap-6',
+                                plans.length === 2 && 'sm:grid-cols-2 max-w-2xl',
+                                plans.length >= 3 && 'sm:grid-cols-3'
+                            )}>
+                                {plans.map((plan) => (
+                                    <div key={plan.id} className={cn(
+                                        'bg-white border rounded-2xl p-6',
+                                        plan.is_featured ? 'border-brand-300 ring-1 ring-brand-100' : 'border-slate-200'
+                                    )}>
+                                        <div className="flex items-baseline justify-between mb-2">
+                                            <h3 className="font-bold text-slate-900">{plan.name}</h3>
+                                            <span className="text-brand-600 font-extrabold">${Number(plan.price_monthly ?? 0).toFixed(0)}/mo</span>
+                                        </div>
+                                        <p className="text-slate-500 text-sm leading-relaxed mb-4">{plan.tagline}</p>
+                                        <Link href="/register" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
+                                            <Check className="w-4 h-4" /> {plan.cta_text || 'Get started'}
+                                        </Link>
                                     </div>
-                                    <p className="text-slate-500 text-sm leading-relaxed mb-4">{blurb}</p>
-                                    <Link href="/register" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-600 hover:underline">
-                                        <Check className="w-4 h-4" /> Get started
-                                    </Link>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </main>
 
                 <SiteFooter />

@@ -540,7 +540,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                     {plans.length > 0 && (
                         <motion.div
                             variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                            className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
+                            className={cn(
+                                'grid grid-cols-1 gap-6 items-stretch',
+                                plans.length === 1 && 'max-w-sm mx-auto',
+                                plans.length === 2 && 'md:grid-cols-2 max-w-3xl mx-auto',
+                                plans.length >= 3 && 'md:grid-cols-3'
+                            )}
                         >
                             {plans.map((plan) => (
                                 <motion.div

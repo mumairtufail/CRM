@@ -71,6 +71,14 @@ Route::get('/blog',              [\App\Http\Controllers\BlogController::class, '
 Route::get('/blog/{slug}',       [\App\Http\Controllers\BlogController::class, 'show'])->name('blog.show');
 Route::get('/sitemap.xml',       [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 
+// Products, changelog, and legal pages (static Inertia pages)
+Route::get('/products',               fn () => inertia('Products'))->name('products');
+Route::get('/changelog',              fn () => inertia('Changelog'))->name('changelog');
+Route::get('/privacy-policy',         fn () => inertia('Legal/PrivacyPolicy'))->name('legal.privacy');
+Route::get('/terms-and-conditions',   fn () => inertia('Legal/TermsAndConditions'))->name('legal.terms');
+Route::get('/refund-policy',          fn () => inertia('Legal/RefundPolicy'))->name('legal.refund');
+Route::get('/shipping-policy',        fn () => inertia('Legal/ShippingPolicy'))->name('legal.shipping');
+
 // Public contact form submission (no auth required)
 Route::post('/contact', [ContactMessageController::class, 'store'])->name('contact.store');
 

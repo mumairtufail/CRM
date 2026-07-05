@@ -1,6 +1,7 @@
 import { Head, Link, usePage } from '@inertiajs/react'
 import { Calendar, Clock, ArrowLeft, User, Tag as TagIcon, Sparkles } from 'lucide-react'
 import Logo from '@/Components/Common/Logo'
+import SiteFooter from '@/Components/Common/SiteFooter'
 
 export default function Show({ blog }) {
   const { props } = usePage()
@@ -108,48 +109,7 @@ export default function Show({ blog }) {
         </main>
 
         {/* Footer */}
-        <footer className="bg-slate-900 border-t border-slate-800 text-slate-400 py-16 mt-20">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div>
-              <Logo size={28} showText={true} text="LumeniaCRM" textClassName="text-white text-[15px]" />
-              <p className="text-[12px] text-slate-500 mt-2">
-                A CRM for sales teams that actually want to use their CRM. Turn leads into revenue.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-white text-[13px] font-bold uppercase tracking-wider mb-4">Latest Blogs</h4>
-              <ul className="space-y-2 text-[12.5px]">
-                {latestBlogs && latestBlogs.length > 0 ? (
-                  latestBlogs.map((b) => (
-                    <li key={b.slug}>
-                      <Link href={`/blog/${b.slug}`} className="hover:text-violet-400 transition-colors block truncate max-w-[280px]">
-                        {b.title}
-                      </Link>
-                    </li>
-                  ))
-                ) : (
-                  <li className="text-slate-600 italic text-[12px]">No articles yet</li>
-                )}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-white text-[13px] font-bold uppercase tracking-wider mb-4">Quick Links</h4>
-              <ul className="space-y-2 text-[12.5px]">
-                <li>
-                  <Link href="/" className="hover:text-violet-400 transition-colors">Home</Link>
-                </li>
-                <li>
-                  <Link href="/blog" className="hover:text-violet-400 transition-colors">Blog</Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="max-w-7xl mx-auto px-6 border-t border-slate-800/60 mt-10 pt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[12px] text-slate-500">
-              &copy; {new Date().getFullYear()} LumeniaCRM. All rights reserved.
-            </p>
-          </div>
-        </footer>
+        <SiteFooter />
       </div>
 
       <style>{`

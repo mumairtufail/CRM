@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -41,6 +42,17 @@ class LoginRequest extends FormRequest
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
+
+        $existing = User::where('email', $this->string('email'))->first();
+
+        if ($existing && is_null($existing->password)) {
+            // Google-only account: Hash::check() against a null password would
+            // never match, so fail fast with a clearer message than "invalid
+            // credentials" instead of falling through to Auth::attempt().
+            throw ValidationException::withMessages([
+                'email' => 'This account uses Google sign-in. Please continue with Google below.',
+            ]);
+        }
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());

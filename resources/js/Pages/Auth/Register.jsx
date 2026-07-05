@@ -3,6 +3,7 @@ import { Input } from '@/Components/ui/input'
 import { Eye, EyeOff, Check, Building, Globe, User, Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react'
 import { useState, useCallback } from 'react'
 import Logo from '@/Components/Common/Logo'
+import GoogleButton from '@/Components/Auth/GoogleButton'
 import { motion, AnimatePresence } from 'framer-motion'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -125,6 +126,14 @@ export default function Register({ appDomain }) {
             <div className="login-header">
               <h1 className="login-title">Create workspace</h1>
               <p className="login-subtitle">Set up your sales dashboard in seconds</p>
+            </div>
+
+            <GoogleButton label="Sign up with Google" />
+
+            <div className="flex items-center gap-3 my-5 text-slate-400 text-[11.5px] font-medium uppercase tracking-wider">
+              <span className="flex-1 h-px bg-slate-200" />
+              or use your email
+              <span className="flex-1 h-px bg-slate-200" />
             </div>
 
             {/* Step Progress bar */}

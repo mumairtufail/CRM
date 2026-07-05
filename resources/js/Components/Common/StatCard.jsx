@@ -1,3 +1,4 @@
+import { Link } from '@inertiajs/react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { TrendingUp, TrendingDown } from 'lucide-react'
@@ -11,15 +12,15 @@ const palette = {
   teal:   { orb: '#14B8A6', icon: 'bg-teal-50 text-teal-600',      bar: '#14B8A6', glow: 'rgba(20,184,166,0.1)' },
 }
 
-export default function StatCard({ title, value, change, icon: Icon, color = 'blue', index = 0 }) {
+export default function StatCard({ title, value, change, icon: Icon, color = 'blue', index = 0, href }) {
   const c = palette[color] ?? palette.blue
 
-  return (
+  const card = (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.07, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-2xl p-5 group hover-lift cursor-default"
+      className={cn('relative overflow-hidden rounded-2xl p-4 sm:p-5 group hover-lift', href ? 'cursor-pointer' : 'cursor-default')}
       style={{
         background: 'rgba(255,255,255,0.85)',
         backdropFilter: 'blur(10px)',
@@ -44,7 +45,7 @@ export default function StatCard({ title, value, change, icon: Icon, color = 'bl
           <p className="text-[10.5px] font-semibold uppercase tracking-[0.1em] text-slate-500">
             {title}
           </p>
-          <p className="text-[26px] font-bold text-slate-800 mt-1.5 leading-none tracking-tight">
+          <p className="text-[22px] sm:text-[26px] font-bold text-slate-800 mt-1.5 leading-none tracking-tight">
             {value ?? '—'}
           </p>
           {change != null && (
@@ -64,4 +65,6 @@ export default function StatCard({ title, value, change, icon: Icon, color = 'bl
       </div>
     </motion.div>
   )
+
+  return href ? <Link href={href}>{card}</Link> : card
 }

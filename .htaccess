@@ -13,13 +13,11 @@
     RewriteCond %{HTTP:x-xsrf-token} .
     RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
 
-    # Forward Vite build assets to public/build/
+    # Forward any request that matches a real file under public/ (build assets,
+    # storage, images, favicon, robots.txt, etc.) straight to that file.
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^build/(.*)$ public/build/$1 [L]
-
-    # Forward storage files to public/storage/
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^storage/(.*)$ public/storage/$1 [L]
+    RewriteCond %{DOCUMENT_ROOT}/public%{REQUEST_URI} -f
+    RewriteRule ^(.*)$ public/$1 [L]
 
     # Redirect Trailing Slashes If Not A Folder...
     RewriteCond %{REQUEST_FILENAME} !-d

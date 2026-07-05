@@ -270,7 +270,7 @@ export default function Hub({ latestBlogs = [] }) {
 
                     {[
                         { heading: 'Product', links: [{ label: 'Features', href: '/#features' }, { label: 'Pricing', href: '/#pricing' }, { label: 'FAQ', href: '/#faq' }, { label: 'Changelog', href: '#' }] },
-                        { heading: 'Free Tools', links: [{ label: 'Email Signature', href: '/tools/email-signature-generator', internal: true }, { label: 'Invoice Generator', href: '/tools/invoice-generator', internal: true }, { label: 'All Free Tools', href: '/tools', internal: true }] },
+                        { heading: 'Free Tools', links: [{ label: 'Email Signature', href: '/tools/email-signature-generator', internal: true }, { label: 'Invoice Generator', href: '/tools/invoice-generator', internal: true }, { label: 'Proposal Writer', href: '/tools/proposal-writer', internal: true }, { label: 'UTM Builder', href: '/tools/utm-builder', internal: true }, { label: 'All Free Tools', href: '/tools', internal: true }] },
                         { heading: 'Account', links: [{ label: 'Sign In', href: '/login', internal: true }, { label: 'Register', href: '/register', internal: true }, { label: 'Support', href: '#' }, { label: 'Contact', href: '#' }] },
                         { heading: 'Legal',   links: [{ label: 'Privacy Policy', href: '#' }, { label: 'Terms of Service', href: '#' }, { label: 'Security', href: '#' }] },
                     ].map(({ heading, links }) => (

@@ -1,5 +1,5 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
@@ -595,11 +595,15 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
   }, [query, filteredTabs])
 
   // Custom Form Field Match Visualizer
-  const FieldWrapper = ({ id, label, children, colSpan = 'md:col-span-1' }) => {
+  // Memoized on `query` only — redefining this component on every keystroke elsewhere on the
+  // page (e.g. typing in a chatbot field) would change its identity and force React to remount
+  // every field's DOM node (killing focus mid-type). It only needs to change when the search
+  // highlighting actually could.
+  const FieldWrapper = useMemo(() => ({ id, label, children, colSpan = 'md:col-span-1' }) => {
     const isMatched = isFieldMatched(id)
     return (
       <div className={cn(
-        "flex flex-col gap-1 rounded-lg transition-all p-1.5 duration-200", 
+        "flex flex-col gap-1 rounded-lg transition-all p-1.5 duration-200",
         colSpan,
         isMatched && "bg-violet-50/50 border border-violet-200 ring-2 ring-violet-50"
       )}>
@@ -614,7 +618,7 @@ export default function AdminSettings({ user, custom_logo_url, setting, models, 
         {children}
       </div>
     )
-  }
+  }, [query])
 
   return (
     <>

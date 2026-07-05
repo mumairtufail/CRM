@@ -3,7 +3,8 @@ import { Input } from '@/Components/ui/input'
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react'
 import { useState } from 'react'
 import Logo from '@/Components/Common/Logo'
-import GoogleButton from '@/Components/Auth/GoogleButton'
+// Google sign-in is still being finished (see routes/auth.php) — temporarily disabled.
+// import GoogleButton from '@/Components/Auth/GoogleButton'
 
 export default function Login({ status }) {
   const [showPass, setShowPass] = useState(false)
@@ -40,6 +41,7 @@ export default function Login({ status }) {
               </div>
             )}
 
+            {/*
             <GoogleButton label="Sign in with Google" />
 
             <div className="flex items-center gap-3 my-5 text-slate-400 text-[11.5px] font-medium uppercase tracking-wider">
@@ -47,6 +49,7 @@ export default function Login({ status }) {
               or continue with email
               <span className="flex-1 h-px bg-slate-200" />
             </div>
+            */}
 
             <form onSubmit={submit} className="login-form">
               {/* Email */}

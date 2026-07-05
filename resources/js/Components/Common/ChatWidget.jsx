@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import axios from 'axios'
-import { MessageCircle, Send, ChevronDown } from 'lucide-react'
+import { MessageCircle, Send, X, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
 
@@ -46,7 +46,6 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
   })
   const endRef = useRef(null)
   const inputRef = useRef(null)
-  const panelRef = useRef(null)
 
   // Small delayed entrance so the launcher doesn't just pop in with the rest of the page.
   useEffect(() => {
@@ -66,7 +65,6 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
     }
   }, [open, messages, sending])
 
-  // Close on outside click / Escape, like a real product widget.
   useEffect(() => {
     if (!open) return
     const onKey = (e) => e.key === 'Escape' && setOpen(false)
@@ -100,7 +98,7 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
     } catch {
       setMessages(prev => [...prev, {
         role: 'agent',
-        content: "Sorry, something went wrong on my end — mind trying that again in a moment?",
+        content: "Sorry, something went wrong on my end, mind trying that again in a moment?",
         at: Date.now(),
       }])
     } finally {
@@ -112,63 +110,60 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
     <>
       {/* Chat panel */}
       <div
-        ref={panelRef}
         role="dialog"
         aria-label={`Chat with ${agentName}`}
         aria-hidden={!open}
         className={cn(
-          'fixed bottom-[92px] right-4 sm:right-6 z-[70] w-[calc(100vw-2rem)] max-w-[380px]',
-          'rounded-[20px] overflow-hidden flex flex-col',
+          'fixed bottom-[88px] right-4 sm:right-6 z-[70] w-[calc(100vw-2rem)] max-w-[368px]',
+          'rounded-[24px] overflow-hidden flex flex-col bg-white',
           'transition-all duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] origin-bottom-right',
           open
             ? 'opacity-100 scale-100 translate-y-0 pointer-events-auto'
             : 'opacity-0 scale-[0.96] translate-y-2 pointer-events-none'
         )}
         style={{
-          background: '#0C0815',
-          border: '1px solid rgba(255,255,255,0.09)',
-          boxShadow: '0 24px 60px -12px rgba(0,0,0,0.55), 0 4px 20px -4px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.04)',
+          border: '1px solid rgba(15,10,30,0.08)',
+          boxShadow: '0 20px 50px -14px rgba(20,10,50,0.22), 0 4px 16px -6px rgba(20,10,50,0.1)',
         }}
       >
         {/* Header */}
-        <div
-          className="relative flex items-center gap-3 px-4 py-3.5 shrink-0"
-          style={{
-            background: 'linear-gradient(150deg, #241A44 0%, #150F29 60%, #0C0815 100%)',
-            borderBottom: '1px solid rgba(255,255,255,0.08)',
-          }}
-        >
-          <div
-            className="absolute inset-x-0 top-0 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, rgba(196,181,253,0.6), transparent)' }}
-          />
-
+        <div className="relative flex items-center gap-3 px-4 py-4 shrink-0 border-b border-slate-100">
           <div className="relative shrink-0">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
-              style={{ boxShadow: '0 2px 10px rgba(124,58,237,0.45)' }}
-            >
-              <LogoMark size={40} />
+            <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-white"
+                 style={{ boxShadow: '0 2px 8px rgba(124,58,237,0.25)' }}>
+              <LogoMark size={36} />
             </div>
-            <span className="absolute -bottom-px -right-px w-3 h-3 rounded-full bg-emerald-400 ring-[2.5px] ring-[#1B1330]" />
+            <span className="absolute -bottom-px -right-px w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-[13.5px] font-bold text-white leading-tight tracking-[-0.01em]">{agentName}</p>
-            <p className="text-[11px] text-white/45 font-medium leading-tight mt-0.5">Typically replies in a few seconds</p>
+            <p className="text-[13.5px] font-bold text-slate-900 leading-tight">{agentName}</p>
+            <p className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">Usually replies in a few seconds</p>
           </div>
 
           <button
             onClick={() => setOpen(false)}
-            className="p-1.5 -mr-1 rounded-lg hover:bg-white/[0.08] text-white/40 hover:text-white/80 transition-colors shrink-0"
+            className="p-1.5 -mr-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
             aria-label="Close chat"
           >
-            <ChevronDown size={17} />
+            <X size={17} />
           </button>
         </div>
 
         {/* Messages */}
-        <div className="chat-scroll h-[380px] overflow-y-auto px-3.5 py-4 space-y-[3px]">
+        <div className="chat-scroll h-[380px] overflow-y-auto px-3.5 py-4 space-y-[3px] bg-slate-50/60">
+          {grouped.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-center px-6">
+              <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-3"
+                   style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+              <p className="text-slate-400 text-[12.5px] leading-relaxed">
+                Ask a question and {agentName} will get back to you right away.
+              </p>
+            </div>
+          )}
+
           {grouped.map((msg, i) => (
             <div
               key={i}
@@ -179,27 +174,23 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
               )}
               style={{ animation: 'chatMsgIn 0.22s ease-out' }}
             >
-              <div className="flex flex-col max-w-[78%]">
+              <div className="flex flex-col max-w-[80%]">
                 <div className={cn(
                   'px-3.5 py-2.5 text-[13px] leading-[1.5] whitespace-pre-wrap',
                   msg.role === 'agent'
-                    ? 'text-white/90'
-                    : 'text-white',
-                  // Rounded-corner tails only on the group's outer edges, iMessage-style.
-                  msg.role === 'agent'
-                    ? cn('rounded-r-[16px]', msg.isFirstOfGroup ? 'rounded-tl-[16px]' : 'rounded-tl-[4px]', msg.isLastOfGroup ? 'rounded-bl-[4px]' : 'rounded-bl-[16px]')
-                    : cn('rounded-l-[16px]', msg.isFirstOfGroup ? 'rounded-tr-[16px]' : 'rounded-tr-[4px]', msg.isLastOfGroup ? 'rounded-br-[4px]' : 'rounded-br-[16px]')
+                    ? cn('bg-white text-slate-700 border border-slate-100 rounded-r-[16px]', msg.isFirstOfGroup ? 'rounded-tl-[16px]' : 'rounded-tl-[4px]', msg.isLastOfGroup ? 'rounded-bl-[4px]' : 'rounded-bl-[16px]')
+                    : cn('text-white rounded-l-[16px]', msg.isFirstOfGroup ? 'rounded-tr-[16px]' : 'rounded-tr-[4px]', msg.isLastOfGroup ? 'rounded-br-[4px]' : 'rounded-br-[16px]')
                 )}
-                  style={msg.role === 'agent'
-                    ? { background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)' }
-                    : { background: 'linear-gradient(135deg, #7C3AED, #6425D0)', boxShadow: '0 1px 2px rgba(124,58,237,0.3)' }
+                  style={msg.role === 'visitor'
+                    ? { background: 'linear-gradient(135deg, #7C3AED, #6425D0)', boxShadow: '0 1px 2px rgba(124,58,237,0.25)' }
+                    : undefined
                   }
                 >
                   {msg.content}
                 </div>
                 {msg.isLastOfGroup && msg.at && (
                   <span className={cn(
-                    'text-[9.5px] text-white/25 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity',
+                    'text-[9.5px] text-slate-300 mt-1 px-1 opacity-0 group-hover:opacity-100 transition-opacity',
                     msg.role === 'agent' ? 'text-left' : 'text-right'
                   )}>
                     {timeLabel(msg.at)}
@@ -211,13 +202,10 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
 
           {sending && (
             <div className="flex items-end mt-3">
-              <div
-                className="px-3.5 py-3 rounded-[16px] rounded-bl-[4px] flex items-center gap-1"
-                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.07)' }}
-              >
-                <span className="w-[5px] h-[5px] rounded-full bg-white/45 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-[5px] h-[5px] rounded-full bg-white/45 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-[5px] h-[5px] rounded-full bg-white/45 animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="px-3.5 py-3 rounded-[16px] rounded-bl-[4px] bg-white border border-slate-100 flex items-center gap-1">
+                <span className="w-[5px] h-[5px] rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-[5px] h-[5px] rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '150ms' }} />
+                <span className="w-[5px] h-[5px] rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: '300ms' }} />
               </div>
             </div>
           )}
@@ -225,19 +213,16 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
         </div>
 
         {/* Input */}
-        <div className="flex items-center gap-2 px-3 py-3 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-2 px-3 py-3 shrink-0 border-t border-slate-100 bg-white">
           <input
             ref={inputRef}
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-            placeholder="Type your message…"
+            placeholder="Type your message..."
             maxLength={2000}
-            className="flex-1 rounded-full px-4 py-2.5 text-[13px] text-white placeholder:text-white/30 outline-none transition-all"
-            style={{ background: 'rgba(255,255,255,0.055)', border: '1px solid rgba(255,255,255,0.09)' }}
-            onFocus={e => { e.target.style.borderColor = 'rgba(139,92,246,0.55)'; e.target.style.background = 'rgba(255,255,255,0.07)' }}
-            onBlur={e => { e.target.style.borderColor = 'rgba(255,255,255,0.09)'; e.target.style.background = 'rgba(255,255,255,0.055)' }}
+            className="flex-1 rounded-full px-4 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-350 outline-none transition-all bg-slate-100 border border-transparent focus:bg-white focus:border-violet-300"
           />
           <button
             onClick={send}
@@ -251,9 +236,7 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
         </div>
       </div>
 
-      {/* Launcher bubble — hidden while the panel is open; the header's own
-          chevron is the only close control, so there's never two floating
-          circles competing for the same corner. */}
+      {/* Launcher bubble */}
       <button
         onClick={() => setOpen(true)}
         aria-label={`Chat with ${agentName}`}
@@ -271,13 +254,13 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
         )}
         style={{
           background: 'linear-gradient(150deg, #8B5CF6, #6425D0 55%, #4F46E5)',
-          boxShadow: '0 10px 30px -6px rgba(124,58,237,0.55), 0 2px 8px rgba(0,0,0,0.25)',
+          boxShadow: '0 10px 28px -8px rgba(124,58,237,0.5), 0 2px 8px rgba(0,0,0,0.18)',
         }}
       >
         <MessageCircle size={23} strokeWidth={2.1} />
 
         {unread && !open && (
-          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-rose-500 ring-2 ring-[#0C0815]" />
+          <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-rose-500 ring-2 ring-white" />
         )}
       </button>
 
@@ -286,11 +269,11 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
           from { opacity: 0; transform: translateY(4px); }
           to   { opacity: 1; transform: translateY(0); }
         }
-        .chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.14) transparent; }
+        .chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(15,10,30,0.14) transparent; }
         .chat-scroll::-webkit-scrollbar { width: 6px; }
         .chat-scroll::-webkit-scrollbar-track { background: transparent; }
-        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.14); border-radius: 999px; }
-        .chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+        .chat-scroll::-webkit-scrollbar-thumb { background: rgba(15,10,30,0.14); border-radius: 999px; }
+        .chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(15,10,30,0.22); }
       `}</style>
     </>
   )

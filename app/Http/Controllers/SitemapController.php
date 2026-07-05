@@ -36,6 +36,30 @@ class SitemapController extends Controller
         $xml[] = '    <priority>0.8</priority>';
         $xml[] = '  </url>';
 
+        // Static marketing pages
+        $staticPages = [
+            '/products' => 0.7,
+            '/changelog' => 0.6,
+            '/tools' => 0.7,
+            '/tools/email-signature-generator' => 0.6,
+            '/tools/invoice-generator' => 0.6,
+            '/tools/proposal-writer' => 0.6,
+            '/tools/utm-builder' => 0.6,
+            '/privacy-policy' => 0.3,
+            '/terms-and-conditions' => 0.3,
+            '/refund-policy' => 0.3,
+            '/shipping-policy' => 0.3,
+        ];
+
+        foreach ($staticPages as $path => $priority) {
+            $xml[] = '  <url>';
+            $xml[] = "    <loc>{$appUrl}{$path}</loc>";
+            $xml[] = "    <lastmod>{$now}</lastmod>";
+            $xml[] = '    <changefreq>monthly</changefreq>';
+            $xml[] = "    <priority>{$priority}</priority>";
+            $xml[] = '  </url>';
+        }
+
         // Individual Blog Posts
         foreach ($blogs as $blog) {
             $lastmod = ($blog->published_at ?? $blog->updated_at)->toAtomString();

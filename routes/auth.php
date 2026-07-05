@@ -4,7 +4,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
-use App\Http\Controllers\Auth\GoogleAuthController;
+// Google sign-in is still being finished — routes below are disabled for now.
+// use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
@@ -26,6 +27,7 @@ Route::middleware('guest')->group(function () {
     Route::post('register/resend-code', [RegisteredUserController::class, 'resendCode'])
         ->name('register.resend-code');
 
+    /*
     Route::get('auth/google/redirect', [GoogleAuthController::class, 'redirect'])
         ->name('auth.google');
 
@@ -36,6 +38,7 @@ Route::middleware('guest')->group(function () {
         ->name('register.google.workspace');
 
     Route::post('register/google/workspace', [GoogleAuthController::class, 'storeWorkspace']);
+    */
 
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');

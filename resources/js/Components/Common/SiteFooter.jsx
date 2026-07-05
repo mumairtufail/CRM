@@ -15,11 +15,13 @@ export default function SiteFooter({ className = '' }) {
         {
             heading: 'Product',
             links: [
-                { label: 'Features', href: homeAnchor('#features') },
-                { label: 'Pricing', href: homeAnchor('#pricing') },
-                { label: 'Products & Services', href: '/products', internal: true },
-                { label: 'FAQ', href: homeAnchor('#faq') },
-                { label: 'Changelog', href: '/changelog', internal: true },
+                { label: 'Lead Management', href: homeAnchor('#features') },
+                { label: 'Email Campaigns', href: homeAnchor('#campaigns') },
+                { label: 'Sales Pipeline', href: homeAnchor('#pipeline') },
+                { label: 'Invoicing', href: homeAnchor('#features') },
+                { label: 'AI Prospecting', href: homeAnchor('#integrations') },
+                { label: 'Clients and Projects', href: homeAnchor('#features') },
+                { label: 'WhatsApp Automation', href: homeAnchor('#whatsapp') },
             ],
         },
         {
@@ -33,12 +35,15 @@ export default function SiteFooter({ className = '' }) {
             ],
         },
         {
-            heading: 'Account',
+            heading: 'Company',
             links: [
+                { label: 'Pricing', href: homeAnchor('#pricing') },
+                { label: 'FAQ', href: homeAnchor('#faq') },
+                { label: 'Products & Services', href: '/products', internal: true },
+                { label: 'Changelog', href: '/changelog', internal: true },
+                { label: 'Contact', href: homeAnchor('#contact') },
                 { label: 'Sign In', href: '/login', internal: true },
                 { label: 'Register', href: '/register', internal: true },
-                { label: 'Support', href: 'mailto:hello@lumenialab.com' },
-                { label: 'Contact', href: homeAnchor('#contact') },
             ],
         },
         {

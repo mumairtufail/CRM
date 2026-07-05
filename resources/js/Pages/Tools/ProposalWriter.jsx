@@ -12,11 +12,10 @@ export default function ProposalWriter({ latestBlogs = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navLinks = [
-    { label: 'Features',       href: '/#features'      },
-    { label: 'AI Prospecting', href: '/#integrations'  },
-    { label: 'How it works',   href: '/#how-it-works'  },
-    { label: 'Pricing',        href: '/#pricing'       },
-    { label: 'Contact',        href: '/#contact'       },
+    { label: 'How it works', href: '/#flow'    },
+    { label: 'Features',     href: '/#modules' },
+    { label: 'Pricing',      href: '/#pricing' },
+    { label: 'Contact',      href: '/#contact' },
   ]
 
   // Proposal writer state
@@ -213,6 +212,16 @@ export default function ProposalWriter({ latestBlogs = [] }) {
 
         {/* Spacer for sticky header */}
         <div className="h-16 w-full shrink-0 print:hidden" />
+
+        {/* Page header */}
+        <div className="max-w-3xl mx-auto px-6 pt-12 pb-4 text-center print:hidden">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight mb-3">
+            Free Proposal Writer
+          </h1>
+          <p className="text-slate-500 leading-relaxed">
+            Draft a client proposal or contract with deliverables and pricing, ready to print or send as a PDF.
+          </p>
+        </div>
 
         {/* Builder Area */}
         <main className="max-w-7xl mx-auto px-6 py-12 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start print:py-0 print:px-0">

@@ -1,6 +1,6 @@
 import { Head, Link } from '@inertiajs/react'
 import { useState } from 'react'
-import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Zap, Menu, X, PenTool, Link2 } from 'lucide-react'
+import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Menu, X, PenTool, Link2 } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
 
@@ -9,11 +9,10 @@ export default function Hub({ latestBlogs = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navLinks = [
-    { label: 'Features',       href: '/#features'      },
-    { label: 'AI Prospecting', href: '/#integrations'  },
-    { label: 'How it works',   href: '/#how-it-works'  },
-    { label: 'Pricing',        href: '/#pricing'       },
-    { label: 'Contact',        href: '/#contact'       },
+    { label: 'How it works', href: '/#flow'    },
+    { label: 'Features',     href: '/#modules' },
+    { label: 'Pricing',      href: '/#pricing' },
+    { label: 'Contact',      href: '/#contact' },
   ]
 
   const tools = [
@@ -159,19 +158,23 @@ export default function Hub({ latestBlogs = [] }) {
         <div className="h-16 w-full shrink-0" />
 
         {/* Hero */}
-        <section className="py-20 md:py-28 text-center bg-gradient-to-b from-white to-transparent relative overflow-hidden">
+        <section className="py-16 md:py-24 bg-gradient-to-b from-white to-transparent relative overflow-hidden">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] rounded-full opacity-[0.03] pointer-events-none blur-3xl bg-violet-600" />
-          <div className="max-w-4xl mx-auto px-6">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-50 border border-violet-100/50 mb-6">
-              <Zap size={12} className="text-violet-600 fill-violet-600" />
-              <span className="text-violet-700 text-[10px] font-extrabold uppercase tracking-wider">Free Business Resources</span>
+          <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-6">
+                Free Sales & Growth <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Power Tools</span>
+              </h1>
+              <p className="text-lg text-slate-500 max-w-xl leading-relaxed">
+                Accelerate your sales workflow, create professional brand assets, and optimize your organic outreach with zero cost.
+              </p>
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-6">
-              Free Sales & Growth <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Power Tools</span>
-            </h1>
-            <p className="text-lg text-slate-500 max-w-xl mx-auto leading-relaxed">
-              Accelerate your sales workflow, create professional brand assets, and optimize your organic outreach with zero cost.
-            </p>
+            <img
+              src="/images/marketing/prospecting-data.jpg"
+              alt="Analytics dashboard showing growth metrics"
+              loading="lazy"
+              className="hidden lg:block w-full aspect-[4/3] object-cover rounded-3xl border border-slate-100 shadow-sm"
+            />
           </div>
         </section>
 

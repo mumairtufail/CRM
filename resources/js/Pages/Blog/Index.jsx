@@ -47,11 +47,6 @@ export default function Index({ blogs }) {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-full opacity-[0.04] pointer-events-none blur-3xl bg-violet-600" />
           
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-violet-50 border border-violet-100 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
-              <span className="text-violet-700 text-[10.5px] font-bold uppercase tracking-wider">Resources & Guides</span>
-            </div>
-            
             <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-tight mb-6">
               The <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">LumeniaCRM</span> Blog
             </h1>

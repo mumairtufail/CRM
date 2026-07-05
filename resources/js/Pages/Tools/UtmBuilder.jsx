@@ -10,11 +10,10 @@ export default function UtmBuilder({ latestBlogs = [] }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const navLinks = [
-    { label: 'Features',       href: '/#features'      },
-    { label: 'AI Prospecting', href: '/#integrations'  },
-    { label: 'How it works',   href: '/#how-it-works'  },
-    { label: 'Pricing',        href: '/#pricing'       },
-    { label: 'Contact',        href: '/#contact'       },
+    { label: 'How it works', href: '/#flow'    },
+    { label: 'Features',     href: '/#modules' },
+    { label: 'Pricing',      href: '/#pricing' },
+    { label: 'Contact',      href: '/#contact' },
   ]
 
   // UTM builder state
@@ -169,6 +168,16 @@ export default function UtmBuilder({ latestBlogs = [] }) {
 
         {/* Spacer for sticky header */}
         <div className="h-16 w-full shrink-0" />
+
+        {/* Page header */}
+        <div className="max-w-3xl mx-auto px-6 pt-12 pb-4 text-center">
+          <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight mb-3">
+            Free UTM Link Builder
+          </h1>
+          <p className="text-slate-500 leading-relaxed">
+            Build a trackable campaign link in seconds, so you know exactly which channel brought a lead in.
+          </p>
+        </div>
 
         {/* Builder Area */}
         <main className="max-w-7xl mx-auto px-6 py-12 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

@@ -1,257 +1,74 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useForm, Head, usePage } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Users, Mail, FileText, Briefcase,
-    Check, ChevronDown, Star, Target,
-    TrendingUp, Menu, X, Building2,
-    Cpu, LayoutDashboard, CheckCircle2,
-    Upload, ArrowRight, Bell, MessageSquare,
-    Phone, Send, MapPin,
-    MailOpen, Sparkles, Clock, AlertCircle, Activity, PenTool, Link2
+    Mail, FileText, Upload, Users, PenTool, Link2,
+    Check, ChevronDown, Star, Menu, X, Quote,
+    CheckCircle2, ArrowRight, Phone, Send, MapPin,
+    Layers, Sparkles, Shield, Clock,
 } from 'lucide-react';
 import { LogoMark } from '@/Components/Common/Logo';
 import ChatWidget from '@/Components/Common/ChatWidget';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import FeatureOrbit from '@/Components/Marketing/FeatureOrbit';
+import ActivityShowcase from '@/Components/Marketing/ActivityShowcase';
+import ModuleShowcase, { MODULES } from '@/Components/Marketing/ModuleShowcase';
 import { cn } from '@/lib/utils';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
 
 const fadeUp = {
-    hidden: { opacity: 0, y: 28 },
-    show:   { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+    hidden: { opacity: 0, y: 24 },
+    show:   { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
 };
 const stagger = {
     hidden: {},
-    show:   { transition: { staggerChildren: 0.1 } },
-};
-const scaleIn = {
-    hidden: { opacity: 0, scale: 0.88 },
-    show:   { opacity: 1, scale: 1, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
+    show:   { transition: { staggerChildren: 0.09 } },
 };
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-const FEATURES = [
-    { icon: Users,     title: 'Lead Management',   description: 'Add leads manually, import from CSV, or pull via AI. Every lead gets its own timeline, tags, and activity log.', accent: '#7C3AED' },
-    { icon: Mail,      title: 'Email Campaigns',    description: 'Write once, send to thousands, and let automatic follow-ups go out to anyone who didn\'t open — no extra clicks from you.', accent: '#3B82F6' },
-    { icon: Target,    title: 'Sales Pipeline',     description: 'A Kanban board for your deals. Drag cards between stages, filter by tag or status, see what\'s stuck.', accent: '#10B981' },
-    { icon: FileText,  title: 'Invoicing',          description: 'Create an invoice in 30 seconds. Mark it sent, track payment. No separate tool, no copy-pasting client details.', accent: '#F59E0B' },
-    { icon: Cpu,       title: 'AI Prospecting',     description: 'Describe your ideal customer and let AI find and import matching leads directly into your workspace.', accent: '#8B5CF6' },
-    { icon: Briefcase, title: 'Clients & Projects', description: 'Flip a lead to client in one click. Manage their projects, files, and tasks in the same place.', accent: '#14B8A6' },
+const SECONDARY_FEATURES = [
+    { icon: Upload,    title: 'Import Your Own List', description: 'Bring in leads from a spreadsheet or Google Sheet any time, alongside whatever AI finds for you.' },
+    { icon: FileText,  title: 'Custom Forms',         description: 'Drop an embeddable form on your site and every submission lands straight into your pipeline as a lead.' },
+    { icon: Users,     title: 'Team & Reporting',     description: 'See what each rep is working, what is stuck, and what closed, without asking for a status update.' },
 ];
 
-const CHIPS = [
-    { icon: Bell,         label: 'New lead',     sub: 'Apex Digital · just now', iconBg: 'rgba(124,58,237,0.18)', iconColor: '#C4B5FD', dotBg: '#7C3AED', pos: '-right-10 top-8',    floatY: -7, dur: 3.2, delay: 0.9  },
-    { icon: Mail,         label: 'Email opened', sub: 'Ahmed K. · 2 min ago',    iconBg: 'rgba(59,130,246,0.18)', iconColor: '#93C5FD', dotBg: '#3B82F6', pos: '-right-12 bottom-24', floatY: -5, dur: 2.8, delay: 1.05 },
-    { icon: CheckCircle2, label: 'Invoice paid', sub: '#041 · $500',              iconBg: 'rgba(16,185,129,0.18)', iconColor: '#6EE7B7', dotBg: '#10B981', pos: '-left-8 bottom-10',  floatY: -6, dur: 3.6, delay: 1.2  },
+const FREE_TOOLS = [
+    { icon: Mail,     title: 'Email Signature',   description: 'Design an HTML email signature for Gmail, Outlook, or Apple Mail, with your logo and socials.', href: '/tools/email-signature-generator', cta: 'Generate signature' },
+    { icon: FileText, title: 'Invoice Generator', description: 'Build and download a branded PDF invoice on the spot, with automatic tax calculation.', href: '/tools/invoice-generator', cta: 'Build invoice' },
+    { icon: PenTool,  title: 'Proposal Writer',   description: 'Draft a commercial proposal with deliverables and scope, ready to print or send as a PDF.', href: '/tools/proposal-writer', cta: 'Write proposal' },
+    { icon: Link2,    title: 'UTM Link Builder',  description: 'Build trackable campaign links so you can see exactly which channel brought a lead in.', href: '/tools/utm-builder', cta: 'Build UTM link' },
+];
+
+const WHY_CHOOSE_US = [
+    { icon: Layers,    title: 'One workspace, not five tools',  description: 'Leads, campaigns, pipeline, invoicing, and support all live in the same place, so nothing gets lost switching tabs.' },
+    { icon: Sparkles,  title: 'AI that does the work, not just autocomplete', description: 'It finds prospects, drafts follow-ups, and answers WhatsApp chats itself, from a knowledge base you write.' },
+    { icon: Shield,    title: 'Your data stays yours',           description: 'Every workspace is isolated at the database level, so agencies running multiple clients never risk a leak between accounts.' },
+    { icon: Clock,     title: 'Real people when you need them',  description: 'Email us and hear back within one business day, not a support ticket that disappears into a queue.' },
 ];
 
 const TESTIMONIALS = [
-    { name: 'Marcus Reid',    role: 'Sales Manager, USA',      avatar: 'MR', rating: 5, text: "Our WhatsApp number used to get messages that just sat there until someone had time. Now the bot answers from the FAQ we wrote ourselves, and about a third of those chats turn into a real lead before I even see them." },
-    { name: 'Dana Whitfield', role: 'Growth Lead, USA',        avatar: 'DW', rating: 5, text: "Turned on automated follow-ups in April and picked up 11 deals that month from people who never replied to the first email. That's money we were just leaving on the table before." },
-    { name: 'Julien Marchand', role: 'Founder, Canada',        avatar: 'JM', rating: 5, text: "I used to run three spreadsheets just to remember who I'd called that week. Now it's one board — drag a card, done. Gets me back a solid afternoon every week I used to lose untangling my own mess." },
-    { name: 'Priya Anand',    role: 'Sales Director, UK',      avatar: 'PA', rating: 5, text: "Reports showed one of my reps was sitting on 60 leads nobody had touched in three weeks. I'd never have caught that from a gut-feel check-in — fixed it the same day." },
-    { name: 'Omar Al Farsi',  role: 'Operations Manager, UAE', avatar: 'OA', rating: 5, text: "Pricing questions on WhatsApp, follow-ups in email, notes in someone's head — it was everywhere. Now a lead shows up once and every message about them sits in one place, whatever channel it came through." },
+    { name: 'Marcus Reid',     role: 'Sales Manager, USA', avatar: 'MR', text: 'Our WhatsApp number used to get messages that just sat there until someone had time. Now the bot answers from the FAQ we wrote ourselves, and about a third of those chats turn into a real lead before I even see them.' },
+    { name: 'Dana Whitfield',  role: 'Growth Lead, USA',   avatar: 'DW', text: 'Turned on automated follow ups in April and picked up 11 deals that month from people who never replied to the first email. That is money we were just leaving on the table before.' },
+    { name: 'Julien Marchand', role: 'Founder, Canada',    avatar: 'JM', text: 'I used to run three spreadsheets just to remember who I had called that week. Now it is one board. Drag a card and it is done. Gets me back a solid afternoon every week I used to lose untangling my own mess.' },
 ];
-
 
 const FAQS = [
-    { q: 'Do I need a credit card to sign up?', a: 'No. The free plan stays free forever and trial plans need no payment details upfront. You only enter billing info when you decide to upgrade.' },
-    { q: 'How does the AI Lead Search work?', a: 'Describe your ideal customer in plain English — industry, job title, company size, location — and our AI finds matching prospects from a database of millions of verified contacts. One click imports them straight into your workspace with name, email, company, and LinkedIn profile already filled in. No manual research, no spreadsheet gymnastics.' },
-    { q: 'Can I bring in my existing leads?', a: 'Yes — upload a CSV or connect a Google Sheet. The importer maps your columns, previews the import, and lets you confirm before anything is saved.' },
-    { q: 'How are workspaces separated?', a: 'Each workspace is completely isolated at the database level. Users in workspace A cannot see or access anything in workspace B, even if they are the same person running both.' },
-    { q: 'Which email providers work for campaigns?', a: 'Anything with SMTP credentials — Gmail, Outlook 365, SendGrid, Mailgun, Brevo, Postmark, and your own mail server.' },
-    { q: 'Is the data stored securely?', a: 'Yes. All connections are TLS-encrypted, data is isolated by workspace. Backups run daily.' },
-    { q: 'Can I convert a lead into a client and invoice them?', a: 'One click converts the lead record into a client. From there create a project and send an invoice — without re-entering any details.' },
-    { q: 'How does the WhatsApp bot know what to say?', a: 'You write a knowledge base of your own answers — pricing, hours, what makes you different — and every reply is drafted from that. Nothing generic, nothing made up. When a conversation shows real intent (someone asks about pricing or a demo), it becomes a lead automatically and lands right on your pipeline.' },
-    { q: 'Do follow-up emails send automatically?', a: 'Yes, if you turn it on for a campaign. Anyone who hasn\'t opened your email gets a follow-up on the schedule you set — you write the sequence once, it keeps running on its own.' },
+    { q: 'Do I need a credit card to sign up?', a: 'No. The free plan stays free and trials do not ask for card details. You only add billing information if you choose to upgrade.' },
+    { q: 'How does AI lead search actually work?', a: 'Type who you are looking for in plain English, industry, title, company size, location, whatever matters to you. Lumenia queries Apollo.io and People Data Labs at the same time and brings back verified people with an email, phone number, and LinkedIn profile already filled in.' },
+    { q: 'What are batches and groups for?', a: 'Every import or manual add lands in a batch automatically. You can also build your own groups, by campaign, region, or however you organize your work, so you are never scrolling one long list.' },
+    { q: 'Do follow up emails really send on their own?', a: 'Yes, once you turn it on for a campaign. Set how long to wait, and anyone who has not opened your email gets a follow up automatically, on the schedule you chose.' },
+    { q: 'Which AI models power the chatbot?', a: 'You can connect OpenAI, Kimi, or Claude. Whichever you choose reads from a knowledge base you write yourself, so answers sound like you, not a generic script, and it can carry the full conversation with a lead.' },
+    { q: 'Does the chatbot actually create leads?', a: 'Yes. The moment a conversation shows real interest, a pricing question, wanting a demo, whatever counts as a signal for you, it creates the lead and drops it straight into your pipeline, already tagged.' },
+    { q: 'Is my workspace data separated from other companies using Lumenia CRM?', a: 'Yes. Every workspace is isolated at the database level. Nobody outside your team can see your leads, emails, or pipeline.' },
 ];
-
-const STEPS = [
-    { num: '01', icon: Building2,  title: 'Create your workspace', description: 'Sign up, pick a name, and you\'re in. The whole setup takes under two minutes.' },
-    { num: '02', icon: Upload,     title: 'Add your leads',         description: 'Import a spreadsheet, type them in, or describe who you\'re targeting and let AI find them.' },
-    { num: '03', icon: TrendingUp, title: 'Work your pipeline',     description: 'Send emails, log calls, move deals through stages, create invoices. Everything in one tab.' },
-];
-
-const TIMELINE_EVENTS = [
-    { icon: Sparkles,     color: '#7C3AED', title: 'Lead found via AI prospecting',         sub: 'Apollo.io · "SaaS founders, Pakistan, <50 employees" · ICP score 94',      time: '14d ago' },
-    { icon: Mail,         color: '#3B82F6', title: 'Campaign email sent',                   sub: 'Q4 Outreach — Batch 1 · Personalised subject & first line',                time: '13d ago' },
-    { icon: MailOpen,     color: '#60A5FA', title: 'Email opened ×3 — pricing link clicked', sub: 'High-intent signal → moved to stage: Interested',                          time: '12d ago', hot: true },
-    { icon: Send,         color: '#8B5CF6', title: 'Auto follow-up sent',                   sub: 'Triggered: no reply in 48 h · Sequence Rule #2',                            time: '10d ago' },
-    { icon: Phone,        color: '#10B981', title: 'Call logged · Bilal Akhtar',            sub: '"Very interested — wants a live demo next week"',                           time: '9d ago'  },
-    { icon: FileText,     color: '#F59E0B', title: 'Proposal sent · $1,500 / mo',           sub: '3 seats · Pro plan · PDF generated via LeadFlow',                          time: '7d ago'  },
-    { icon: CheckCircle2, color: '#10B981', title: 'Invoice paid — Deal Won ✓',             sub: 'INV-041 · $1,500 · Received in full',                                       time: '2d ago', won: true },
-];
-
-const AUTO_RULES = [
-    { trigger: 'No reply in 48 hours',     action: 'Auto-send a follow-up email',     icon: Clock,       color: '#3B82F6', bg: '#EFF6FF' },
-    { trigger: 'Email opened 3+ times',    action: 'Alert the assigned rep instantly', icon: Activity,    color: '#7C3AED', bg: '#F5F3FF' },
-    { trigger: 'Pricing link clicked',     action: 'Move lead to "Hot" stage',        icon: TrendingUp,  color: '#10B981', bg: '#ECFDF5' },
-    { trigger: 'Deal stalled 7+ days',     action: 'Send a nudge reminder',           icon: AlertCircle, color: '#F59E0B', bg: '#FFFBEB' },
-];
-
-const BUSINESS_TYPES = [
-    {
-        type: 'Agencies',
-        icon: Building2,
-        color: '#7C3AED',
-        bg: 'rgba(124,58,237,0.05)',
-        border: 'rgba(124,58,237,0.15)',
-        headline: 'Run every client from one platform.',
-        copy: 'Separate workspaces per client. Each team sees only their data. You get the full picture in one superadmin view — no shared spreadsheets.',
-        stat: '12 clients', statSub: 'managed without a single shared spreadsheet',
-    },
-    {
-        type: 'Sales Teams',
-        icon: Target,
-        color: '#3B82F6',
-        bg: 'rgba(59,130,246,0.05)',
-        border: 'rgba(59,130,246,0.15)',
-        headline: 'Stop letting warm leads go cold.',
-        copy: 'Auto follow-up rules, shared timelines, and a full activity log per lead so nothing falls through between reps — even when someone is OOO.',
-        stat: '2× faster', statSub: 'pipeline velocity — reported by our users',
-    },
-    {
-        type: 'Freelancers',
-        icon: Users,
-        color: '#10B981',
-        bg: 'rgba(16,185,129,0.05)',
-        border: 'rgba(16,185,129,0.15)',
-        headline: 'First contact to paid invoice, same tab.',
-        copy: 'Capture a lead, run a campaign, close the deal, and send the invoice without leaving LeadFlow or repeating yourself across four different tools.',
-        stat: '4 h / week', statSub: 'saved on admin, chasing, and copy-pasting',
-    },
-];
-
-// ─── Mock UI ──────────────────────────────────────────────────────────────────
-
-function MockSidebar() {
-    const items = [
-        { icon: LayoutDashboard, label: 'Dashboard', active: true  },
-        { icon: Users,           label: 'Leads',     active: false },
-        { icon: Target,          label: 'Pipeline',  active: false },
-        { icon: Mail,            label: 'Campaigns', active: false },
-        { icon: FileText,        label: 'Invoices',  active: false },
-        { icon: Briefcase,       label: 'Projects',  active: false },
-    ];
-    return (
-        <div className="hidden sm:flex w-44 flex-shrink-0 flex-col border-r border-white/5 p-3"
-             style={{ background: 'linear-gradient(180deg,#0D0B18,#130F22)' }}>
-            <div className="flex items-center gap-1.5 mb-4 px-2">
-                <LogoMark size={18} />
-                <span className="text-white text-xs font-semibold truncate">My Workspace</span>
-            </div>
-            {items.map(({ icon: Icon, label, active }) => (
-                <div key={label}
-                     className={`flex items-center gap-2 px-2 py-1.5 rounded-md mb-0.5 text-[11px] ${
-                         active ? 'bg-violet-600/20 text-violet-300' : 'text-white/40'
-                     }`}>
-                    <Icon className="w-3 h-3 flex-shrink-0" />{label}
-                </div>
-            ))}
-        </div>
-    );
-}
-
-function MockDashboard() {
-    const stats = [
-        { label: 'Total Leads',  value: '2,847',  color: 'text-blue-300',   bg: 'bg-blue-500/10'   },
-        { label: 'Active Deals', value: '143',    color: 'text-green-300',  bg: 'bg-green-500/10'  },
-        { label: 'Revenue MTD',  value: '$48.2k', color: 'text-violet-300', bg: 'bg-violet-500/10' },
-        { label: 'Emails Sent',  value: '12,400', color: 'text-amber-300',  bg: 'bg-amber-500/10'  },
-    ];
-    const bars     = [40,65,50,80,60,90,75,95,70,88,65,100];
-    const pipeline = [
-        { label: 'New',       pct: 85, color: 'bg-blue-500'   },
-        { label: 'Qualified', pct: 62, color: 'bg-violet-500' },
-        { label: 'Proposal',  pct: 40, color: 'bg-amber-500'  },
-        { label: 'Won',       pct: 24, color: 'bg-green-500'  },
-    ];
-    return (
-        <div className="flex-1 p-3 overflow-hidden">
-            <div className="text-white/70 text-xs font-semibold mb-2">Dashboard</div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 mb-3">
-                {stats.map(({ label, value, color, bg }) => (
-                    <div key={label} className={`rounded-lg p-2 border border-white/5 ${bg}`}>
-                        <div className="text-white/40 text-[9px] mb-0.5">{label}</div>
-                        <div className={`text-sm font-bold ${color}`}>{value}</div>
-                    </div>
-                ))}
-            </div>
-            <div className="grid grid-cols-5 gap-1.5">
-                <div className="col-span-3 rounded-lg bg-white/[0.03] border border-white/5 p-2">
-                    <div className="text-white/40 text-[9px] mb-1.5">New leads (30 days)</div>
-                    <div className="flex items-end gap-0.5" style={{ height: '52px' }}>
-                        {bars.map((h, i) => (
-                            <motion.div key={i} className="flex-1 rounded-sm"
-                                 initial={{ height: 0 }}
-                                 animate={{ height: `${h}%` }}
-                                 transition={{ duration: 0.6, delay: 1 + i * 0.05, ease: [0.22, 1, 0.36, 1] }}
-                                 style={{ background: 'linear-gradient(180deg,#7C3AED,#4F46E5)', opacity: 0.85 }} />
-                        ))}
-                    </div>
-                </div>
-                <div className="col-span-2 rounded-lg bg-white/[0.03] border border-white/5 p-2">
-                    <div className="text-white/40 text-[9px] mb-2">Pipeline</div>
-                    <div className="space-y-1.5">
-                        {pipeline.map(({ label, pct, color }) => (
-                            <div key={label}>
-                                <div className="flex justify-between text-[8px] text-white/40 mb-0.5">
-                                    <span>{label}</span><span>{pct}%</span>
-                                </div>
-                                <div className="h-1 bg-white/10 rounded-full">
-                                    <motion.div className={`h-full rounded-full ${color}`}
-                                        initial={{ width: 0 }}
-                                        animate={{ width: `${pct}%` }}
-                                        transition={{ duration: 0.7, delay: 1.3, ease: 'easeOut' }} />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-// ─── Hero rotating word ───────────────────────────────────────────────────────
-
-const HERO_WORDS = ['spreadsheets.', 'sticky notes.', 'lost inboxes.', 'slow follow-ups.'];
-
-function RotatingWord() {
-    const [index, setIndex] = useState(0);
-    useEffect(() => {
-        const id = setInterval(() => setIndex(i => (i + 1) % HERO_WORDS.length), 2800);
-        return () => clearInterval(id);
-    }, []);
-    return (
-        <span className="inline-grid overflow-hidden align-bottom">
-            <AnimatePresence mode="popLayout" initial={false}>
-                <motion.span
-                    key={HERO_WORDS[index]}
-                    initial={{ y: '110%', opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: '-110%', opacity: 0 }}
-                    transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                    className="whitespace-nowrap bg-clip-text text-transparent pb-[0.12em]"
-                    style={{
-                        gridArea: '1 / 1',
-                        backgroundImage: 'linear-gradient(130deg, #C4B5FD 15%, #818CF8 60%, #8B5CF6 100%)',
-                    }}>
-                    {HERO_WORDS[index]}
-                </motion.span>
-            </AnimatePresence>
-        </span>
-    );
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
     const { props } = usePage();
     const seo = props.seo || {};
-    const latestBlogs = props.latestBlogs || [];
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openFaq,    setOpenFaq]    = useState(null);
@@ -269,11 +86,10 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
     }, []);
 
     const navLinks = [
-        { label: 'Features',       href: '#features'      },
-        { label: 'AI Prospecting', href: '#integrations'  },
-        { label: 'How it works',   href: '#how-it-works'  },
-        { label: 'Pricing',        href: '#pricing'       },
-        { label: 'Contact',        href: '#contact'       },
+        { label: 'How it works', href: '#flow'    },
+        { label: 'Features',     href: '#modules' },
+        { label: 'Pricing',      href: '#pricing' },
+        { label: 'Contact',      href: '#contact'  },
     ];
 
     const submitContact = (e) => {
@@ -290,20 +106,60 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                 <title>{seo.meta_title || 'LumeniaCRM'}</title>
                 <meta name="description" content={seo.meta_description || ''} />
                 {seo.meta_keywords && <meta name="keywords" content={seo.meta_keywords} />}
+                <link rel="canonical" href={`https://${appUrl}/`} />
+
                 <meta property="og:title" content={seo.meta_title || 'LumeniaCRM'} />
                 <meta property="og:description" content={seo.meta_description || ''} />
                 <meta property="og:type" content="website" />
+                <meta property="og:url" content={`https://${appUrl}/`} />
+                <meta property="og:image" content={`https://${appUrl}/og-image.png`} />
+
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={seo.meta_title || 'LumeniaCRM'} />
+                <meta name="twitter:description" content={seo.meta_description || ''} />
+                <meta name="twitter:image" content={`https://${appUrl}/og-image.png`} />
+
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'SoftwareApplication',
+                        name: 'LumeniaCRM',
+                        applicationCategory: 'BusinessApplication',
+                        operatingSystem: 'Web',
+                        description: seo.meta_description || undefined,
+                        url: `https://${appUrl}/`,
+                        offers: plans.length > 0
+                            ? plans.map(plan => ({
+                                '@type': 'Offer',
+                                name: plan.name,
+                                price: String(plan.price_monthly ?? '0'),
+                                priceCurrency: 'USD',
+                            }))
+                            : undefined,
+                    })}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'FAQPage',
+                        mainEntity: FAQS.map(({ q, a }) => ({
+                            '@type': 'Question',
+                            name: q,
+                            acceptedAnswer: { '@type': 'Answer', text: a },
+                        })),
+                    })}
+                </script>
             </Head>
 
             {/* ── Nav ──────────────────────────────────────────────────────── */}
-            <nav className={`fixed inset-x-0 top-0 z-50 transition-all duration-300 ${
-                scrolled ? 'bg-white/95 backdrop-blur-md shadow-sm border-b border-slate-100' : 'bg-transparent'
+            <nav className={`fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md transition-all duration-300 ${
+                scrolled ? 'shadow-sm border-b border-slate-100' : 'border-b border-transparent'
             }`}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-16">
                         <Link href="/" className="flex items-center gap-2.5">
                             <LogoMark size={34} />
-                            <span className={`font-extrabold text-[17px] tracking-tight leading-none ${scrolled ? 'text-slate-900' : 'text-white'}`}>
+                            <span className="font-extrabold text-[17px] tracking-tight leading-none text-slate-900">
                                 Lumenia CRM
                             </span>
                         </Link>
@@ -311,17 +167,13 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         <div className="hidden md:flex items-center gap-8">
                             {navLinks.map(({ label, href }) => (
                                 <a key={label} href={href}
-                                   className={`text-sm font-medium transition-colors hover:text-violet-500 ${
-                                       scrolled ? 'text-slate-600' : 'text-white/75'
-                                   }`}>{label}</a>
+                                   className="text-sm font-medium text-slate-600 transition-colors hover:text-violet-500">{label}</a>
                             ))}
                         </div>
 
                         <div className="hidden md:flex items-center gap-2">
                             <Link href="/login"
-                                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                                      scrolled ? 'text-slate-700 hover:bg-slate-100' : 'text-white/75 hover:text-white hover:bg-white/10'
-                                  }`}>
+                                  className="px-4 py-2 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-100 transition-colors">
                                 Sign In
                             </Link>
                             <Link href="/register"
@@ -331,7 +183,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             </Link>
                         </div>
 
-                        <button className={`md:hidden p-1.5 ${scrolled ? 'text-slate-700' : 'text-white'}`}
+                        <button className="md:hidden p-1.5 text-slate-700"
                                 onClick={() => setMobileOpen(v => !v)}>
                             {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                         </button>
@@ -339,15 +191,14 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                 </div>
 
                 {mobileOpen && (
-                    <div className="md:hidden border-t border-white/10 px-4 py-4 space-y-1"
-                         style={{ background: 'rgba(10,8,18,0.97)' }}>
+                    <div className="md:hidden border-t border-slate-100 bg-white px-4 py-4 space-y-1">
                         {navLinks.map(({ label, href }) => (
                             <a key={label} href={href} onClick={() => setMobileOpen(false)}
-                               className="block py-2.5 text-white/75 hover:text-white text-sm font-medium">{label}</a>
+                               className="block py-2.5 text-slate-600 hover:text-slate-900 text-sm font-medium">{label}</a>
                         ))}
-                        <div className="pt-3 border-t border-white/10 flex flex-col gap-2">
+                        <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
                             <Link href="/login"
-                                  className="block py-3 rounded-xl text-center text-sm font-medium text-white/75 border border-white/15 hover:bg-white/5">
+                                  className="block py-3 rounded-xl text-center text-sm font-medium text-slate-700 border border-slate-200 hover:bg-slate-50">
                                 Sign In
                             </Link>
                             <Link href="/register"
@@ -361,173 +212,112 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </nav>
 
             {/* ── Hero ─────────────────────────────────────────────────────── */}
-            <section className="relative min-h-screen flex items-center overflow-hidden pt-16"
-                     style={{ background: 'linear-gradient(155deg, #08060F 0%, #0F0C1E 50%, #130F24 100%)' }}>
-
-                {/* Faint blueprint grid, masked toward the center */}
-                <div className="absolute inset-0 pointer-events-none"
-                     style={{
-                         backgroundImage: 'linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)',
-                         backgroundSize: '56px 56px',
-                         maskImage: 'radial-gradient(ellipse 90% 75% at 60% 35%, black 25%, transparent 78%)',
-                         WebkitMaskImage: 'radial-gradient(ellipse 90% 75% at 60% 35%, black 25%, transparent 78%)',
-                     }} />
-
-                {/* Slow-drifting aurora blobs */}
-                <motion.div
-                    className="absolute -top-32 right-[-8%] w-[760px] h-[700px] rounded-full pointer-events-none"
-                    animate={{ x: [0, -48, 0], y: [0, 36, 0], scale: [1, 1.07, 1] }}
-                    transition={{ duration: 18, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{ background: 'radial-gradient(ellipse at 60% 40%, rgba(124,58,237,0.17) 0%, transparent 62%)', filter: 'blur(70px)' }} />
-                <motion.div
-                    className="absolute bottom-[-12%] left-[-8%] w-[560px] h-[560px] rounded-full pointer-events-none"
-                    animate={{ x: [0, 56, 0], y: [0, -32, 0] }}
-                    transition={{ duration: 23, repeat: Infinity, ease: 'easeInOut' }}
-                    style={{ background: 'radial-gradient(ellipse at 40% 60%, rgba(79,70,229,0.12) 0%, transparent 62%)', filter: 'blur(80px)' }} />
-
-                <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+            <section className="relative overflow-hidden pt-16 bg-white">
+                <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
                     <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
 
-                        {/* Left: Copy */}
                         <motion.div variants={stagger} initial="hidden" animate="show">
-                            <motion.div variants={fadeUp} className="mb-7">
-                                <span className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full
-                                                 text-xs font-semibold text-violet-300
-                                                 bg-violet-500/10 border border-violet-500/20">
-                                    <span className="relative flex h-2 w-2 flex-shrink-0">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-60" />
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-violet-400" />
-                                    </span>
-                                    AI lead prospecting is live
-                                </span>
+                            <motion.div variants={fadeUp} className="flex items-center gap-3 mb-6">
+                                <div className="h-px w-10 bg-violet-400" />
+                                <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Lumenia CRM</span>
                             </motion.div>
 
                             <motion.h1 variants={fadeUp}
-                                       className="text-[44px] sm:text-6xl lg:text-[64px] font-black text-white
-                                                  leading-[1.04] tracking-tight mb-7">
-                                Stop losing deals<br />to <RotatingWord />
+                                       className="text-[40px] sm:text-6xl lg:text-[58px] font-black text-slate-900
+                                                  leading-[1.06] tracking-tight mb-7">
+                                Find leads, follow up,<br />and close the deal.
                             </motion.h1>
 
                             <motion.p variants={fadeUp}
-                                      className="text-white/45 text-lg sm:text-xl leading-relaxed mb-10 max-w-[420px]">
-                                Lumenia CRM puts your leads, emails, pipeline, and invoices
-                                in one workspace your whole team can use — starting free.
+                                      className="text-slate-500 text-lg sm:text-xl leading-relaxed mb-10 max-w-[440px]">
+                                Lumenia CRM finds new customers with AI, runs your email and WhatsApp
+                                follow ups on its own, and replies to leads itself so nothing sits unanswered.
                             </motion.p>
 
                             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-start gap-3 mb-10">
                                 <Link href="/register"
                                       className="group relative overflow-hidden inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-base
                                                  font-semibold text-white transition-all
-                                                 hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-px"
+                                                 hover:shadow-xl hover:shadow-violet-500/20 hover:-translate-y-px"
                                       style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                    <span className="absolute inset-0 -translate-x-full group-hover:translate-x-full
-                                                     transition-transform duration-700 ease-out
-                                                     bg-gradient-to-r from-transparent via-white/25 to-transparent" />
                                     <span className="relative">Create Free Account</span>
                                     <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                                 </Link>
                                 <Link href="/login"
                                       className="inline-flex items-center gap-1.5 px-7 py-3.5 rounded-xl text-base font-medium
-                                                 text-white/50 hover:text-white/90 transition-colors">
+                                                 text-slate-500 hover:text-slate-900 transition-colors">
                                     Sign in <ArrowRight className="w-3.5 h-3.5 opacity-50" />
                                 </Link>
                             </motion.div>
 
-                            <motion.div variants={fadeUp} className="flex items-center gap-4">
-                                <div className="flex -space-x-2.5">
-                                    {TESTIMONIALS.map(({ avatar }, i) => (
-                                        <div key={avatar}
-                                             className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white
-                                                        border-2 border-[#0D0A1A]"
-                                             style={{ background: `linear-gradient(135deg, ${['#7C3AED','#3B82F6','#10B981','#F59E0B','#EC4899'][i]}, #4F46E5)` }}>
-                                            {avatar}
-                                        </div>
-                                    ))}
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-1 mb-0.5">
-                                        {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />)}
-                                        <span className="text-white/60 text-xs font-semibold ml-1">4.9</span>
+                            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex -space-x-2.5">
+                                        {TESTIMONIALS.map(({ avatar }, i) => (
+                                            <div key={avatar}
+                                                 className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white
+                                                            border-2 border-white shadow-sm"
+                                                 style={{ background: `linear-gradient(135deg, ${['#7C3AED','#3B82F6','#10B981'][i]}, #4F46E5)` }}>
+                                                {avatar}
+                                            </div>
+                                        ))}
                                     </div>
-                                    <div className="text-white/30 text-xs">Trusted by 500+ teams · free plan, no card needed</div>
+                                    <div>
+                                        <div className="flex items-center gap-1 mb-0.5">
+                                            {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />)}
+                                            <span className="text-slate-700 text-xs font-semibold ml-1">4.9</span>
+                                        </div>
+                                        <div className="text-slate-400 text-xs">Free plan, no card needed</div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-5 text-slate-400 text-xs">
+                                    <span><span className="text-slate-800 font-bold">500+</span> workspaces</span>
+                                    <span><span className="text-slate-800 font-bold">50k+</span> leads tracked</span>
                                 </div>
                             </motion.div>
                         </motion.div>
 
-                        {/* Right: App mockup + floating chips */}
-                        <div className="relative hidden lg:block">
-                            <div className="absolute -inset-8 rounded-3xl pointer-events-none"
-                                 style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.2) 0%, transparent 65%)', filter: 'blur(40px)' }} />
-
-                            <div style={{ perspective: '1600px' }}>
-                                <motion.div
-                                    initial={{ opacity: 0, y: 56, rotateX: 14 }}
-                                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                                    transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                                    className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl"
-                                    style={{ background: '#0F0D1C', transformOrigin: 'center bottom' }}>
-                                    <div className="flex items-center gap-2 px-5 py-3 border-b border-white/10">
-                                        <div className="flex gap-1.5">
-                                            <div className="w-3 h-3 rounded-full bg-red-500/70" />
-                                            <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
-                                            <div className="w-3 h-3 rounded-full bg-green-500/70" />
+                        <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                            className="relative"
+                        >
+                            <img
+                                src="/images/marketing/hero-team.jpg"
+                                alt="A sales team meeting and smiling together in a modern office"
+                                className="w-full aspect-[4/3] object-cover rounded-3xl shadow-xl"
+                            />
+                            <div className="absolute -bottom-5 -left-5 sm:-left-8 bg-white rounded-2xl shadow-lg border border-slate-100 px-4 py-3 flex items-center gap-3 max-w-[240px]">
+                                <div className="flex -space-x-2 shrink-0">
+                                    {TESTIMONIALS.map(({ avatar }, i) => (
+                                        <div key={avatar}
+                                             className="w-7 h-7 rounded-full flex items-center justify-center text-[9px] font-bold text-white border-2 border-white"
+                                             style={{ background: `linear-gradient(135deg, ${['#7C3AED','#3B82F6','#10B981'][i]}, #4F46E5)` }}>
+                                            {avatar}
                                         </div>
-                                        <div className="flex-1 flex justify-center">
-                                            <div className="bg-white/5 rounded-md px-10 py-1 text-white/20 text-xs">
-                                                {appUrl}/dashboard
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex" style={{ minHeight: '280px' }}>
-                                        <MockSidebar />
-                                        <MockDashboard />
-                                    </div>
-                                </motion.div>
+                                    ))}
+                                </div>
+                                <p className="text-slate-700 text-xs font-medium leading-snug">
+                                    Trusted by 500+ sales teams
+                                </p>
                             </div>
-
-                            {CHIPS.map(({ icon: Icon, label, sub, iconBg, iconColor, dotBg, pos, floatY, dur, delay }) => (
-                                <motion.div
-                                    key={label}
-                                    initial={{ opacity: 0, scale: 0.85 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                                    className={`absolute ${pos}`}>
-                                    <motion.div
-                                        animate={{ y: [0, floatY, 0] }}
-                                        transition={{ duration: dur, repeat: Infinity, ease: 'easeInOut', delay: delay + 0.3 }}
-                                        className="flex items-center gap-2.5 rounded-xl px-3 py-2 shadow-xl border border-white/10"
-                                        style={{ background: 'rgba(15,13,28,0.92)', backdropFilter: 'blur(12px)' }}>
-                                        <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                                             style={{ background: iconBg }}>
-                                            <Icon className="w-3.5 h-3.5" style={{ color: iconColor }} />
-                                        </div>
-                                        <div>
-                                            <div className="text-white text-xs font-semibold leading-tight">{label}</div>
-                                            <div className="text-white/35 text-[10px]">{sub}</div>
-                                        </div>
-                                        <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: dotBg }} />
-                                    </motion.div>
-                                </motion.div>
-                            ))}
-                        </div>
+                        </motion.div>
                     </div>
                 </div>
-
-                <div className="absolute bottom-0 inset-x-0 h-28 pointer-events-none"
-                     style={{ background: 'linear-gradient(to bottom, transparent, #08060F)' }} />
             </section>
 
-            {/* ── Integration strip ────────────────────────────────────────── */}
-            <section className="py-8 border-b border-white/5" style={{ background: '#06050D' }}>
+            {/* ── Works with strip ─────────────────────────────────────────── */}
+            <section className="py-7 border-y border-slate-100 bg-white">
                 <div className="max-w-5xl mx-auto px-4">
-                    <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-10">
-                        <span className="text-white/20 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
+                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10">
+                        <span className="text-slate-300 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
                             Works with
                         </span>
-                        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-                            {['Gmail', 'Outlook', 'WhatsApp Business', 'SendGrid', 'Mailgun', 'Brevo', 'Google Sheets', 'CSV Import'].map(name => (
+                        <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2">
+                            {['Apollo.io', 'People Data Labs', 'Gmail', 'Outlook', 'WhatsApp Business', 'OpenAI', 'Claude', 'Kimi'].map(name => (
                                 <span key={name}
-                                      className="text-white/25 text-sm font-medium hover:text-white/50 transition-colors cursor-default">
+                                      className="text-slate-400 text-sm font-medium hover:text-slate-600 transition-colors cursor-default">
                                     {name}
                                 </span>
                             ))}
@@ -536,980 +326,231 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                 </div>
             </section>
 
-            {/* ── Stats ────────────────────────────────────────────────────── */}
-            <section className="py-20" style={{ background: '#06050D' }}>
-                <div className="max-w-5xl mx-auto px-4">
-                    <motion.div
-                        variants={stagger}
-                        initial="hidden"
-                        whileInView="show"
-                        viewport={{ once: true }}
-                        className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-                        {[
-                            { value: '500+',  label: 'Active workspaces', color: '#A78BFA' },
-                            { value: '50k+',  label: 'Leads tracked',     color: '#60A5FA' },
-                            { value: '99.9%', label: 'Uptime SLA',        color: '#34D399' },
-                            { value: '4.9★',  label: 'Average rating',    color: '#FCD34D' },
-                        ].map(({ value, label, color }) => (
-                            <motion.div key={label} variants={scaleIn}>
-                                <div className="text-4xl font-black mb-2" style={{ color }}>{value}</div>
-                                <div className="text-white/30 text-sm">{label}</div>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* ── Features ─────────────────────────────────────────────────── */}
-            <section id="features" className="py-28 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-16">
+            {/* ── Why choose us ────────────────────────────────────────────── */}
+            <section id="why-us" className="py-24 bg-white">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14 max-w-2xl">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
                             <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">What's included</span>
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Why choose us</span>
                         </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">
-                            Six tools. One tab.
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-4">
+                            Built to replace the mess, not add to it.
                         </motion.h2>
-                        <motion.p variants={fadeUp} className="text-slate-400 text-lg mt-3 max-w-md">
-                            No switching between apps. No copy-pasting between tools.
+                        <motion.p variants={fadeUp} className="text-slate-500 text-lg">
+                            Here is what actually sets Lumenia apart from a spreadsheet and four disconnected apps.
                         </motion.p>
                     </motion.div>
 
-                    <motion.div
-                        variants={stagger}
-                        initial="hidden"
-                        whileInView="show"
-                        viewport={{ once: true }}
-                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 rounded-2xl overflow-hidden border border-slate-100">
-                        {FEATURES.map(({ icon: Icon, title, description, accent }, idx) => (
-                            <motion.div
-                                key={title}
-                                variants={fadeUp}
-                                className="group bg-white p-8 border-r border-b border-slate-100
-                                           hover:bg-slate-50/60 transition-colors duration-200 cursor-default
-                                           [&:nth-child(3n)]:border-r-0 [&:nth-last-child(-n+3)]:border-b-0">
-                                <div className="flex items-start justify-between mb-5">
-                                    <div className="w-10 h-10 rounded-xl flex items-center justify-center
-                                                    group-hover:scale-110 transition-transform duration-200"
-                                         style={{ background: `${accent}18` }}>
-                                        <Icon style={{ color: accent, width: '18px', height: '18px' }} />
-                                    </div>
-                                    <span className="text-xs font-bold text-slate-200 tabular-nums">
-                                        {String(idx + 1).padStart(2, '0')}
-                                    </span>
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                                className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {WHY_CHOOSE_US.map(({ icon: Icon, title, description }) => (
+                            <motion.div key={title} variants={fadeUp}
+                                        className="rounded-2xl border border-slate-100 p-6 flex gap-4 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-violet-50">
+                                    <Icon className="w-5 h-5 text-violet-600" />
                                 </div>
-                                <h3 className="text-[15px] font-bold text-slate-900 mb-2">{title}</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
-                                <div className="mt-5 h-0.5 w-0 group-hover:w-8 transition-all duration-300 rounded-full"
-                                     style={{ background: accent }} />
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                </div>
-            </section>
-
-            {/* ── AI Data Partners ──────────────────────────────────────────── */}
-            <section id="integrations" className="py-28" style={{ background: '#07050F' }}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14">
-                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10" style={{ background: '#FB923C' }} />
-                            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#FB923C' }}>AI Prospecting</span>
-                        </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-white leading-tight mb-4">
-                            Find anyone. Import instantly.<br />
-                            <span className="text-white/25 font-light text-3xl sm:text-4xl">Powered by the world's best data.</span>
-                        </motion.h2>
-                        <motion.p variants={fadeUp} className="text-white/40 text-lg max-w-2xl">
-                            Describe your ideal customer in plain English. LeadFlow queries{' '}
-                            <span className="font-semibold" style={{ color: '#FB923C' }}>Apollo.io</span> and{' '}
-                            <span className="text-blue-400 font-semibold">People Data Labs</span>{' '}
-                            simultaneously, ranks results by ICP match score, and imports verified leads straight into your workspace.
-                        </motion.p>
-                    </motion.div>
-
-                    {/* Bento grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-
-                        {/* Apollo.io card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.55 }}
-                            className="md:col-span-5 rounded-3xl p-7 border border-white/[0.06] relative overflow-hidden"
-                            style={{ background: 'rgba(255,107,61,0.04)' }}
-                        >
-                            <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full pointer-events-none"
-                                 style={{ background: 'radial-gradient(circle, rgba(255,107,61,0.12) 0%, transparent 65%)' }} />
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-sm shrink-0"
-                                     style={{ background: 'linear-gradient(135deg,#FF6B3D,#E63900)' }}>A</div>
                                 <div>
-                                    <div className="text-white font-bold text-sm">Apollo.io</div>
-                                    <div className="text-white/30 text-xs">Sales Intelligence Platform</div>
-                                </div>
-                                <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
-                                     style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.3)' }}>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    <span className="text-green-400 text-[10px] font-bold">Live</span>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                {[{ n:'275M+',l:'Verified contacts'},{n:'73M+',l:'Companies indexed'},{n:'98%',l:'Email accuracy'},{n:'< 1s',l:'Query response'}].map(({n,l})=>(
-                                    <div key={l} className="rounded-2xl p-4 border border-white/[0.05]" style={{ background:'rgba(255,255,255,0.025)' }}>
-                                        <div className="text-[22px] font-black text-white leading-none mb-1">{n}</div>
-                                        <div className="text-white/25 text-[11px]">{l}</div>
-                                    </div>
-                                ))}
-                            </div>
-                            <ul className="space-y-2">
-                                {['Verified work emails','Direct phone numbers','LinkedIn URL + seniority','Tech stack & funding data','Company headcount + growth'].map(item=>(
-                                    <li key={item} className="flex items-center gap-2.5 text-white/45 text-sm">
-                                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" style={{ color:'#FB923C' }}/>{item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-
-                        {/* Connector bridge */}
-                        <div className="hidden md:flex md:col-span-2 flex-col items-center justify-center gap-3">
-                            <div className="flex-1 w-px" style={{ background: 'linear-gradient(180deg,transparent,rgba(255,255,255,0.06))' }} />
-                            <div className="w-12 h-12 rounded-full border flex items-center justify-center shrink-0"
-                                 style={{ background: 'rgba(124,58,237,0.15)', borderColor: 'rgba(124,58,237,0.35)' }}>
-                                <Sparkles size={15} className="text-violet-400" />
-                            </div>
-                            <div className="flex-1 w-px" style={{ background: 'linear-gradient(180deg,rgba(255,255,255,0.06),transparent)' }} />
-                        </div>
-
-                        {/* People Data Labs card */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.08 }}
-                            className="md:col-span-5 rounded-3xl p-7 border border-white/[0.06] relative overflow-hidden"
-                            style={{ background: 'rgba(59,130,246,0.04)' }}
-                        >
-                            <div className="absolute -top-24 -left-24 w-72 h-72 rounded-full pointer-events-none"
-                                 style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 65%)' }} />
-                            <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-xl flex items-center justify-center font-black text-white text-[10px] shrink-0"
-                                     style={{ background: 'linear-gradient(135deg,#3B82F6,#1D4ED8)' }}>PDL</div>
-                                <div>
-                                    <div className="text-white font-bold text-sm">People Data Labs</div>
-                                    <div className="text-white/30 text-xs">Enterprise Data API</div>
-                                </div>
-                                <div className="ml-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full border"
-                                     style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.3)' }}>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                                    <span className="text-green-400 text-[10px] font-bold">Live</span>
-                                </div>
-                            </div>
-                            <div className="space-y-0 mb-6 divide-y" style={{ borderColor:'rgba(255,255,255,0.05)' }}>
-                                {[{n:'1.5B+',l:'Person profiles globally',c:'#60A5FA'},{n:'420M+',l:'Professional B2B records',c:'#818CF8'},{n:'180+',l:'Countries covered',c:'#34D399'}].map(({n,l,c})=>(
-                                    <div key={l} className="flex items-center justify-between py-3.5">
-                                        <span className="text-white/35 text-sm">{l}</span>
-                                        <span className="font-black text-xl leading-none" style={{ color:c }}>{n}</span>
-                                    </div>
-                                ))}
-                            </div>
-                            <ul className="space-y-2">
-                                {['Work & personal emails','Job history & seniority','Skills, education & certs','Social profiles (LinkedIn, GitHub)','Real-time job change signals'].map(item=>(
-                                    <li key={item} className="flex items-center gap-2.5 text-white/45 text-sm">
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400 shrink-0"/>{item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-
-                        {/* Combined stat */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.12 }}
-                            className="md:col-span-4 rounded-3xl p-8 flex flex-col justify-between border"
-                            style={{ background:'linear-gradient(135deg,rgba(124,58,237,0.1),rgba(79,70,229,0.05))', borderColor:'rgba(124,58,237,0.2)' }}
-                        >
-                            <div>
-                                <div className="text-[54px] font-black text-white leading-none mb-2">
-                                    350M<span className="text-violet-400">+</span>
-                                </div>
-                                <div className="text-white/30 text-sm leading-relaxed">
-                                    reachable contacts across both networks — deduplicated, ranked by ICP fit
-                                </div>
-                            </div>
-                            <div className="space-y-3 pt-6 mt-6 border-t border-white/[0.07]">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background:'#FF6B3D' }} />
-                                    <span className="text-white/30 text-xs">Apollo.io · 275M contacts</span>
-                                </div>
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background:'#3B82F6' }} />
-                                    <span className="text-white/30 text-xs">People Data Labs · 1.5B profiles</span>
-                                </div>
-                                <div className="flex items-center gap-2.5 pt-3 border-t border-white/[0.05]">
-                                    <Sparkles className="w-3.5 h-3.5 text-violet-400 shrink-0" />
-                                    <span className="text-violet-300 text-xs font-semibold">AI-ranked by ICP match score</span>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        {/* AI query demo */}
-                        <motion.div
-                            initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.55, delay: 0.16 }}
-                            className="md:col-span-8 rounded-3xl p-7 border border-white/[0.06]"
-                            style={{ background:'rgba(255,255,255,0.02)' }}
-                        >
-                            <div className="text-white/20 text-[10px] font-black uppercase tracking-widest mb-4">AI Lead Search — Live</div>
-
-                            {/* Natural-language query */}
-                            <div className="rounded-xl border px-4 py-3.5 mb-4"
-                                 style={{ background:'rgba(124,58,237,0.07)', borderColor:'rgba(124,58,237,0.3)' }}>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                    <Sparkles size={11} className="text-violet-400 shrink-0" />
-                                    <span className="text-violet-400 text-[9px] font-black uppercase tracking-widest">Natural-language query</span>
-                                </div>
-                                <p className="text-white/55 text-sm leading-relaxed italic">
-                                    "Find <span className="text-violet-300 not-italic font-semibold">SaaS founders</span> in{' '}
-                                    <span className="text-violet-300 not-italic font-semibold">Pakistan</span> with companies{' '}
-                                    <span className="text-violet-300 not-italic font-semibold">under 50 employees</span> using{' '}
-                                    <span className="text-violet-300 not-italic font-semibold">HubSpot or Salesforce</span>"
-                                </p>
-                            </div>
-
-                            <div className="flex items-center gap-2 mb-4 text-white/20 text-xs">
-                                <div className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-                                Querying Apollo.io + People Data Labs · 247 matches found
-                            </div>
-
-                            {/* Result rows */}
-                            <div className="space-y-2">
-                                {[
-                                    { name:'Ahmed Karim',   title:'Co-founder & CEO', company:'Techstars PK',  email:'a.k***@techstars.pk',  score:94, src:'Apollo' },
-                                    { name:'Sara Qureshi',  title:'Founder',          company:'Cloudify.io',   email:'s.q***@cloudify.io',   score:89, src:'PDL'    },
-                                    { name:'Omar Siddiqui', title:'CEO',              company:'Nexara Pvt',    email:'o.s***@nexara.pk',      score:83, src:'Apollo' },
-                                ].map(({ name, title, company, email, score, src }) => (
-                                    <div key={name}
-                                         className="flex items-center gap-3 rounded-xl px-4 py-3 border border-white/[0.05]"
-                                         style={{ background:'rgba(255,255,255,0.03)' }}>
-                                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[11px] font-bold shrink-0"
-                                             style={{ background:'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                            {name[0]}
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-white/75 text-sm font-semibold truncate">{name}</div>
-                                            <div className="text-white/25 text-xs truncate">{title} · {company}</div>
-                                        </div>
-                                        <div className="hidden sm:block text-white/20 text-xs shrink-0">{email}</div>
-                                        <div className="shrink-0 text-[9px] font-bold px-2 py-0.5 rounded-full border"
-                                             style={{ color:src==='Apollo'?'#FB923C':'#60A5FA', borderColor:src==='Apollo'?'rgba(251,146,60,0.3)':'rgba(96,165,250,0.3)', background:src==='Apollo'?'rgba(251,146,60,0.08)':'rgba(96,165,250,0.08)' }}>
-                                            {src}
-                                        </div>
-                                        <div className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-black"
-                                             style={{ background:score>=90?'rgba(16,185,129,0.12)':'rgba(59,130,246,0.1)', color:score>=90?'#10B981':'#60A5FA' }}>
-                                            {score}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="mt-4 pt-4 border-t border-white/[0.05] flex items-center justify-between gap-4">
-                                <span className="text-white/20 text-xs">244 more results · importing to workspace</span>
-                                <div className="w-32 h-1.5 rounded-full bg-white/[0.06] overflow-hidden shrink-0">
-                                    <div className="h-full w-3/4 rounded-full" style={{ background:'linear-gradient(90deg,#7C3AED,#4F46E5)' }} />
-                                </div>
-                            </div>
-                        </motion.div>
-
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Pipeline highlight ───────────────────────────────────────── */}
-            <section className="py-28" style={{ background: '#0A0812' }}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -32 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                            className="rounded-2xl p-5 border border-white/8"
-                            style={{ background: 'rgba(15,13,28,0.9)' }}>
-                            <div className="text-white/25 text-[10px] font-bold uppercase tracking-widest mb-4">
-                                Pipeline Board
-                            </div>
-                            <div className="grid grid-cols-3 gap-3">
-                                {[
-                                    { stage: 'New',      color: '#60A5FA', leads: [{ name: 'Apex Digital', val: '$1,500' }, { name: 'TechNova', val: '$500' }, { name: 'BlueByte', val: '$1,200' }] },
-                                    { stage: 'In Talk',  color: '#A78BFA', leads: [{ name: 'Orion Labs',   val: '$2,000' }, { name: 'Qlink Corp', val: '$950' }] },
-                                    { stage: 'Proposal', color: '#FCD34D', leads: [{ name: 'Fivestar Co',  val: '$550'   }, { name: 'Cloudify',  val: '$2,800' }] },
-                                ].map(({ stage, color, leads }) => (
-                                    <div key={stage}>
-                                        <div className="text-xs font-bold mb-2" style={{ color }}>
-                                            {stage} <span className="text-white/20 font-normal">({leads.length})</span>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {leads.map(({ name, val }) => (
-                                                <div key={name}
-                                                     className="bg-white/[0.04] rounded-xl p-2.5 border border-white/5">
-                                                    <div className="flex items-center gap-1.5 mb-1">
-                                                        <div className="w-5 h-5 rounded-full flex-shrink-0 flex items-center justify-center text-white text-[9px] font-bold"
-                                                             style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                                            {name[0]}
-                                                        </div>
-                                                        <span className="text-white/65 text-[11px] font-medium truncate">{name}</span>
-                                                    </div>
-                                                    <div className="text-[11px] font-bold text-green-400">{val}</div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: 32 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="h-px w-10 bg-violet-500" />
-                                <span className="text-violet-400 text-xs font-bold uppercase tracking-widest">Pipeline</span>
-                            </div>
-                            <h2 className="text-4xl font-black text-white mb-5 leading-tight">
-                                Know exactly what<br />needs attention today.
-                            </h2>
-                            <p className="text-white/40 text-lg mb-8 leading-relaxed">
-                                The Kanban board shows every deal in your pipeline. Drag a card to update its stage.
-                                Click it to see the full history — calls, emails, notes — without opening a separate screen.
-                            </p>
-                            <ul className="space-y-3">
-                                {[
-                                    'Custom stages that match your sales process',
-                                    'Priority and score per lead',
-                                    'Bulk moves across stages',
-                                    'Full activity log on every card',
-                                    'Filter by tag, owner, or status in seconds',
-                                ].map(item => (
-                                    <li key={item} className="flex items-center gap-3 text-white/50 text-sm">
-                                        <CheckCircle2 className="w-4 h-4 text-violet-400 flex-shrink-0" />{item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Campaign highlight ───────────────────────────────────────── */}
-            <section className="py-28 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -32 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}>
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="h-px w-10 bg-blue-400" />
-                                <span className="text-blue-600 text-xs font-bold uppercase tracking-widest">Email Campaigns</span>
-                            </div>
-                            <h2 className="text-4xl font-black text-slate-900 mb-5 leading-tight">
-                                See who read your email<br />before you follow up.
-                            </h2>
-                            <p className="text-slate-500 text-lg mb-8 leading-relaxed">
-                                Send a campaign to a segment of your leads and track opens and clicks per person.
-                                Know exactly who's warm so you reach out at the right moment.
-                            </p>
-                            <ul className="space-y-3">
-                                {[
-                                    'Works with Gmail, Outlook, SendGrid, any SMTP',
-                                    'Open & click tracking per contact',
-                                    'Personalise with name, company, custom fields',
-                                    'Multi-step follow-ups to anyone who hasn\'t opened yet',
-                                    'Schedule sends or throttle by hour',
-                                    'Per-contact delivery log',
-                                ].map(item => (
-                                    <li key={item} className="flex items-center gap-3 text-slate-600 text-sm">
-                                        <CheckCircle2 className="w-4 h-4 text-blue-500 flex-shrink-0" />{item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: 32 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-                            className="rounded-2xl overflow-hidden border border-slate-100 shadow-lg">
-                            <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
-                                <div className="text-slate-800 font-semibold text-sm">Q4 Outreach — Batch 1</div>
-                                <div className="text-slate-400 text-xs mt-0.5">847 recipients · running for 2 days</div>
-                            </div>
-                            <div className="bg-white p-4">
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                    {[
-                                        { label: 'Delivered', value: '847', sub: '100%',  color: '#059669', bg: '#ECFDF5' },
-                                        { label: 'Opened',    value: '412', sub: '48.7%', color: '#2563EB', bg: '#EFF6FF' },
-                                        { label: 'Clicked',   value: '89',  sub: '10.5%', color: '#7C3AED', bg: '#F5F3FF' },
-                                        { label: 'Replied',   value: '24',  sub: '2.8%',  color: '#D97706', bg: '#FFFBEB' },
-                                    ].map(({ label, value, sub, color, bg }) => (
-                                        <div key={label} className="rounded-xl p-3 border border-slate-100" style={{ background: bg }}>
-                                            <div className="text-slate-500 text-xs mb-1">{label}</div>
-                                            <div className="text-2xl font-bold" style={{ color }}>{value}</div>
-                                            <div className="text-xs opacity-70" style={{ color }}>{sub}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <div className="text-slate-400 text-[10px] mb-2">Sends per hour (last 48 h)</div>
-                                <div className="flex items-end gap-1" style={{ height: '44px' }}>
-                                    {[20,80,100,60,40,75,90,50,30,85,70,95].map((h, i) => (
-                                        <div key={i} className="flex-1 rounded-sm"
-                                             style={{ height: `${h}%`, background: 'linear-gradient(180deg,#3B82F6,#6366F1)', opacity: 0.65 }} />
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── WhatsApp Automation ──────────────────────────────────────── */}
-            <section className="py-28" style={{ background: '#0A0812' }}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-
-                        <motion.div
-                            initial={{ opacity: 0, x: -32 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-                            className="rounded-2xl p-5 border border-white/8"
-                            style={{ background: 'rgba(15,13,28,0.9)' }}>
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="text-white/25 text-[10px] font-bold uppercase tracking-widest">
-                                    WhatsApp · +92 300 1234567
-                                </div>
-                                <div className="flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: '#25D366' }}>
-                                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: '#25D366' }} /> Online
-                                </div>
-                            </div>
-                            <div className="space-y-2.5">
-                                <div className="max-w-[82%] bg-white/[0.06] rounded-2xl rounded-tl-sm px-3.5 py-2.5">
-                                    <p className="text-white/70 text-[12.5px] leading-relaxed">
-                                        Hey, do you have a free trial? What's pricing look like for a 5-person team?
-                                    </p>
-                                </div>
-                                <div className="max-w-[85%] ml-auto rounded-2xl rounded-tr-sm px-3.5 py-2.5"
-                                     style={{ background: 'linear-gradient(135deg,#10B981,#0d9c6f)' }}>
-                                    <p className="text-white text-[12.5px] leading-relaxed">
-                                        Yep, the free plan has no time limit. For 5 seats our Team plan is $79/mo.
-                                        Want someone to call you and walk through it?
-                                    </p>
-                                </div>
-                                <div className="flex items-center gap-1.5 pl-1 pt-1">
-                                    <Sparkles className="w-3 h-3" style={{ color: '#25D366' }} />
-                                    <span className="text-[10px] font-medium" style={{ color: 'rgba(37,211,102,0.7)' }}>
-                                        Answered from your knowledge base
-                                    </span>
-                                </div>
-                            </div>
-                            <div className="mt-4 pt-4 border-t border-white/8 flex items-center gap-2.5">
-                                <div className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0"
-                                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                    N
-                                </div>
-                                <span className="text-white/50 text-[11.5px]">
-                                    Lead created — <span className="font-semibold" style={{ color: '#25D366' }}>tagged "Pricing inquiry"</span>
-                                </span>
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, x: 32 }}
-                            whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.65, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}>
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="h-px w-10" style={{ background: '#25D366' }} />
-                                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#25D366' }}>WhatsApp Automation</span>
-                            </div>
-                            <h2 className="text-4xl font-black text-white mb-5 leading-tight">
-                                Someone messages you<br />on WhatsApp. A lead shows<br />up in your pipeline.
-                            </h2>
-                            <p className="text-white/40 text-lg mb-6 leading-relaxed">
-                                Connect your WhatsApp Business number and every conversation gets a reply in seconds —
-                                drawn from the FAQs and answers you've actually written, not a generic script.
-                                The moment someone asks about pricing or a demo, LeadFlow creates the lead and tags it for you.
-                            </p>
-                            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-6"
-                                 style={{ borderColor: 'rgba(37,211,102,0.3)', background: 'rgba(37,211,102,0.08)' }}>
-                                <MessageSquare className="w-3.5 h-3.5" style={{ color: '#25D366' }} />
-                                <span className="text-[11px] font-semibold" style={{ color: '#25D366' }}>
-                                    Built on the WhatsApp Business Platform
-                                </span>
-                            </div>
-                            <ul className="space-y-3">
-                                {[
-                                    'Replies pulled from your own knowledge base, not a generic script',
-                                    "Picks up buying signals — \"pricing\", \"demo\", \"book a call\" — automatically",
-                                    'Qualified chats become leads on their own, already tagged',
-                                    'Works on the WhatsApp number you already use',
-                                    'Every message sits on the lead\'s timeline next to their emails and calls',
-                                ].map(item => (
-                                    <li key={item} className="flex items-center gap-3 text-white/50 text-sm">
-                                        <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: '#25D366' }} />{item}
-                                    </li>
-                                ))}
-                            </ul>
-                        </motion.div>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Lead History Timeline ────────────────────────────────────── */}
-            <section className="py-28 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-
-                        {/* ── Left: text ── */}
-                        <motion.div
-                            initial={{ opacity: 0, x: -28 }} whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.6, ease: [0.22,1,0.36,1] }}
-                            className="lg:sticky lg:top-24"
-                        >
-                            <div className="flex items-center gap-3 mb-5">
-                                <div className="h-px w-10 bg-violet-400" />
-                                <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Lead History</span>
-                            </div>
-                            <h2 className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight mb-5">
-                                Every touchpoint.<br />Forever on record.
-                            </h2>
-                            <p className="text-slate-500 text-lg leading-relaxed mb-8">
-                                From the moment AI finds a lead to the day the invoice is paid,
-                                every email, call, note, and stage change is timestamped and
-                                searchable — attached to the lead, not scattered across your inbox.
-                            </p>
-                            <ul className="space-y-3 mb-10">
-                                {[
-                                    'AI import source + ICP score logged automatically',
-                                    'Campaign sends and per-contact open/click tracking',
-                                    'Auto and manual follow-up history in one thread',
-                                    'Call logs with rep notes and timestamps',
-                                    'Pipeline stage changes with who moved it and when',
-                                    'Proposal, invoice, and payment events all visible',
-                                ].map(item => (
-                                    <li key={item} className="flex items-center gap-3 text-slate-600 text-sm">
-                                        <CheckCircle2 className="w-4 h-4 text-violet-400 flex-shrink-0" />{item}
-                                    </li>
-                                ))}
-                            </ul>
-                            <div className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full border border-violet-200 bg-violet-50 text-violet-700 text-sm font-semibold">
-                                <Activity className="w-4 h-4" />
-                                Full history. No gaps. No surprises.
-                            </div>
-                        </motion.div>
-
-                        {/* ── Right: timeline mockup ── */}
-                        <motion.div
-                            initial={{ opacity: 0, x: 28 }} whileInView={{ opacity: 1, x: 0 }}
-                            viewport={{ once: true }} transition={{ duration: 0.6, delay: 0.08, ease: [0.22,1,0.36,1] }}
-                            className="rounded-2xl overflow-hidden border border-white/[0.07] shadow-2xl"
-                            style={{ background:'#0D0B18' }}
-                        >
-                            {/* Lead header */}
-                            <div className="px-5 py-4 border-b border-white/[0.06] flex items-center justify-between">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                                         style={{ background:'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>A</div>
-                                    <div>
-                                        <div className="text-white font-semibold text-[13px] leading-none">Ali Hassan — Apex Digital</div>
-                                        <div className="text-white/25 text-[10px] mt-0.5">SaaS Founder · Lahore, PK · ICP score 94</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold"
-                                     style={{ background:'rgba(16,185,129,0.1)', color:'#10B981' }}>
-                                    <div className="w-1.5 h-1.5 rounded-full bg-green-400" />Won
-                                </div>
-                            </div>
-
-                            {/* Events */}
-                            <div className="px-5 pt-5 pb-4">
-                                {TIMELINE_EVENTS.map(({ icon: Icon, color, title, sub, time, hot, won }, i) => (
-                                    <div key={i} className="flex gap-3 relative">
-                                        {i < TIMELINE_EVENTS.length - 1 && (
-                                            <div className="absolute left-[15px] top-9 bottom-0 w-px"
-                                                 style={{ background:'rgba(255,255,255,0.05)' }} />
-                                        )}
-                                        <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 z-10"
-                                             style={{ background:`${color}18` }}>
-                                            <Icon className="w-4 h-4" style={{ color }} />
-                                        </div>
-                                        <div className={`flex-1 ${i < TIMELINE_EVENTS.length - 1 ? 'pb-5' : 'pb-1'}`}>
-                                            <div className="flex items-start justify-between gap-2">
-                                                <span className={`font-semibold text-[13px] leading-snug ${won?'text-green-400':hot?'text-blue-300':'text-white/70'}`}>
-                                                    {title}
-                                                </span>
-                                                <span className="text-white/20 text-[11px] shrink-0 mt-0.5">{time}</span>
-                                            </div>
-                                            <p className="text-white/25 text-[11px] mt-0.5 leading-relaxed">{sub}</p>
-                                            {hot && (
-                                                <span className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold"
-                                                      style={{ background:'rgba(59,130,246,0.15)', color:'#60A5FA' }}>
-                                                    ↑ High intent signal
-                                                </span>
-                                            )}
-                                            {won && (
-                                                <span className="mt-1.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold"
-                                                      style={{ background:'rgba(16,185,129,0.15)', color:'#10B981' }}>
-                                                    ✓ Deal closed
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-
-                    </div>
-                </div>
-            </section>
-
-            {/* ── How it works ─────────────────────────────────────────────── */}
-            <section id="how-it-works" className="py-28" style={{ background: '#F7F6FE' }}>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-16">
-                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Getting started</span>
-                        </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">
-                            Three steps.<br />
-                            <span className="text-slate-400 font-normal text-4xl sm:text-4xl">You're working.</span>
-                        </motion.h2>
-                        <motion.p variants={fadeUp} className="text-slate-500 text-lg mt-3 max-w-md">
-                            No demo calls, no lengthy onboarding. Sign up and you're running in minutes.
-                        </motion.p>
-                    </motion.div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {STEPS.map(({ num, icon: Icon, title, description }, i) => (
-                            <motion.div
-                                key={title}
-                                initial={{ opacity: 0, y: 32 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                                className="relative bg-white rounded-2xl p-8 border border-slate-100 shadow-sm overflow-hidden">
-                                <div className="absolute top-4 right-5 text-[56px] font-black text-slate-100 leading-none select-none">
-                                    {num}
-                                </div>
-                                <div className="relative">
-                                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6"
-                                         style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                        <Icon className="w-6 h-6 text-white" />
-                                    </div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-3">{title}</h3>
+                                    <h3 className="text-[15px] font-bold text-slate-900 mb-1.5">{title}</h3>
                                     <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
                                 </div>
                             </motion.div>
                         ))}
+                    </motion.div>
+                </div>
+            </section>
+
+            {/* ── Modules in depth ─────────────────────────────────────────── */}
+            <section id="modules" className="py-24 bg-white border-t border-slate-100">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-10 lg:gap-16 items-start">
+                        <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                                    className="lg:sticky lg:top-28 rounded-3xl border border-slate-100 bg-slate-50/60 p-6 sm:p-8">
+                            <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
+                                <div className="h-px w-10 bg-violet-400" />
+                                <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Features</span>
+                            </motion.div>
+                            <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+                                Every module, explained.
+                            </motion.h2>
+                            <motion.p variants={fadeUp} className="text-slate-500 text-lg mt-3 mb-8">
+                                What each part actually does, and how it fits with the rest.
+                            </motion.p>
+
+                            <motion.div variants={fadeUp} className="space-y-0.5">
+                                {MODULES.map(({ tag }) => (
+                                    <div key={tag}
+                                         className="flex items-center gap-2.5 py-2.5 border-t border-slate-200/70 first:border-t-0 text-sm font-semibold text-slate-700">
+                                        <Check className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+                                        {tag}
+                                    </div>
+                                ))}
+                            </motion.div>
+                        </motion.div>
+
+                        <ModuleShowcase />
                     </div>
                 </div>
             </section>
 
-            {/* ── Automation + Business Impact ──────────────────────────────── */}
-            <section className="py-28 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-
-                    {/* Automation rules header */}
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14">
+            {/* ── The Flow ─────────────────────────────────────────────────── */}
+            <section id="flow" className="py-24" style={{ background: '#F7F6FE' }}>
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14 max-w-2xl">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-violet-400" />
-                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Automation</span>
+                            <div className="h-px w-10 bg-violet-500" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">How it works</span>
                         </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight mb-3">
-                            Your follow-up never drops.
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-4">
+                            From a first hello to a closed deal, in one place.
                         </motion.h2>
-                        <motion.p variants={fadeUp} className="text-slate-500 text-lg max-w-xl">
-                            Set the rules once. LeadFlow works the pipeline automatically — so every lead
-                            gets the right action at the right time, without you thinking about it.
+                        <motion.p variants={fadeUp} className="text-slate-500 text-lg">
+                            Here is the whole path a lead takes through Lumenia CRM, start to finish.
                         </motion.p>
                     </motion.div>
 
-                    {/* IF → THEN rule cards */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-24">
-                        {AUTO_RULES.map(({ trigger, action, icon: Icon, color, bg }, i) => (
-                            <motion.div
-                                key={trigger}
-                                initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.07 }}
-                                className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-0.5 duration-200"
-                            >
-                                <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5" style={{ background: bg }}>
-                                    <Icon className="w-5 h-5" style={{ color }} />
-                                </div>
-                                <div className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-300 mb-1.5">If</div>
-                                <div className="text-slate-900 font-bold text-sm leading-snug mb-4">{trigger}</div>
-                                <div className="h-px bg-slate-100 mb-4" />
-                                <div className="text-[9px] font-black uppercase tracking-[0.14em] text-slate-300 mb-1.5">Then</div>
-                                <div className="font-semibold text-sm leading-snug" style={{ color }}>{action}</div>
-                            </motion.div>
-                        ))}
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0, y: 24 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                        <FeatureOrbit />
+                    </motion.div>
+                </div>
+            </section>
 
-                    {/* Who it's for */}
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-10">
+            {/* ── Secondary tools ──────────────────────────────────────────── */}
+            <section id="tools" className="py-24 bg-white border-t border-slate-100">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
-                            <div className="h-px w-10 bg-slate-200" />
-                            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Who it's for</span>
+                            <div className="h-px w-10 bg-violet-400" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Also included</span>
                         </motion.div>
                         <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
-                            Built for the way you actually sell.
+                            A few more things, so nothing needs a second tool.
                         </motion.h2>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                        {BUSINESS_TYPES.map(({ type, icon: Icon, color, bg, border, headline, copy, stat, statSub }, i) => (
-                            <motion.div
-                                key={type}
-                                initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.1 }}
-                                className="rounded-2xl p-8 border"
-                                style={{ background: bg, borderColor: border }}
-                            >
-                                <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5 bg-white shadow-sm">
-                                    <Icon className="w-5 h-5" style={{ color }} />
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                                className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {SECONDARY_FEATURES.map(({ icon: Icon, title, description }) => (
+                            <motion.div key={title} variants={fadeUp}
+                                        className="rounded-2xl border border-slate-100 p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4 bg-violet-50">
+                                    <Icon className="w-[18px] h-[18px] text-violet-600" />
                                 </div>
-                                <div className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color }}>{type}</div>
-                                <h3 className="text-slate-900 font-black text-lg leading-snug mb-3">{headline}</h3>
-                                <p className="text-slate-500 text-sm leading-relaxed mb-7">{copy}</p>
-                                <div className="pt-5 border-t" style={{ borderColor: border }}>
-                                    <div className="text-2xl font-black leading-none mb-0.5" style={{ color }}>{stat}</div>
-                                    <div className="text-slate-400 text-xs">{statSub}</div>
-                                </div>
+                                <h3 className="text-[15px] font-bold text-slate-900 mb-2">{title}</h3>
+                                <p className="text-slate-500 text-sm leading-relaxed">{description}</p>
                             </motion.div>
                         ))}
-                    </div>
+                    </motion.div>
+                </div>
+            </section>
 
+            {/* ── Free Tools ───────────────────────────────────────────────── */}
+            <section id="free-tools" className="py-24 border-t border-slate-100" style={{ background: '#F8F9FD' }}>
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12 max-w-xl">
+                        <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
+                            <div className="h-px w-10 bg-violet-400" />
+                            <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Free tools</span>
+                        </motion.div>
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-3">
+                            A few things you can use right now, free, no account needed.
+                        </motion.h2>
+                        <motion.p variants={fadeUp} className="text-slate-500 text-lg">
+                            Small tools we built for ourselves and figured other people could use too.
+                        </motion.p>
+                    </motion.div>
+
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 rounded-3xl border border-slate-200
+                                           divide-y divide-slate-200 sm:divide-y-0 sm:divide-x overflow-hidden bg-white">
+                        {FREE_TOOLS.map(({ icon: Icon, title, description, href, cta }, i) => (
+                            <motion.div key={title} variants={fadeUp}
+                                        className="group relative p-7 sm:p-8 flex flex-col hover:bg-violet-50/50 transition-colors">
+                                <div className="flex items-start justify-between mb-8">
+                                    <span className="text-6xl font-black leading-none text-violet-100 group-hover:text-violet-200 transition-colors select-none">
+                                        {String(i + 1).padStart(2, '0')}
+                                    </span>
+                                    <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-violet-50 group-hover:bg-violet-600 transition-colors shrink-0">
+                                        <Icon className="w-4 h-4 text-violet-600 group-hover:text-white transition-colors" />
+                                    </div>
+                                </div>
+                                <h3 className="text-base font-bold text-slate-900 mb-2 group-hover:text-violet-700 transition-colors">
+                                    {title}
+                                </h3>
+                                <p className="text-sm text-slate-500 leading-relaxed mb-6 flex-1">{description}</p>
+                                <Link href={href}
+                                      className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-900 group-hover:text-violet-600 transition-colors">
+                                    {cta}
+                                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                                </Link>
+                            </motion.div>
+                        ))}
+                    </motion.div>
                 </div>
             </section>
 
             {/* ── Testimonials ─────────────────────────────────────────────── */}
-            <section className="py-28 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-16">
+            <section className="py-24 border-t border-slate-100" style={{ background: '#F8F9FD' }}>
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
                             <div className="h-px w-10 bg-violet-400" />
                             <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">What people say</span>
                         </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight">
-                            From teams that<br />actually use it.
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">
+                            From teams that actually use it.
                         </motion.h2>
                     </motion.div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                        <motion.div
-                            initial={{ opacity: 0, y: 28 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                            className="rounded-2xl p-8 lg:p-10 flex flex-col justify-between"
-                            style={{ background: 'linear-gradient(150deg,#0D0B18,#1A1232)' }}>
-                            <div>
-                                <div className="flex gap-1 mb-6">
-                                    {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
-                                </div>
-                                <blockquote className="text-white/75 text-xl leading-relaxed font-light">
-                                    "{TESTIMONIALS[0].text}"
-                                </blockquote>
-                            </div>
-                            <div className="flex items-center gap-3 pt-8 mt-8 border-t border-white/10">
-                                <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
-                                     style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
-                                    {TESTIMONIALS[0].avatar}
-                                </div>
-                                <div>
-                                    <div className="text-white font-semibold text-sm">{TESTIMONIALS[0].name}</div>
-                                    <div className="text-white/35 text-xs">{TESTIMONIALS[0].role}</div>
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            {TESTIMONIALS.slice(1).map(({ name, role, avatar, text, rating }, i) => (
-                                <motion.div
-                                    key={name}
-                                    initial={{ opacity: 0, y: 28 }}
-                                    whileInView={{ opacity: 1, y: 0 }}
-                                    viewport={{ once: true }}
-                                    transition={{ duration: 0.55, delay: 0.1 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                                    className="rounded-2xl p-6 bg-slate-50 border border-slate-100">
-                                    <div className="flex gap-1 mb-3">
-                                        {Array.from({ length: rating }).map((_, j) => (
-                                            <Star key={j} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                                        ))}
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                                className="grid grid-cols-1 lg:grid-cols-3 lg:grid-rows-2 gap-5 lg:h-[560px]">
+                        {TESTIMONIALS.map(({ name, role, avatar, text }, i) => {
+                            const featured = i === 0;
+                            return (
+                                <motion.div key={name} variants={fadeUp}
+                                            className={cn(
+                                                'relative rounded-3xl p-8 flex flex-col justify-between overflow-hidden',
+                                                featured ? 'lg:col-span-2 lg:row-span-2 min-h-[280px]' : 'min-h-[220px]',
+                                            )}
+                                            style={featured
+                                                ? { background: 'linear-gradient(155deg,#1B1030 0%,#0F0A1F 100%)' }
+                                                : { background: '#fff', border: '1px solid #F1F5F9' }}>
+                                    <Quote
+                                        className={cn('absolute -top-4 -right-4 w-32 h-32 pointer-events-none', featured ? 'text-white/[0.04]' : 'text-violet-50')}
+                                        fill="currentColor" strokeWidth={0}
+                                    />
+                                    <div className="relative">
+                                        <div className="flex gap-1 mb-4">
+                                            {[1,2,3,4,5].map(s => <Star key={s} className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />)}
+                                        </div>
+                                        <blockquote className={cn('leading-relaxed', featured ? 'text-xl sm:text-2xl text-white/90 font-medium' : 'text-[13px] text-slate-700')}>
+                                            "{text}"
+                                        </blockquote>
                                     </div>
-                                    <blockquote className="text-slate-700 leading-relaxed mb-4 text-[13px]">"{text}"</blockquote>
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
+                                    <div className="relative flex items-center gap-2.5 mt-6">
+                                        <div className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0"
                                              style={{ background: 'linear-gradient(135deg,#7C3AED,#4F46E5)' }}>
                                             {avatar}
                                         </div>
                                         <div>
-                                            <div className="text-slate-900 font-semibold text-[13px]">{name}</div>
-                                            <div className="text-slate-400 text-[11px]">{role}</div>
+                                            <div className={cn('font-semibold text-[13px]', featured ? 'text-white' : 'text-slate-900')}>{name}</div>
+                                            <div className={cn('text-[11px]', featured ? 'text-white/40' : 'text-slate-400')}>{role}</div>
                                         </div>
                                     </div>
                                 </motion.div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="mt-10 flex items-center justify-center gap-3">
-                        <div className="flex gap-0.5">
-                            {[1,2,3,4,5].map(i => <Star key={i} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
-                        </div>
-                        <span className="text-slate-700 font-semibold text-sm">4.9 out of 5</span>
-                        <span className="text-slate-400 text-sm">· 200+ reviews</span>
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Free Tools Showcase ────────────────────────────────────── */}
-            <section id="free-tools" className="py-24 border-t border-slate-100 bg-[#F8F9FD]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center max-w-xl mx-auto mb-16">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-100/50 mb-4">
-                            <Sparkles className="w-3.5 h-3.5 text-violet-600 fill-violet-600" />
-                            <span className="text-violet-700 text-[10px] font-extrabold uppercase tracking-wider">Free Growth Tools</span>
-                        </div>
-                        <h2 className="text-3xl font-black text-slate-900 tracking-tight leading-tight">
-                            Free Sales & Lead Generation Tools
-                        </h2>
-                        <p className="text-sm text-slate-500 mt-3 font-normal leading-relaxed">
-                            Generate beautiful professional brand assets, HTML email signatures, B2B proposals, UTM campaign links, and PDF invoices on the fly.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5 }}
-                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
-                        >
-                            <div>
-                                <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl w-fit mb-5">
-                                    <Mail className="w-5 h-5" />
-                                </div>
-                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
-                                    Email Signature
-                                </h3>
-                                <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
-                                    Design HTML email signatures for Gmail, Outlook, and Apple Mail. Custom themes, avatars, and social icons.
-                                </p>
-                            </div>
-                            <Link
-                                href="/tools/email-signature-generator"
-                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
-                            >
-                                Generate Signature
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.05 }}
-                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
-                        >
-                            <div>
-                                <div className="p-3 bg-violet-50 text-violet-600 rounded-xl w-fit mb-5">
-                                    <FileText className="w-5 h-5" />
-                                </div>
-                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
-                                    Invoice Generator
-                                </h3>
-                                <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
-                                    Build, brand, and download professional PDF invoices on the fly. Auto tax calculations and custom line items.
-                                </p>
-                            </div>
-                            <Link
-                                href="/tools/invoice-generator"
-                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
-                            >
-                                Build Invoice Free
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.1 }}
-                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
-                        >
-                            <div>
-                                <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl w-fit mb-5">
-                                    <PenTool className="w-5 h-5" />
-                                </div>
-                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
-                                    Proposal Writer
-                                </h3>
-                                <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
-                                    Draft professional commercial offers and contracts. Add deliverables, services scope, and print to PDF.
-                                </p>
-                            </div>
-                            <Link
-                                href="/tools/proposal-writer"
-                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
-                            >
-                                Write Proposal
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.15 }}
-                            className="bg-white border border-slate-200 p-6 rounded-2xl flex flex-col justify-between hover:shadow-md transition-shadow group"
-                        >
-                            <div>
-                                <div className="p-3 bg-sky-50 text-sky-600 rounded-xl w-fit mb-5">
-                                    <Link2 className="w-5 h-5" />
-                                </div>
-                                <h3 className="text-base font-bold text-slate-800 mb-2 group-hover:text-violet-600 transition-colors">
-                                    UTM Link Builder
-                                </h3>
-                                <p className="text-xs text-slate-400 font-normal leading-relaxed mb-6">
-                                    Construct trackable campaign links with UTM tags for analytics and conversion funnel attribution.
-                                </p>
-                            </div>
-                            <Link
-                                href="/tools/utm-builder"
-                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-slate-950 text-white hover:bg-violet-600 rounded-xl text-xs font-bold transition-all"
-                            >
-                                Build UTM Link
-                                <ArrowRight className="w-3.5 h-3.5" />
-                            </Link>
-                        </motion.div>
-                    </div>
+                            );
+                        })}
+                    </motion.div>
                 </div>
             </section>
 
             {/* ── Pricing ──────────────────────────────────────────────────── */}
-            <section id="pricing" className="py-28" style={{ background: '#0A0812' }}>
+            <section id="pricing" className="py-24" style={{ background: '#0A0812' }}>
                 <div className="max-w-5xl mx-auto px-4 sm:px-6">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center">
                         <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-5">
@@ -1517,11 +558,11 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             <span className="text-violet-400 text-xs font-bold uppercase tracking-widest">Pricing</span>
                             <div className="h-px w-10 bg-violet-500" />
                         </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight">
-                            Pricing that fits<br />your team.
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-white mb-4 leading-tight">
+                            Pricing that fits your team.
                         </motion.h2>
                         <motion.p variants={fadeUp} className="text-white/40 text-lg mb-14 max-w-lg mx-auto leading-relaxed">
-                            Start free on Basic. Upgrade whenever you need more — just sign up and we'll take it from there.
+                            Start free. Upgrade whenever you need more, just sign up and we will take it from there.
                         </motion.p>
                     </motion.div>
 
@@ -1560,7 +601,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
 
                                     <div className="flex-1 space-y-3 mb-8">
                                         {plan.description ? (
-                                            <div 
+                                            <div
                                                 className="plan-rich-description text-white/70 text-sm space-y-2"
                                                 dangerouslySetInnerHTML={{ __html: plan.description }}
                                             />
@@ -1568,7 +609,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                             <>
                                                 <div className="flex items-start gap-2.5 text-white/70 text-sm">
                                                     <Check className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
-                                                    Core CRM — leads, pipeline, invoicing, reports, team
+                                                    Core CRM, leads, pipeline, invoicing, reports, team
                                                 </div>
                                                 {plan.modules.map((m) => (
                                                     <div key={m.id} className="flex items-start gap-2.5 text-white/70 text-sm">
@@ -1602,15 +643,22 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                 </div>
             </section>
 
+            {/* ── Live Timeline ─────────────────────────────────────────────── */}
+            <section className="py-20 bg-white">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <ActivityShowcase />
+                </div>
+            </section>
+
             {/* ── FAQ ──────────────────────────────────────────────────────── */}
-            <section id="faq" className="py-28 bg-white">
+            <section id="faq" className="py-24 bg-white">
                 <div className="max-w-3xl mx-auto px-4 sm:px-6">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
                             <div className="h-px w-10 bg-violet-400" />
                             <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">FAQ</span>
                         </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 mb-4">
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 mb-4">
                             Questions.
                         </motion.h2>
                         <motion.p variants={fadeUp} className="text-slate-500 text-lg">
@@ -1625,7 +673,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         {FAQS.map(({ q, a }, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, y: 16 }}
+                                initial={{ opacity: 0, y: 14 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true }}
                                 transition={{ duration: 0.4, delay: idx * 0.04 }}
@@ -1662,27 +710,26 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                 </div>
             </section>
 
-            {/* ── Contact Us ───────────────────────────────────────────────── */}
-            <section id="contact" className="py-28 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            {/* ── Contact ──────────────────────────────────────────────────── */}
+            <section id="contact" className="py-24" style={{ background: '#F8F9FD' }}>
+                <div className="max-w-6xl mx-auto px-4 sm:px-6">
 
-                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-14">
+                    <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="mb-12">
                         <motion.div variants={fadeUp} className="flex items-center gap-3 mb-4">
                             <div className="h-px w-10 bg-violet-400" />
                             <span className="text-violet-600 text-xs font-bold uppercase tracking-widest">Get in touch</span>
                         </motion.div>
-                        <motion.h2 variants={fadeUp} className="text-4xl sm:text-5xl font-black text-slate-900 leading-tight mb-4">
+                        <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-black text-slate-900 leading-tight mb-4">
                             Let's talk.
                         </motion.h2>
                         <motion.p variants={fadeUp} className="text-slate-500 text-lg max-w-lg">
                             Have a question, need a demo, or want to discuss a custom plan?
-                            Drop us a message and we'll get back to you within one business day.
+                            Send us a message and we will get back to you within one business day.
                         </motion.p>
                     </motion.div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
 
-                        {/* Contact info */}
                         <motion.div
                             initial={{ opacity: 0, x: -24 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -1691,34 +738,12 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             className="lg:col-span-2 space-y-8">
 
                             {[
-                                {
-                                    icon: Mail,
-                                    title: 'Email us',
-                                    value: 'hello@lumenialab.com',
-                                    sub: 'We reply within 24 hours',
-                                    color: '#7C3AED',
-                                    bg: '#F5F3FF',
-                                },
-                                {
-                                    icon: Phone,
-                                    title: 'Call us',
-                                    value: '+92 335 445 5494',
-                                    sub: 'Available 24 hours',
-                                    color: '#059669',
-                                    bg: '#ECFDF5',
-                                },
-                                {
-                                    icon: MapPin,
-                                    title: 'Headquarters',
-                                    value: 'Lahore, Pakistan',
-                                    sub: 'Lumenia Lab Pvt. Ltd.',
-                                    color: '#D97706',
-                                    bg: '#FFFBEB',
-                                },
+                                { icon: Mail,    title: 'Email us',      value: 'hello@lumenialab.com',   sub: 'We reply within 24 hours', color: '#7C3AED', bg: '#F5F3FF' },
+                                { icon: Phone,   title: 'Call us',       value: '+92 335 445 5494',       sub: 'Available 24 hours',        color: '#059669', bg: '#ECFDF5' },
+                                { icon: MapPin,  title: 'Headquarters',  value: 'Lahore, Pakistan',        sub: 'Lumenia Lab Pvt. Ltd.',     color: '#D97706', bg: '#FFFBEB' },
                             ].map(({ icon: Icon, title, value, sub, color, bg }) => (
                                 <div key={title} className="flex items-start gap-4">
-                                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0"
-                                         style={{ background: bg }}>
+                                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0" style={{ background: bg }}>
                                         <Icon className="w-5 h-5" style={{ color }} />
                                     </div>
                                     <div>
@@ -1730,7 +755,6 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             ))}
                         </motion.div>
 
-                        {/* Contact form */}
                         <motion.div
                             initial={{ opacity: 0, x: 24 }}
                             whileInView={{ opacity: 1, x: 0 }}
@@ -1745,7 +769,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                     </div>
                                     <h3 className="text-xl font-bold text-slate-900 mb-2">Message sent!</h3>
                                     <p className="text-slate-500 text-sm max-w-xs">
-                                        Thanks for reaching out. We'll get back to you within one business day.
+                                        Thanks for reaching out. We will get back to you within one business day.
                                     </p>
                                     <button
                                         onClick={() => setContactSent(false)}
@@ -1756,7 +780,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                                 </div>
                             ) : (
                                 <form onSubmit={submitContact}
-                                      className="rounded-2xl border border-slate-100 bg-slate-50/60 p-8 space-y-5">
+                                      className="rounded-2xl border border-slate-100 bg-white p-8 space-y-5">
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                                         <div>
@@ -1882,7 +906,7 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </section>
 
             {/* ── Final CTA ────────────────────────────────────────────────── */}
-            <section className="py-32 relative overflow-hidden"
+            <section className="py-28 relative overflow-hidden"
                      style={{ background: 'linear-gradient(155deg,#08060F 0%,#130F24 100%)' }}>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-[700px] h-[500px] rounded-full"
@@ -1896,9 +920,8 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                     viewport={{ once: true }}
                     className="relative z-10 max-w-2xl mx-auto px-4 text-center">
                     <motion.h2 variants={fadeUp}
-                               className="text-4xl sm:text-6xl font-black text-white mb-5 leading-tight">
-                        Give it a try.<br />
-                        <span className="text-white/30 font-light text-3xl sm:text-5xl">It's free to start.</span>
+                               className="text-4xl sm:text-5xl font-black text-white mb-5 leading-tight">
+                        Give it a try. It's free to start.
                     </motion.h2>
                     <motion.p variants={fadeUp} className="text-white/40 text-lg mb-10">
                         Create your workspace in two minutes and see if it fits how you work.

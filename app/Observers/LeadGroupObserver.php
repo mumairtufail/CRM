@@ -3,17 +3,10 @@
 namespace App\Observers;
 
 use App\Models\LeadGroup;
-use Illuminate\Support\Facades\Cache;
+use App\Support\LeadsCache;
 
 class LeadGroupObserver
 {
-    public function updated(LeadGroup $group): void { $this->bust($group->organization_id); }
-    public function deleted(LeadGroup $group): void { $this->bust($group->organization_id); }
-
-    private function bust(?int $orgId): void
-    {
-        if ($orgId) {
-            Cache::increment("leads_v:{$orgId}");
-        }
-    }
+    public function updated(LeadGroup $group): void { LeadsCache::bust($group->organization_id); }
+    public function deleted(LeadGroup $group): void { LeadsCache::bust($group->organization_id); }
 }

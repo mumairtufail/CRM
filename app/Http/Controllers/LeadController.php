@@ -8,6 +8,7 @@ use App\Models\Lead;
 use App\Models\LeadGroup;
 use App\Models\Tag;
 use App\Models\User;
+use App\Support\LeadsCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
@@ -18,9 +19,9 @@ class LeadController extends Controller
     public function index(Request $request)
     {
         $orgId   = auth()->user()->organization_id;
-        $perPage = in_array((int) $request->input('per_page'), [20, 50, 100])
+        $perPage = in_array((int) $request->input('per_page'), [25, 50, 100, 200])
             ? (int) $request->input('per_page')
-            : 20;
+            : 25;
 
         $version  = Cache::get("leads_v:{$orgId}", 1);
         $cacheKey = "leads:idx:{$orgId}:v{$version}:" . md5(serialize($request->all()));
@@ -574,7 +575,7 @@ class LeadController extends Controller
         }
 
         $group->leads()->syncWithoutDetaching($request->lead_ids);
-        Cache::increment("leads_v:{$group->organization_id}");
+        LeadsCache::bust($group->organization_id);
         $count = count($request->lead_ids);
 
         return response()->json([

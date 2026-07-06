@@ -257,7 +257,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
     router.get('/leads', { ...filters, page }, { preserveState: true })
   }, [filters])
 
-  const perPage = Number(filters?.per_page) || 20
+  const perPage = Number(filters?.per_page) || 25
   const handlePerPageChange = useCallback(n => applyFilters({ per_page: n, page: 1 }), [applyFilters])
 
   // Single delete
@@ -662,7 +662,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {[20, 50, 100].map(n => (
+                {[25, 50, 100, 200].map(n => (
                   <SelectItem key={n} value={String(n)} className="text-xs">{n} per page</SelectItem>
                 ))}
               </SelectContent>

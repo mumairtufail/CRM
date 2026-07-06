@@ -19,7 +19,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from '@/Components/ui/select'
-import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X, UsersRound, ChevronDown, MapPin, Check, Send } from 'lucide-react'
+import { Plus, MoreHorizontal, Pencil, Trash2, ExternalLink, Filter, X, UsersRound, ChevronDown, MapPin, Check, Send, ClipboardList } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/Components/ui/dialog'
@@ -51,11 +51,23 @@ const CONTACTED_OPTIONS = [
   { value: 'yes', label: 'Already contacted' },
 ]
 
-// Turn a plain string list into {value,label} options with a leading "Any …" entry.
+// Turn a plain string list (or a list already shaped as {value,label}) into
+// {value,label} options with a leading "Any …" entry.
 const toOptions = (allLabel, list) => [
   { value: 'all', label: allLabel },
-  ...((list ?? []).map(v => ({ value: v, label: v }))),
+  ...((list ?? []).map(v => (v && typeof v === 'object' ? v : { value: v, label: v }))),
 ]
+
+// Non-form sources ("csv", "google_sheet", …) get a friendlier label — form
+// sources are handled separately since they carry a linked lead_form record.
+const humanizeSource = source => {
+  switch (source) {
+    case 'csv': return 'CSV import'
+    case 'google_sheet': return 'Google Sheet'
+    case 'manual': return 'Manual'
+    default: return source || 'Manual'
+  }
+}
 
 // A compact inline <select>-style filter that sits in the toolbar and highlights when set.
 function InlineSelect({ icon, placeholder, value, options, onChange }) {
@@ -385,6 +397,29 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
       cell: ({ getValue }) => (
         <span className="text-sm text-gray-600 truncate block max-w-[140px]">{getValue() || '—'}</span>
       ),
+    },
+    {
+      id: 'source',
+      header: 'Source',
+      size: 150,
+      enableSorting: false,
+      meta: { className: 'hidden lg:table-cell' },
+      cell: ({ row }) => {
+        const form = row.original.lead_form
+        if (form) {
+          return (
+            <Link
+              href={`/forms/${form.id}/edit`}
+              className="inline-flex items-center gap-1 text-[11.5px] font-medium text-brand-600 hover:text-brand-700 truncate max-w-[140px]"
+              title={`Submitted via "${form.name}"`}
+            >
+              <ClipboardList size={12} className="shrink-0" />
+              <span className="truncate">{form.name}</span>
+            </Link>
+          )
+        }
+        return <span className="text-[11.5px] text-gray-500">{humanizeSource(row.original.source)}</span>
+      },
     },
     {
       id: 'groups',

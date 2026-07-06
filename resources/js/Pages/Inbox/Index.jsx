@@ -6,13 +6,14 @@ import { cn } from '@/lib/utils'
 import {
   Inbox, Star, Trash2, RefreshCw, Mail, MailOpen,
   StarOff, RotateCcw, Trash, AlertCircle, Settings,
-  ChevronRight, User, Clock, PenLine, X, Send,
+  ChevronRight, User, Clock, PenLine, X, Send, Reply, SearchX,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/Components/ui/dialog'
 import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
+import SearchInput from '@/Components/Common/SearchInput'
 import { formatDistanceToNow, format, isToday, isThisYear } from 'date-fns'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -321,7 +322,7 @@ function EmailListSkeleton() {
   )
 }
 
-function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
+function EmailList({ emails, selectedId, onSelect, folder, syncing, search }) {
   const items = emails?.data ?? []
 
   if (items.length === 0) {
@@ -329,19 +330,21 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
       <div className="flex-1 flex flex-col items-center justify-center text-center p-6">
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3"
           style={{ background: 'rgb(var(--brand-600) / 0.07)' }}>
-          {folder === 'starred' ? <Star size={22} className="text-brand-400" />
+          {search ? <SearchX size={22} className="text-brand-400" /> :
+            folder === 'starred' ? <Star size={22} className="text-brand-400" />
             : folder === 'trash' ? <Trash2 size={22} className="text-brand-400" />
             : folder === 'sent' ? <Send size={22} className="text-brand-400" />
             : <Inbox size={22} className="text-brand-400" />}
         </div>
         <p className="text-[13px] font-medium text-slate-600 mb-1">
-          {folder === 'starred' ? 'No starred emails'
+          {search ? 'No matching emails'
+            : folder === 'starred' ? 'No starred emails'
             : folder === 'trash' ? 'Trash is empty'
             : folder === 'sent' ? 'No sent emails yet'
             : 'Inbox is empty'}
         </p>
         <p className="text-[11.5px] text-slate-400">
-          {folder === 'inbox' ? 'Click "Sync inbox" to fetch emails' : ''}
+          {search ? `No results for "${search}"` : folder === 'inbox' ? 'Click "Sync inbox" to fetch emails' : ''}
         </p>
       </div>
     )
@@ -362,14 +365,14 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
         <div className="px-4 py-3 flex items-center justify-between border-t border-slate-100">
           <button
             disabled={emails.current_page <= 1}
-            onClick={() => router.get('/inbox', { folder, page: emails.current_page - 1 }, { preserveState: true })}
+            onClick={() => router.get('/inbox', { folder, search: search || undefined, page: emails.current_page - 1 }, { preserveState: true })}
             className="text-[11.5px] text-slate-500 hover:text-brand-600 disabled:opacity-30 disabled:cursor-not-allowed">
             ← Prev
           </button>
           <span className="text-[11px] text-slate-400">{emails.current_page} / {emails.last_page}</span>
           <button
             disabled={emails.current_page >= emails.last_page}
-            onClick={() => router.get('/inbox', { folder, page: emails.current_page + 1 }, { preserveState: true })}
+            onClick={() => router.get('/inbox', { folder, search: search || undefined, page: emails.current_page + 1 }, { preserveState: true })}
             className="text-[11.5px] text-slate-500 hover:text-brand-600 disabled:opacity-30 disabled:cursor-not-allowed">
             Next →
           </button>
@@ -381,7 +384,10 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing }) {
 
 // ─── Reading pane ──────────────────────────────────────────────────────────────
 
-function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, onDelete, folder }) {
+function ReadingPane({
+  email, bodyLoading, onClose, onStar, onTrash, onRestore, onDelete, folder,
+  replyOpen, replyBody, onReplyBodyChange, onOpenReply, onCancelReply, onSendReply, replySending,
+}) {
   // Rewrite all links to open in new tab — iframe sandbox blocks navigation otherwise
   const safeBodyHtml = useMemo(() => {
     if (!email?.body_html) return ''
@@ -413,6 +419,13 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
           ← Back
         </button>
         <div className="flex-1" />
+
+        {folder !== 'trash' && (
+          <button onClick={onOpenReply}
+            className="h-7 px-2.5 rounded-lg text-[11.5px] text-slate-500 hover:bg-brand-50 hover:text-brand-600 flex items-center gap-1 transition-colors shrink-0">
+            <Reply size={12} /> Reply
+          </button>
+        )}
 
         <button onClick={() => onStar(email)}
           title={email.is_starred ? 'Unstar' : 'Star'}
@@ -498,6 +511,49 @@ function ReadingPane({ email, bodyLoading, onClose, onStar, onTrash, onRestore, 
           </pre>
         ) : (
           <p className="text-[13px] text-slate-400 italic">No content</p>
+        )}
+
+        {/* Inline reply composer */}
+        {replyOpen && (
+          <div className="mt-6 rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <div className="flex items-center gap-2 px-3.5 py-2 border-b border-slate-100 bg-slate-50/80">
+              <Reply size={12} className="text-brand-500" />
+              <span className="text-[11.5px] font-semibold text-slate-600">
+                Reply to {email.from_name || email.from_email}
+              </span>
+              <div className="flex-1" />
+              <button onClick={onCancelReply}
+                className="h-6 w-6 rounded-md flex items-center justify-center text-slate-400 hover:bg-slate-200/60 hover:text-slate-600 transition-colors">
+                <X size={13} />
+              </button>
+            </div>
+            <textarea
+              value={replyBody}
+              onChange={e => onReplyBodyChange(e.target.value)}
+              placeholder="Write your reply…"
+              rows={6}
+              autoFocus
+              className="w-full px-3.5 py-3 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none"
+            />
+            <div className="flex items-center justify-end gap-2 px-3.5 py-2.5 border-t border-slate-100 bg-slate-50/50">
+              <button
+                type="button"
+                onClick={onCancelReply}
+                className="h-8 px-4 text-[12.5px] font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-white transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={replySending}
+                onClick={onSendReply}
+                className="h-8 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
+                style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
+              >
+                {replySending ? 'Sending…' : 'Send Reply'}
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
@@ -626,7 +682,7 @@ const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
 
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
-export default function InboxIndex({ emails: initialEmails, folder, counts: initialCounts, hasSmtp, hasImap, credential: initialCredential, activeTemplate }) {
+export default function InboxIndex({ emails: initialEmails, folder, search: initialSearch, counts: initialCounts, hasSmtp, hasImap, credential: initialCredential, activeTemplate }) {
   // Local state — updated optimistically; reset when Inertia navigates
   const [emails, setEmails]           = useState(initialEmails)
   const [counts, setCounts]           = useState(initialCounts)
@@ -635,6 +691,10 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   const [bodyLoading, setBodyLoading] = useState(false)
   const [syncing, setSyncing]         = useState(false)
   const [composeOpen, setComposeOpen] = useState(false)
+  const [searchTerm, setSearchTerm]   = useState(initialSearch ?? '')
+  const [replyOpen, setReplyOpen]     = useState(false)
+  const [replyBody, setReplyBody]     = useState('')
+  const [replySending, setReplySending] = useState(false)
   const bodyCache = useRef(new Map())
   const pollRef   = useRef(null)
 
@@ -646,7 +706,10 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
     setCounts(initialCounts)
     setCredential(initialCredential)
     setSelected(null)
-  }, [initialEmails, initialCounts, initialCredential])
+    setSearchTerm(initialSearch ?? '')
+    setReplyOpen(false)
+    setReplyBody('')
+  }, [initialEmails, initialCounts, initialCredential, initialSearch])
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -667,12 +730,19 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleFolderChange = useCallback((f) => {
-    router.get('/inbox', { folder: f }, { preserveState: false })
-  }, [])
+    router.get('/inbox', { folder: f, search: searchTerm || undefined }, { preserveState: false })
+  }, [searchTerm])
+
+  const handleSearch = useCallback((value) => {
+    setSearchTerm(value)
+    router.get('/inbox', { folder, search: value || undefined }, { preserveState: true, replace: true })
+  }, [folder])
 
   const handleSelect = useCallback((email) => {
     // Show header/meta immediately — no waiting
     setSelected(email)
+    setReplyOpen(false)
+    setReplyBody('')
 
     // Mark as read optimistically
     if (!email.is_read) {
@@ -731,6 +801,47 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
     fetch(`/inbox/${email.id}`, { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() } })
       .catch(() => {})
   }, [removeFromList])
+
+  const handleOpenReply = useCallback(() => {
+    setReplyOpen(true)
+    setReplyBody('')
+  }, [])
+
+  const handleCancelReply = useCallback(() => {
+    setReplyOpen(false)
+    setReplyBody('')
+  }, [])
+
+  const handleSendReply = useCallback(async () => {
+    if (!selected || !replyBody.trim()) {
+      toast.error('Write a message before sending.')
+      return
+    }
+    setReplySending(true)
+    try {
+      const res = await fetch(`/inbox/${selected.id}/reply`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-CSRF-TOKEN': csrf(),
+        },
+        body: JSON.stringify({ body_html: replyBody }),
+      })
+      const json = await res.json()
+      if (json.ok) {
+        toast.success('Reply sent!')
+        setReplyOpen(false)
+        setReplyBody('')
+      } else {
+        toast.error(json.error || 'Failed to send reply.')
+      }
+    } catch {
+      toast.error('Reply failed — check your connection.')
+    } finally {
+      setReplySending(false)
+    }
+  }, [selected, replyBody])
 
   const handleSync = useCallback(async () => {
     if (syncing) return
@@ -847,6 +958,16 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
                 )}
               </div>
             </div>
+            {!notReady && (
+              <div className="px-3 pt-2.5 pb-2 border-b border-slate-100 shrink-0">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={handleSearch}
+                  placeholder="Search mail…"
+                  className="w-full"
+                />
+              </div>
+            )}
             {notReady ? (
               <SetupBanner hasSmtp={hasSmtp} />
             ) : (
@@ -856,6 +977,7 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
                 onSelect={handleSelect}
                 folder={folder}
                 syncing={syncing}
+                search={searchTerm}
               />
             )}
           </div>
@@ -882,6 +1004,13 @@ export default function InboxIndex({ emails: initialEmails, folder, counts: init
                 onTrash={handleTrash}
                 onRestore={handleRestore}
                 onDelete={handleDelete}
+                replyOpen={replyOpen}
+                replyBody={replyBody}
+                onReplyBodyChange={setReplyBody}
+                onOpenReply={handleOpenReply}
+                onCancelReply={handleCancelReply}
+                onSendReply={handleSendReply}
+                replySending={replySending}
               />
             )}
           </div>

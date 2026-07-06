@@ -15,6 +15,7 @@ class InboxController extends Controller
         $user   = $request->user();
         $cred   = $user->smtpCredentials()->where('is_active', true)->first();
         $folder = $request->get('folder', 'inbox');
+        $search = trim((string) $request->get('search', ''));
 
         $query = FetchedEmail::orderBy('sent_at', 'desc');
 
@@ -25,10 +26,19 @@ class InboxController extends Controller
             default   => $query->inbox(),
         };
 
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('subject', 'like', "%{$search}%")
+                    ->orWhere('from_name', 'like', "%{$search}%")
+                    ->orWhere('from_email', 'like', "%{$search}%")
+                    ->orWhere('body_text', 'like', "%{$search}%");
+            });
+        }
+
         $emails = $query->select([
             'id', 'folder', 'from_name', 'from_email', 'to_addresses', 'subject',
             'body_text', 'is_read', 'is_starred', 'is_trashed', 'sent_at',
-        ])->paginate(30)->through(fn ($e) => [
+        ])->paginate(30)->withQueryString()->through(fn ($e) => [
             'id'         => $e->id,
             'folder'     => $e->folder,
             'from_name'  => $e->from_name,
@@ -61,6 +71,7 @@ class InboxController extends Controller
         return Inertia::render('Inbox/Index', [
             'emails'         => $emails,
             'folder'         => $folder,
+            'search'         => $search,
             'counts'         => $counts,
             'hasSmtp'        => (bool) $cred,
             'hasImap'        => $cred ? $cred->hasImap() : false,
@@ -190,6 +201,33 @@ class InboxController extends Controller
             return response()->json([
                 'ok'    => false,
                 'error' => 'Send failed: ' . $e->getMessage(),
+            ], 422);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function reply(Request $request, FetchedEmail $fetchedEmail)
+    {
+        $request->validate([
+            'body_html' => 'required|string',
+        ]);
+
+        $mailer = MailService::forUser($request->user());
+
+        if (!$mailer) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'No active SMTP account. Go to Settings → SMTP and activate one first.',
+            ], 422);
+        }
+
+        try {
+            $mailer->sendReply($fetchedEmail, $request->body_html);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'ok'    => false,
+                'error' => 'Reply failed: ' . $e->getMessage(),
             ], 422);
         }
 

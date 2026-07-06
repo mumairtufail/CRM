@@ -11,9 +11,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/Components/ui/dialog'
-import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X } from 'lucide-react'
+import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import RichEditor from '@/Components/Common/RichEditor'
+import AiComposeModal from '@/Components/Campaigns/AiComposeModal'
 import { cn } from '@/lib/utils'
 
 // Starter bodies intentionally omit the sign-off / signature — the regards,
@@ -429,12 +430,13 @@ function FollowUpStepCard({ stepNumber, step, prevDelayHours, errors, onUpdate, 
   )
 }
 
-export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], forms = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false }) {
+export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], forms = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false, aiConfigured = false }) {
   const isEdit = !!campaign
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewStep, setPreviewStep] = useState(null) // null = closed, number = step index
   const [recipientCount, setRecipientCount] = useState(campaign?.total_recipients ?? leadCount ?? 0)
   const [subjectRef, setSubjectRef] = useState(null)
+  const [aiComposeOpen, setAiComposeOpen] = useState(false)
 
   const { data, setData, post, put, processing, errors } = useForm({
     name:             campaign?.name             ?? '',
@@ -506,6 +508,20 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
     setData('followup_steps', data.followup_steps.map((s, i) =>
       i === index ? { ...s, [field]: value } : s
     ))
+  }
+
+  const handleAiApply = (result) => {
+    setData(current => ({
+      ...current,
+      subject:          result.subject,
+      body_html:        result.body_html,
+      lead_form_id:     result.lead_form_id ?? current.lead_form_id,
+      followup_enabled: result.followup_steps.length > 0 ? true : current.followup_enabled,
+      followup_steps:   result.followup_steps.length > 0
+        ? result.followup_steps.map(s => ({ _id: crypto.randomUUID(), ...s }))
+        : current.followup_steps,
+    }))
+    toast.success('AI-generated content added — review and adjust as needed')
   }
 
   const submit = (e) => {
@@ -613,7 +629,20 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                 <div className="form-card">
                   <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                     <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Email body</p>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        title={aiConfigured ? undefined : 'Set up an AI provider in Settings → AI to use this'}
+                        onClick={() => aiConfigured ? setAiComposeOpen(true) : toast.error('Set up an AI provider in Settings → AI to use AI Compose')}
+                        className={cn(
+                          'flex items-center gap-1 text-[11px] font-semibold px-2 py-1 rounded-full transition-colors',
+                          aiConfigured
+                            ? 'text-brand-700 bg-brand-50 hover:bg-brand-100 border border-brand-200'
+                            : 'text-slate-400 bg-slate-50 border border-slate-200 cursor-not-allowed'
+                        )}
+                      >
+                        <Sparkles size={11} /> AI Compose
+                      </button>
                       <span className="text-[10.5px] text-slate-400">Template:</span>
                       {Object.entries(TEMPLATES).map(([key, t]) => (
                         <button
@@ -801,6 +830,16 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
           fromName={sender?.from_name}
           fromEmail={sender?.from_email}
           body={data.body_html}
+        />
+
+        {/* AI Compose wizard */}
+        <AiComposeModal
+          open={aiComposeOpen}
+          onClose={() => setAiComposeOpen(false)}
+          forms={forms}
+          aiConfigured={aiConfigured}
+          orgFollowupEnabled={orgFollowupEnabled}
+          onApply={handleAiApply}
         />
 
         {/* Follow-up step preview */}

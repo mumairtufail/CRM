@@ -200,6 +200,62 @@ class MailService
     }
 
     /**
+     * Reply to a fetched email, threading it via In-Reply-To/References so it
+     * lands in the same conversation in the recipient's mail client.
+     */
+    public function sendReply(FetchedEmail $original, string $bodyHtml): void
+    {
+        $this->configureMailer();
+
+        $user     = $this->credential->user;
+        $template = $user?->active_template_id
+            ? EmailTemplate::find($user->active_template_id)
+            : null;
+
+        $html = $template
+            ? $template->render([
+                ...EmailTemplate::varsFor($user, $this->credential->from_name),
+                'content' => $bodyHtml,
+            ])
+            : $bodyHtml;
+
+        // Replying to something we sent goes back to its recipient; replying to
+        // something we received goes back to its sender.
+        $isSent  = $original->folder === 'sent';
+        $toEmail = $isSent ? ($original->to_addresses[0]['email'] ?? null) : $original->from_email;
+        $toName  = $isSent ? ($original->to_addresses[0]['name'] ?? '') : ($original->from_name ?? '');
+
+        if (!$toEmail) {
+            throw new \RuntimeException('Original email has no recipient to reply to.');
+        }
+
+        $subject = Str::startsWith(Str::lower(trim($original->subject ?? '')), 're:')
+            ? $original->subject
+            : 'Re: ' . $original->subject;
+
+        $domain    = Str::after($this->credential->from_email, '@') ?: 'localhost';
+        $messageId = (string) Str::uuid() . '@' . $domain;
+        $inReplyTo = $original->message_id ? '<' . $original->message_id . '>' : null;
+
+        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $toName, $subject, $messageId, $inReplyTo) {
+            $message
+                ->to($toEmail, $toName ?: null)
+                ->from($this->credential->from_email, $this->credential->from_name)
+                ->subject($subject);
+
+            $headers = $message->getSymfonyMessage()->getHeaders();
+            $headers->remove('Message-ID');
+            $headers->addIdHeader('Message-ID', $messageId);
+            if ($inReplyTo) {
+                $headers->addTextHeader('In-Reply-To', $inReplyTo);
+                $headers->addTextHeader('References', $inReplyTo);
+            }
+        });
+
+        $this->recordSent($toEmail, $subject, $html, $messageId, $toName ?: '');
+    }
+
+    /**
      * Persist a copy of an outgoing email into the Sent folder so it's visible in
      * the inbox immediately, without waiting for an IMAP sync — and regardless of
      * whether IMAP is even configured. Best-effort: a failure here must not

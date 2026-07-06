@@ -25,6 +25,17 @@ import usePermissions from '@/Hooks/usePermissions'
 
 const STATUSES = ['new','contacted','qualified','proposal','negotiation','won','lost','unqualified']
 
+// Non-form sources ("csv", "google_sheet", …) get a friendlier label — form
+// sources are handled separately since they carry a linked lead_form record.
+const humanizeSource = source => {
+  switch (source) {
+    case 'csv': return 'CSV import'
+    case 'google_sheet': return 'Google Sheet'
+    case 'manual': return 'Manual'
+    default: return source || 'Manual'
+  }
+}
+
 const CLIENT_STATUSES = [
   { value: 'onboarding', label: 'Onboarding', desc: 'Just getting started' },
   { value: 'active',     label: 'Active',     desc: 'Current paying client' },
@@ -738,8 +749,19 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [],
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-[10.5px] text-slate-400 mt-1.5">
-                Source: <span className="font-semibold capitalize text-slate-600">{lead.source || 'manual'}</span>
+              <p className="text-[10.5px] text-slate-400 mt-1.5 flex items-center gap-1">
+                Source:{' '}
+                {lead.lead_form ? (
+                  <Link
+                    href={`/forms/${lead.lead_form.id}/edit`}
+                    className="font-semibold text-brand-600 hover:text-brand-700 inline-flex items-center gap-1 truncate"
+                  >
+                    <ClipboardList size={11} className="shrink-0" />
+                    {lead.lead_form.name}
+                  </Link>
+                ) : (
+                  <span className="font-semibold capitalize text-slate-600">{humanizeSource(lead.source)}</span>
+                )}
               </p>
             </div>
 

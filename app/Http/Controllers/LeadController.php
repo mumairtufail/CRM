@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\Client;
 use App\Models\Lead;
+use App\Models\LeadForm;
 use App\Models\LeadGroup;
 use App\Models\Tag;
 use App\Models\User;
@@ -27,7 +28,7 @@ class LeadController extends Controller
         $cacheKey = "leads:idx:{$orgId}:v{$version}:" . md5(serialize($request->all()));
 
         $payload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage, $orgId) {
-            $query = Lead::with(['emails', 'phones', 'tags', 'groups'])
+            $query = Lead::with(['emails', 'phones', 'tags', 'groups', 'leadForm:id,name,slug'])
                 ->withCount('activities');
 
             if ($search = $request->input('search')) {
@@ -98,7 +99,7 @@ class LeadController extends Controller
                     'countries'  => $this->distinctValues('country')->toArray(),
                     'cities'     => $this->distinctValues('city')->toArray(),
                     'industries' => $this->distinctValues('industry')->toArray(),
-                    'sources'    => $this->distinctValues('source')->toArray(),
+                    'sources'    => $this->sourceFilterOptions()->toArray(),
                     'groups'     => LeadGroup::orderBy('name')->get(['id', 'name', 'color'])->values()->toArray(),
                     'users'      => User::where('organization_id', $orgId)
                         ->where('is_active', true)
@@ -132,6 +133,37 @@ class LeadController extends Controller
             ->orderBy($column)
             ->pluck($column)
             ->values();
+    }
+
+    /**
+     * Distinct source values for the current tenant, with a human-readable label —
+     * "form:{slug}" resolves to the form's actual name (falling back to the slug
+     * if that form's since been deleted), everything else gets a light humanization.
+     */
+    private function sourceFilterOptions()
+    {
+        $rawSources = $this->distinctValues('source');
+
+        $formSlugs = $rawSources
+            ->filter(fn ($s) => str_starts_with($s, 'form:'))
+            ->map(fn ($s) => substr($s, 5));
+
+        $formNames = LeadForm::whereIn('slug', $formSlugs)->pluck('name', 'slug');
+
+        return $rawSources->map(function ($source) use ($formNames) {
+            if (str_starts_with($source, 'form:')) {
+                $slug = substr($source, 5);
+
+                return ['value' => $source, 'label' => 'Form: ' . ($formNames[$slug] ?? $slug)];
+            }
+
+            return ['value' => $source, 'label' => match ($source) {
+                'csv'          => 'CSV import',
+                'google_sheet' => 'Google Sheet',
+                'manual'       => 'Manual',
+                default        => $source,
+            }];
+        })->values();
     }
 
     public function search(Request $request)
@@ -241,7 +273,7 @@ class LeadController extends Controller
 
     public function show(Lead $lead)
     {
-        $lead->load(['emails', 'phones', 'tags', 'client', 'assignee:id,name', 'creator:id,name']);
+        $lead->load(['emails', 'phones', 'tags', 'client', 'assignee:id,name', 'creator:id,name', 'leadForm:id,name,slug']);
         $activities = $lead->activities()->with('user:id,name')->limit(30)->get();
 
         $emailSends = $lead->emailSends()

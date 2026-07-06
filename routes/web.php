@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Auth\AdminAuthenticatedSessionController;
 use App\Http\Controllers\SupportCaseController;
 use App\Http\Controllers\AiProviderController;
+use App\Http\Controllers\AiEmailComposerController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\MetaWebhookController;
 use App\Http\Controllers\WhatsappCampaignController;
@@ -305,6 +306,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/campaigns/{campaign}/resume-followups', [CampaignController::class, 'resumeFollowups'])->name('campaigns.resume-followups');
         Route::post('/campaigns/{campaign}/clone',            [CampaignController::class, 'clone'])->name('campaigns.clone');
         Route::get('/campaigns/{campaign}/log',               [CampaignController::class, 'log'])->name('campaigns.log');
+
+        Route::post('/campaigns/ai-compose/draft',     [AiEmailComposerController::class, 'draft'])->name('campaigns.ai-compose.draft');
+        Route::post('/campaigns/ai-compose/followups', [AiEmailComposerController::class, 'followups'])->name('campaigns.ai-compose.followups');
+        Route::post('/campaigns/ai-compose/rewrite',   [AiEmailComposerController::class, 'rewrite'])->name('campaigns.ai-compose.rewrite');
     });
 
     // Lead Groups
@@ -422,6 +427,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/inbox/{fetchedEmail}',                    [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/sync',                             [InboxController::class, 'sync'])->name('inbox.sync');
     Route::post('/inbox/send',                             [InboxController::class, 'send'])->name('inbox.send');
+    Route::post('/inbox/{fetchedEmail}/reply',             [InboxController::class, 'reply'])->name('inbox.reply');
     Route::patch('/inbox/{fetchedEmail}/read',             [InboxController::class, 'markRead'])->name('inbox.read');
     Route::patch('/inbox/{fetchedEmail}/starred',          [InboxController::class, 'markStarred'])->name('inbox.starred');
     Route::patch('/inbox/{fetchedEmail}/trash',            [InboxController::class, 'trash'])->name('inbox.trash');

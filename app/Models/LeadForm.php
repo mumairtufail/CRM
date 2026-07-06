@@ -56,6 +56,11 @@ class LeadForm extends Model
         return $this->hasMany(Lead::class);
     }
 
+    public function formSessions()
+    {
+        return $this->hasMany(FormSession::class);
+    }
+
     /**
      * The slug column is unique across ALL workspaces, not just the current
      * one — so this must bypass the tenant global scope. Without

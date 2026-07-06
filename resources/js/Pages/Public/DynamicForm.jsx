@@ -169,6 +169,7 @@ export default function DynamicForm({ form }) {
   const { data, setData, post, processing, errors } = useForm({
     fields: initialFields,
     session_token: sessionToken.current,
+    ...utmParams.current,
   })
 
   const handleSubmit = (e) => {

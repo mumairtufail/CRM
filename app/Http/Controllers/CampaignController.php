@@ -247,37 +247,41 @@ class CampaignController extends Controller
 
     public function show(EmailCampaign $campaign)
     {
+        // Submissions are attributed via the {{form_link}}'s utm_campaign param,
+        // which carries the sending EmailSend's own tracking_token — so "did any
+        // of THIS campaign's sends lead to a submission" is just a token lookup,
+        // no new attribution column needed.
+        $formSessionsByToken = collect();
+        if ($campaign->lead_form_id) {
+            $tokens = $campaign->sends()->pluck('tracking_token')->filter()->all();
+            $formSessionsByToken = FormSession::whereIn('utm_campaign', $tokens)
+                ->whereNotNull('submitted_at')
+                ->get()
+                ->keyBy('utm_campaign');
+        }
+        $formSubmissions = $formSessionsByToken->count();
+
         $sends = $campaign->sends()
             ->with('lead')
             ->latest('sent_at')
             ->paginate(25)
             ->through(fn ($s) => [
-                'id'             => $s->id,
-                'lead_name'      => $s->lead?->full_name,
-                'lead_id'        => $s->lead_id,
-                'email_used'     => $s->email_used,
-                'status'         => $s->status,
-                'error_message'  => $s->error_message,
-                'is_followup'    => (bool) $s->is_followup,
-                'followup_step'  => $s->followup_step,
-                'sent_at'        => $s->sent_at?->diffForHumans(),
-                'opened_at'      => $s->opened_at?->diffForHumans(),
-                'clicked_at'     => $s->clicked_at?->diffForHumans(),
+                'id'                   => $s->id,
+                'lead_name'            => $s->lead?->full_name,
+                'lead_id'              => $s->lead_id,
+                'email_used'           => $s->email_used,
+                'status'               => $s->status,
+                'error_message'        => $s->error_message,
+                'is_followup'          => (bool) $s->is_followup,
+                'followup_step'        => $s->followup_step,
+                'sent_at'              => $s->sent_at?->diffForHumans(),
+                'opened_at'            => $s->opened_at?->diffForHumans(),
+                'clicked_at'           => $s->clicked_at?->diffForHumans(),
+                'form_link_clicked_at' => $s->form_link_clicked_at?->diffForHumans(),
+                'form_submitted_at'    => $formSessionsByToken->get($s->tracking_token)?->submitted_at?->diffForHumans(),
             ]);
 
         $failedCount = $campaign->sends()->where('status', 'failed')->count();
-
-        // Submissions are attributed via the {{form_link}}'s utm_campaign param,
-        // which carries the sending EmailSend's own tracking_token — so "did any
-        // of THIS campaign's sends lead to a submission" is just a token lookup,
-        // no new attribution column needed.
-        $formSubmissions = null;
-        if ($campaign->lead_form_id) {
-            $tokens = $campaign->sends()->pluck('tracking_token')->filter()->all();
-            $formSubmissions = FormSession::whereIn('utm_campaign', $tokens)
-                ->whereNotNull('submitted_at')
-                ->count();
-        }
 
         return Inertia::render('Campaigns/Show', [
             'campaign' => [
@@ -308,6 +312,7 @@ class CampaignController extends Controller
                     'public_url' => $campaign->leadForm->publicUrl(),
                 ] : null,
                 'form_submissions'  => $formSubmissions,
+                'form_clicks'       => $campaign->form_clicks_count,
             ],
             'sends' => $sends,
         ]);
@@ -320,17 +325,31 @@ class CampaignController extends Controller
             ->oldest('created_at')
             ->get();
 
+        // Same attribution lookup as show() — the "Form" column in the live-polled
+        // log must carry the same fields, or it goes blank once polling replaces
+        // the SSR rows from show() with these.
+        $formSessionsByToken = collect();
+        if ($campaign->lead_form_id) {
+            $tokens = $rows->pluck('tracking_token')->filter()->all();
+            $formSessionsByToken = FormSession::whereIn('utm_campaign', $tokens)
+                ->whereNotNull('submitted_at')
+                ->get()
+                ->keyBy('utm_campaign');
+        }
+
         $sends = $rows->map(fn ($s) => [
-            'id'            => $s->id,
-            'lead_id'       => $s->lead_id,
-            'lead_name'     => $s->lead?->full_name ?? '—',
-            'email_used'    => $s->email_used,
-            'status'        => $s->status,
-            'error_message' => $s->error_message,
-            'sent_at'       => $s->sent_at?->diffForHumans(),
-            'sent_at_time'  => $s->sent_at?->format('H:i:s'),
-            'opened_at'     => $s->opened_at?->diffForHumans(),
-            'clicked_at'    => $s->clicked_at?->diffForHumans(),
+            'id'                   => $s->id,
+            'lead_id'              => $s->lead_id,
+            'lead_name'            => $s->lead?->full_name ?? '—',
+            'email_used'           => $s->email_used,
+            'status'               => $s->status,
+            'error_message'        => $s->error_message,
+            'sent_at'              => $s->sent_at?->diffForHumans(),
+            'sent_at_time'         => $s->sent_at?->format('H:i:s'),
+            'opened_at'            => $s->opened_at?->diffForHumans(),
+            'clicked_at'           => $s->clicked_at?->diffForHumans(),
+            'form_link_clicked_at' => $s->form_link_clicked_at?->diffForHumans(),
+            'form_submitted_at'    => $formSessionsByToken->get($s->tracking_token)?->submitted_at?->diffForHumans(),
         ]);
 
         // Compute live from the actual rows so counts are always accurate,
@@ -523,7 +542,8 @@ class CampaignController extends Controller
      */
     public function trackClick(string $token, Request $request)
     {
-        $send = EmailSend::with('lead', 'campaign')->where('tracking_token', $token)->first();
+        $send = EmailSend::with('lead', 'campaign.leadForm')->where('tracking_token', $token)->first();
+        $url  = $request->query('url', '/');
 
         if ($send) {
             if (! $send->clicked_at) {
@@ -544,9 +564,16 @@ class CampaignController extends Controller
                 $send->update(['opened_at' => now()]);
                 EmailCampaign::where('id', $send->email_campaign_id)->increment('opened_count');
             }
-        }
 
-        $url = $request->query('url', '/');
+            // Distinguish "clicked the attached form's link" from clicking any
+            // other link in the email — form slugs are random 8-char tokens, so
+            // a prefix match against the (query-string-free) public URL is safe.
+            $publicUrl = $send->campaign?->leadForm?->publicUrl();
+            if ($publicUrl && ! $send->form_link_clicked_at && str_starts_with($url, $publicUrl)) {
+                $send->update(['form_link_clicked_at' => now()]);
+                EmailCampaign::where('id', $send->email_campaign_id)->increment('form_clicks_count');
+            }
+        }
 
         // Validate the redirect URL is a real URL (basic safety)
         if (! filter_var($url, FILTER_VALIDATE_URL)) {

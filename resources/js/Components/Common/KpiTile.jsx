@@ -12,6 +12,7 @@ const palette = {
   purple: { icon: 'bg-brand-50 text-brand-600',     accent: 'rgb(var(--brand-600))' },
   red:    { icon: 'bg-red-50 text-red-600',         accent: '#EF4444' },
   teal:   { icon: 'bg-teal-50 text-teal-600',       accent: '#14B8A6' },
+  indigo: { icon: 'bg-indigo-50 text-indigo-600',   accent: '#6366F1' },
 }
 
 // Minimal hand-rolled sparkline — no Recharts mount here since a KPI strip

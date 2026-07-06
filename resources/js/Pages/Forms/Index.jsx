@@ -70,7 +70,7 @@ export default function FormsIndex({ forms }) {
                         {f.is_default && <Badge variant="secondary" className="text-[9.5px] px-1.5 py-0">Default</Badge>}
                       </div>
                       <p className="text-[11px] text-slate-400 mt-0.5">
-                        {f.submissions_count} submission{f.submissions_count !== 1 ? 's' : ''}
+                        {f.visitors_count} visitor{f.visitors_count !== 1 ? 's' : ''} · {f.submissions_count} submission{f.submissions_count !== 1 ? 's' : ''}
                         {f.last_submitted_at ? ` · last ${f.last_submitted_at}` : ''}
                       </p>
                     </div>

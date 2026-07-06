@@ -14,7 +14,8 @@ class FormController extends Controller
 
     public function index()
     {
-        $forms = LeadForm::orderByDesc('is_default')
+        $forms = LeadForm::withCount('formSessions')
+            ->orderByDesc('is_default')
             ->latest()
             ->get()
             ->map(fn (LeadForm $f) => [
@@ -23,6 +24,7 @@ class FormController extends Controller
                 'is_active'         => $f->is_active,
                 'is_default'        => $f->is_default,
                 'public_url'        => $f->publicUrl(),
+                'visitors_count'    => $f->form_sessions_count,
                 'submissions_count' => $f->submissions_count,
                 'last_submitted_at' => $f->last_submitted_at?->diffForHumans(),
                 'created_at'        => $f->created_at->diffForHumans(),

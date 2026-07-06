@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activity;
 use App\Models\EmailSend;
+use App\Models\FormSession;
 use App\Models\Lead;
 use App\Support\ResolvesDateRange;
 use Illuminate\Http\Request;
@@ -50,6 +51,7 @@ class DashboardController extends Controller
             'pipeline_value'  => (float) Lead::whereNotIn('status', ['won', 'lost'])->sum('deal_value'),
             'conversion_rate' => $totalClosed > 0 ? round($wonTotal / $totalClosed * 100) : 0,
             'open_deals'      => Lead::whereNotIn('status', ['won', 'lost'])->where('deal_value', '>', 0)->count(),
+            'form_visitors'   => FormSession::whereBetween('created_at', [$from, $to])->count(),
         ];
 
         $leadsOverTime = Lead::selectRaw('DATE(created_at) as date, COUNT(*) as count')

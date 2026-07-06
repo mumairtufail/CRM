@@ -8,6 +8,7 @@ import {
 import {
   Users, TrendingUp, Mail, Target, Clock,
   Sparkles, Percent, Briefcase, X, Activity as ActivityIcon, DollarSign,
+  ClipboardList,
 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
 import StatusBadge from '@/Components/Common/StatusBadge'
@@ -235,7 +236,7 @@ export default function Dashboard({
           )}
 
           {/* KPI strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
             <KpiTile title="Total Leads" value={stats?.total_leads ?? 0}  change={stats?.leads_change}
               icon={Users}      color="blue"   href="/leads"            index={0}
               sparkline={(leadsOverTime ?? []).map(d => d.count)} />
@@ -249,6 +250,8 @@ export default function Dashboard({
               icon={Mail}       color="red"    href="/campaigns"        index={4} />
             <KpiTile title="Conv. Rate"  value={`${stats?.conversion_rate ?? 0}%`}
               icon={Percent}    color="amber"                            index={5} />
+            <KpiTile title="Form Visitors" value={stats?.form_visitors ?? 0}
+              icon={ClipboardList} color="indigo" href="/forms"         index={6} />
           </div>
 
           {/* Row 2 — Area chart + Funnel (clickable) */}

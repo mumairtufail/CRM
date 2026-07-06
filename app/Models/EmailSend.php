@@ -13,14 +13,16 @@ class EmailSend extends Model
         'organization_id',
         'email_campaign_id', 'lead_id', 'email_used', 'status', 'error_message',
         'message_id', 'tracking_token', 'sent_at', 'opened_at', 'clicked_at',
+        'form_link_clicked_at',
         'is_followup', 'parent_send_id', 'followup_step',
     ];
 
     protected $casts = [
-        'sent_at'       => 'datetime',
-        'opened_at'     => 'datetime',
-        'clicked_at'    => 'datetime',
-        'is_followup'   => 'boolean',
+        'sent_at'              => 'datetime',
+        'opened_at'            => 'datetime',
+        'clicked_at'           => 'datetime',
+        'form_link_clicked_at' => 'datetime',
+        'is_followup'          => 'boolean',
     ];
 
     public function campaign()

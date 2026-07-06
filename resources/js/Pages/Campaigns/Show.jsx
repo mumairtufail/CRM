@@ -555,9 +555,15 @@ export default function CampaignShow({ campaign, sends }) {
                       <p className="text-[11px] text-slate-400">Linked via <span className="font-mono">{'{{form_link}}'}</span> in this email</p>
                     </div>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-[18px] font-bold text-slate-800 leading-none">{campaign.form_submissions ?? 0}</p>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">Submitted</p>
+                  <div className="flex items-center gap-5 shrink-0">
+                    <div className="text-right">
+                      <p className="text-[18px] font-bold text-slate-800 leading-none">{campaign.form_clicks ?? 0}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">Clicked</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[18px] font-bold text-slate-800 leading-none">{campaign.form_submissions ?? 0}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wide mt-0.5">Submitted</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -639,6 +645,9 @@ export default function CampaignShow({ campaign, sends }) {
                         <th className="px-4 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Sent</th>
                         <th className="px-4 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden md:table-cell">Opened</th>
                         <th className="px-4 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Clicked</th>
+                        {campaign.form && (
+                          <th className="px-4 py-2 text-left text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:table-cell">Form</th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -678,6 +687,17 @@ export default function CampaignShow({ campaign, sends }) {
                             <td className="px-4 py-2.5 hidden md:table-cell text-slate-400">{s.sent_at || '—'}</td>
                             <td className="px-4 py-2.5 hidden md:table-cell text-slate-400">{s.opened_at || '—'}</td>
                             <td className="px-4 py-2.5 hidden lg:table-cell text-slate-400">{s.clicked_at || '—'}</td>
+                            {campaign.form && (
+                              <td className="px-4 py-2.5 hidden lg:table-cell">
+                                {s.form_submitted_at ? (
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">Submitted</span>
+                                ) : s.form_link_clicked_at ? (
+                                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-50 text-brand-700">Clicked</span>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </td>
+                            )}
                           </tr>
                         )
                       })}

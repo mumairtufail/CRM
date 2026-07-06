@@ -16,7 +16,7 @@ class EmailCampaign extends Model
         'from_name', 'from_email', 'filters',
         'recipient_mode', 'group_id', 'lead_form_id',
         'total_recipients', 'sent_count', 'opened_count',
-        'clicked_count', 'bounced_count', 'unsubscribed_count',
+        'clicked_count', 'form_clicks_count', 'bounced_count', 'unsubscribed_count',
         'scheduled_at', 'sent_at',
         'followup_enabled', 'followup_subject', 'followup_body_html', 'followup_delay_hours',
         'followup_steps',

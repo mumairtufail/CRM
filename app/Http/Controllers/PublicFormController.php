@@ -41,9 +41,15 @@ class PublicFormController extends Controller
         $validated = $request->validate([
             ...$this->buildRules($form),
             'session_token' => 'nullable|string|max:64',
+            'utm_source'    => 'nullable|string|max:100',
+            'utm_medium'    => 'nullable|string|max:100',
+            'utm_campaign'  => 'nullable|string|max:100',
         ]);
         $submitted = $validated['fields'] ?? [];
         $sessionToken = $validated['session_token'] ?? null;
+        $utmSource    = $validated['utm_source'] ?? null;
+        $utmMedium    = $validated['utm_medium'] ?? null;
+        $utmCampaign  = $validated['utm_campaign'] ?? null;
 
         $leadAttributes = [
             'lead_form_id' => $form->id,
@@ -76,7 +82,7 @@ class PublicFormController extends Controller
             }
         }
 
-        $lead = DB::transaction(function () use ($leadAttributes, $customFields, $emailValue, $phoneValue, $form, $sessionToken) {
+        $lead = DB::transaction(function () use ($leadAttributes, $customFields, $emailValue, $phoneValue, $form, $sessionToken, $utmSource, $utmMedium, $utmCampaign) {
             $lead = Lead::create([
                 ...$leadAttributes,
                 'custom_fields' => $customFields ?: null,
@@ -95,15 +101,29 @@ class PublicFormController extends Controller
 
             // Link (or create, if no autosave ever fired) the tracking session so it
             // reads as "submitted" rather than being swept up as abandoned later.
+            // UTM fields are also passed here (not just from autosave) since a fast
+            // fill can submit before any field ever blurs and fires an autosave —
+            // without this, that session would be created with no attribution.
             if ($sessionToken) {
-                FormSession::firstOrCreate(
+                $session = FormSession::firstOrCreate(
                     ['session_token' => $sessionToken, 'lead_form_id' => $form->id],
-                    ['status' => 'in_progress', 'started_at' => now(), 'last_active_at' => now(), 'values' => []]
-                )->update([
+                    [
+                        'status' => 'in_progress', 'started_at' => now(), 'last_active_at' => now(), 'values' => [],
+                        'utm_source' => $utmSource, 'utm_medium' => $utmMedium, 'utm_campaign' => $utmCampaign,
+                    ]
+                );
+
+                $session->update([
                     'status'         => 'submitted',
                     'submitted_at'   => now(),
                     'last_active_at' => now(),
                     'lead_id'        => $lead->id,
+                    // Backfill attribution if autosave created the row before UTM
+                    // params were captured on this end — favor keeping attribution
+                    // over strict first-touch.
+                    'utm_source'     => $session->utm_source ?? $utmSource,
+                    'utm_medium'     => $session->utm_medium ?? $utmMedium,
+                    'utm_campaign'   => $session->utm_campaign ?? $utmCampaign,
                 ]);
             }
 

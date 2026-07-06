@@ -234,7 +234,6 @@ class FormController extends Controller
                     'order'       => $i,
                 ];
             } else {
-                abort_if(isset($catalog[$key]), 422, "\"{$key}\" is reserved for a built-in field.");
                 abort_unless(in_array($field['type'], LeadForm::CUSTOM_FIELD_TYPES, true), 422, "Invalid custom field type \"{$field['type']}\".");
 
                 $options = null;

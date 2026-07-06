@@ -170,6 +170,9 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
       onError: (errs) => {
         const firstErr = Object.values(errs)[0];
         toast.error(typeof firstErr === 'string' ? firstErr : 'Please fix validation errors.');
+        if (errs.name || errs.slug || errs.success_message || errs.description) {
+          setActiveSubTab('settings')
+        }
       }
     }
     
@@ -230,7 +233,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                     <span className="text-[9px] text-slate-400 font-semibold">Click to toggle</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {builtinCatalog.map(c => {
+                    {builtinCatalog.filter(c => c.key !== 'budget' || isBuiltinOn(c.key)).map(c => {
                       const on = isBuiltinOn(c.key)
                       return (
                         <button
@@ -379,7 +382,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
             {activeSubTab === 'settings' && (
               <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FieldWrapper label="Form Name" error={errors.name}>
+                  <FieldWrapper label="Form Name *" error={errors.name}>
                     <Input
                       value={data.name}
                       onChange={e => setData('name', e.target.value)}

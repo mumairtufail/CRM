@@ -80,17 +80,53 @@ class ImportController extends Controller
                 ], 422);
             }
 
-            // Sheet is accessible. We cannot list all tab names without the Sheets API key,
-            // so return a verified status and let the user type the tab name (default Sheet1).
+            // Sheet is accessible. We don't have a Sheets API key, but the public "view"
+            // page renders each tab as a `docs-sheet-tab-caption` element — scrape those
+            // to get the real tab names instead of guessing "Sheet1".
+            $sheetNames = $this->scrapeSheetTabNames($spreadsheetId);
+
             return response()->json([
                 'spreadsheet_id' => $spreadsheetId,
                 'verified'       => true,
-                'sheets'         => ['Sheet1'],
+                'sheets'         => $sheetNames ?: ['Sheet1'],
+                'guessed'        => empty($sheetNames),
+                'warning'        => empty($sheetNames)
+                    ? 'Could not automatically detect tab names — enter the exact tab name shown at the bottom of your Google Sheet.'
+                    : null,
             ]);
 
         } catch (\Throwable $e) {
             Log::error('fetchSheets exception', ['message' => $e->getMessage()]);
             return response()->json(['error' => 'Connection error: ' . $e->getMessage()], 422);
+        }
+    }
+
+    // ── Google Sheets: scrape real tab names from the public view page ────────
+
+    private function scrapeSheetTabNames(string $spreadsheetId): array
+    {
+        try {
+            $response = Http::timeout(10)->get("https://docs.google.com/spreadsheets/d/{$spreadsheetId}/edit");
+
+            if (!$response->ok()) {
+                return [];
+            }
+
+            preg_match_all(
+                '/docs-sheet-tab-caption">([^<]*)</',
+                $response->body(),
+                $matches
+            );
+
+            $names = array_map(
+                fn ($name) => html_entity_decode(trim($name), ENT_QUOTES),
+                $matches[1] ?? []
+            );
+
+            return array_values(array_filter($names, fn ($name) => $name !== ''));
+        } catch (\Throwable $e) {
+            Log::warning('scrapeSheetTabNames failed', ['message' => $e->getMessage()]);
+            return [];
         }
     }
 

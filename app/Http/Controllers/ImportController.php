@@ -112,8 +112,10 @@ class ImportController extends Controller
                 return [];
             }
 
+            // Match the caption div regardless of other classes Google adds
+            // (e.g. the active tab gets an extra "docs-sheet-active-tab" class).
             preg_match_all(
-                '/docs-sheet-tab-caption">([^<]*)</',
+                '/<div class="[^"]*\bdocs-sheet-tab-caption\b[^"]*">([^<]*)<\/div>/',
                 $response->body(),
                 $matches
             );

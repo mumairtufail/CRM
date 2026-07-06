@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Lumenia CRM</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="wrap">
+    <h1>Lumenia CRM</h1>
+
+    <section id="loginView" class="view hidden">
+      <label for="email">Email</label>
+      <input id="email" type="email" placeholder="you@lumeniacrm.com" autocomplete="username" />
+
+      <label for="password">Password</label>
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password" />
+
+      <button id="loginBtn">Log in</button>
+      <p id="loginError" class="error hidden"></p>
+    </section>
+
+    <section id="mainView" class="view hidden">
+      <div class="account-row">
+        <span id="userEmail"></span>
+        <button id="logoutBtn" class="link-btn">Log out</button>
+      </div>
+
+      <div id="noLeadHint" class="hint hidden">
+        Open a LinkedIn profile and click <strong>Import to CRM</strong>, then
+        reopen this popup to draft a message.
+      </div>
+
+      <div id="leadPanel" class="hidden">
+        <p class="lead-name" id="leadName"></p>
+        <p class="lead-sub" id="leadSub"></p>
+
+        <button id="generateBtn">Generate message</button>
+        <p id="generateStatus" class="status hidden"></p>
+
+        <div id="holdOffBox" class="hold-off hidden">
+          Hold off on outreach. The profile signals something sensitive, so no
+          message was drafted.
+        </div>
+
+        <textarea id="messageBox" class="hidden" rows="6"></textarea>
+        <button id="copyBtn" class="hidden">Copy</button>
+      </div>
+    </section>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

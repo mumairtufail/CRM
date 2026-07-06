@@ -10,13 +10,14 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['organization_id', 'role', 'role_id', 'is_active', 'name', 'email', 'password', 'google_id', 'avatar', 'company_name', 'company_logo', 'company_website', 'company_phone', 'company_email', 'company_linkedin', 'mail_batch_size', 'mail_batch_delay', 'active_template_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     protected function casts(): array
     {

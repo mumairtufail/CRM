@@ -22,6 +22,7 @@ import {
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
   Zap, Key, Wifi, Globe, Phone, PenLine, BookOpen, ChevronRight,
   MessageSquare, Database, Tag as TagIcon, Pencil, Trash2,
+  Puzzle, Download,
 } from 'lucide-react'
 
 // lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
@@ -103,6 +104,7 @@ const NAV = [
       { id: 'ai',        label: 'AI Provider',     icon: Zap },
       { id: 'leadgen',   label: 'Lead Generation', icon: Sparkles },
       { id: 'whatsapp',  label: 'WhatsApp',        icon: MessageSquare },
+      { id: 'extension', label: 'Browser Extension', icon: Puzzle },
     ],
   },
   {
@@ -1875,6 +1877,62 @@ function MaintenanceTab() {
   )
 }
 
+function ExtensionTab() {
+  return (
+    <div className="space-y-3 max-w-xl">
+      <Card title="LinkedIn Import Extension">
+        <p className="text-[12px] text-slate-500 leading-relaxed">
+          A Chrome extension for personal use, not published on the Chrome Web
+          Store. It imports the LinkedIn profile you're viewing into your CRM
+          as a lead with one click, then drafts one outreach message using
+          your configured AI provider. You always review and copy the draft
+          yourself, nothing is ever sent automatically.
+        </p>
+
+        <a href={route('settings.extension.download')}>
+          <Button type="button" size="sm" className="h-8 text-xs gap-1.5 mt-3">
+            <Download size={12} />
+            Download extension (.zip)
+          </Button>
+        </a>
+
+        <div className="pt-2 mt-2 border-t border-slate-100">
+          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            Install it
+          </p>
+          <ol className="text-[12px] text-slate-600 leading-relaxed list-decimal list-inside space-y-1">
+            <li>Download the zip above and unzip it somewhere you'll keep it (don't delete the folder after installing — Chrome loads the extension from it).</li>
+            <li>Open <code className="text-[11px] bg-slate-100 px-1 py-0.5 rounded">chrome://extensions</code> in Chrome.</li>
+            <li>Turn on <strong>Developer mode</strong>, top right.</li>
+            <li>Click <strong>Load unpacked</strong> and select the unzipped <code className="text-[11px] bg-slate-100 px-1 py-0.5 rounded">lumenia-crm-extension</code> folder.</li>
+            <li>Pin the extension icon, click it, and log in with your CRM email and password.</li>
+          </ol>
+        </div>
+
+        <div className="pt-2 mt-2 border-t border-slate-100">
+          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            Use it
+          </p>
+          <ol className="text-[12px] text-slate-600 leading-relaxed list-decimal list-inside space-y-1">
+            <li>Open any linkedin.com/in/... profile page.</li>
+            <li>Click <strong>Import to CRM</strong>, which appears just under the person's name.</li>
+            <li>Reopen the extension popup and click <strong>Generate message</strong> to draft an outreach message.</li>
+            <li>Edit if you like, click <strong>Copy</strong>, then paste it into LinkedIn's own message box and send it yourself.</li>
+          </ol>
+        </div>
+
+        <p className="text-[11px] text-slate-400 leading-relaxed pt-2 mt-2 border-t border-slate-100">
+          Chrome only allows one-click installs for extensions published on
+          the Chrome Web Store. This one reads LinkedIn's page content, which
+          typically doesn't survive Web Store review, so it's distributed as
+          a direct download instead — the Load unpacked steps above take
+          under a minute.
+        </p>
+      </Card>
+    </div>
+  )
+}
+
 // ─── Page root ────────────────────────────────────────────────────────────────
 
 export default function ProfileEdit({
@@ -1925,6 +1983,7 @@ export default function ProfileEdit({
             {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}
             {tab === 'leadgen'     && <LeadGenTab leadGenSettings={leadGenSettings} />}
             {tab === 'whatsapp'    && <WhatsappTab status={whatsappStatus} />}
+            {tab === 'extension'   && <ExtensionTab />}
             {tab === 'maintenance' && <MaintenanceTab />}
           </div>
         </div>

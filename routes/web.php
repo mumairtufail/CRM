@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\BlogController as AdminBlogController;
 use App\Http\Controllers\Auth\AdminAuthenticatedSessionController;
 use App\Http\Controllers\SupportCaseController;
 use App\Http\Controllers\AiProviderController;
+use App\Http\Controllers\ExtensionDownloadController;
 use App\Http\Controllers\AiEmailComposerController;
 use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\MetaWebhookController;
@@ -445,6 +446,9 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('module:whatsapp_automation')->group(function () {
         Route::get('/settings/whatsapp', [WhatsappStatusController::class, 'show'])->name('whatsapp.settings');
     });
+
+    // Browser Extension download
+    Route::get('/settings/extension/download', [ExtensionDownloadController::class, 'download'])->name('settings.extension.download');
 
     Route::post('/settings/cache/clear', [ProfileController::class, 'clearLeadsCache'])->name('settings.cache.clear');
 

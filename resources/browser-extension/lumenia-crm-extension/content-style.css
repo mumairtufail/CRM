@@ -1,0 +1,36 @@
+.lumenia-import-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.lumenia-import-button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 16px;
+  border-radius: 16px;
+  border: 1px solid #4338ca;
+  background: #fff;
+  color: #4338ca;
+  cursor: pointer;
+}
+
+.lumenia-import-button:hover {
+  background: #eef2ff;
+}
+
+.lumenia-import-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.lumenia-status {
+  font-size: 13px;
+  color: #444;
+}
+
+.lumenia-status-error {
+  color: #b91c1c;
+}

@@ -14,7 +14,14 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
     { label: 'Pricing',      href: '/#pricing' },
     { label: 'Contact',      href: '/#contact' },
   ]
-  
+
+  const CURRENCY_LABELS = { '$': 'USD ($)', '€': 'EUR (€)', '£': 'GBP (£)', '₨': 'PKR (₨)' }
+  const formatDate = (iso) => {
+    if (!iso) return ''
+    const [y, m, d] = iso.split('-')
+    return `${d}/${m}/${y}`
+  }
+
   // Invoice state
   const [invoice, setInvoice] = useState({
     invoiceNumber: 'INV-2026-001',
@@ -126,12 +133,6 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
               padding: 0 !important;
               margin: 0 !important;
             }
-            input, textarea, select {
-              border: none !important;
-              background: transparent !important;
-              padding-top: 0 !important;
-              padding-bottom: 0 !important;
-            }
           }
         `}</style>
       </Head>
@@ -232,30 +233,34 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                   type="text"
                   value={invoice.companyName}
                   onChange={(e) => handleInvoiceChange('companyName', e.target.value)}
-                  className="text-2xl font-black text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-brand-500 w-full focus:outline-none py-1"
+                  className="text-2xl font-black text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-brand-500 w-full focus:outline-none py-1 print:hidden"
                 />
+                <div className="hidden print:block text-2xl font-black text-slate-800 py-1">{invoice.companyName}</div>
                 <div className="space-y-1.5 text-sm text-slate-500">
                   <input
                     type="email"
                     value={invoice.companyEmail}
                     onChange={(e) => handleInvoiceChange('companyEmail', e.target.value)}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 print:hidden"
                     placeholder="email@company.com"
                   />
+                  <div className="hidden print:block py-0.5">{invoice.companyEmail}</div>
                   <input
                     type="text"
                     value={invoice.companyPhone}
                     onChange={(e) => handleInvoiceChange('companyPhone', e.target.value)}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 print:hidden"
                     placeholder="Phone"
                   />
+                  <div className="hidden print:block py-0.5">{invoice.companyPhone}</div>
                   <textarea
                     value={invoice.companyAddress}
                     onChange={(e) => handleInvoiceChange('companyAddress', e.target.value)}
                     rows={2}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 resize-none"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 resize-none print:hidden"
                     placeholder="Address"
                   />
+                  <div className="hidden print:block py-0.5 whitespace-pre-line">{invoice.companyAddress}</div>
                 </div>
               </div>
 
@@ -264,40 +269,52 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                 <h1 className="text-4xl font-extrabold tracking-tight text-slate-400 uppercase select-none">INVOICE</h1>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-slate-500 md:justify-items-end">
                   <span className="font-semibold text-slate-400">Invoice No:</span>
-                  <input
-                    type="text"
-                    value={invoice.invoiceNumber}
-                    onChange={(e) => handleInvoiceChange('invoiceNumber', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right font-bold text-slate-700 w-32"
-                  />
+                  <span className="w-32 inline-block text-right font-bold text-slate-700">
+                    <input
+                      type="text"
+                      value={invoice.invoiceNumber}
+                      onChange={(e) => handleInvoiceChange('invoiceNumber', e.target.value)}
+                      className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right font-bold text-slate-700 w-full print:hidden"
+                    />
+                    <span className="hidden print:inline">{invoice.invoiceNumber}</span>
+                  </span>
 
                   <span className="font-semibold text-slate-400">Date:</span>
-                  <input
-                    type="date"
-                    value={invoice.date}
-                    onChange={(e) => handleInvoiceChange('date', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-32"
-                  />
+                  <span className="w-32 inline-block text-right">
+                    <input
+                      type="date"
+                      value={invoice.date}
+                      onChange={(e) => handleInvoiceChange('date', e.target.value)}
+                      className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-full print:hidden"
+                    />
+                    <span className="hidden print:inline">{formatDate(invoice.date)}</span>
+                  </span>
 
                   <span className="font-semibold text-slate-400">Due Date:</span>
-                  <input
-                    type="date"
-                    value={invoice.dueDate}
-                    onChange={(e) => handleInvoiceChange('dueDate', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-32"
-                  />
+                  <span className="w-32 inline-block text-right">
+                    <input
+                      type="date"
+                      value={invoice.dueDate}
+                      onChange={(e) => handleInvoiceChange('dueDate', e.target.value)}
+                      className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-full print:hidden"
+                    />
+                    <span className="hidden print:inline">{formatDate(invoice.dueDate)}</span>
+                  </span>
 
                   <span className="font-semibold text-slate-400">Currency:</span>
-                  <select
-                    value={invoice.currency}
-                    onChange={(e) => handleInvoiceChange('currency', e.target.value)}
-                    className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-16 bg-white"
-                  >
-                    <option value="$">USD ($)</option>
-                    <option value="€">EUR (€)</option>
-                    <option value="£">GBP (£)</option>
-                    <option value="₨">PKR (₨)</option>
-                  </select>
+                  <span className="w-16 inline-block text-right">
+                    <select
+                      value={invoice.currency}
+                      onChange={(e) => handleInvoiceChange('currency', e.target.value)}
+                      className="border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 text-right w-full bg-white print:hidden"
+                    >
+                      <option value="$">USD ($)</option>
+                      <option value="€">EUR (€)</option>
+                      <option value="£">GBP (£)</option>
+                      <option value="₨">PKR (₨)</option>
+                    </select>
+                    <span className="hidden print:inline">{CURRENCY_LABELS[invoice.currency] || invoice.currency}</span>
+                  </span>
                 </div>
               </div>
             </div>
@@ -310,24 +327,27 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                   type="text"
                   value={invoice.clientName}
                   onChange={(e) => handleInvoiceChange('clientName', e.target.value)}
-                  className="text-lg font-bold text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-1 w-full"
+                  className="text-lg font-bold text-slate-800 border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-1 w-full print:hidden"
                   placeholder="Client Name"
                 />
+                <div className="hidden print:block text-lg font-bold text-slate-800 py-1">{invoice.clientName}</div>
                 <div className="space-y-1.5 text-sm text-slate-500">
                   <input
                     type="email"
                     value={invoice.clientEmail}
                     onChange={(e) => handleInvoiceChange('clientEmail', e.target.value)}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 print:hidden"
                     placeholder="client@email.com"
                   />
+                  <div className="hidden print:block py-0.5">{invoice.clientEmail}</div>
                   <textarea
                     value={invoice.clientAddress}
                     onChange={(e) => handleInvoiceChange('clientAddress', e.target.value)}
                     rows={2}
-                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 resize-none"
+                    className="block w-full border-b border-transparent hover:border-slate-200 focus:border-brand-500 focus:outline-none py-0.5 resize-none print:hidden"
                     placeholder="Client Address"
                   />
+                  <div className="hidden print:block py-0.5 whitespace-pre-line">{invoice.clientAddress}</div>
                 </div>
               </div>
             </div>
@@ -352,26 +372,29 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                           type="text"
                           value={item.description}
                           onChange={(e) => handleItemChange(item.id, 'description', e.target.value)}
-                          className="w-full border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-sm text-slate-800"
+                          className="w-full border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-sm text-slate-800 print:hidden"
                         />
+                        <div className="hidden print:block py-1 text-sm text-slate-800">{item.description}</div>
                       </td>
                       <td className="py-4 text-center">
                         <input
                           type="number"
                           value={item.quantity}
                           onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
-                          className="w-16 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-center text-sm text-slate-800"
+                          className="w-16 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-center text-sm text-slate-800 print:hidden"
                           min="1"
                         />
+                        <div className="hidden print:block py-1 text-center text-sm text-slate-800">{item.quantity}</div>
                       </td>
                       <td className="py-4 text-right">
                         <input
                           type="number"
                           value={item.price}
                           onChange={(e) => handleItemChange(item.id, 'price', e.target.value)}
-                          className="w-20 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-right text-sm text-slate-800"
+                          className="w-20 border-b border-transparent hover:border-slate-100 focus:border-brand-500 focus:outline-none py-1 text-right text-sm text-slate-800 print:hidden"
                           min="0"
                         />
+                        <div className="hidden print:block py-1 text-right text-sm text-slate-800">{item.price}</div>
                       </td>
                       <td className="py-4 text-right text-sm font-semibold text-slate-800 select-none">
                         {invoice.currency}{(item.quantity * item.price).toLocaleString()}
@@ -407,9 +430,10 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
                 <textarea
                   value={invoice.notes}
                   onChange={(e) => handleInvoiceChange('notes', e.target.value)}
-                  className="w-full border border-slate-200 rounded-xl p-4 text-xs text-slate-500 focus:outline-none focus:border-brand-500 resize-none h-24 print:border-0 print:p-0 print:text-slate-600"
+                  className="w-full border border-slate-200 rounded-xl p-4 text-xs text-slate-500 focus:outline-none focus:border-brand-500 resize-none h-24 print:hidden"
                   placeholder="Payment details, IBAN, bank name, etc."
                 />
+                <div className="hidden print:block text-xs text-slate-600 whitespace-pre-line">{invoice.notes}</div>
               </div>
 
               {/* Totals */}

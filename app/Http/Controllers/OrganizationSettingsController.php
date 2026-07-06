@@ -12,7 +12,8 @@ class OrganizationSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $request->validate([
-            'followup_enabled' => 'required|boolean',
+            'followup_enabled' => 'sometimes|boolean',
+            'name'             => 'sometimes|required|string|max:150',
         ]);
 
         $org = app(TenantContext::class)->get() ?? $request->user()?->organization;
@@ -21,11 +22,18 @@ class OrganizationSettingsController extends Controller
             return Redirect::back()->withErrors(['org' => 'No workspace found.']);
         }
 
-        $settings                     = $org->settings ?? [];
-        $settings['followup_enabled'] = (bool) $request->input('followup_enabled');
-        $org->settings                = $settings;
+        if ($request->has('followup_enabled')) {
+            $settings                     = $org->settings ?? [];
+            $settings['followup_enabled'] = (bool) $request->input('followup_enabled');
+            $org->settings                = $settings;
+        }
+
+        if ($request->has('name')) {
+            $org->name = $request->input('name');
+        }
+
         $org->save();
 
-        return Redirect::route('profile.edit')->with('status', 'followup-settings-updated');
+        return Redirect::route('profile.edit')->with('status', 'organization-settings-updated');
     }
 }

@@ -7,12 +7,15 @@ use App\Models\EmailSend;
 use App\Models\Lead;
 use App\Models\User;
 use App\Models\WhatsappSend;
+use App\Support\ResolvesDateRange;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ReportController extends Controller
 {
+    use ResolvesDateRange;
+
     public function index(Request $request)
     {
         $request->validate([
@@ -62,35 +65,6 @@ class ReportController extends Controller
                 'types' => ['import', 'status_change', 'call', 'note', 'reassignment', 'deletion', 'whatsapp'],
             ],
         ]);
-    }
-
-    /**
-     * @return array{0: string, 1: Carbon, 2: Carbon}
-     */
-    private function resolveRange(Request $request): array
-    {
-        $range = $request->input('range', '30d');
-
-        try {
-            [$from, $to] = match ($range) {
-                'today'      => [now()->startOfDay(), now()->endOfDay()],
-                '7d'         => [now()->subDays(7), now()],
-                '30d'        => [now()->subDays(30), now()],
-                '90d'        => [now()->subDays(90), now()],
-                'this_month' => [now()->startOfMonth(), now()->endOfDay()],
-                'last_month' => [now()->subMonthNoOverflow()->startOfMonth(), now()->subMonthNoOverflow()->endOfMonth()],
-                'custom'     => [
-                    $request->filled('from') ? Carbon::parse($request->input('from'))->startOfDay() : now()->subDays(30),
-                    $request->filled('to') ? Carbon::parse($request->input('to'))->endOfDay() : now(),
-                ],
-                default      => [now()->subDays(30), now()],
-            };
-        } catch (\Throwable) {
-            $range = '30d';
-            [$from, $to] = [now()->subDays(30), now()];
-        }
-
-        return [$range, $from, $to];
     }
 
     private function agentRow(User $user, Carbon $from, Carbon $to): array

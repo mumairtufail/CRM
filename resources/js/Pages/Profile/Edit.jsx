@@ -321,12 +321,27 @@ function DeleteForm() {
 // ─── Workspace tab ────────────────────────────────────────────────────────────
 
 function WorkspaceTab() {
-  const { auth } = usePage().props
+  const { auth, organization } = usePage().props
   const logoInputRef = useRef()
   const [logoPreview, setLogoPreview] = useState(
     auth.user.company_logo ? `/storage/${auth.user.company_logo}` : null
   )
   const [removingLogo, setRemovingLogo] = useState(false)
+
+  const [orgName, setOrgName]     = useState(organization?.name ?? '')
+  const [savingName, setSavingName] = useState(false)
+
+  const saveOrgName = e => {
+    e.preventDefault()
+    if (!orgName.trim()) return
+    setSavingName(true)
+    router.post('/organization/settings', { name: orgName.trim() }, {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Workspace name updated'),
+      onError:   () => toast.error('Failed to update workspace name'),
+      onFinish:  () => setSavingName(false),
+    })
+  }
 
   const { data, setData, processing } = useForm({
     company_name:    auth.user.company_name    ?? '',
@@ -372,9 +387,19 @@ function WorkspaceTab() {
 
   return (
     <div className="space-y-3 max-w-xl">
+      <Card title="Workspace name">
+        <form onSubmit={saveOrgName} className="space-y-3">
+          <Field label="Workspace name" hint="Shown in the sidebar and used to identify your workspace across the app.">
+            <Input value={orgName} onChange={e => setOrgName(e.target.value)}
+              className="h-8 text-[13px]" placeholder="Acme Inc." />
+          </Field>
+          <SaveBtn processing={savingName} label="Save name" />
+        </form>
+      </Card>
+
       <Card title="Workspace branding">
         <form onSubmit={submit} className="space-y-3">
-          <Field label="Company logo">
+          <Field label="Company logo" hint="Used in email signatures and other documents — not shown in the sidebar.">
             <div className="flex items-center gap-3">
               {logoPreview ? (
                 <div className="relative shrink-0">
@@ -402,7 +427,7 @@ function WorkspaceTab() {
             <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
           </Field>
 
-          <Field label="Company name">
+          <Field label="Company name" hint="Used in email signatures — not the workspace name shown in the sidebar.">
             <Input value={data.company_name} onChange={e => setData('company_name', e.target.value)}
               className="h-8 text-[13px]" placeholder="Acme Inc." />
           </Field>

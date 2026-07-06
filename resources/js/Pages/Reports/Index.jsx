@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import { Head, Link, router } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import {
@@ -6,8 +7,9 @@ import {
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from '@/Components/ui/select'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
 import {
-  BarChart3, Users, Mail, MessageSquare, ChevronLeft, ChevronRight, TrendingUp, Target, Globe, MapPin,
+  BarChart3, Users, Mail, MessageSquare, ChevronLeft, ChevronRight, TrendingUp, Globe, MapPin, X,
 } from 'lucide-react'
 import { CONTACT_CHANNELS } from '@/Components/Common/OutreachChannels'
 import GlassCard from '@/Components/Common/GlassCard'
@@ -15,31 +17,33 @@ import SectionHeader from '@/Components/Common/SectionHeader'
 import InlineEmptyState from '@/Components/Common/InlineEmptyState'
 import ActivityFeedItem from '@/Components/Common/ActivityFeedItem'
 import { AreaTooltip, BarTooltip } from '@/Components/Common/ChartTooltip'
+import RangeSelect, { CustomRangeInputs } from '@/Components/Common/RangeFilter'
 import { CHART_COLORS } from '@/lib/chartPalette'
-
-const RANGE_PRESETS = [
-  { value: 'today',      label: 'Today' },
-  { value: '7d',         label: 'Last 7 days' },
-  { value: '30d',        label: 'Last 30 days' },
-  { value: '90d',        label: 'Last 90 days' },
-  { value: 'this_month', label: 'This month' },
-  { value: 'last_month', label: 'Last month' },
-  { value: 'custom',     label: 'Custom range' },
-]
 
 const CHANNEL_META = Object.fromEntries(CONTACT_CHANNELS.map(c => [c.key, c]))
 
-function ChipMini({ channel }) {
+function ChipMini({ channel, dimmed }) {
   const meta = CHANNEL_META[channel]
   if (!meta) return null
   return (
     <span
       title={meta.label}
-      className="inline-flex items-center justify-center rounded font-bold w-4 h-4 text-[7px] text-white shrink-0"
+      className={`inline-flex items-center justify-center rounded font-bold w-4 h-4 text-[7px] text-white shrink-0 transition-opacity ${dimmed ? 'opacity-25' : 'opacity-100'}`}
       style={{ background: meta.bg }}
     >
       {meta.letter.toUpperCase()}
     </span>
+  )
+}
+
+function RateBar({ label, pct, color }) {
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <div className="flex-1 h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div className="h-full rounded-full" style={{ width: `${Math.min(100, pct)}%`, background: color }} />
+      </div>
+      <span className="text-[10px] font-semibold text-slate-500 w-16 shrink-0">{pct}% {label}</span>
+    </div>
   )
 }
 
@@ -51,14 +55,23 @@ export default function ReportsIndex({
     router.get('/reports', { ...filters, ...params }, { preserveState: true, preserveScroll: true })
   }
 
+  // Client-side cross-filter: click a channel bar and every agent row /
+  // channel chip on the page dims to just that channel, instantly, using
+  // data already on the page. Distinct from the server-driven filters below
+  // (date range, agent, activity type) which need fresh aggregates.
+  const [selectedChannel, setSelectedChannel] = useState(null)
+  const toggleChannel = (name) => setSelectedChannel(prev => prev === name ? null : name)
+
   const chipChannels = channelBreakdown.filter(c => c.name !== 'email_sends' && c.name !== 'whatsapp_sends')
   const topCountriesByAgent = geo?.top_countries_by_agent ?? {}
+
+  const rowHasChannel = (row) => Object.keys(row.channel_counts ?? {}).includes(selectedChannel)
 
   return (
     <AppLayout title="Reports">
       <Head title="Reports" />
 
-      <div className="space-y-4">
+      <div className="space-y-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h2 className="text-[18px] font-bold text-slate-800 tracking-tight leading-none">Reports & Analytics</h2>
@@ -68,44 +81,30 @@ export default function ReportsIndex({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Select
+            <RangeSelect
               value={range.key}
-              onValueChange={v => {
+              onChange={v => {
                 if (v === 'custom') {
                   updateQuery({ range: v, from: range.from, to: range.to })
                 } else {
                   updateQuery({ range: v, from: undefined, to: undefined })
                 }
               }}
-            >
-              <SelectTrigger className="h-8 text-[13px] w-36"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {RANGE_PRESETS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-
+            />
             {range.key === 'custom' && (
-              <div className="grid grid-cols-2 gap-1.5 w-full sm:flex sm:items-center sm:w-auto">
-                <input
-                  type="date"
-                  defaultValue={range.from}
-                  onChange={e => updateQuery({ range: 'custom', from: e.target.value, to: filters.to ?? range.to })}
-                  className="h-8 rounded-lg border border-slate-200 px-2 text-[12.5px] text-slate-600 w-full sm:w-auto"
-                />
-                <input
-                  type="date"
-                  defaultValue={range.to}
-                  onChange={e => updateQuery({ range: 'custom', to: e.target.value, from: filters.from ?? range.from })}
-                  className="h-8 rounded-lg border border-slate-200 px-2 text-[12.5px] text-slate-600 w-full sm:w-auto"
-                />
-              </div>
+              <CustomRangeInputs
+                from={range.from}
+                to={range.to}
+                onFrom={v => updateQuery({ range: 'custom', from: v, to: filters.to ?? range.to })}
+                onTo={v => updateQuery({ range: 'custom', to: v, from: filters.from ?? range.from })}
+              />
             )}
           </div>
         </div>
 
         <GlassCard>
           <SectionHeader title="Leads Over Time" icon={TrendingUp} />
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 pt-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 pt-3">
             {[
               { label: 'Leads created', value: funnel.total },
               { label: 'Contacted', value: funnel.contacted, sub: `${funnel.contact_rate}% of created` },
@@ -119,7 +118,7 @@ export default function ReportsIndex({
               </div>
             ))}
           </div>
-          <div className="px-4 py-4" style={{ height: 200 }}>
+          <div className="px-4 py-3" style={{ height: 180 }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={leadsTrend ?? []} margin={{ top: 6, right: 4, left: -24, bottom: 0 }}>
                 <defs>
@@ -138,10 +137,22 @@ export default function ReportsIndex({
           </div>
         </GlassCard>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           <GlassCard className="lg:col-span-2">
             <SectionHeader title="Channel Breakdown" icon={BarChart3} />
-            <div className="px-4 py-3" style={{ height: 260 }}>
+            {selectedChannel && (
+              <div className="flex items-center gap-2 px-5 pt-2.5">
+                <span className="text-[11px] text-slate-400">Highlighting:</span>
+                <button
+                  onClick={() => setSelectedChannel(null)}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 text-brand-700 border border-brand-200 pl-2.5 pr-1.5 py-0.5 text-[11px] font-semibold capitalize hover:bg-brand-100 transition-colors"
+                >
+                  {CHANNEL_META[selectedChannel]?.label ?? selectedChannel}
+                  <X size={11} />
+                </button>
+              </div>
+            )}
+            <div className="px-4 py-3" style={{ height: 240 }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chipChannels} layout="vertical" margin={{ left: 10, right: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
@@ -149,31 +160,41 @@ export default function ReportsIndex({
                   <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
                   <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgb(var(--brand-600) / 0.04)' }} />
                   <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={14}>
-                    {chipChannels.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                    {chipChannels.map((entry, i) => (
+                      <Cell
+                        key={i}
+                        fill={CHART_COLORS[i % CHART_COLORS.length]}
+                        opacity={!selectedChannel || selectedChannel === entry.name ? 0.85 : 0.25}
+                        className="cursor-pointer"
+                        onClick={() => toggleChannel(entry.name)}
+                      />
+                    ))}
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </GlassCard>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <GlassCard>
-              <div className="px-5 py-4 flex items-center gap-3">
+              <div className="px-5 py-3 flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-blue-50 text-blue-600 shrink-0"><Mail size={17} /></div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Emails sent</p>
                   <p className="text-[22px] font-bold text-slate-800 leading-none mt-1">{engagement.email.sent}</p>
-                  <p className="text-[10.5px] text-slate-400 mt-1">{engagement.email.open_rate}% opened &middot; {engagement.email.click_rate}% clicked</p>
+                  <RateBar label="opened" pct={engagement.email.open_rate} color="#3B82F6" />
+                  <RateBar label="clicked" pct={engagement.email.click_rate} color="#93C5FD" />
                 </div>
               </div>
             </GlassCard>
             <GlassCard>
-              <div className="px-5 py-4 flex items-center gap-3">
+              <div className="px-5 py-3 flex items-center gap-3">
                 <div className="p-2.5 rounded-xl bg-emerald-50 text-emerald-600 shrink-0"><MessageSquare size={17} /></div>
-                <div>
+                <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">WhatsApp sent</p>
                   <p className="text-[22px] font-bold text-slate-800 leading-none mt-1">{engagement.whatsapp.sent}</p>
-                  <p className="text-[10.5px] text-slate-400 mt-1">{engagement.whatsapp.delivery_rate}% delivered &middot; {engagement.whatsapp.read_rate}% read</p>
+                  <RateBar label="delivered" pct={engagement.whatsapp.delivery_rate} color="#10B981" />
+                  <RateBar label="read" pct={engagement.whatsapp.read_rate} color="#6EE7B7" />
                 </div>
               </div>
             </GlassCard>
@@ -186,44 +207,50 @@ export default function ReportsIndex({
             <table className="w-full text-[12.5px] min-w-[720px]">
               <thead>
                 <tr className="text-left text-[10.5px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
-                  <th className="px-5 py-2.5 sticky left-0 bg-white/90 backdrop-blur-sm">Agent</th>
-                  <th className="px-3 py-2.5 text-right">Created</th>
-                  <th className="px-3 py-2.5 text-right">Assigned</th>
-                  <th className="px-3 py-2.5 text-right">Contacted</th>
-                  <th className="px-3 py-2.5 text-right">Won</th>
-                  <th className="px-3 py-2.5 text-right">Conv. %</th>
-                  <th className="px-3 py-2.5 text-right">Emails</th>
-                  <th className="px-3 py-2.5 text-right">WhatsApp</th>
-                  <th className="px-3 py-2.5 text-right">Avg. Hrs to Contact</th>
-                  <th className="px-3 py-2.5">Channels</th>
+                  <th className="px-5 py-2 sticky left-0 bg-white/90 backdrop-blur-sm">Agent</th>
+                  <th className="px-3 py-2 text-right">Created</th>
+                  <th className="px-3 py-2 text-right">Assigned</th>
+                  <th className="px-3 py-2 text-right">Contacted</th>
+                  <th className="px-3 py-2 text-right">Won</th>
+                  <th className="px-3 py-2 text-right">Conv. %</th>
+                  <th className="px-3 py-2 text-right">Emails</th>
+                  <th className="px-3 py-2 text-right">WhatsApp</th>
+                  <th className="px-3 py-2 text-right">Avg. Hrs to Contact</th>
+                  <th className="px-3 py-2">Channels</th>
                 </tr>
               </thead>
               <tbody>
                 {agentRows.map(row => {
                   const topCountries = topCountriesByAgent[row.id]?.map(c => c.country).join(', ')
+                  const dimmed = selectedChannel && !rowHasChannel(row)
                   return (
-                    <tr key={row.id} className="border-b border-slate-50 hover:bg-slate-50/60 group">
-                      <td className="px-5 py-2.5 font-semibold sticky left-0 bg-white/90 backdrop-blur-sm group-hover:bg-slate-50/90">
+                    <tr
+                      key={row.id}
+                      onClick={() => updateQuery({ user_id: filters.user_id === String(row.id) ? undefined : row.id })}
+                      className={`border-b border-slate-50 hover:bg-slate-50/60 group cursor-pointer transition-opacity ${dimmed ? 'opacity-35' : 'opacity-100'} ${String(filters.user_id) === String(row.id) ? 'bg-brand-50/50' : ''}`}
+                    >
+                      <td className="px-5 py-2 font-semibold sticky left-0 bg-white/90 backdrop-blur-sm group-hover:bg-slate-50/90">
                         <Link
                           href={`/leads?assigned_to=${row.id}`}
+                          onClick={e => e.stopPropagation()}
                           title={topCountries ? `Top territories: ${topCountries}` : undefined}
                           className="text-brand-600 hover:underline"
                         >
                           {row.name}
                         </Link>
                       </td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.leads_created}</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.leads_assigned}</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.leads_contacted}</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.won_count}</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.conversion_rate}%</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.emails_sent}</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">{row.whatsapp_sent}</td>
-                      <td className="px-3 py-2.5 text-slate-600 text-right">
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.leads_created}</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.leads_assigned}</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.leads_contacted}</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.won_count}</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.conversion_rate}%</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.emails_sent}</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">{row.whatsapp_sent}</td>
+                      <td className="px-3 py-2 text-slate-600 text-right">
                         {row.avg_hours_to_contact != null ? `${row.avg_hours_to_contact}h` : '—'}
                         {row.contact_sample_size > 0 && <span className="text-slate-300 text-[10px] ml-1">(n={row.contact_sample_size})</span>}
                       </td>
-                      <td className="px-3 py-2.5">
+                      <td className="px-3 py-2">
                         <div className="flex items-center gap-1">
                           {Object.keys(row.channel_counts ?? {}).map(ch => <ChipMini key={ch} channel={ch} />)}
                         </div>
@@ -237,36 +264,42 @@ export default function ReportsIndex({
               </tbody>
             </table>
           </div>
+          <p className="px-5 py-2 text-[10.5px] text-slate-400 border-t border-slate-100/80">
+            Click a row to filter the activity feed below to that agent · click a channel bar above to highlight agents using it
+          </p>
         </GlassCard>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <GlassCard>
-            <SectionHeader title="Top Countries" icon={Globe} />
-            <div className="px-4 py-3" style={{ height: 220 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={geo.by_country} layout="vertical" margin={{ left: 10, right: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
-                  <Tooltip cursor={{ fill: 'rgb(var(--brand-600) / 0.04)' }} />
-                  <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={12} fill="rgb(var(--brand-600))" />
-                </BarChart>
-              </ResponsiveContainer>
+        <GlassCard>
+          <Tabs defaultValue="countries">
+            <div className="flex items-center justify-between px-5 pt-3 pb-2 border-b border-slate-100/80">
+              <TabsList className="h-8 bg-slate-100/70 p-0.5">
+                <TabsTrigger value="countries" className="text-[11.5px] px-3 h-7 gap-1.5"><Globe size={12} /> Countries</TabsTrigger>
+                <TabsTrigger value="cities" className="text-[11.5px] px-3 h-7 gap-1.5"><MapPin size={12} /> Cities</TabsTrigger>
+              </TabsList>
             </div>
-          </GlassCard>
-
-          <GlassCard>
-            <SectionHeader title="Top Cities" icon={MapPin} />
-            <div className="px-5 py-3 space-y-2 max-h-[220px] overflow-y-auto">
+            <TabsContent value="countries" className="mt-0 px-4 py-3" style={{ height: 220 }}>
+              {geo.by_country.length ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={geo.by_country} layout="vertical" margin={{ left: 10, right: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                    <XAxis type="number" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                    <YAxis type="category" dataKey="name" width={80} tick={{ fontSize: 10, fill: '#64748b' }} axisLine={false} tickLine={false} />
+                    <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgb(var(--brand-600) / 0.04)' }} />
+                    <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={12} fill="rgb(var(--brand-600))" />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : <InlineEmptyState icon={Globe} message="No country data in this period" />}
+            </TabsContent>
+            <TabsContent value="cities" className="mt-0 px-5 py-3 space-y-2 max-h-[220px] overflow-y-auto">
               {geo.by_city.length ? geo.by_city.map(c => (
                 <div key={c.name} className="flex items-center justify-between text-[12.5px]">
                   <span className="text-slate-600">{c.name}</span>
                   <span className="font-semibold text-slate-800">{c.value}</span>
                 </div>
-              )) : <p className="text-[12px] text-slate-400 py-4 text-center">No city data in this period</p>}
-            </div>
-          </GlassCard>
-        </div>
+              )) : <InlineEmptyState icon={MapPin} message="No city data in this period" />}
+            </TabsContent>
+          </Tabs>
+        </GlassCard>
 
         <GlassCard>
           <SectionHeader title="Activity Feed" icon={MessageSquare} />

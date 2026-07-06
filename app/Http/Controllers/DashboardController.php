@@ -5,17 +5,21 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\EmailSend;
 use App\Models\Lead;
+use App\Support\ResolvesDateRange;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
+    use ResolvesDateRange;
+
+    public function index(Request $request)
     {
         $user = Auth::user();
 
         if ($user->isOwner() || $user->hasPermission('dashboard.view_all')) {
-            return $this->ownerView();
+            return $this->ownerView($request);
         }
 
         return $this->agentView($user);
@@ -24,39 +28,44 @@ class DashboardController extends Controller
     /**
      * Organization-wide KPIs — owners, and any role granted dashboard.view_all.
      */
-    private function ownerView()
+    private function ownerView(Request $request)
     {
-        $now = now();
+        [$rangeKey, $from, $to] = $this->resolveRange($request);
+        [$prevFrom, $prevTo] = $this->precedingRange($from, $to);
 
-        $totalClosed    = Lead::whereIn('status', ['won', 'lost'])->count();
-        $wonTotal       = Lead::byStatus('won')->count();
+        $totalClosed = Lead::whereIn('status', ['won', 'lost'])
+            ->whereBetween('updated_at', [$from, $to])->count();
+        $wonTotal = Lead::byStatus('won')
+            ->whereBetween('updated_at', [$from, $to])->count();
 
         $stats = [
             'total_leads'     => Lead::count(),
             'leads_change'    => $this->pctChange(
-                Lead::whereMonth('created_at', $now->month)->count(),
-                Lead::whereMonth('created_at', $now->copy()->subMonth()->month)->count()
+                Lead::whereBetween('created_at', [$from, $to])->count(),
+                Lead::whereBetween('created_at', [$prevFrom, $prevTo])->count()
             ),
-            'won_count'       => Lead::byStatus('won')->whereMonth('updated_at', $now->month)->count(),
+            'won_count'       => $wonTotal,
             'won_change'      => null,
-            'emails_sent'     => EmailSend::whereMonth('created_at', $now->month)->where('status', 'sent')->count(),
+            'emails_sent'     => EmailSend::whereBetween('created_at', [$from, $to])->where('status', 'sent')->count(),
             'pipeline_value'  => (float) Lead::whereNotIn('status', ['won', 'lost'])->sum('deal_value'),
             'conversion_rate' => $totalClosed > 0 ? round($wonTotal / $totalClosed * 100) : 0,
             'open_deals'      => Lead::whereNotIn('status', ['won', 'lost'])->where('deal_value', '>', 0)->count(),
         ];
 
         $leadsOverTime = Lead::selectRaw('DATE(created_at) as date, COUNT(*) as count')
-            ->where('created_at', '>=', now()->subDays(30))
+            ->whereBetween('created_at', [$from, $to])
             ->groupBy('date')
             ->orderBy('date')
             ->get();
 
         $statusBreakdown = Lead::selectRaw('status as name, COUNT(*) as value')
+            ->whereBetween('created_at', [$from, $to])
             ->groupBy('status')
             ->orderByDesc('value')
             ->get();
 
         $sourceBreakdown = Lead::selectRaw('source as name, COUNT(*) as value')
+            ->whereBetween('created_at', [$from, $to])
             ->groupBy('source')
             ->orderByDesc('value')
             ->limit(6)
@@ -80,6 +89,7 @@ class DashboardController extends Controller
                 'deal_value' => (float) $l->deal_value,
                 'currency'   => $l->currency,
                 'status'     => $l->status,
+                'source'     => $l->source,
             ]);
 
         $upcomingFollowUps = Lead::whereNotNull('follow_up_at')
@@ -108,7 +118,10 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', compact(
             'stats', 'leadsOverTime', 'statusBreakdown', 'sourceBreakdown',
             'recentLeads', 'topDeals', 'upcomingFollowUps', 'recentActivities'
-        ) + ['viewType' => 'owner']);
+        ) + [
+            'viewType' => 'owner',
+            'range'    => ['key' => $rangeKey, 'from' => $from->toDateString(), 'to' => $to->toDateString()],
+        ]);
     }
 
     /**

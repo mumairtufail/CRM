@@ -8,7 +8,7 @@
         <title inertia>{{ config('app.name', 'CRM') }}</title>
 
         <!-- Favicon -->
-        <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+        <link rel="icon" href="/favicon.svg?v={{ file_exists(public_path('favicon.svg')) ? filemtime(public_path('favicon.svg')) : 1 }}" type="image/svg+xml">
         <link rel="alternate icon" href="/favicon.ico" sizes="any">
 
         <!-- Fonts preconnect -->

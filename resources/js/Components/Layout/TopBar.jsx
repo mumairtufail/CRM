@@ -244,7 +244,7 @@ export default function TopBar({ title, onMenuClick }) {
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-[330px] max-w-[calc(100vw-24px)] rounded-xl overflow-hidden z-50 bg-white"
+            <div className="fixed left-3 right-3 top-[64px] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-[330px] rounded-xl overflow-hidden z-50 bg-white"
               style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                 <p className="text-[12.5px] font-semibold text-slate-800">
@@ -284,7 +284,7 @@ export default function TopBar({ title, onMenuClick }) {
                         onClick={(e) => deleteNotification(e, n)}
                         aria-label="Delete notification"
                         title="Delete"
-                        className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
+                        className="shrink-0 w-6 h-6 rounded-md flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors sm:opacity-0 sm:group-hover:opacity-100"
                       >
                         <X size={13} />
                       </button>

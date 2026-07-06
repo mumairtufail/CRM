@@ -115,8 +115,7 @@ export default function Sidebar({ open, onToggle }) {
   const user      = props?.auth?.user
   const organization = props?.organization
   const plan      = props?.plan
-  const logoUrl   = user?.company_logo ? `/storage/${user.company_logo}` : null
-  const brandName = organization?.name || user?.company_name || 'CRM'
+  const brandName = organization?.name || 'CRM'
   const { can } = usePermissions()
 
   const hasModule = (key) => !key || plan?.modules?.includes(key)
@@ -167,15 +166,7 @@ export default function Sidebar({ open, onToggle }) {
         open ? 'justify-between' : 'justify-center'
       )}>
         <div className={cn('flex items-center gap-2.5 min-w-0', !open && 'justify-center w-full')}>
-          {logoUrl
-            ? (
-              <div className="w-7 h-7 rounded-[9px] flex items-center justify-center shrink-0 shadow-lg overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, rgb(var(--brand-600)) 0%, rgb(var(--brand2-600)) 100%)' }}>
-                <img src={logoUrl} alt="logo" className="w-full h-full rounded-[9px] object-contain" />
-              </div>
-            )
-            : <LogoMark size={28} radius={9} className="shrink-0 shadow-lg" />
-          }
+          <LogoMark size={28} radius={9} className="shrink-0 shadow-lg" />
           {open && (
             <span className="font-bold text-[13.5px] text-white truncate tracking-tight">{brandName}</span>
           )}

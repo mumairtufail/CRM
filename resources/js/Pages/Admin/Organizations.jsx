@@ -17,6 +17,12 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
   const [active, setActive] = useState(organization.plan_status === 'active')
   const [saving, setSaving] = useState(false)
 
+  // `plans` only lists currently-active plans. If this org is sitting on a plan
+  // that's since been deactivated, still show it here so the select isn't blank.
+  const planOptions = organization.plan && !plans.some(p => p.id === organization.plan.id)
+    ? [...plans, organization.plan]
+    : plans
+
   const submit = () => {
     setSaving(true)
     router.patch(`/admin/organizations/${organization.id}/plan`, {
@@ -45,7 +51,7 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
                 <SelectValue placeholder="No plan" />
               </SelectTrigger>
               <SelectContent>
-                {plans.map(p => (
+                {planOptions.map(p => (
                   <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
                 ))}
               </SelectContent>

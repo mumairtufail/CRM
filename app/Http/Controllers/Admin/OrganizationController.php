@@ -43,7 +43,7 @@ class OrganizationController extends Controller
         return Inertia::render('Admin/Organizations', [
             'organizations' => $organizations,
             'filters'       => $request->only(['search']),
-            'plans'         => Plan::orderBy('sort_order')->get(['id', 'name']),
+            'plans'         => Plan::where('is_active', true)->orderBy('sort_order')->get(['id', 'name']),
         ]);
     }
 

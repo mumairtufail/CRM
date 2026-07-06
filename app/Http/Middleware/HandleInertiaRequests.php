@@ -77,7 +77,9 @@ class HandleInertiaRequests extends Middleware
             'plan' => $organization ? [
                 'name'    => $organization->plan?->name,
                 'status'  => $organization->plan_status,
-                'modules' => $organization->plan_id ? Plan::cachedModuleKeys($organization->plan_id) : [],
+                'modules' => $organization->plan_status === 'active' && $organization->plan_id
+                    ? Plan::cachedModuleKeys($organization->plan_id)
+                    : [],
             ] : null,
             'impersonating' => $impersonatorId ? [
                 'name' => $webUser?->name,

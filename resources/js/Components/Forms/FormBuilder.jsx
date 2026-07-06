@@ -233,7 +233,7 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                     <span className="text-[9px] text-slate-400 font-semibold">Click to toggle</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {builtinCatalog.filter(c => c.key !== 'budget' || isBuiltinOn(c.key)).map(c => {
+                    {builtinCatalog.map(c => {
                       const on = isBuiltinOn(c.key)
                       return (
                         <button
@@ -360,8 +360,8 @@ export default function FormBuilder({ builtinCatalog, initial, submitUrl, method
                           )}
                         </div>
 
-                        {/* Remove custom field */}
-                        {f.kind === 'custom' && (
+                        {/* Remove field — always_required builtins (e.g. First Name) can't be removed */}
+                        {!(f.kind === 'builtin' && f.key === 'first_name') && (
                           <button
                             type="button"
                             className="text-slate-400 hover:text-rose-500 p-1.5 rounded hover:bg-slate-55 shrink-0"

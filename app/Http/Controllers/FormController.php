@@ -197,7 +197,10 @@ class FormController extends Controller
     /**
      * Re-derives each field against the built-in catalog / allowed custom
      * types rather than trusting the client, so a tampered request can't
-     * e.g. claim "budget" is a dropdown or reuse a reserved key.
+     * e.g. claim "budget" is a dropdown. Custom fields may reuse a
+     * catalog key (e.g. label it "Budget") since PublicFormController
+     * dispatches on `kind` first — a same-keyed custom field just lands
+     * in custom_fields instead of getting the builtin's special handling.
      */
     private function normalizeFields(array $fields): array
     {

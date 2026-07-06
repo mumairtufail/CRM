@@ -23,14 +23,6 @@ export default function GuestLayout({ children }) {
 
                 {/* Hero copy */}
                 <div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
-                         style={{ background: 'rgb(var(--brand-500) / 0.15)', border: '1px solid rgb(var(--brand-500) / 0.25)' }}>
-                        <div className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-pulse" />
-                        <span className="text-brand-300 text-[11px] font-semibold uppercase tracking-widest">
-                            Trusted CRM Platform
-                        </span>
-                    </div>
-
                     <h2 className="text-3xl xl:text-4xl font-black text-white leading-tight mb-4">
                         Turn leads into<br />
                         <span style={{ background: 'linear-gradient(90deg, rgb(var(--brand-400)), rgb(var(--brand2-400)))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
@@ -41,19 +33,6 @@ export default function GuestLayout({ children }) {
                         Manage every lead, campaign, and deal in one place.
                         Your pipeline, your inbox, your invoices — all in sync.
                     </p>
-
-                    {/* Stats row */}
-                    <div className="flex gap-6 mt-8 pt-8 border-t border-white/[0.08]">
-                        {[
-                            { value: '10k+', label: 'Active users' },
-                            { value: '99.9%', label: 'Uptime SLA' },
-                        ].map(({ value, label }) => (
-                            <div key={label}>
-                                <div className="text-2xl font-black text-white leading-none">{value}</div>
-                                <div className="text-white/30 text-xs mt-1">{label}</div>
-                            </div>
-                        ))}
-                    </div>
                 </div>
 
                 {/* Footer copy */}

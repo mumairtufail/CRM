@@ -7,6 +7,7 @@ use App\Models\EmailSend;
 use App\Models\Lead;
 use App\Models\User;
 use App\Models\WhatsappSend;
+use App\Support\ComputesFirstContactSpeed;
 use App\Support\ResolvesDateRange;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ use Inertia\Inertia;
 class ReportController extends Controller
 {
     use ResolvesDateRange;
+    use ComputesFirstContactSpeed;
 
     public function index(Request $request)
     {
@@ -30,7 +32,8 @@ class ReportController extends Controller
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 
-        $speedMap = collect($this->speedToFirstContact($from, $to))->keyBy('user_id');
+        $contactSpeedRows = $this->firstContactRows($from, $to);
+        $speedMap         = collect($contactSpeedRows)->keyBy('user_id');
 
         $agentRows = $users->map(function (User $user) use ($from, $to, $speedMap) {
             $row = $this->agentRow($user, $from, $to);
@@ -41,6 +44,21 @@ class ReportController extends Controller
         })->values();
 
         $channelBreakdown = $this->channelBreakdown($from, $to);
+        $funnel           = $this->funnel($from, $to);
+        $engagement       = $this->engagementRates($from, $to);
+
+        $totalContactHours = array_sum(array_column($contactSpeedRows, 'sum_hours'));
+        $totalContactCount = array_sum(array_column($contactSpeedRows, 'count'));
+
+        $summary = [
+            'leads_created'          => $funnel['total'],
+            'contact_rate'           => $funnel['contact_rate'],
+            'win_rate'               => $funnel['win_rate_of_closed'],
+            'emails_sent'            => $engagement['email']['sent'],
+            'whatsapp_sent'          => $engagement['whatsapp']['sent'],
+            'active_agents'          => Activity::whereBetween('created_at', [$from, $to])->distinct('user_id')->count('user_id'),
+            'org_avg_hours_to_contact' => $totalContactCount > 0 ? round($totalContactHours / $totalContactCount, 1) : null,
+        ];
 
         $activities = Activity::with(['lead:id,first_name,last_name,company', 'user:id,name'])
             ->whereBetween('created_at', [$from, $to])
@@ -54,9 +72,10 @@ class ReportController extends Controller
             'range'            => ['key' => $range, 'from' => $from->toDateString(), 'to' => $to->toDateString()],
             'agentRows'        => $agentRows,
             'channelBreakdown' => $channelBreakdown,
-            'funnel'           => $this->funnel($from, $to),
+            'funnel'           => $funnel,
             'geo'              => $this->geoBreakdown($from, $to),
-            'engagement'       => $this->engagementRates($from, $to),
+            'engagement'       => $engagement,
+            'summary'          => $summary,
             'leadsTrend'       => $this->leadsTrend($from, $to),
             'activities'       => $activities,
             'filters'          => $request->only(['user_id', 'type', 'range', 'from', 'to']),
@@ -157,68 +176,6 @@ class ReportController extends Controller
             'win_rate_of_contacted' => $contacted > 0 ? round($won / $contacted * 100) : 0,
             'win_rate_of_closed'    => $closed > 0 ? round($won / $closed * 100) : 0,
         ];
-    }
-
-    /**
-     * Per-agent average hours from Lead.created_at to the lead's first contact-type
-     * Activity. Uses the activity log rather than last_contacted_at because that column
-     * is overwritten on every subsequent contact and only reflects the most recent one.
-     *
-     * The initial activity scan isn't bounded by $from because a lead's true first
-     * contact may predate the window — we need it to correctly decide whether that
-     * first contact falls inside [$from, $to]. This means one full pass over
-     * contact-type activities per report load; acceptable at this app's scale. If it
-     * ever becomes slow, add an index on activities(lead_id, type, created_at) (today
-     * there's only (lead_id, created_at)) or bound the lookback window.
-     */
-    private function speedToFirstContact(Carbon $from, Carbon $to): array
-    {
-        $firstContacts = Activity::query()
-            ->whereIn('type', ['call', 'whatsapp', 'email_sent'])
-            ->selectRaw('lead_id, user_id, MIN(created_at) as first_contact_at')
-            ->groupBy('lead_id', 'user_id')
-            ->get()
-            ->groupBy('lead_id')
-            ->map(fn ($rows) => $rows->sortBy('first_contact_at')->first());
-
-        $leadIds = $firstContacts->keys();
-        if ($leadIds->isEmpty()) {
-            return [];
-        }
-
-        $leads = Lead::whereIn('id', $leadIds)->get(['id', 'created_at', 'assigned_to']);
-
-        $perAgent = [];
-        foreach ($leads as $lead) {
-            $fc = $firstContacts->get($lead->id);
-            if (!$fc || !$fc->first_contact_at) {
-                continue;
-            }
-
-            $firstContactAt = Carbon::parse($fc->first_contact_at);
-            if ($firstContactAt->lt($from) || $firstContactAt->gt($to)) {
-                continue;
-            }
-
-            $agentId = $fc->user_id ?? $lead->assigned_to;
-            if (!$agentId) {
-                continue;
-            }
-
-            $hours = $lead->created_at->diffInHours($firstContactAt, false);
-            if ($hours < 0) {
-                continue;
-            }
-
-            $perAgent[$agentId]['sum_hours'] = ($perAgent[$agentId]['sum_hours'] ?? 0) + $hours;
-            $perAgent[$agentId]['count']     = ($perAgent[$agentId]['count'] ?? 0) + 1;
-        }
-
-        return collect($perAgent)->map(fn ($v, $agentId) => [
-            'user_id'     => (int) $agentId,
-            'avg_hours'   => $v['count'] > 0 ? round($v['sum_hours'] / $v['count'], 1) : null,
-            'sample_size' => $v['count'],
-        ])->values()->all();
     }
 
     /**

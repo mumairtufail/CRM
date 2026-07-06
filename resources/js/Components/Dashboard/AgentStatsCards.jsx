@@ -1,7 +1,7 @@
 import { Users, PhoneCall, Mail, Clock, CheckCircle2 } from 'lucide-react'
-import StatCard from '@/Components/Common/StatCard'
+import KpiTile from '@/Components/Common/KpiTile'
 
-const CARDS = [
+const TILES = [
   { key: 'leads_assigned',  title: 'Leads Assigned',  icon: Users,        color: 'blue',   href: '/leads' },
   { key: 'leads_contacted', title: 'Leads Contacted',  icon: CheckCircle2, color: 'green',  href: '/leads?contacted=yes' },
   { key: 'emails_sent',     title: 'Emails Sent',      icon: Mail,         color: 'purple' },
@@ -10,14 +10,14 @@ const CARDS = [
 ]
 
 /**
- * Own-performance KPI cards for a team member (agent) who lacks
+ * Own-performance KPI tiles for a team member (agent) who lacks
  * dashboard.view_all — scoped entirely to leads assigned to them.
  */
 export default function AgentStatsCards({ agentStats }) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
-      {CARDS.map(({ key, title, icon, color, href }, index) => (
-        <StatCard
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+      {TILES.map(({ key, title, icon, color, href }, index) => (
+        <KpiTile
           key={key}
           title={title}
           value={agentStats?.[key] ?? 0}

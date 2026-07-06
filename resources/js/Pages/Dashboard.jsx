@@ -7,12 +7,12 @@ import {
 } from 'recharts'
 import {
   Users, TrendingUp, Mail, Target, Clock,
-  Sparkles, Percent, Briefcase, X, Activity as ActivityIcon,
+  Sparkles, Percent, Briefcase, X, Activity as ActivityIcon, DollarSign,
 } from 'lucide-react'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
 import StatusBadge from '@/Components/Common/StatusBadge'
 import LeadAvatar from '@/Components/Common/LeadAvatar'
-import StatCard from '@/Components/Common/StatCard'
+import KpiTile from '@/Components/Common/KpiTile'
 import GlassCard from '@/Components/Common/GlassCard'
 import SectionHeader from '@/Components/Common/SectionHeader'
 import InlineEmptyState from '@/Components/Common/InlineEmptyState'
@@ -48,34 +48,32 @@ function FunnelBar({ name, value, max, color, active, dimmed, onClick }) {
   )
 }
 
-function WelcomeBanner({ name, range, onRangeChange, children }) {
+function WelcomeBanner({ name, range, onRangeChange }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-2xl px-5 py-4 sm:px-6"
+      className="relative overflow-hidden rounded-2xl px-5 py-3.5 sm:px-6"
       style={{ background: 'linear-gradient(135deg, rgb(var(--brand-ink)) 0%, rgb(var(--brand-800)) 50%, rgb(var(--brand-ink)) 100%)', boxShadow: '0 4px 30px rgb(var(--brand-600) / 0.25)' }}
     >
       <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none opacity-[0.15]"
         style={{ background: 'radial-gradient(circle, rgb(var(--brand-600)) 0%, transparent 70%)', transform: 'translate(30%,-55%)' }} />
       <div className="absolute -bottom-16 left-1/4 w-48 h-48 rounded-full pointer-events-none opacity-[0.08]"
         style={{ background: 'radial-gradient(circle, rgb(var(--brand2-600)) 0%, transparent 70%)' }} />
-      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex items-center gap-2 mb-1">
             <Sparkles size={12} className="text-brand-300" />
             <span className="text-brand-300/80 text-[10.5px] font-bold uppercase tracking-widest">CRM Overview</span>
           </div>
           <h2 className="text-lg sm:text-xl font-bold text-white">{greeting()}{name ? `, ${name}` : ''}</h2>
-          <p className="text-white/40 text-[12.5px] mt-0.5">Here's your pipeline snapshot.</p>
         </div>
-        <div className="flex items-center flex-wrap gap-3 sm:gap-5 shrink-0">
-          {children}
-          {range && (
+        {range && (
+          <div className="shrink-0">
             <RangeSelect variant="dark" value={range.key} onChange={v => onRangeChange({ range: v, from: undefined, to: undefined })} />
-          )}
-        </div>
+          </div>
+        )}
       </div>
       {range?.key === 'custom' && (
         <div className="relative mt-3">
@@ -94,11 +92,11 @@ function WelcomeBanner({ name, range, onRangeChange, children }) {
 
 function AgentDashboard({ agentStats, myLeads, upcomingFollowUps, recentActivities, name }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-2.5">
       <WelcomeBanner name={name} />
       <AgentStatsCards agentStats={agentStats} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.35 }}>
           <GlassCard className="h-full">
             <SectionHeader title="My leads" icon={Target} href="/leads" />
@@ -217,23 +215,10 @@ export default function Dashboard({
     <>
       <Head title="Dashboard" />
       <AppLayout title="Dashboard">
-        <div className="space-y-3">
+        <div className="space-y-2.5">
 
           {/* Welcome banner + range filter */}
-          <WelcomeBanner name={name} range={range} onRangeChange={updateRange}>
-            <div className="flex items-center gap-4 sm:gap-6">
-              {[
-                { label: 'Leads', value: stats?.total_leads ?? 0 },
-                { label: 'Pipeline', value: stats?.pipeline_value ? `$${(stats.pipeline_value / 1000).toFixed(1)}k` : '$0' },
-                { label: 'Conv.', value: `${stats?.conversion_rate ?? 0}%` },
-              ].map(item => (
-                <div key={item.label} className="text-center">
-                  <p className="text-[18px] sm:text-[22px] font-bold text-white leading-none">{item.value}</p>
-                  <p className="text-[9px] sm:text-[10px] text-white/35 uppercase tracking-wider mt-0.5">{item.label}</p>
-                </div>
-              ))}
-            </div>
-          </WelcomeBanner>
+          <WelcomeBanner name={name} range={range} onRangeChange={updateRange} />
 
           {/* Active cross-filter indicator */}
           {crossFilter && (
@@ -249,22 +234,30 @@ export default function Dashboard({
             </motion.div>
           )}
 
-          {/* 5 Stat Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-            <StatCard title="Total Leads"    value={stats?.total_leads ?? 0}     change={stats?.leads_change}  icon={Users}      color="blue"   href="/leads"              index={0} />
-            <StatCard title="Won"            value={stats?.won_count ?? 0}        change={stats?.won_change}    icon={TrendingUp} color="green"  href="/leads?status=won"   index={1} />
-            <StatCard title="Emails Sent"    value={stats?.emails_sent ?? 0}                                    icon={Mail}       color="purple" href="/campaigns"           index={2} />
-            <StatCard title="Open Deals"     value={stats?.open_deals ?? 0}                                     icon={Briefcase}  color="teal"   href="/pipeline"            index={3} />
-            <StatCard title="Conv. Rate"     value={`${stats?.conversion_rate ?? 0}%`}                          icon={Percent}    color="amber"                              index={4} />
+          {/* KPI strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <KpiTile title="Total Leads" value={stats?.total_leads ?? 0}  change={stats?.leads_change}
+              icon={Users}      color="blue"   href="/leads"            index={0}
+              sparkline={(leadsOverTime ?? []).map(d => d.count)} />
+            <KpiTile title="Won"         value={stats?.won_count ?? 0}   change={stats?.won_change}
+              icon={TrendingUp} color="green"  href="/leads?status=won" index={1} />
+            <KpiTile title="Pipeline"    value={stats?.pipeline_value ? `$${(stats.pipeline_value / 1000).toFixed(1)}k` : '$0'}
+              icon={DollarSign} color="purple" href="/pipeline"         index={2} />
+            <KpiTile title="Open Deals"  value={stats?.open_deals ?? 0}
+              icon={Briefcase}  color="teal"   href="/pipeline"         index={3} />
+            <KpiTile title="Emails Sent" value={stats?.emails_sent ?? 0}
+              icon={Mail}       color="red"    href="/campaigns"        index={4} />
+            <KpiTile title="Conv. Rate"  value={`${stats?.conversion_rate ?? 0}%`}
+              icon={Percent}    color="amber"                            index={5} />
           </div>
 
           {/* Row 2 — Area chart + Funnel (clickable) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
             <motion.div className="lg:col-span-2" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.35 }}>
               <GlassCard className="h-full">
                 <SectionHeader title="New leads" icon={ActivityIcon} />
-                <div className="px-4 py-3">
-                  <ResponsiveContainer width="100%" height={170}>
+                <div className="px-3.5 py-2.5">
+                  <ResponsiveContainer width="100%" height={150}>
                     <AreaChart data={leadsOverTime ?? []} margin={{ top: 6, right: 4, left: -24, bottom: 0 }}>
                       <defs>
                         <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
@@ -287,7 +280,7 @@ export default function Dashboard({
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26, duration: 0.35 }}>
               <GlassCard className="h-full">
                 <SectionHeader title="Pipeline funnel" />
-                <div className="px-5 py-3 space-y-2">
+                <div className="px-4 py-2.5 space-y-2">
                   {orderedStatus.length ? orderedStatus.map((item, i) => (
                     <FunnelBar key={item.name} name={item.name} value={item.value}
                       max={maxStatus} color={FUNNEL_COLORS[i] || '#94a3b8'}
@@ -304,20 +297,20 @@ export default function Dashboard({
           </div>
 
           {/* Row 3 — Source donut + Top deals (both cross-filterable) */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-2.5">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.30, duration: 0.35 }}>
               <GlassCard className="h-full">
                 <SectionHeader title="Lead sources" />
-                <div className="px-3 py-3">
+                <div className="px-3 py-2.5">
                   {sourceData.length ? (
                     <div className="flex items-center gap-3">
-                      <div style={{ width: 100, height: 100 }} className="shrink-0">
+                      <div style={{ width: 88, height: 88 }} className="shrink-0">
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Tooltip content={<BarTooltip />} />
                             <Pie
                               data={sourceData} dataKey="value" nameKey="name"
-                              innerRadius={30} outerRadius={48} paddingAngle={2}
+                              innerRadius={26} outerRadius={42} paddingAngle={2}
                               stroke="none" isAnimationActive={false}
                             >
                               {sourceData.map((entry, i) => (
@@ -385,7 +378,7 @@ export default function Dashboard({
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.38, duration: 0.35 }}>
             <GlassCard>
               <Tabs defaultValue="leads">
-                <div className="flex items-center justify-between px-5 pt-3 pb-2 border-b border-slate-100/80">
+                <div className="flex items-center justify-between px-4 pt-2.5 pb-2 border-b border-slate-100/80">
                   <TabsList className="h-8 bg-slate-100/70 p-0.5">
                     <TabsTrigger value="leads" className="text-[11.5px] px-3 h-7">Recent leads</TabsTrigger>
                     <TabsTrigger value="activity" className="text-[11.5px] px-3 h-7">Activity</TabsTrigger>

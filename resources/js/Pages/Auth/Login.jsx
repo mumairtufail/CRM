@@ -165,7 +165,7 @@ export default function Login({ status }) {
           padding: 24px;
           background: rgb(var(--brand-tint));
           position: relative;
-          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         /* Glassmorphic card styling - Light Mode */

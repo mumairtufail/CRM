@@ -13,7 +13,7 @@ import SiteFooter from '@/Components/Common/SiteFooter';
 import FeatureOrbit from '@/Components/Marketing/FeatureOrbit';
 import ActivityShowcase from '@/Components/Marketing/ActivityShowcase';
 import ModuleShowcase, { MODULES } from '@/Components/Marketing/ModuleShowcase';
-import HeroVisual from '@/Components/Marketing/HeroVisual';
+import DotGrid from '@/Components/Marketing/DotGrid';
 import { cn } from '@/lib/utils';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
@@ -26,6 +26,37 @@ const stagger = {
     hidden: {},
     show:   { transition: { staggerChildren: 0.09 } },
 };
+
+// ─── Hero rotating word ───────────────────────────────────────────────────────
+
+const HERO_WORDS = ['finds your leads', 'writes your follow-ups', 'answers your WhatsApp', 'closes your deals'];
+
+function RotatingWord() {
+    const [index, setIndex] = useState(0);
+    useEffect(() => {
+        const id = setInterval(() => setIndex(i => (i + 1) % HERO_WORDS.length), 2400);
+        return () => clearInterval(id);
+    }, []);
+    return (
+        // Fixed-height slot on its own line: each phrase animates in centered,
+        // so the surrounding headline never reflows.
+        <span className="relative block h-[1.35em] overflow-hidden text-[length:min(7.5vw,0.85em)]">
+            <AnimatePresence mode="wait">
+                <motion.span
+                    key={index}
+                    initial={{ y: '70%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '-70%', opacity: 0 }}
+                    transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                    className="absolute inset-0 flex items-center justify-center
+                               whitespace-nowrap text-brand-600"
+                >
+                    {HERO_WORDS[index]}
+                </motion.span>
+            </AnimatePresence>
+        </span>
+    );
+}
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -219,101 +250,74 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
             </nav>
 
             {/* ── Hero ─────────────────────────────────────────────────────── */}
-            <section className="relative overflow-hidden pt-16 bg-brand-tint">
-                <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
-                    <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
+            <section className="relative overflow-hidden pt-16 bg-white">
+                <DotGrid
+                    dotSize={6}
+                    gap={24}
+                    baseColor="--brand-300"
+                    activeColor="--brand-700"
+                    baseAlpha={0.45}
+                    activeAlpha={1}
+                    proximity={150}
+                />
 
-                        <motion.div variants={stagger} initial="hidden" animate="show">
-                            <motion.div variants={fadeUp} className="flex items-center gap-3 mb-6">
-                                <div className="h-px w-10 bg-brand-400" />
-                                <span className="text-brand-600 text-xs font-bold uppercase tracking-widest">Lumenia CRM</span>
-                            </motion.div>
+                <div className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-28 lg:py-36 text-center">
+                    <motion.div variants={stagger} initial="hidden" animate="show">
+                        <motion.h1 variants={fadeUp}
+                                   className="text-[42px] sm:text-6xl lg:text-7xl font-black text-slate-900
+                                              leading-[1.08] tracking-tight mb-8">
+                            The CRM that
+                            <RotatingWord />
+                        </motion.h1>
 
-                            <motion.h1 variants={fadeUp}
-                                       className="text-[40px] sm:text-6xl lg:text-[58px] font-black text-slate-900
-                                                  leading-[1.06] tracking-tight mb-7">
-                                Find leads, follow up,<br />and close the deal.
-                            </motion.h1>
+                        <motion.p variants={fadeUp} className="text-slate-500 text-lg sm:text-xl mb-10">
+                            AI prospecting, follow-ups, and replies, all on autopilot.
+                        </motion.p>
 
-                            <motion.p variants={fadeUp}
-                                      className="text-slate-500 text-lg sm:text-xl leading-relaxed mb-10 max-w-[440px]">
-                                Lumenia CRM finds new customers with AI, runs your email and WhatsApp
-                                follow ups on its own, and replies to leads itself so nothing sits unanswered.
-                            </motion.p>
-
-                            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row items-start gap-3 mb-10">
-                                <Link href="/register"
-                                      className="group relative overflow-hidden inline-flex items-center gap-2 px-7 py-3.5 rounded-xl text-base
-                                                 font-semibold text-white transition-all
-                                                 hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-px"
-                                      style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
-                                    <span className="relative">Create Free Account</span>
-                                    <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                                </Link>
-                                <Link href="/login"
-                                      className="inline-flex items-center gap-1.5 px-7 py-3.5 rounded-xl text-base font-medium
-                                                 text-slate-500 hover:text-slate-900 transition-colors">
-                                    Sign in <ArrowRight className="w-3.5 h-3.5 opacity-50" />
-                                </Link>
-                            </motion.div>
-
-                            <motion.div variants={fadeUp} className="flex flex-wrap items-center gap-x-8 gap-y-3">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex -space-x-2.5">
-                                        {TESTIMONIALS.slice(0, 3).map(({ avatar }, i) => (
-                                            <div key={avatar}
-                                                 className="w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-bold text-white
-                                                            border-2 border-white shadow-sm"
-                                                 style={{ background: `linear-gradient(135deg, ${['rgb(var(--brand-600))','#3B82F6','#10B981'][i]}, rgb(var(--brand2-600)))` }}>
-                                                {avatar}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-1 mb-0.5">
-                                            {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 text-amber-400 fill-amber-400" />)}
-                                            <span className="text-slate-700 text-xs font-semibold ml-1">4.9</span>
-                                        </div>
-                                        <div className="text-slate-400 text-xs">Free plan, no card needed</div>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-5 text-slate-400 text-xs">
-                                    <span><span className="text-slate-800 font-bold">500+</span> workspaces</span>
-                                    <span className="flex items-center gap-1.5">
-                                        <CheckCircle2 className="w-3.5 h-3.5 text-[#0866FF] fill-[#0866FF]/10" />
-                                        <span className="text-slate-800 font-semibold">Meta Verified</span>
-                                    </span>
-                                </div>
-                            </motion.div>
+                        <motion.div variants={fadeUp}
+                                    className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <Link href="/register"
+                                  className="group relative overflow-hidden inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base
+                                             font-semibold text-white transition-all
+                                             hover:shadow-xl hover:shadow-brand-500/30 hover:-translate-y-px"
+                                  style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
+                                <span className="relative">Create Free Account</span>
+                                <ArrowRight className="relative w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                            </Link>
+                            <Link href="/login"
+                                  className="inline-flex items-center gap-1.5 px-7 py-4 rounded-xl text-base font-medium
+                                             text-slate-500 hover:text-slate-900 transition-colors">
+                                Sign in <ArrowRight className="w-3.5 h-3.5 opacity-50" />
+                            </Link>
                         </motion.div>
-
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-                            className="relative"
-                        >
-                            <HeroVisual />
-                        </motion.div>
-                    </div>
+                    </motion.div>
                 </div>
             </section>
 
             {/* ── Works with strip ─────────────────────────────────────────── */}
-            <section className="py-7 border-y border-slate-100 bg-brand-tint">
-                <div className="max-w-5xl mx-auto px-4">
-                    <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-10">
-                        <span className="text-slate-300 text-xs font-bold uppercase tracking-widest whitespace-nowrap">
-                            Works with
-                        </span>
-                        <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-2">
-                            {['Apollo.io', 'People Data Labs', 'Gmail', 'Outlook', 'WhatsApp Business', 'OpenAI', 'Claude', 'Kimi'].map(name => (
-                                <span key={name}
-                                      className="text-slate-400 text-sm font-medium hover:text-slate-600 transition-colors cursor-default">
-                                    {name}
-                                </span>
-                            ))}
-                        </div>
+            <section className="py-10 border-y border-slate-100 bg-brand-tint">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center text-slate-300 text-xs font-bold uppercase tracking-widest mb-6">
+                        Works with
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-x-4 gap-y-5">
+                        {[
+                            { name: 'Apollo.io', logo: '/images/integrations/apollo.png' },
+                            { name: 'People Data Labs', logo: '/images/integrations/pdl.png' },
+                            { name: 'Gmail', logo: '/images/integrations/gmail.svg' },
+                            { name: 'Outlook', logo: '/images/integrations/outlook.png' },
+                            { name: 'WhatsApp Business', logo: '/images/integrations/whatsapp.svg' },
+                            { name: 'OpenAI', logo: '/images/integrations/openai.svg' },
+                            { name: 'Claude', logo: '/images/integrations/claude.svg' },
+                            { name: 'Kimi', logo: '/images/integrations/kimi.svg' },
+                        ].map(({ name, logo }) => (
+                            <span key={name}
+                                  className="flex flex-col items-center gap-2 opacity-80 hover:opacity-100 transition-opacity cursor-default">
+                                <img src={logo} alt={`${name} logo`} loading="lazy"
+                                     className="h-7 w-7 object-contain rounded-md" />
+                                <span className="text-slate-500 text-xs font-semibold text-center leading-tight">{name}</span>
+                            </span>
+                        ))}
                     </div>
                 </div>
             </section>

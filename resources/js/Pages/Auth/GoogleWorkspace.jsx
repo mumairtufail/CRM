@@ -177,7 +177,7 @@ export default function GoogleWorkspace({ name, email, avatar, appDomain }) {
           padding: 24px;
           background: rgb(var(--brand-tint));
           position: relative;
-          font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
         }
 
         .login-card {

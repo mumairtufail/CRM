@@ -13,9 +13,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Poppins', ...defaultTheme.fontFamily.sans],
-        display: ['Poppins', ...defaultTheme.fontFamily.sans],
-        serif: ['Fraunces', ...defaultTheme.fontFamily.serif],
+        sans: ['Inter', ...defaultTheme.fontFamily.sans],
+        display: ['Inter', ...defaultTheme.fontFamily.sans],
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -6,8 +6,20 @@
   const BUTTON_ID = 'lumenia-import-btn';
   let lastUrl = location.href;
 
+  function isVisible(el) {
+    if (!el) return false;
+    const style = window.getComputedStyle(el);
+    if (style.display === 'none' || style.visibility === 'hidden') return false;
+    const rect = el.getBoundingClientRect();
+    return rect.width > 0 && rect.height > 0;
+  }
+
   function getProfileNameEl() {
-    return document.querySelector('main h1') || document.querySelector('h1');
+    // LinkedIn keeps a visually-hidden "<h1>LinkedIn</h1>" in its nav bar for
+    // screen readers, which is often the first <h1> in the DOM — skip hidden
+    // ones so we land on the actual profile name.
+    const candidates = Array.from(document.querySelectorAll('main h1, h1'));
+    return candidates.find(isVisible) || null;
   }
 
   function splitName(fullName) {

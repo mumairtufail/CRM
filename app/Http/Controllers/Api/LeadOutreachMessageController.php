@@ -13,6 +13,10 @@ class LeadOutreachMessageController extends Controller
     {
         abort_unless($lead->organization_id === $request->user()->organization_id, 403);
 
+        $validated = $request->validate([
+            'instructions' => 'nullable|string|max:500',
+        ]);
+
         $service = new LeadOutreachMessageService($lead->organization_id);
 
         if (! $service->isConfigured()) {
@@ -29,7 +33,7 @@ class LeadOutreachMessageController extends Controller
             'city'       => $lead->city,
             'country'    => $lead->country,
             'notes'      => $lead->notes,
-        ]);
+        ], $validated['instructions'] ?? null);
 
         if ($result === null) {
             return response()->json(['message' => 'Message generation failed. Try again.'], 422);

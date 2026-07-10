@@ -87,8 +87,11 @@ async function handleImportLead(payload) {
   return { success: true, lead: result.data.lead, created: result.data.created };
 }
 
-async function handleGenerateMessage({ leadId }) {
-  const result = await apiFetch(`/leads/${leadId}/generate-message`, { method: 'POST' });
+async function handleGenerateMessage({ leadId, instructions }) {
+  const result = await apiFetch(`/leads/${leadId}/generate-message`, {
+    method: 'POST',
+    body: JSON.stringify({ instructions: instructions || null }),
+  });
 
   if (!result.ok) {
     return { success: false, message: result.data?.message || 'Message generation failed.' };

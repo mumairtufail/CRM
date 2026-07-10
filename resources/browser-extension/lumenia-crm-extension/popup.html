@@ -3,11 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <title>Lumenia CRM</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" />
   <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
   <div class="wrap">
-    <h1>Lumenia CRM</h1>
+    <div class="brand-row">
+      <img src="icons/icon32.png" alt="" width="22" height="22" />
+      <h1>Lumenia CRM</h1>
+    </div>
 
     <section id="loginView" class="view hidden">
       <label for="email">Email</label>
@@ -34,6 +40,10 @@
       <div id="leadPanel" class="hidden">
         <p class="lead-name" id="leadName"></p>
         <p class="lead-sub" id="leadSub"></p>
+
+        <label for="instructions">Instructions (optional)</label>
+        <textarea id="instructions" rows="3" placeholder="e.g. mention we both work in real estate, keep it upbeat"></textarea>
+        <p class="hint-small">Styling guidance only — the no pitch, no CRM mention, and safety-flag rules always apply.</p>
 
         <button id="generateBtn">Generate message</button>
         <p id="generateStatus" class="status hidden"></p>

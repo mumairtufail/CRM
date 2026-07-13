@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -17,6 +17,29 @@ import {
 import EmptyState from './EmptyState'
 import { Users } from 'lucide-react'
 
+// Memoized row used in selection mode: a checkbox toggle only re-renders the
+// affected row instead of every heavy cell (dropdowns, selects, popovers) on
+// the page. Row references stay stable while data/columns are stable, so the
+// compare only needs the row object + its selected flag. Callers using
+// selection must keep their column defs referentially stable (useMemo).
+const SelectableRow = memo(function SelectableRow({ row, isSelected }) {
+  return (
+    <TableRow
+      data-state={isSelected ? 'selected' : undefined}
+      className="hover:bg-brand-50/40 transition-colors border-gray-50 group data-[state=selected]:bg-brand-50/60"
+    >
+      {row.getVisibleCells().map(cell => (
+        <TableCell
+          key={cell.id}
+          className={`py-3.5${cell.column.columnDef.meta?.className ? ' ' + cell.column.columnDef.meta.className : ''}`}
+        >
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+        </TableCell>
+      ))}
+    </TableRow>
+  )
+}, (prev, next) => prev.row === next.row && prev.isSelected === next.isSelected)
+
 export default function DataTable({
   data = [],
   columns = [],
@@ -26,6 +49,10 @@ export default function DataTable({
   // Client-side sorting
   sorting: externalSorting,
   onSortingChange: onExternalSortingChange,
+  // Row selection (optional) — pass all three to enable checkbox selection
+  rowSelection,        // { [rowId]: true }
+  onRowSelectionChange,
+  getRowId,            // (row) => string
   loading = false,
   perPageSelector,     // optional slot rendered next to "Showing X–Y" text
 }) {
@@ -33,12 +60,15 @@ export default function DataTable({
 
   const activeSorting = externalSorting ?? sorting
   const handleSortingChange = onExternalSortingChange ?? setSorting
+  const selectable = !!onRowSelectionChange
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting: activeSorting },
+    state: { sorting: activeSorting, ...(selectable ? { rowSelection: rowSelection ?? {} } : {}) },
     onSortingChange: handleSortingChange,
+    ...(selectable ? { onRowSelectionChange, enableRowSelection: true } : {}),
+    getRowId,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualPagination: !!pagination,
@@ -93,7 +123,9 @@ export default function DataTable({
                 </TableRow>
               ))
             ) : table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map(row => (
+              table.getRowModel().rows.map(row => selectable ? (
+                <SelectableRow key={row.id} row={row} isSelected={row.getIsSelected()} />
+              ) : (
                 <TableRow key={row.id} className="hover:bg-brand-50/40 transition-colors border-gray-50 group">
                   {row.getVisibleCells().map(cell => (
                     <TableCell

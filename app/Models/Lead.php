@@ -94,12 +94,24 @@ class Lead extends Model
 
     public function getPrimaryEmailAttribute(): ?string
     {
+        // Reuse the eager-loaded relation — these accessors are in $appends, so
+        // hitting the DB here turns every list serialization into an N+1.
+        if ($this->relationLoaded('emails')) {
+            return $this->emails->firstWhere('is_primary', true)?->email
+                ?? $this->emails->first()?->email;
+        }
+
         return $this->emails()->where('is_primary', true)->value('email')
             ?? $this->emails()->value('email');
     }
 
     public function getPrimaryPhoneAttribute(): ?string
     {
+        if ($this->relationLoaded('phones')) {
+            return $this->phones->firstWhere('is_primary', true)?->phone
+                ?? $this->phones->first()?->phone;
+        }
+
         return $this->phones()->where('is_primary', true)->value('phone')
             ?? $this->phones()->value('phone');
     }

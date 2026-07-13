@@ -24,12 +24,28 @@ class LeadController extends Controller
             ? (int) $request->input('per_page')
             : 25;
 
-        $version  = Cache::get("leads_v:{$orgId}", 1);
-        $cacheKey = "leads:idx:{$orgId}:v{$version}:" . md5(serialize($request->all()));
+        $version = Cache::get("leads_v:{$orgId}", 1);
 
-        $payload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage, $orgId) {
-            $query = Lead::with(['emails', 'phones', 'tags', 'groups', 'leadForm:id,name,slug'])
-                ->withCount('activities');
+        // Filter dropdown options change far less often than list pages do, so they
+        // get their own cache entry instead of being rebuilt on every new
+        // filter/page combination (each combo is its own cache key below).
+        $filterOptions = Cache::remember("leads:filters:{$orgId}:v{$version}", 1800, fn () => [
+            'countries'  => $this->distinctValues('country')->toArray(),
+            'cities'     => $this->distinctValues('city')->toArray(),
+            'industries' => $this->distinctValues('industry')->toArray(),
+            'sources'    => $this->sourceFilterOptions()->toArray(),
+            'groups'     => LeadGroup::orderBy('name')->get(['id', 'name', 'color'])->values()->toArray(),
+            'users'      => User::where('organization_id', $orgId)
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name'])
+                ->toArray(),
+        ]);
+
+        $cacheKey = "leads:idx2:{$orgId}:v{$version}:" . md5(serialize($request->all()));
+
+        $leadsPayload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage) {
+            $query = Lead::with(['emails', 'groups', 'leadForm:id,name']);
 
             if ($search = $request->input('search')) {
                 $query->search($search);
@@ -85,39 +101,47 @@ class LeadController extends Controller
                 $query->whereHas('groups', fn ($q) => $q->where('lead_groups.id', (int) $groupId));
             }
 
-            $sort = $request->input('sort', 'created_at');
-            $dir  = $request->input('dir', 'desc');
+            $sortable = ['created_at', 'first_name', 'company', 'status', 'priority', 'deal_value', 'last_contacted_at'];
+            $sort     = in_array($request->input('sort'), $sortable, true) ? $request->input('sort') : 'created_at';
+            $dir      = strtolower($request->input('dir', 'desc')) === 'asc' ? 'asc' : 'desc';
             $query->orderBy($sort, $dir);
 
             $leads = $query->paginate($perPage)->withQueryString();
 
+            // Only the fields the index table actually renders — full models (notes,
+            // custom_fields, tags, every email/phone row…) made both the cached
+            // payload and the JSON shipped to the browser several times larger.
+            $leads->through(fn (Lead $lead) => [
+                'id'               => $lead->id,
+                'full_name'        => $lead->full_name,
+                'primary_email'    => $lead->primary_email,
+                'company'          => $lead->company,
+                'source'           => $lead->source,
+                'status'           => $lead->status,
+                'priority'         => $lead->priority,
+                'deal_value'       => $lead->deal_value,
+                'linkedin_url'     => $lead->linkedin_url,
+                'social_handles'   => $lead->social_handles,
+                'contact_channels' => $lead->contact_channels,
+                'lead_form'        => $lead->leadForm?->only(['id', 'name']),
+                'groups'           => $lead->groups->map(fn ($g) => [
+                    'id' => $g->id, 'name' => $g->name, 'color' => $g->color,
+                ])->all(),
+            ]);
+
             // Cache stores (e.g. database) reject unserializing objects, so only
             // plain arrays go into the cached payload — never Eloquent models/collections.
-            return [
-                'leads'         => $leads->toArray(),
-                'filterOptions' => [
-                    'countries'  => $this->distinctValues('country')->toArray(),
-                    'cities'     => $this->distinctValues('city')->toArray(),
-                    'industries' => $this->distinctValues('industry')->toArray(),
-                    'sources'    => $this->sourceFilterOptions()->toArray(),
-                    'groups'     => LeadGroup::orderBy('name')->get(['id', 'name', 'color'])->values()->toArray(),
-                    'users'      => User::where('organization_id', $orgId)
-                        ->where('is_active', true)
-                        ->orderBy('name')
-                        ->get(['id', 'name'])
-                        ->toArray(),
-                ],
-            ];
+            return $leads->toArray();
         });
 
         return Inertia::render('Leads/Index', [
-            'leads'         => $payload['leads'],
+            'leads'         => $leadsPayload,
             'filters'       => $request->only([
                 'search', 'status', 'source', 'sort', 'dir',
                 'country', 'city', 'industry', 'priority', 'contacted', 'reached', 'group', 'per_page',
                 'assigned_to',
             ]),
-            'filterOptions' => $payload['filterOptions'],
+            'filterOptions' => $filterOptions,
         ]);
     }
 

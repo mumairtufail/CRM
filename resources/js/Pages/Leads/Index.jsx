@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import DataTable from '@/Components/Common/DataTable'
@@ -197,17 +197,23 @@ function Checkbox({ checked, indeterminate, onChange, onClick }) {
   )
 }
 
+const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
+
 export default function LeadsIndex({ leads, filters, filterOptions }) {
   const [deleteId, setDeleteId]             = useState(null)
   const [deleting, setDeleting]             = useState(false)
   const [loading, setLoading]               = useState(false)
-  const [selectedIds, setSelectedIds]       = useState(new Set())
+  const [rowSelection, setRowSelection]     = useState({})
   const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
   const [bulkDeleting, setBulkDeleting]     = useState(false)
   const [addGroupOpen, setAddGroupOpen]     = useState(false)
   const [groups, setGroups]                 = useState([])
   const [addingGroup, setAddingGroup]       = useState(false)
   const [chosenGroupId, setChosenGroupId]   = useState(null)
+  const [newGroupName, setNewGroupName]     = useState('')
+
+  // Row ids come back as the rowSelection object's keys (strings).
+  const selectedIdList = useMemo(() => Object.keys(rowSelection).map(Number), [rowSelection])
 
   const fetchGroups = async () => {
     try {
@@ -226,7 +232,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
   const { data: rows = [], ...pagination } = leads ?? {}
 
   // Clear selection whenever the page data changes (filter / page change)
-  useEffect(() => { setSelectedIds(new Set()) }, [leads])
+  useEffect(() => { setRowSelection({}) }, [leads])
 
   // Merge a patch into the current filters, drop empty values, and navigate.
   const applyFilters = useCallback((patch) => {
@@ -284,37 +290,15 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
     })
   }
 
-  // Toggle one row
-  const toggleRow = useCallback((id) => {
-    setSelectedIds(prev => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id); else next.add(id)
-      return next
-    })
-  }, [])
-
-  // Toggle all rows on current page
-  const toggleAll = useCallback((rowIds) => {
-    setSelectedIds(prev => {
-      const allSelected = rowIds.length > 0 && rowIds.every(id => prev.has(id))
-      if (allSelected) {
-        const next = new Set(prev)
-        rowIds.forEach(id => next.delete(id))
-        return next
-      }
-      return new Set([...prev, ...rowIds])
-    })
-  }, [])
-
   // Bulk delete
   const handleBulkDelete = () => {
     setBulkDeleting(true)
-    const ids = [...selectedIds]
+    const ids = selectedIdList
     router.post('/leads/bulk-destroy', { ids }, {
       preserveState: false,
       onSuccess: () => {
         toast.success(`${ids.length} lead${ids.length !== 1 ? 's' : ''} deleted`)
-        setSelectedIds(new Set())
+        setRowSelection({})
       },
       onError: () => toast.error('Failed to delete leads'),
       onFinish: () => { setBulkDeleting(false); setBulkDeleteOpen(false) },
@@ -322,50 +306,69 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
   }
 
   // Bulk add to group
-  const openAddToGroup = async () => {
-    await fetchGroups()
+  const openAddToGroup = () => {
+    fetchGroups()
     setChosenGroupId(null)
+    setNewGroupName('')
     setAddGroupOpen(true)
   }
 
-  const handleAddToGroup = () => {
-    if (!chosenGroupId) return
-    const ids = [...selectedIds]
+  // Adds the selected leads to an existing group, or creates a new group from
+  // the inline name field first — one endpoint handles both.
+  const handleAddToGroup = async () => {
+    const creating = !chosenGroupId && newGroupName.trim() !== ''
+    if (!chosenGroupId && !creating) return
+
     setAddingGroup(true)
-    router.post(`/groups/${chosenGroupId}/leads`, { lead_ids: ids }, {
-      preserveState: true,
-      onSuccess: () => {
-        toast.success(`${ids.length} lead${ids.length !== 1 ? 's' : ''} added to group`)
-        setSelectedIds(new Set())
-        setAddGroupOpen(false)
-      },
-      onError: () => toast.error('Failed to add leads to group'),
-      onFinish: () => setAddingGroup(false),
-    })
+    try {
+      const res = await fetch('/leads/bulk-add-to-group', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'X-CSRF-TOKEN': csrf(),
+        },
+        body: JSON.stringify({
+          lead_ids: selectedIdList,
+          group_id: chosenGroupId,
+          group_name: creating ? newGroupName.trim() : null,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error)
+
+      toast.success(`${data.count} lead${data.count !== 1 ? 's' : ''} added to “${data.group.name}”`)
+      setRowSelection({})
+      setAddGroupOpen(false)
+      setNewGroupName('')
+      router.reload({ only: ['leads', 'filterOptions'] })
+    } catch {
+      toast.error('Failed to add leads to group')
+    } finally {
+      setAddingGroup(false)
+    }
   }
 
-  const columns = [
+  // Column defs are memoized (everything they close over is a stable setter or
+  // module-level component) so DataTable's memoized rows can skip re-rendering
+  // untouched rows when the selection changes.
+  const columns = useMemo(() => [
     // ── Checkbox column ──
     {
       id: 'select',
       enableSorting: false,
       size: 44,
-      header: ({ table }) => {
-        const rowIds = table.getRowModel().rows.map(r => r.original.id)
-        const allChecked = rowIds.length > 0 && rowIds.every(id => selectedIds.has(id))
-        const someChecked = rowIds.some(id => selectedIds.has(id)) && !allChecked
-        return (
-          <Checkbox
-            checked={allChecked}
-            indeterminate={someChecked}
-            onChange={() => toggleAll(rowIds)}
-          />
-        )
-      },
+      header: ({ table }) => (
+        <Checkbox
+          checked={table.getIsAllRowsSelected()}
+          indeterminate={table.getIsSomeRowsSelected()}
+          onChange={table.getToggleAllRowsSelectedHandler()}
+        />
+      ),
       cell: ({ row }) => (
         <Checkbox
-          checked={selectedIds.has(row.original.id)}
-          onChange={() => toggleRow(row.original.id)}
+          checked={row.getIsSelected()}
+          onChange={row.getToggleSelectedHandler()}
           onClick={e => e.stopPropagation()}
         />
       ),
@@ -433,9 +436,10 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
         const first = grps[0]
         const extra = grps.length - 1
         return (
-          <div className="flex items-center gap-1 flex-wrap">
+          <div className="flex items-center gap-1">
             <span
-              className="inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full border"
+              className="inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full border whitespace-nowrap max-w-[130px]"
+              title={first.name}
               style={{
                 background: (first.color ?? 'rgb(var(--brand2-500))') + '18',
                 borderColor: (first.color ?? 'rgb(var(--brand2-500))') + '40',
@@ -443,9 +447,9 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
               }}
             >
               <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: first.color ?? 'rgb(var(--brand2-500))' }} />
-              {first.name}
+              <span className="truncate min-w-0">{first.name}</span>
             </span>
-            {extra > 0 && <span className="text-[10px] text-slate-400">+{extra}</span>}
+            {extra > 0 && <span className="text-[10px] text-slate-400 shrink-0">+{extra}</span>}
           </div>
         )
       },
@@ -520,9 +524,9 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
         </DropdownMenu>
       ),
     },
-  ]
+  ], [])
 
-  const selectionCount = selectedIds.size
+  const selectionCount = selectedIdList.length
 
   return (
     <>
@@ -690,6 +694,9 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
           columns={columns}
           pagination={pagination}
           onPageChange={handlePageChange}
+          rowSelection={rowSelection}
+          onRowSelectionChange={setRowSelection}
+          getRowId={row => String(row.id)}
           loading={loading}
           perPageSelector={
             <Select value={String(perPage)} onValueChange={v => handlePerPageChange(Number(v))}>
@@ -733,15 +740,15 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 Add {selectionCount} lead{selectionCount !== 1 ? 's' : ''} to Group
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-1.5 max-h-60 overflow-y-auto">
+            <div className="space-y-1.5 max-h-52 overflow-y-auto">
               {groups.length === 0 && (
-                <p className="text-xs text-slate-400 text-center py-4">No groups yet. Create one first.</p>
+                <p className="text-xs text-slate-400 text-center py-4">No groups yet — create one below.</p>
               )}
               {groups.map(g => (
                 <button
                   key={g.id}
                   type="button"
-                  onClick={() => setChosenGroupId(g.id)}
+                  onClick={() => { setChosenGroupId(g.id); setNewGroupName('') }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border text-left transition-all ${
                     chosenGroupId === g.id
                       ? 'border-brand-300 bg-brand-50'
@@ -750,7 +757,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 >
                   <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: g.color }} />
                   <span className="text-[13px] font-medium text-slate-700 flex-1 truncate">{g.name}</span>
-                  <span className="text-[11px] text-slate-400">{g.leads_count} leads</span>
+                  <span className="text-[11px] text-slate-400 shrink-0">{g.leads_count} leads</span>
                   {chosenGroupId === g.id && (
                     <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center shrink-0">
                       <span className="text-white text-[9px]">✓</span>
@@ -759,17 +766,36 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
                 </button>
               ))}
             </div>
+
+            {/* ── Or create a new group right here ── */}
+            <div>
+              <div className="flex items-center gap-2 my-1">
+                <div className="h-px flex-1 bg-slate-100" />
+                <span className="text-[10px] uppercase tracking-wide text-slate-400">or create new</span>
+                <div className="h-px flex-1 bg-slate-100" />
+              </div>
+              <input
+                type="text"
+                value={newGroupName}
+                onChange={e => { setNewGroupName(e.target.value); if (e.target.value.trim()) setChosenGroupId(null) }}
+                onKeyDown={e => { if (e.key === 'Enter' && newGroupName.trim()) handleAddToGroup() }}
+                placeholder="New group name…"
+                maxLength={100}
+                className="w-full h-9 px-3 rounded-lg border border-slate-200 text-[13px] text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-300"
+              />
+            </div>
+
             <DialogFooter className="gap-2">
               <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setAddGroupOpen(false)}>
                 Cancel
               </Button>
               <Button
                 size="sm"
-                disabled={!chosenGroupId || addingGroup}
+                disabled={(!chosenGroupId && !newGroupName.trim()) || addingGroup}
                 className="h-8 text-xs"
                 onClick={handleAddToGroup}
               >
-                {addingGroup ? 'Adding…' : 'Add to Group'}
+                {addingGroup ? 'Adding…' : (chosenGroupId || !newGroupName.trim()) ? 'Add to Group' : 'Create & Add'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -800,7 +826,7 @@ export default function LeadsIndex({ leads, filters, filterOptions }) {
           <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.12)' }} />
 
           <button
-            onClick={() => setSelectedIds(new Set())}
+            onClick={() => setRowSelection({})}
             style={{
               display: 'flex', alignItems: 'center', gap: 5,
               background: 'rgba(255,255,255,0.08)',

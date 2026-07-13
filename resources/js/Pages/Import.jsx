@@ -102,6 +102,7 @@ function DropZone({ onFile, uploading }) {
       onDrop={handleDrop}
       className={cn(
         'border-2 border-dashed rounded-xl p-10 text-center cursor-pointer transition-colors',
+        'w-full flex-1 flex flex-col items-center justify-center',
         drag ? 'border-brand-400 bg-brand-50' : 'border-slate-200 hover:border-brand-300 hover:bg-brand-50/40'
       )}
     >
@@ -282,7 +283,7 @@ export default function Import({ importJob }) {
       <AppLayout title="Import">
         <PageHeader title="Import Leads" description="Bulk-import leads from a CSV file or Google Sheet" />
 
-        <div className="max-w-3xl space-y-3">
+        <div className="max-w-6xl space-y-3">
 
           {/* ── If a job is in preview, show the shared preview UI ── */}
           {importJob ? (
@@ -355,7 +356,7 @@ export default function Import({ importJob }) {
           ) : (
             <>
               {/* ── Mode switcher ── */}
-              <div className="flex gap-3">
+              <div className="flex gap-3 max-w-2xl">
                 <ModeTab
                   active={mode === 'csv'}
                   onClick={() => setMode('csv')}
@@ -372,11 +373,11 @@ export default function Import({ importJob }) {
                 />
               </div>
 
-              {/* ── CSV mode ── */}
+              {/* ── CSV mode ── columns reference and drop zone sit side by side ── */}
               {mode === 'csv' && (
-                <>
+                <div className="grid gap-3 lg:grid-cols-5 items-stretch">
                   {/* Expected columns + template */}
-                  <div className="form-card">
+                  <div className="form-card lg:col-span-3">
                     <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                       <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                         Supported columns <span className="normal-case font-normal text-slate-400">({ALL_COLS.length} total)</span>
@@ -421,26 +422,16 @@ export default function Import({ importJob }) {
                   </div>
 
                   {/* Drop zone */}
-                  <div className="form-card p-4">
+                  <div className="form-card p-4 lg:col-span-2 flex">
                     <DropZone onFile={handleFile} uploading={uploading} />
                   </div>
-                </>
+                </div>
               )}
 
-              {/* ── Google Sheets mode ── */}
+              {/* ── Google Sheets mode ── inputs left, guide right ── */}
               {mode === 'sheets' && (
-                <>
-                  {/* Instructions */}
-                  <div className="form-card px-4 py-3">
-                    <div className="flex items-start gap-2.5">
-                      <Info size={13} className="text-brand-400 mt-0.5 shrink-0" />
-                      <p className="text-[12px] text-slate-500">
-                        Make sure your Google Sheet is shared as <span className="font-semibold text-slate-700">"Anyone with the link can view"</span>.
-                        Open the sheet → Share → change to Anyone with the link.
-                      </p>
-                    </div>
-                  </div>
-
+                <div className="grid gap-3 lg:grid-cols-5 items-start">
+                  <div className="lg:col-span-3 space-y-3">
                   {/* URL input */}
                   <div className="form-card">
                     <div className="px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
@@ -558,7 +549,38 @@ export default function Import({ importJob }) {
                       </div>
                     </div>
                   )}
-                </>
+                  </div>
+
+                  {/* How it works */}
+                  <div className="form-card lg:col-span-2">
+                    <div className="px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+                      <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">How it works</p>
+                    </div>
+                    <div className="px-4 py-3 space-y-3">
+                      {[
+                        ['Share your sheet', 'Open the sheet → Share → set access to "Anyone with the link can view".'],
+                        ['Paste the URL', 'Copy the link from your browser and paste it on the left, then click Load Sheets.'],
+                        ['Pick the tab & import', 'Choose which tab to import — you\'ll get a preview before anything is saved.'],
+                      ].map(([title, text], i) => (
+                        <div key={i} className="flex items-start gap-3">
+                          <span className="shrink-0 w-5 h-5 rounded-full bg-brand-50 text-brand-600 text-[11px] font-bold flex items-center justify-center mt-0.5">
+                            {i + 1}
+                          </span>
+                          <div>
+                            <p className="text-[12.5px] font-semibold text-slate-700">{title}</p>
+                            <p className="text-[11.5px] text-slate-400 mt-0.5 leading-snug">{text}</p>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="flex items-start gap-2.5 pt-2 border-t border-slate-100">
+                        <Info size={13} className="text-brand-400 mt-0.5 shrink-0" />
+                        <p className="text-[11.5px] text-slate-400 leading-snug">
+                          Column names work the same as CSV imports — only <span className="font-semibold text-slate-600">first_name</span> is required.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </>
           )}

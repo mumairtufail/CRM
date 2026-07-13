@@ -209,7 +209,7 @@ export default function CampaignsIndex({ campaigns }) {
         />
 
         {campaigns?.length ? (
-          <div className="space-y-2 max-w-3xl">
+          <div className="space-y-2">
             {/* Select all row */}
             {campaigns.length > 1 && (
               <div className="flex items-center gap-3 px-1 pb-1">
@@ -225,6 +225,8 @@ export default function CampaignsIndex({ campaigns }) {
               </div>
             )}
 
+            {/* Two columns on wide screens so the list uses the full page width */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
             {campaigns.map(c => (
               <div key={c.id} className="flex items-center gap-2">
                 <input
@@ -296,6 +298,7 @@ export default function CampaignsIndex({ campaigns }) {
                 <CampaignActions campaign={c} onDelete={id => setSingleDeleteId(id)} />
               </div>
             ))}
+            </div>
           </div>
         ) : (
           <EmptyState

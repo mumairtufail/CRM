@@ -13,6 +13,7 @@ import {
 import {
   Mail, Plus, Users, Send, Eye, MousePointerClick, Trash2,
   MoreHorizontal, StopCircle, RotateCcw, RotateCw, Pencil, PauseCircle,
+  LayoutGrid, List,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -134,6 +135,9 @@ export default function CampaignsIndex({ campaigns }) {
   const [confirmOpen, setConfirmOpen]       = useState(false)
   const [deleting, setDeleting]             = useState(false)
   const [singleDeleteId, setSingleDeleteId] = useState(null)
+  const [view, setView] = useState(() => localStorage.getItem('campaigns_view') || 'card')
+
+  const switchView = v => { setView(v); localStorage.setItem('campaigns_view', v) }
 
   const allIds      = campaigns?.map(c => c.id) ?? []
   const allSelected = allIds.length > 0 && allIds.every(id => selected.has(id))
@@ -188,6 +192,22 @@ export default function CampaignsIndex({ campaigns }) {
           description={`${campaigns?.length ?? 0} campaigns`}
           action={
             <div className="flex items-center gap-2">
+              {/* Card / list view toggle */}
+              <div className="flex items-center rounded-lg border border-slate-200 bg-white p-0.5">
+                {[['card', LayoutGrid], ['list', List]].map(([v, Icon]) => (
+                  <button
+                    key={v}
+                    type="button"
+                    title={`${v === 'card' ? 'Card' : 'List'} view`}
+                    onClick={() => switchView(v)}
+                    className={`flex items-center justify-center w-8 h-7 rounded-md transition-colors ${
+                      view === v ? 'bg-brand-50 text-brand-600' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <Icon size={14} />
+                  </button>
+                ))}
+              </div>
               {selected.size > 0 && (
                 <Button
                   variant="outline"
@@ -225,80 +245,148 @@ export default function CampaignsIndex({ campaigns }) {
               </div>
             )}
 
-            {/* Two columns on wide screens so the list uses the full page width */}
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-2.5">
-            {campaigns.map(c => (
-              <div key={c.id} className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={selected.has(c.id)}
-                  onChange={e => toggleOne(c.id, e)}
-                  onClick={e => e.stopPropagation()}
-                  className="w-4 h-4 rounded border-slate-300 text-brand-600 cursor-pointer accent-brand-600 shrink-0"
-                />
-                <Link href={`/campaigns/${c.id}`} className="block flex-1 min-w-0">
-                  <div className="form-card px-4 py-3 hover:shadow-md transition-shadow cursor-pointer">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-[13.5px] font-semibold text-slate-800 truncate">{c.name}</p>
+            {view === 'card' ? (
+              /* ── Card view · compact 3-up grid ── */
+              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {campaigns.map((c, i) => {
+                  const seq = campaigns.length - i
+                  const showStats = ['sent', 'paused', 'failed'].includes(c.status) && c.sent_count > 0
+                  return (
+                    <Link key={c.id} href={`/campaigns/${c.id}`} className="block min-w-0">
+                      <div className="form-card h-full px-4 py-3 hover:shadow-md transition-shadow cursor-pointer flex flex-col gap-1.5">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={selected.has(c.id)}
+                            onChange={() => {}}
+                            onClick={e => toggleOne(c.id, e)}
+                            className="w-4 h-4 rounded border-slate-300 text-brand-600 cursor-pointer accent-brand-600 shrink-0"
+                          />
+                          <span className="text-[10.5px] font-bold text-slate-300 tabular-nums" title={`Campaign #${seq} — higher means more recent`}>
+                            #{seq}
+                          </span>
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${STATUS_STYLE[c.status] ?? STATUS_STYLE.draft}`}>
                             {c.status}
                           </span>
+                          <span className="flex-1" />
+                          <CampaignActions campaign={c} onDelete={id => setSingleDeleteId(id)} />
                         </div>
-                        <p className="text-[12px] text-slate-500 mt-0.5 truncate">
-                          Subject: {c.subject}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          From {c.from_name} &lt;{c.from_email}&gt; · {c.created_at}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-5 shrink-0">
-                        <div className="text-center">
-                          <div className="flex items-center gap-1 text-slate-400 justify-center">
-                            <Users size={11} />
-                            <span className="text-[12px] font-semibold text-slate-700">{c.total_recipients}</span>
-                          </div>
-                          <p className="text-[9px] text-slate-400 mt-0.5">recipients</p>
+                        <div className="min-w-0">
+                          <p className="text-[13.5px] font-semibold text-slate-800 truncate">{c.name}</p>
+                          <p className="text-[12px] text-slate-500 mt-0.5 truncate">{c.subject}</p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 truncate">
+                            {c.sent_at ? `Sent ${c.sent_at}` : `Created ${c.created_at}`} · {c.from_email}
+                          </p>
                         </div>
-                        {['sent', 'paused', 'failed'].includes(c.status) && c.sent_count > 0 && (
-                          <>
-                            <div className="text-center">
-                              <div className="flex items-center gap-1 text-slate-400 justify-center">
-                                <Send size={10} />
-                                <p className="text-[12px] font-semibold text-slate-700">{c.sent_count}</p>
-                              </div>
-                              <p className="text-[9px] text-slate-400 mt-0.5">sent</p>
-                            </div>
-                            <div className="text-center">
-                              <div className="flex items-center gap-1 text-slate-400 justify-center">
-                                <Eye size={10} />
-                                <p className="text-[12px] font-semibold text-slate-700">
-                                  {c.sent_count > 0 ? Math.round((c.opened_count / c.sent_count) * 100) : 0}%
-                                </p>
-                              </div>
-                              <p className="text-[9px] text-slate-400 mt-0.5">open rate</p>
-                            </div>
-                            <div className="text-center">
-                              <div className="flex items-center gap-1 text-slate-400 justify-center">
-                                <MousePointerClick size={10} />
-                                <p className="text-[12px] font-semibold text-slate-700">
-                                  {c.sent_count > 0 ? Math.round((c.clicked_count / c.sent_count) * 100) : 0}%
-                                </p>
-                              </div>
-                              <p className="text-[9px] text-slate-400 mt-0.5">click rate</p>
-                            </div>
-                          </>
-                        )}
+                        <div className="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between text-[11.5px]">
+                          <span className="flex items-center gap-1 text-slate-500" title="Recipients">
+                            <Users size={11} className="text-slate-400" />
+                            <b className="font-semibold text-slate-700">{c.total_recipients}</b>
+                          </span>
+                          {showStats ? (
+                            <>
+                              <span className="flex items-center gap-1 text-slate-500" title="Sent">
+                                <Send size={10} className="text-slate-400" />
+                                <b className="font-semibold text-slate-700">{c.sent_count}</b>
+                              </span>
+                              <span className="flex items-center gap-1 text-slate-500" title="Open rate">
+                                <Eye size={10} className="text-slate-400" />
+                                <b className="font-semibold text-slate-700">{Math.round((c.opened_count / c.sent_count) * 100)}%</b>
+                              </span>
+                              <span className="flex items-center gap-1 text-slate-500" title="Click rate">
+                                <MousePointerClick size={10} className="text-slate-400" />
+                                <b className="font-semibold text-slate-700">{Math.round((c.clicked_count / c.sent_count) * 100)}%</b>
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-slate-300">not sent yet</span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </Link>
-                <CampaignActions campaign={c} onDelete={id => setSingleDeleteId(id)} />
+                    </Link>
+                  )
+                })}
               </div>
-            ))}
-            </div>
+            ) : (
+              /* ── List view · slim full-width rows ── */
+              <div className="space-y-1.5">
+                {campaigns.map((c, i) => {
+                  const seq = campaigns.length - i
+                  const showStats = ['sent', 'paused', 'failed'].includes(c.status) && c.sent_count > 0
+                  return (
+                    <div key={c.id} className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        checked={selected.has(c.id)}
+                        onChange={e => toggleOne(c.id, e)}
+                        onClick={e => e.stopPropagation()}
+                        className="w-4 h-4 rounded border-slate-300 text-brand-600 cursor-pointer accent-brand-600 shrink-0"
+                      />
+                      <Link href={`/campaigns/${c.id}`} className="block flex-1 min-w-0">
+                        <div className="form-card px-4 py-2.5 hover:shadow-md transition-shadow cursor-pointer">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10.5px] font-bold text-slate-300 tabular-nums shrink-0" title={`Campaign #${seq} — higher means more recent`}>
+                                  #{seq}
+                                </span>
+                                <p className="text-[13.5px] font-semibold text-slate-800 truncate">{c.name}</p>
+                                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize shrink-0 ${STATUS_STYLE[c.status] ?? STATUS_STYLE.draft}`}>
+                                  {c.status}
+                                </span>
+                              </div>
+                              <p className="text-[11.5px] text-slate-400 mt-0.5 truncate">
+                                {c.subject} · From {c.from_name} &lt;{c.from_email}&gt; · {c.sent_at ? `Sent ${c.sent_at}` : `Created ${c.created_at}`}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-5 shrink-0">
+                              <div className="text-center">
+                                <div className="flex items-center gap-1 text-slate-400 justify-center">
+                                  <Users size={11} />
+                                  <span className="text-[12px] font-semibold text-slate-700">{c.total_recipients}</span>
+                                </div>
+                                <p className="text-[9px] text-slate-400 mt-0.5">recipients</p>
+                              </div>
+                              {showStats && (
+                                <>
+                                  <div className="text-center">
+                                    <div className="flex items-center gap-1 text-slate-400 justify-center">
+                                      <Send size={10} />
+                                      <p className="text-[12px] font-semibold text-slate-700">{c.sent_count}</p>
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 mt-0.5">sent</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="flex items-center gap-1 text-slate-400 justify-center">
+                                      <Eye size={10} />
+                                      <p className="text-[12px] font-semibold text-slate-700">
+                                        {Math.round((c.opened_count / c.sent_count) * 100)}%
+                                      </p>
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 mt-0.5">open rate</p>
+                                  </div>
+                                  <div className="text-center">
+                                    <div className="flex items-center gap-1 text-slate-400 justify-center">
+                                      <MousePointerClick size={10} />
+                                      <p className="text-[12px] font-semibold text-slate-700">
+                                        {Math.round((c.clicked_count / c.sent_count) * 100)}%
+                                      </p>
+                                    </div>
+                                    <p className="text-[9px] text-slate-400 mt-0.5">click rate</p>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                      <CampaignActions campaign={c} onDelete={id => setSingleDeleteId(id)} />
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         ) : (
           <EmptyState

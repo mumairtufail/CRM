@@ -36,6 +36,12 @@ class AiProviderController extends Controller
             ['id' => 'nvidia/mistral-nemo-minitron-8b-8k-instruct',    'label' => 'Mistral Nemo Minitron 8B'],
             ['id' => 'deepseek-ai/deepseek-r1',                        'label' => 'DeepSeek R1'],
         ],
+        'gemini' => [
+            ['id' => 'gemini-2.5-flash', 'label' => 'Gemini 2.5 Flash'],
+            ['id' => 'gemini-2.5-pro',   'label' => 'Gemini 2.5 Pro'],
+            ['id' => 'gemini-1.5-flash', 'label' => 'Gemini 1.5 Flash'],
+            ['id' => 'gemini-1.5-pro',   'label' => 'Gemini 1.5 Pro'],
+        ],
     ];
 
     public function show(Request $request)
@@ -58,18 +64,32 @@ class AiProviderController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'provider' => 'required|in:claude,openai,kimi',
+            'provider' => 'required|in:claude,openai,kimi,gemini',
             'api_key'  => 'required|string|min:10',
             'model'    => 'required|string|max:200',
             'base_url' => 'nullable|url|max:500',
         ]);
+
+        $current = AiProviderSetting::where('organization_id', $request->user()->organization_id)->first();
+
+        $shouldReset = true;
+        if ($current) {
+            // Only reset if key, provider, or model changed
+            if (
+                $current->provider === $validated['provider'] &&
+                $current->model    === $validated['model'] &&
+                $current->api_key  === $validated['api_key']
+            ) {
+                $shouldReset = false;
+            }
+        }
 
         AiProviderSetting::updateOrCreate(
             ['organization_id' => $request->user()->organization_id],
             [
                 ...$validated,
                 'is_active'    => true,
-                'validated_at' => null, // reset validation on key change
+                'validated_at' => $shouldReset ? null : ($current ? $current->validated_at : null),
             ]
         );
 
@@ -78,8 +98,8 @@ class AiProviderController extends Controller
 
     public function validate(Request $request)
     {
-        $request->validate([
-            'provider' => 'required|in:claude,openai,kimi',
+        $validated = $request->validate([
+            'provider' => 'required|in:claude,openai,kimi,gemini',
             'api_key'  => 'required|string|min:10',
             'model'    => 'required|string|max:200',
             'base_url' => 'nullable|url|max:500',
@@ -97,11 +117,15 @@ class AiProviderController extends Controller
         [$ok, $message] = $service->test();
 
         if ($ok) {
-            // Mark the saved setting as validated if it exists and matches
-            AiProviderSetting::where('organization_id', $request->user()->organization_id)
-                ->where('provider', $request->provider)
-                ->where('model', $request->model)
-                ->update(['validated_at' => now()]);
+            // Save the setting directly with validated_at now!
+            AiProviderSetting::updateOrCreate(
+                ['organization_id' => $request->user()->organization_id],
+                [
+                    ...$validated,
+                    'is_active'    => true,
+                    'validated_at' => now(),
+                ]
+            );
         }
 
         return response()->json([

@@ -41,6 +41,12 @@ class AiSettingsController extends Controller
             ['id' => 'nvidia/mistral-nemo-minitron-8b-8k-instruct',    'label' => 'Mistral Nemo Minitron 8B'],
             ['id' => 'deepseek-ai/deepseek-r1',                        'label' => 'DeepSeek R1'],
         ],
+        'gemini' => [
+            ['id' => 'gemini-2.5-flash', 'label' => 'Gemini 2.5 Flash'],
+            ['id' => 'gemini-2.5-pro',   'label' => 'Gemini 2.5 Pro'],
+            ['id' => 'gemini-1.5-flash', 'label' => 'Gemini 1.5 Flash'],
+            ['id' => 'gemini-1.5-pro',   'label' => 'Gemini 1.5 Pro'],
+        ],
     ];
 
     public function edit(): Response
@@ -61,7 +67,7 @@ class AiSettingsController extends Controller
     public function update(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'provider'  => 'required|in:claude,openai,kimi',
+            'provider'  => 'required|in:claude,openai,kimi,gemini',
             'api_key'   => 'required|string',
             'model'     => 'required|string|max:200',
             'base_url'  => 'nullable|url|max:500',
@@ -93,7 +99,7 @@ class AiSettingsController extends Controller
     public function test(Request $request): JsonResponse
     {
         $request->validate([
-            'provider' => 'required|in:claude,openai,kimi',
+            'provider' => 'required|in:claude,openai,kimi,gemini',
             'api_key'  => 'required|string',
             'model'    => 'required|string|max:200',
             'base_url' => 'nullable|url|max:500',

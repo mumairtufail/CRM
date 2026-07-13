@@ -147,11 +147,12 @@ export default function Ai({ setting, models }) {
                     <label className="block text-[12px] font-semibold text-slate-700 mb-1.5">
                       Select Provider
                     </label>
-                    <div className="grid grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
                       {[
                         { id: 'openai', label: 'OpenAI' },
                         { id: 'claude', label: 'Anthropic' },
                         { id: 'kimi', label: 'Kimi (NVIDIA NIM)' },
+                        { id: 'gemini', label: 'Gemini (Google)' },
                       ].map(p => (
                         <button
                           key={p.id}

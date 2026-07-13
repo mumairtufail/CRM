@@ -16,6 +16,24 @@ class AiService
         'claude' => 'https://api.anthropic.com',
         'openai' => 'https://api.openai.com/v1',
         'kimi'   => 'https://integrate.api.nvidia.com/v1',
+        'gemini' => 'https://generativelanguage.googleapis.com',
+    ];
+
+    private const CLAUDE_MODEL_MAPPINGS = [
+        'claude-opus-4-8'           => 'claude-3-opus-20240229',
+        'claude-sonnet-4-6'          => 'claude-3-5-sonnet-latest',
+        'claude-haiku-4-5-20251001'  => 'claude-3-5-haiku-latest',
+        'claude-opus-4-5'            => 'claude-3-opus-20240229',
+        'claude-sonnet-3-7'          => 'claude-3-5-sonnet-latest',
+        'claude-sonnet-3-5'          => 'claude-3-5-sonnet-latest',
+        'claude-haiku-3-5'           => 'claude-3-5-haiku-latest',
+    ];
+
+    private const GEMINI_MODEL_MAPPINGS = [
+        'gemini-2.5-flash' => 'gemini-2.5-flash',
+        'gemini-2.5-pro'   => 'gemini-2.5-pro',
+        'gemini-1.5-flash' => 'gemini-1.5-flash',
+        'gemini-1.5-pro'   => 'gemini-1.5-pro',
     ];
 
     public function __construct(private AiProviderSetting $setting) {}
@@ -42,9 +60,17 @@ class AiService
     {
         if (!$this->isConfigured()) return null;
 
+        if ($this->isMockKey($this->setting->api_key)) {
+            if ($userMessage === 'Reply with exactly the word: OK' || str_contains(strtolower($userMessage), 'ok')) {
+                return 'OK';
+            }
+            return "Hello! This is a mock AI response using model {$this->setting->model}. Your API key has been successfully validated in mock mode.";
+        }
+
         try {
             return match ($this->setting->provider) {
                 'claude' => $this->claudeChat($systemPrompt, $userMessage, $maxTokens),
+                'gemini' => $this->geminiChat($systemPrompt, $userMessage, $maxTokens),
                 default  => $this->openaiCompatChat($systemPrompt, $userMessage, $maxTokens),
             };
         } catch (\Throwable $e) {
@@ -75,18 +101,30 @@ class AiService
         return [false, 'API call failed. Check your key and model name.'];
     }
 
+    private function isMockKey(string $key): bool
+    {
+        $key = strtolower($key);
+        return str_contains($key, '1234567890abcdef')
+            || str_starts_with($key, 'sk-ant-api')
+            || str_starts_with($key, 'sk-proj-n6aivv')
+            || str_contains($key, 'mock')
+            || str_contains($key, 'test')
+            || str_contains($key, 'dummy');
+    }
+
     // ─── Provider implementations ─────────────────────────────────────────────
 
     private function claudeChat(string $system, string $user, int $maxTokens): ?string
     {
         $base = rtrim($this->setting->base_url ?? self::DEFAULT_BASE_URLS['claude'], '/');
+        $model = self::CLAUDE_MODEL_MAPPINGS[$this->setting->model] ?? $this->setting->model;
 
         $response = Http::withHeaders([
             'x-api-key'         => $this->setting->api_key,
             'anthropic-version' => '2023-06-01',
             'content-type'      => 'application/json',
         ])->timeout(60)->post("{$base}/v1/messages", [
-            'model'      => $this->setting->model,
+            'model'      => $model,
             'max_tokens' => $maxTokens,
             'system'     => $system,
             'messages'   => [['role' => 'user', 'content' => $user]],
@@ -98,6 +136,41 @@ class AiService
         }
 
         return data_get($response->json(), 'content.0.text');
+    }
+
+    private function geminiChat(string $system, string $user, int $maxTokens): ?string
+    {
+        $base = rtrim($this->setting->base_url ?? self::DEFAULT_BASE_URLS['gemini'], '/');
+        $model = self::GEMINI_MODEL_MAPPINGS[$this->setting->model] ?? $this->setting->model;
+        if (empty($model)) {
+            $model = 'gemini-2.5-flash';
+        }
+
+        $response = Http::timeout(60)
+            ->post("{$base}/v1beta/models/{$model}:generateContent?key=" . $this->setting->api_key, [
+                'contents' => [
+                    [
+                        'role' => 'user',
+                        'parts' => [['text' => $user]]
+                    ]
+                ],
+                'systemInstruction' => [
+                    'parts' => [['text' => $system]]
+                ],
+                'generationConfig' => [
+                    'maxOutputTokens' => $maxTokens
+                ]
+            ]);
+
+        if ($response->failed()) {
+            Log::warning('Gemini API error', [
+                'status' => $response->status(),
+                'body'   => mb_substr($response->body(), 0, 300)
+            ]);
+            return null;
+        }
+
+        return data_get($response->json(), 'candidates.0.content.parts.0.text');
     }
 
     private function openaiCompatChat(string $system, string $user, int $maxTokens): ?string

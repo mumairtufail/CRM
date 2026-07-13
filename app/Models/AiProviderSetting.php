@@ -42,6 +42,7 @@ class AiProviderSetting extends Model
             'claude' => 'Claude (Anthropic)',
             'openai' => 'OpenAI',
             'kimi'   => 'Kimi K2 (NVIDIA NIM)',
+            'gemini' => 'Gemini (Google)',
             default  => ucfirst($this->provider),
         };
     }

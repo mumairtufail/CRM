@@ -1441,6 +1441,7 @@ const PROVIDERS = [
   { id: 'claude', label: 'Claude (Anthropic)', color: '#D97706', hint: 'Best for reasoning and natural conversation' },
   { id: 'openai', label: 'OpenAI',             color: '#10B981', hint: 'GPT-4o, o1, and the full OpenAI lineup' },
   { id: 'kimi',   label: 'Kimi K2 (NVIDIA NIM)', color: 'rgb(var(--brand2-500))', hint: 'Access Kimi K2, Llama 3.1, DeepSeek, and more' },
+  { id: 'gemini', label: 'Gemini (Google)',    color: '#1A73E8', hint: 'Access Gemini 2.5, 1.5, and more' },
 ]
 
 const PROVIDER_MODELS = {
@@ -1469,6 +1470,12 @@ const PROVIDER_MODELS = {
     { id: 'meta/llama-3.1-405b-instruct',                label: 'Llama 3.1 405B' },
     { id: 'nvidia/mistral-nemo-minitron-8b-8k-instruct', label: 'Mistral Nemo Minitron 8B' },
     { id: 'deepseek-ai/deepseek-r1',                     label: 'DeepSeek R1' },
+  ],
+  gemini: [
+    { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
+    { id: 'gemini-2.5-pro',   label: 'Gemini 2.5 Pro' },
+    { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash' },
+    { id: 'gemini-1.5-pro',   label: 'Gemini 1.5 Pro' },
   ],
 }
 
@@ -1686,7 +1693,7 @@ function AiProviderTab({ aiSetting }) {
                   value={apiKey}
                   onChange={e => { setApiKey(e.target.value); setValidated(false) }}
                   className="h-8 text-[13px] font-mono pr-8"
-                  placeholder={provider === 'claude' ? 'sk-ant-...' : provider === 'openai' ? 'sk-...' : 'nvapi-...'}
+                  placeholder={provider === 'claude' ? 'sk-ant-...' : provider === 'openai' ? 'sk-...' : provider === 'gemini' ? 'AIzaSy...' : 'nvapi-...'}
                 />
                 <button type="button" onClick={() => setShowKey(v => !v)}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">

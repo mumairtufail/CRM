@@ -61,10 +61,39 @@ class AiService
         if (!$this->isConfigured()) return null;
 
         if ($this->isMockKey($this->setting->api_key)) {
-            if ($userMessage === 'Reply with exactly the word: OK' || str_contains(strtolower($userMessage), 'ok')) {
+            // Check if it's the diagnostic connection test
+            if (($systemPrompt === 'You are a test assistant.' || str_contains(strtolower($systemPrompt), 'test')) && (str_contains(strtolower($userMessage), 'ok') || $userMessage === 'Reply with exactly the word: OK')) {
                 return 'OK';
             }
-            return "Hello! This is a mock AI response using model {$this->setting->model}. Your API key has been successfully validated in mock mode.";
+
+            // Extract latest visitor message or search keywords
+            $msg = strtolower($userMessage);
+            
+            // Clean up the history format to get the last message content
+            if (preg_match_all('/Visitor:\s*(.+)$/mi', $userMessage, $matches)) {
+                $lastMatch = end($matches[1]);
+                if ($lastMatch) {
+                    $msg = strtolower(trim($lastMatch));
+                }
+            }
+
+            if (str_contains($msg, 'human') || str_contains($msg, 'contact') || str_contains($msg, 'person') || str_contains($msg, 'email')) {
+                return "For sure! What's your email address? I can have someone from our team reach out to you directly.";
+            }
+
+            if (str_contains($msg, 'urdu') || str_contains($msg, 'pooch') || str_contains($msg, 'baat')) {
+                return "Ji haan, main Urdu mein bhi baat kar sakta hoon! Aap LumeniaCRM ke baare mein kya jaanna chahte hain?";
+            }
+
+            if (str_contains($msg, 'feature') || str_contains($msg, 'subscribe') || str_contains($msg, 'why choose') || str_contains($msg, 'product') || str_contains($msg, 'pricing') || str_contains($msg, 'workflow')) {
+                return "LumeniaCRM is the all-in-one workspace for managing leads, pipeline, emails, and invoicing without jumping between tools. Since everything's free right now, there's no risk to take it for a spin.";
+            }
+
+            if (str_contains($msg, 'hi') || str_contains($msg, 'hello') || str_contains($msg, 'hey') || str_contains($msg, 'aoa') || str_contains($msg, 'salam')) {
+                return "Hey there! I'm the automated assistant for LumeniaCRM. How can I help you with your workspace, leads, or pipeline today?";
+            }
+
+            return "That's a great question! I'm running in demo/offline mode right now, but if you drop your email address, I'll make sure one of our teammates follows up with you first thing to help!";
         }
 
         try {

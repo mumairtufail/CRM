@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import axios from 'axios'
-import { MessageCircle, Send, X, Sparkles } from 'lucide-react'
+import { MessageCircle, Send, X, Sparkles, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
 
@@ -38,7 +38,15 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
   const [messages, setMessages] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]')
-      if (Array.isArray(saved) && saved.length) return saved
+      if (Array.isArray(saved) && saved.length) {
+        const lastMsg = saved[saved.length - 1]
+        if (lastMsg && lastMsg.at && (Date.now() - lastMsg.at) > 2 * 60 * 60 * 1000) {
+          localStorage.removeItem(SESSION_KEY)
+          localStorage.removeItem(HISTORY_KEY)
+        } else {
+          return saved
+        }
+      }
     } catch { /* fall through to welcome */ }
     return welcomeMessage
       ? [{ role: 'agent', content: welcomeMessage, at: Date.now() }]
@@ -80,6 +88,15 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
       isLastOfGroup: i === messages.length - 1 || messages[i + 1].role !== msg.role,
     }))
   }, [messages])
+
+  const startNewChat = () => {
+    if (confirm('Start a new conversation? Your current chat history will be cleared.')) {
+      localStorage.removeItem(SESSION_KEY)
+      localStorage.removeItem(HISTORY_KEY)
+      setMessages(welcomeMessage ? [{ role: 'agent', content: welcomeMessage, at: Date.now() }] : [])
+      setInput('')
+    }
+  }
 
   const send = async () => {
     const text = input.trim()
@@ -140,6 +157,15 @@ export default function ChatWidget({ agentName = 'Sarah', welcomeMessage }) {
             <p className="text-[13.5px] font-bold text-slate-900 leading-tight">{agentName}</p>
             <p className="text-[11px] text-slate-400 font-medium leading-tight mt-0.5">Usually replies in a few seconds</p>
           </div>
+
+          <button
+            onClick={startNewChat}
+            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors shrink-0"
+            title="Start new chat"
+            aria-label="Start new chat"
+          >
+            <RotateCcw size={14} />
+          </button>
 
           <button
             onClick={() => setOpen(false)}

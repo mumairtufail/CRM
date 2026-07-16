@@ -730,10 +730,8 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                 
                 {/* Smartphone Mockup Container */}
                 <div className="w-[290px] bg-slate-50 border-[8px] border-slate-200/90 rounded-[44px] shadow-2xl p-2.5 flex flex-col relative select-none">
-                  {/* Top speaker notch */}
-                  <div className="w-16 h-3 bg-slate-200/80 rounded-full mx-auto mb-2 mt-1 relative z-10">
-                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-1 bg-slate-400/40 rounded-full" />
-                  </div>
+                  {/* Sleek speaker ear-piece line */}
+                  <div className="w-10 h-1 bg-slate-300/80 rounded-full mx-auto mb-2.5 mt-1.5" />
 
                   {/* Phone screen inside bezel */}
                   <div className="bg-white rounded-[32px] overflow-hidden flex flex-col border border-slate-150 h-[450px] relative">

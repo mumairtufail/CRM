@@ -46,6 +46,29 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const [smsMessage, setSmsMessage] = useState('')
   const [sendingSms, setSendingSms] = useState(false)
 
+  // Searchable Quick Dial Lead States
+  const [leadSearchQuery, setLeadSearchQuery] = useState('')
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const filteredLeads = quickLeads.filter(lead => {
+    const query = leadSearchQuery.toLowerCase()
+    const name = (lead.name ?? '').toLowerCase()
+    const email = (lead.email ?? '').toLowerCase()
+    const phone = (lead.phone ?? '').toLowerCase()
+    return name.includes(query) || email.includes(query) || phone.includes(query)
+  })
+
   // Web Audio Tester States
   const [audioContext, setAudioContext] = useState(null)
   const [analyser, setAnalyser] = useState(null)
@@ -88,9 +111,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     if (!twilioSetting) return
 
     // Inject Twilio JS Client SDK dynamically if not loaded
-    if (!window.Twilio) {
+    if (!window.Twilio || !window.Twilio.Device) {
       const script = document.createElement('script')
-      script.src = 'https://sdk.twilio.com/js/client/releases/1.14.0/twilio.js'
+      script.src = 'https://sdk.twilio.com/js/voice/releases/2.11.1/twilio-voice.min.js'
       script.async = true
       script.onload = () => initTwilioDevice()
       document.body.appendChild(script)
@@ -134,8 +157,10 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         codecPreferences: ['opus', 'pcmu'],
       })
 
-      device.on('ready', () => {
-        console.log('Embedded Twilio Softphone Ready')
+      device.register()
+
+      device.on('registered', () => {
+        console.log('Embedded Twilio Softphone Registered & Ready')
       })
 
       device.on('error', (err) => {
@@ -548,24 +573,67 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               
               {/* Left Column: Logs, SMS & Voicemails (8 columns) */}
               <div className="lg:col-span-8 space-y-6">
-                {/* Quick dial dropdown card */}
-                <div className="rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center" style={glassCard}>
+                {/* Quick dial dropdown card (Searchable) */}
+                <div className="rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center relative z-[40]" style={glassCard}>
                   <span className="text-[12.5px] font-semibold text-slate-500 shrink-0">Quick Dial Lead:</span>
-                  <select
-                    value={selectedQuickLead}
-                    onChange={e => {
-                      setSelectedQuickLead(e.target.value)
-                      triggerCall(e.target.value)
-                    }}
-                    className="w-full sm:w-64 rounded-xl border border-slate-200 text-xs py-1.5 focus:border-brand-500 focus:ring-0 text-slate-700"
-                  >
-                    <option value="">Select Lead with Phone...</option>
-                    {quickLeads.map(lead => (
-                      <option key={lead.id} value={lead.phone}>
-                        {lead.name} ({lead.phone})
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative w-full sm:w-80" ref={dropdownRef}>
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                      <Input
+                        type="text"
+                        placeholder="Search lead by name, email, or phone..."
+                        value={leadSearchQuery}
+                        onChange={e => {
+                          setLeadSearchQuery(e.target.value)
+                          setIsDropdownOpen(true)
+                        }}
+                        onFocus={() => setIsDropdownOpen(true)}
+                        className="pl-9 text-xs h-9 rounded-xl pr-8 w-full border-slate-200 focus:border-brand-500 focus:ring-0 text-slate-700"
+                      />
+                      {(leadSearchQuery || selectedQuickLead) && (
+                        <button
+                          onClick={() => {
+                            setLeadSearchQuery('')
+                            setSelectedQuickLead('')
+                            setIsDropdownOpen(false)
+                          }}
+                          className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+
+                    {isDropdownOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-150 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50 divide-y divide-slate-50">
+                        {filteredLeads.length === 0 ? (
+                          <div className="p-3 text-xs text-slate-450 text-center">No matching leads with phone numbers</div>
+                        ) : (
+                          filteredLeads.map(lead => (
+                            <button
+                              key={lead.id}
+                              type="button"
+                              onClick={() => {
+                                triggerCall(lead.phone)
+                                setLeadSearchQuery(lead.name)
+                                setSelectedQuickLead(lead.phone)
+                                setIsDropdownOpen(false)
+                              }}
+                              className="w-full text-left p-2.5 hover:bg-slate-50 flex flex-col gap-0.5 transition-colors"
+                            >
+                              <div className="flex justify-between items-baseline w-full">
+                                <span className="text-xs font-bold text-slate-700">{lead.name}</span>
+                                <span className="text-[10px] font-mono font-bold text-brand-600">{lead.phone}</span>
+                              </div>
+                              {lead.email && (
+                                <span className="text-[10px] text-slate-400 truncate">{lead.email}</span>
+                              )}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Main Comm Tabs */}
@@ -798,12 +866,15 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
                 {/* Smartphone Mockup Container */}
-                <div className="w-[290px] bg-slate-50 border-[8px] border-slate-200/90 rounded-[44px] shadow-2xl p-2.5 flex flex-col relative select-none">
-                  {/* Sleek speaker ear-piece line */}
-                  <div className="w-10 h-1 bg-slate-300/80 rounded-full mx-auto mb-2.5 mt-1.5" />
-
+                <div 
+                  className="w-[290px] rounded-[40px] shadow-2xl p-2.5 flex flex-col relative select-none"
+                  style={{
+                    background: 'linear-gradient(180deg, rgb(var(--brand-ink2)) 0%, rgb(var(--brand-900)) 50%, rgb(var(--brand-ink)) 100%)',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(var(--brand-600) / 0.15)'
+                  }}
+                >
                   {/* Phone screen inside bezel */}
-                  <div className="bg-white rounded-[32px] overflow-hidden flex flex-col border border-slate-150 h-[450px] relative">
+                  <div className="bg-white rounded-[32px] overflow-hidden flex flex-col h-[450px] relative">
                     
                     {/* Screen Header */}
                     <div className="px-4 py-2.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between shrink-0">

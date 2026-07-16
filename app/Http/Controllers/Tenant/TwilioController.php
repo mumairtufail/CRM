@@ -45,6 +45,7 @@ class TwilioController extends Controller
                 return [
                     'id'    => $lead->id,
                     'name'  => $lead->full_name,
+                    'email' => $lead->email,
                     'phone' => $lead->phones->first()?->phone,
                 ];
             })->filter(fn($l) => !empty($l['phone']))->values();

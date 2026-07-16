@@ -894,12 +894,12 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
               <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
-                {/* iPhone Pro Mockup Container (Brushed Aluminum Frame) */}
+                {/* iPhone Pro Mockup Container (Purple Metallic Frame) */}
                 <div 
                   className="w-[280px] bg-white rounded-[44px] overflow-hidden flex flex-col relative select-none"
                   style={{
-                    border: '10px solid #cbd5e1', // Elegant solid brushed aluminum silver frame
-                    boxShadow: 'inset 0 0 0 1px #94a3b8, 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 35px rgba(var(--brand-600) / 0.15)'
+                    border: '6px solid rgb(var(--brand-600, 124 58 237))', // Thinner premium purple metallic frame matching CRM theme
+                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.15), 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 35px rgba(var(--brand-600) / 0.15)'
                   }}
                 >
                   {/* Phone screen inside bezel */}
@@ -1341,7 +1341,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     </div>
 
                     {/* Bottom Tab Bar selector inside mockup */}
-                    <div className="flex h-[45px] border-t border-slate-100 shrink-0 bg-slate-50/50">
+                    <div className="flex h-[52px] pb-2 pt-1.5 border-t border-slate-100 shrink-0 bg-slate-50/50">
                       {[
                         { id: 'keypad', label: 'Keypad', icon: Phone },
                         { id: 'recent', label: 'Recent', icon: Clock },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Head, Link, router } from '@inertiajs/react'
+import { Head, Link, router, usePage } from '@inertiajs/react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
@@ -15,6 +15,9 @@ import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
 export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads }) {
+  const { auth } = usePage().props
+  const user = auth?.user
+
   // Tabs and general state
   const [activeTab, setActiveTab] = useState('calls')
   const [syncing, setSyncing] = useState(false)
@@ -408,15 +411,19 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     }
   }
 
-  // ─── Filter Lists ───────────────────────────────────────────────────────────
-  const filteredCalls = (calls.data ?? []).filter(call => {
+  const filteredCalls = (calls?.data ?? []).filter(call => {
     if (!callSearch) return true
-    return call.from_number.includes(callSearch) || call.to_number.includes(callSearch)
+    const fromNum = call.from_number ?? ''
+    const toNum = call.to_number ?? ''
+    return fromNum.includes(callSearch) || toNum.includes(callSearch)
   })
 
-  const filteredMessages = (messages.data ?? []).filter(msg => {
+  const filteredMessages = (messages?.data ?? []).filter(msg => {
     if (!msgSearch) return true
-    return msg.from_number.includes(msgSearch) || msg.to_number.includes(msgSearch) || msg.body.toLowerCase().includes(msgSearch.toLowerCase())
+    const fromNum = msg.from_number ?? ''
+    const toNum = msg.to_number ?? ''
+    const msgBody = msg.body ?? ''
+    return fromNum.includes(msgSearch) || toNum.includes(msgSearch) || msgBody.toLowerCase().includes(msgSearch.toLowerCase())
   })
 
   const glassCard = {

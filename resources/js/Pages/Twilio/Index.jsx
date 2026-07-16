@@ -9,7 +9,7 @@ import { Card } from '@/Components/ui/card'
 import {
   Phone, PhoneCall, PhoneOff, PhoneForwarded, MessageSquare,
   Clock, Volume2, VolumeX, Delete, HelpCircle, X, Play, Pause,
-  AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, User
+  AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, User, Send
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -38,6 +38,12 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const deviceRef = useRef(null)
   const connectionRef = useRef(null)
   const timerRef = useRef(null)
+
+  // Smartphone Mockup Tabs
+  const [activeMockupTab, setActiveMockupTab] = useState('keypad') // 'keypad' | 'recent' | 'messages' | 'voicemail' | 'settings'
+  const [activeSmsNumber, setActiveSmsNumber] = useState('')
+  const [smsMessage, setSmsMessage] = useState('')
+  const [sendingSms, setSendingSms] = useState(false)
 
   // Web Audio Tester States
   const [audioContext, setAudioContext] = useState(null)
@@ -169,17 +175,15 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   const endCallState = () => {
     stopTimer()
-    setCallState('ended')
-    setTimeout(() => {
-      setCallState('idle')
-      setCallDuration(0)
-    }, 2000)
+    setCallState('idle')
+    setCallDuration(0)
     router.reload({ only: ['calls'] })
   }
 
   const triggerCall = (phone) => {
     if (!phone) return
     setDialNumber(phone)
+    setActiveMockupTab('keypad')
     toast.info(`Pre-filled dialer with ${phone}`)
   }
 
@@ -222,12 +226,14 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   }
 
   const handleHangup = () => {
-    if (isSoftphone && deviceRef.current) {
-      deviceRef.current.disconnectAll()
-    } else {
-      endCallState()
-      toast.info('Call ended.')
+    if (connectionRef.current) {
+      try { connectionRef.current.disconnect() } catch {}
     }
+    if (deviceRef.current) {
+      try { deviceRef.current.disconnectAll() } catch {}
+    }
+    endCallState()
+    toast.info('Call ended.')
   }
 
   const toggleMute = () => {
@@ -278,8 +284,53 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const formatTime = (secs) => {
     const mins = Math.floor(secs / 60)
     const remaining = secs % 60
-    return `${mins}:${remaining < 10 ? '0' : ''}${remaining}`
+    return `${mins.toString().padStart(2, '0')}:${remaining.toString().padStart(2, '0')}`
   }
+
+  // ─── SMS Threads Inside Mockup ─────────────────────────────────────────────
+  const getSmsThreads = () => {
+    const threads = {}
+    const msgList = messages?.data ?? []
+    msgList.forEach(msg => {
+      const partner = msg.direction === 'inbound' ? msg.from_number : msg.to_number
+      if (!partner) return
+      if (!threads[partner]) {
+        threads[partner] = []
+      }
+      threads[partner].push(msg)
+    })
+    return threads
+   }
+
+   const handleSendSms = async (e) => {
+     e.preventDefault()
+     if (!activeSmsNumber.trim() || !smsMessage.trim()) return
+
+     setSendingSms(true)
+     try {
+       const res = await fetch('/twilio/sms', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
+           Accept: 'application/json',
+         },
+         body: JSON.stringify({ to: activeSmsNumber, body: smsMessage }),
+       })
+       const data = await res.json()
+       if (res.ok) {
+         toast.success('SMS sent successfully.')
+         setSmsMessage('')
+         router.reload({ only: ['messages'] })
+       } else {
+         toast.error(data.error ?? 'Failed to send SMS.')
+       }
+     } catch {
+       toast.error('Network error sending SMS.')
+     } finally {
+       setSendingSms(false)
+     }
+   }
 
   // ─── Voice Wave Visualizer & Audio Tester ──────────────────────────────────
   const startMicTest = async () => {
@@ -411,6 +462,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     }
   }
 
+  // ─── Filter Lists ───────────────────────────────────────────────────────────
   const filteredCalls = (calls?.data ?? []).filter(call => {
     if (!callSearch) return true
     const fromNum = call.from_number ?? ''
@@ -737,7 +789,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                   <div className="bg-white rounded-[32px] overflow-hidden flex flex-col border border-slate-150 h-[450px] relative">
                     
                     {/* Screen Header */}
-                    <div className="px-4 py-2.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                    <div className="px-4 py-2.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between shrink-0">
                       <div className="flex items-center gap-1.5">
                         <div className={cn("w-1.5 h-1.5 rounded-full", callState !== 'idle' ? "bg-red-500 animate-pulse" : "bg-emerald-500")} />
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
@@ -750,105 +802,343 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     {/* Active call duration display */}
                     {callState !== 'idle' && (
                       <div className={cn(
-                        "px-4 py-2 flex justify-between items-center text-[11px] font-bold border-b border-slate-50",
+                        "px-4 py-2 flex justify-between items-center text-[11px] font-bold border-b border-slate-50 shrink-0",
                         callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
                       )}>
-                        <span>{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
+                        <span className="animate-pulse">{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
                         <span className="font-mono text-[10px]">{dialNumber}</span>
                       </div>
                     )}
 
-                    {/* Dialer Body */}
-                    <div className="p-3.5 flex-1 flex flex-col justify-between">
+                    {/* Dialer Screen Area (Scrollable Viewport) */}
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-white">
                       
-                      {/* Identity Display */}
-                      <div className="w-full text-center pb-1.5 border-b border-slate-100">
-                        <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">Agent Line</span>
-                        <span className="text-[12px] font-bold text-slate-700 block truncate mt-0.5">{user?.name ?? 'Agent'}</span>
-                      </div>
+                      {/* 1. KEYPAD TAB */}
+                      {activeMockupTab === 'keypad' && (
+                        <div className="p-3.5 flex flex-col justify-between h-full min-h-[350px]">
+                          {/* Identity Display */}
+                          <div className="w-full text-center pb-1.5 border-b border-slate-100">
+                            <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">Agent Line</span>
+                            <span className="text-[12px] font-bold text-slate-700 block truncate mt-0.5">{user?.name ?? 'Agent'}</span>
+                          </div>
 
-                      {/* Input Box */}
-                      <div className="w-full flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 mt-2">
-                        <input
-                          type="text"
-                          value={dialNumber}
-                          onChange={e => setDialNumber(e.target.value)}
-                          placeholder="Dial number..."
-                          disabled={callState !== 'idle'}
-                          className="bg-transparent border-none text-[15px] font-bold tracking-wider w-full focus:outline-none focus:ring-0 text-slate-800 placeholder-slate-300 p-0 h-6"
-                        />
-                        {dialNumber && callState === 'idle' && (
-                          <button onClick={deleteKey} className="text-slate-400 hover:text-slate-600 transition-colors p-0.5">
-                            <Delete size={13} />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Numeric Keypad Grid */}
-                      <div className="grid grid-cols-3 gap-x-4 gap-y-2 my-2.5 justify-items-center">
-                        {[
-                          { num: '1', letters: '' },
-                          { num: '2', letters: 'ABC' },
-                          { num: '3', letters: 'DEF' },
-                          { num: '4', letters: 'GHI' },
-                          { num: '5', letters: 'JKL' },
-                          { num: '6', letters: 'MNO' },
-                          { num: '7', letters: 'PQRS' },
-                          { num: '8', letters: 'TUV' },
-                          { num: '9', letters: 'WXYZ' },
-                          { num: '*', letters: '' },
-                          { num: '0', letters: '+' },
-                          { num: '#', letters: '' },
-                        ].map(({ num, letters }) => (
-                          <button
-                            key={num}
-                            type="button"
-                            disabled={callState !== 'idle' && callState !== 'connected'}
-                            onClick={() => addKey(num)}
-                            className="w-[40px] h-[40px] rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-100/60"
-                          >
-                            <span className="text-[14px] font-bold text-slate-700 leading-none">{num}</span>
-                            {letters && <span className="text-[7px] font-bold text-slate-400 uppercase mt-0.5">{letters}</span>}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Call Control Button */}
-                      <div className="w-full flex justify-center">
-                        {callState === 'idle' ? (
-                          <button
-                            type="button"
-                            onClick={handleCall}
-                            className="w-11 h-11 rounded-full bg-brand-600 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center shadow-md shadow-brand-600/10 text-white"
-                          >
-                            <PhoneCall size={16} />
-                          </button>
-                        ) : (
-                          <div className="flex gap-3">
-                            {isSoftphone && (
-                              <button
-                                type="button"
-                                onClick={toggleMute}
-                                className={cn(
-                                  "w-10 h-10 rounded-full active:scale-95 transition-all flex items-center justify-center border border-slate-200",
-                                  isMuted ? "bg-amber-500 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                                )}
-                              >
-                                {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                          {/* Input Box */}
+                          <div className="w-full flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 mt-2">
+                            <input
+                              type="text"
+                              value={dialNumber}
+                              onChange={e => setDialNumber(e.target.value)}
+                              placeholder="Dial number..."
+                              disabled={callState !== 'idle'}
+                              className="bg-transparent border-none text-[15px] font-bold tracking-wider w-full focus:outline-none focus:ring-0 text-slate-800 placeholder-slate-300 p-0 h-6"
+                            />
+                            {dialNumber && callState === 'idle' && (
+                              <button onClick={deleteKey} className="text-slate-400 hover:text-slate-600 transition-colors p-0.5">
+                                <Delete size={13} />
                               </button>
                             )}
-                            <button
-                              type="button"
-                              onClick={handleHangup}
-                              className="w-11 h-11 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center shadow-sm text-white"
-                            >
-                              <PhoneOff size={16} />
-                            </button>
                           </div>
-                        )}
-                      </div>
+
+                          {/* Numeric Keypad Grid */}
+                          <div className="grid grid-cols-3 gap-x-4 gap-y-2 my-2.5 justify-items-center">
+                            {[
+                              { num: '1', letters: '' },
+                              { num: '2', letters: 'ABC' },
+                              { num: '3', letters: 'DEF' },
+                              { num: '4', letters: 'GHI' },
+                              { num: '5', letters: 'JKL' },
+                              { num: '6', letters: 'MNO' },
+                              { num: '7', letters: 'PQRS' },
+                              { num: '8', letters: 'TUV' },
+                              { num: '9', letters: 'WXYZ' },
+                              { num: '*', letters: '' },
+                              { num: '0', letters: '+' },
+                              { num: '#', letters: '' },
+                            ].map(({ num, letters }) => (
+                              <button
+                                key={num}
+                                type="button"
+                                disabled={callState !== 'idle' && callState !== 'connected'}
+                                onClick={() => addKey(num)}
+                                className="w-[40px] h-[40px] rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-100/60"
+                              >
+                                <span className="text-[14px] font-bold text-slate-700 leading-none">{num}</span>
+                                {letters && <span className="text-[7px] font-bold text-slate-400 uppercase mt-0.5">{letters}</span>}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Call Control Button */}
+                          <div className="w-full flex justify-center">
+                            {callState === 'idle' ? (
+                              <button
+                                type="button"
+                                onClick={handleCall}
+                                className="w-11 h-11 rounded-full bg-brand-600 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center shadow-md shadow-brand-600/10 text-white"
+                              >
+                                <PhoneCall size={16} />
+                              </button>
+                            ) : (
+                              <div className="flex gap-3">
+                                {isSoftphone && (
+                                  <button
+                                    type="button"
+                                    onClick={toggleMute}
+                                    className={cn(
+                                      "w-10 h-10 rounded-full active:scale-95 transition-all flex items-center justify-center border border-slate-200",
+                                      isMuted ? "bg-amber-500 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                                    )}
+                                  >
+                                    {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={handleHangup}
+                                  className="w-11 h-11 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center shadow-sm text-white"
+                                >
+                                  <PhoneOff size={16} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 2. RECENT LOGS TAB */}
+                      {activeMockupTab === 'recent' && (
+                        <div className="p-3 divide-y divide-slate-50 h-full overflow-y-auto">
+                          {filteredCalls.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-48 text-center px-4">
+                              <Clock size={20} className="text-slate-350 mb-1.5" />
+                              <p className="text-[11px] font-semibold text-slate-400">No call history</p>
+                            </div>
+                          ) : (
+                            filteredCalls.map(call => (
+                              <div key={call.id} className="py-2.5 flex items-center justify-between gap-2">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[11px] font-bold text-slate-700 truncate">
+                                    {call.direction === 'inbound' ? call.from_number : call.to_number}
+                                  </p>
+                                  <span className={cn(
+                                    "text-[8px] font-bold uppercase tracking-wider",
+                                    call.direction === 'inbound' ? "text-blue-500" : "text-purple-500"
+                                  )}>
+                                    {call.direction} • {formatDuration(call.duration)}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => triggerCall(call.direction === 'inbound' ? call.from_number : call.to_number)}
+                                  className="w-6.5 h-6.5 rounded-lg bg-slate-50 hover:bg-slate-100 flex items-center justify-center border border-slate-100"
+                                >
+                                  <PhoneCall size={9.5} className="text-slate-550" />
+                                </button>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
+
+                      {/* 3. MESSAGES TAB */}
+                      {activeMockupTab === 'messages' && (
+                        <div className="h-full flex flex-col bg-slate-50/50">
+                          {activeSmsNumber ? (
+                            <div className="flex-1 flex flex-col min-h-0 bg-white">
+                              {/* Header */}
+                              <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50">
+                                <button type="button" onClick={() => setActiveSmsNumber('')} className="text-[10px] text-brand-600 hover:underline font-bold">
+                                  ← Back
+                                </button>
+                                <span className="text-[10px] font-bold text-slate-700 truncate max-w-[130px]">{activeSmsNumber}</span>
+                                <div className="w-8" />
+                              </div>
+
+                              {/* Message List */}
+                              <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
+                                {(messages?.data ?? [])
+                                  .filter(msg => msg.from_number === activeSmsNumber || msg.to_number === activeSmsNumber)
+                                  .slice()
+                                  .reverse()
+                                  .map(msg => {
+                                    const isInbound = msg.direction === 'inbound'
+                                    return (
+                                      <div key={msg.id} className={cn('flex flex-col max-w-[85%]', isInbound ? 'mr-auto items-start' : 'ml-auto items-end')}>
+                                        <div className={cn(
+                                          'rounded-2xl px-3 py-1.5 text-[11px] leading-relaxed',
+                                          isInbound ? 'bg-slate-100 text-slate-800 rounded-tl-none' : 'bg-brand-600 text-white rounded-tr-none'
+                                        )}>
+                                          {msg.body}
+                                        </div>
+                                        <span className="text-[7.5px] text-slate-400 mt-0.5 px-1 font-mono">
+                                          {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </span>
+                                      </div>
+                                    )
+                                  })}
+                              </div>
+
+                              {/* Compose compose Box */}
+                              <form onSubmit={handleSendSms} className="p-2 border-t border-slate-100 bg-white flex gap-1.5 items-center shrink-0">
+                                <input
+                                  type="text"
+                                  value={smsMessage}
+                                  onChange={e => setSmsMessage(e.target.value)}
+                                  placeholder="Message..."
+                                  className="bg-slate-50 border border-slate-150 rounded-xl text-[11px] px-3 py-1.5 flex-1 focus:outline-none focus:border-brand-500 focus:ring-0 text-slate-850 h-7.5"
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={sendingSms || !smsMessage.trim()}
+                                  className="w-7.5 h-7.5 rounded-xl bg-brand-600 hover:bg-brand-700 flex items-center justify-center shrink-0 disabled:opacity-45 text-white"
+                                >
+                                  <Send size={11} />
+                                </button>
+                              </form>
+                            </div>
+                          ) : (
+                            <div className="p-3 divide-y divide-slate-50 h-full overflow-y-auto bg-white">
+                              {Object.keys(getSmsThreads()).length === 0 ? (
+                                <div className="flex flex-col items-center justify-center h-48 text-center px-4">
+                                  <MessageSquare size={20} className="text-slate-350 mb-1.5" />
+                                  <p className="text-[11px] font-semibold text-slate-400">No messages</p>
+                                </div>
+                              ) : (
+                                Object.entries(getSmsThreads()).map(([phone, msgs]) => {
+                                  const lastMsg = msgs[0]
+                                  return (
+                                    <div
+                                      key={phone}
+                                      onClick={() => setActiveSmsNumber(phone)}
+                                      className="py-2 flex items-start gap-2.5 cursor-pointer hover:bg-slate-50 px-1.5 rounded-xl transition-all"
+                                    >
+                                      <div className="w-7.5 h-7.5 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 font-bold text-[10px]">
+                                        {phone.slice(-2)}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="flex justify-between items-baseline">
+                                          <span className="text-[11.5px] font-bold text-slate-700 truncate">{phone}</span>
+                                          <span className="text-[8px] text-slate-400 font-mono">
+                                            {new Date(lastMsg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                          </span>
+                                        </div>
+                                        <p className="text-[10px] text-slate-500 truncate mt-0.5">{lastMsg.body}</p>
+                                      </div>
+                                    </div>
+                                  )
+                                })
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* 4. VOICEMAIL TAB */}
+                      {activeMockupTab === 'voicemail' && (
+                        <div className="p-3 space-y-2.5 h-full overflow-y-auto">
+                          {filteredCalls.filter(c => c.status === 'voicemail').length === 0 ? (
+                            <div className="flex flex-col items-center justify-center h-48 text-center px-4">
+                              <Volume2 size={20} className="text-slate-350 mb-1.5" />
+                              <p className="text-[11px] font-semibold text-slate-400">No voicemails</p>
+                            </div>
+                          ) : (
+                            filteredCalls
+                              .filter(c => c.status === 'voicemail')
+                              .map(call => (
+                                <div
+                                  key={call.id}
+                                  className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between hover:border-slate-200 transition-colors"
+                                >
+                                  <div className="flex justify-between items-start gap-2 mb-2">
+                                    <div className="min-w-0">
+                                      <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wide block">From</span>
+                                      <p className="text-[11px] font-bold text-slate-700 truncate">{call.from_number}</p>
+                                    </div>
+                                    <span className="text-[8px] text-slate-400 font-mono">
+                                      {new Date(call.created_at).toLocaleString([], { month: 'short', day: 'numeric' })}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border border-slate-100">
+                                    <button
+                                      type="button"
+                                      onClick={() => playVoicemail(call)}
+                                      className={cn(
+                                        'w-5.5 h-5.5 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all',
+                                        playingVoicemail === call.id ? 'bg-amber-500 text-white' : 'bg-brand-600 text-white hover:bg-brand-700'
+                                      )}
+                                    >
+                                      {playingVoicemail === call.id ? <Pause size={9} fill="white" /> : <Play size={9} fill="white" className="ml-0.5" />}
+                                    </button>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-[9.5px] text-slate-500 truncate">Duration: {formatDuration(call.duration)}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))
+                          )}
+                        </div>
+                      )}
+
+                      {/* 5. SETTINGS TAB */}
+                      {activeMockupTab === 'settings' && (
+                        <div className="p-3.5 space-y-3.5 text-[11.5px] h-full overflow-y-auto">
+                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-xl flex items-center gap-2.5">
+                            <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-[12px] border border-emerald-100 shrink-0">
+                              ✓
+                            </div>
+                            <div>
+                              <h4 className="font-bold text-slate-700">Twilio Active</h4>
+                              <p className="text-[9.5px] text-emerald-600 font-medium">Ready for calls and SMS</p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2.5">
+                            <div>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Line Number</span>
+                              <span className="text-[11.5px] font-mono font-semibold text-slate-700 block mt-0.5">{twilioSetting?.phone_number}</span>
+                            </div>
+
+                            <div>
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Calling Method</span>
+                              <span className="text-[11px] font-semibold text-slate-700 block mt-0.5 capitalize">
+                                {isSoftphone ? 'Softphone (Browser)' : 'Click-to-Call (Bridged)'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                     </div>
+
+                    {/* Bottom Tab Bar selector inside mockup */}
+                    <div className="flex h-[45px] border-t border-slate-100 shrink-0 bg-slate-50/50">
+                      {[
+                        { id: 'keypad', label: 'Keypad', icon: Phone },
+                        { id: 'recent', label: 'Recent', icon: Clock },
+                        { id: 'messages', label: 'SMS', icon: MessageSquare },
+                        { id: 'voicemail', label: 'Voice', icon: Volume2 },
+                        { id: 'settings', label: 'Status', icon: HelpCircle },
+                      ].map(tabItem => {
+                        const Icon = tabItem.icon
+                        const isActive = activeMockupTab === tabItem.id
+                        return (
+                          <button
+                            key={tabItem.id}
+                            type="button"
+                            onClick={() => setActiveMockupTab(tabItem.id)}
+                            className={cn(
+                              'flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors border-t-2',
+                              isActive ? 'border-brand-500 text-brand-600 bg-white' : 'border-transparent text-slate-400 hover:text-slate-600'
+                            )}
+                          >
+                            <Icon size={12} />
+                            <span className="text-[8px] font-bold tracking-wide uppercase leading-none">{tabItem.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+
                   </div>
                 </div>
 

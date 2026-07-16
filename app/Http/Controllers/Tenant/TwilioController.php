@@ -37,7 +37,7 @@ class TwilioController extends Controller
 
         // Get list of recent leads with phones for quick contact dropdown
         $leads = \App\Models\Lead::where('organization_id', $orgId)
-            ->with('phones')
+            ->with(['phones', 'emails'])
             ->orderBy('first_name')
             ->limit(100)
             ->get()
@@ -45,7 +45,7 @@ class TwilioController extends Controller
                 return [
                     'id'    => $lead->id,
                     'name'  => $lead->full_name,
-                    'email' => $lead->email,
+                    'email' => $lead->primary_email,
                     'phone' => $lead->phones->first()?->phone,
                 ];
             })->filter(fn($l) => !empty($l['phone']))->values();
@@ -283,18 +283,20 @@ class TwilioController extends Controller
         if (empty($q)) {
             // Return top 15 leads by default
             $leads = \App\Models\Lead::where('organization_id', $orgId)
-                ->with('phones')
+                ->with(['phones', 'emails'])
                 ->orderBy('first_name')
                 ->limit(15)
                 ->get();
         } else {
             // Search all leads
             $leads = \App\Models\Lead::where('organization_id', $orgId)
-                ->with('phones')
+                ->with(['phones', 'emails'])
                 ->where(function ($query) use ($q) {
                     $query->where('first_name', 'like', "%{$q}%")
                         ->orWhere('last_name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhereHas('emails', function ($eQuery) use ($q) {
+                            $eQuery->where('email', 'like', "%{$q}%");
+                        })
                         ->orWhereHas('phones', function ($pQuery) use ($q) {
                             $pQuery->where('phone', 'like', "%{$q}%");
                         });
@@ -308,7 +310,7 @@ class TwilioController extends Controller
             return [
                 'id'    => $lead->id,
                 'name'  => $lead->full_name,
-                'email' => $lead->email,
+                'email' => $lead->primary_email,
                 'phone' => $lead->phones->first()?->phone,
             ];
         })->filter(fn($l) => !empty($l['phone']))->values();

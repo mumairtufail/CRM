@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Head, Link, router, usePage } from '@inertiajs/react'
+import { Device } from '@twilio/voice-sdk'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
@@ -123,16 +124,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   // ─── Twilio Device Setup ──────────────────────────────────────────────────────
   useEffect(() => {
-    if (!twilioSetting) return
-
-    // Inject Twilio JS Client SDK dynamically if not loaded
-    if (!window.Twilio || !window.Twilio.Device) {
-      const script = document.createElement('script')
-      script.src = 'https://sdk.twilio.com/js/voice/releases/2.11.1/twilio-voice.min.js'
-      script.async = true
-      script.onload = () => initTwilioDevice()
-      document.body.appendChild(script)
-    } else {
+    if (twilioSetting) {
       initTwilioDevice()
     }
 
@@ -167,7 +159,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
       setIsSoftphone(true)
 
-      const device = new window.Twilio.Device(token, {
+      const device = new Device(token, {
         debug: true,
         codecPreferences: ['opus', 'pcmu'],
       })
@@ -902,22 +894,18 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
               <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
-                {/* iPhone Pro Mockup Container (Brushed Metal) */}
+                {/* iPhone Pro Mockup Container (Brushed Aluminum Frame) */}
                 <div 
-                  className="w-[280px] rounded-[44px] shadow-2xl p-[3px] flex flex-col relative select-none"
+                  className="w-[280px] bg-white rounded-[44px] overflow-hidden flex flex-col relative select-none"
                   style={{
-                    background: 'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 50%, #94a3b8 100%)', // Brushed aluminum/titanium style gradient
-                    border: '1.5px solid #cbd5e1',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 35px rgba(var(--brand-600) / 0.15)'
+                    border: '10px solid #cbd5e1', // Elegant solid brushed aluminum silver frame
+                    boxShadow: 'inset 0 0 0 1px #94a3b8, 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 35px rgba(var(--brand-600) / 0.15)'
                   }}
                 >
-                  {/* Inner Black Screen Bezel */}
-                  <div className="bg-black p-[7px] rounded-[41px] flex flex-col w-full h-full relative">
+                  {/* Phone screen inside bezel */}
+                  <div className="bg-white flex flex-col h-[460px] relative w-full">
                     
-                    {/* Phone screen inside bezel */}
-                    <div className="bg-white rounded-[34px] overflow-hidden flex flex-col h-[460px] relative">
-                      
-                      {/* Active call overlay screen */}
+                    {/* Active call overlay screen */}
                       {callState !== 'idle' && (
                         <div className="absolute inset-0 bg-slate-900 text-white flex flex-col justify-between p-6 z-[60] animate-in fade-in zoom-in duration-200">
                           {/* Status bar mock */}
@@ -1381,8 +1369,6 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     </div>
                   </div>
                 </div>
-              </div>
-
               </div>
             </div>
           </div>

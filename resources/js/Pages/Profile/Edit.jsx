@@ -104,7 +104,7 @@ const NAV = [
       { id: 'ai',        label: 'AI Provider',     icon: Zap },
       { id: 'leadgen',   label: 'Lead Generation', icon: Sparkles },
       { id: 'whatsapp',  label: 'WhatsApp',        icon: MessageSquare },
-      { id: 'extension', label: 'Browser Extension', icon: Puzzle },
+      { id: 'twilio',    label: 'Twilio Settings',  icon: Phone },
     ],
   },
   {
@@ -1884,57 +1884,233 @@ function MaintenanceTab() {
   )
 }
 
-function ExtensionTab() {
+function TwilioSettingTab({ twilioSetting }) {
+  const [accountSid, setAccountSid]   = React.useState(twilioSetting?.account_sid ?? '')
+  const [authToken, setAuthToken]     = React.useState(twilioSetting?.auth_token ?? '')
+  const [phoneNumber, setPhoneNumber] = React.useState(twilioSetting?.phone_number ?? '')
+  const [twimlAppSid, setTwimlAppSid] = React.useState(twilioSetting?.twiml_app_sid ?? '')
+  const [apiKey, setApiKey]           = React.useState(twilioSetting?.api_key ?? '')
+  const [apiSecret, setApiSecret]     = React.useState(twilioSetting?.api_secret ?? '')
+
+  const [showToken, setShowToken]     = React.useState(false)
+  const [showSecret, setShowSecret]   = React.useState(false)
+  const [validating, setValidating]   = React.useState(false)
+  const [validated, setValidated]     = React.useState(twilioSetting?.is_validated ?? false)
+  const [validMsg, setValidMsg]       = React.useState('')
+  const [saving, setSaving]           = React.useState(false)
+
+  const validate = async () => {
+    if (!accountSid.trim()) { toast.error('Enter Account SID first.'); return }
+    if (!authToken.trim())  { toast.error('Enter Auth Token first.'); return }
+    if (!phoneNumber.trim()) { toast.error('Enter Twilio Phone Number first.'); return }
+
+    setValidating(true)
+    setValidated(false)
+    setValidMsg('')
+
+    try {
+      const res = await fetch(route('twilio.validate'), {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
+          Accept:         'application/json',
+        },
+        body: JSON.stringify({
+          account_sid: accountSid,
+          auth_token: authToken,
+          phone_number: phoneNumber,
+          twiml_app_sid: twimlAppSid || null,
+          api_key: apiKey || null,
+          api_secret: apiSecret || null,
+        }),
+      })
+      const data = await res.json()
+      setValidated(res.ok)
+      setValidMsg(data.message ?? '')
+      if (res.ok) {
+        toast.success('Twilio credentials validated successfully.')
+      } else {
+        toast.error(data.message ?? 'Validation failed.')
+      }
+    } catch {
+      setValidMsg('Network error. Try again.')
+      toast.error('Network error during validation.')
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  const save = async (e) => {
+    e.preventDefault()
+    if (!accountSid.trim()) { toast.error('Enter Account SID.'); return }
+    if (!authToken.trim())  { toast.error('Enter Auth Token.'); return }
+    if (!phoneNumber.trim()) { toast.error('Enter Twilio Phone Number.'); return }
+
+    setSaving(true)
+    try {
+      router.post(route('twilio.store'), {
+        account_sid: accountSid,
+        auth_token: authToken,
+        phone_number: phoneNumber,
+        twiml_app_sid: twimlAppSid || null,
+        api_key: apiKey || null,
+        api_secret: apiSecret || null,
+      }, {
+        onSuccess: () => {
+          toast.success('Twilio settings saved.')
+          setSaving(false)
+        },
+        onError: () => {
+          toast.error('Failed to save Twilio settings.')
+          setSaving(false)
+        }
+      })
+    } catch {
+      setSaving(false)
+    }
+  }
+
+  const remove = () => {
+    if (confirm('Are you sure you want to remove your Twilio configuration?')) {
+      router.delete(route('twilio.destroy'), {
+        onSuccess: () => {
+          toast.success('Twilio settings removed.')
+          setAccountSid('')
+          setAuthToken('')
+          setPhoneNumber('')
+          setTwimlAppSid('')
+          setApiKey('')
+          setApiSecret('')
+          setValidated(false)
+          setValidMsg('')
+        }
+      })
+    }
+  }
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com'
+
   return (
-    <div className="space-y-3 max-w-xl">
-      <Card title="LinkedIn Import Extension">
-        <p className="text-[12px] text-slate-500 leading-relaxed">
-          A Chrome extension for personal use, not published on the Chrome Web
-          Store. It imports the LinkedIn profile you're viewing into your CRM
-          as a lead with one click, then drafts one outreach message using
-          your configured AI provider. You always review and copy the draft
-          yourself, nothing is ever sent automatically.
+    <div className="space-y-4 max-w-xl">
+      <Card title="Twilio Settings">
+        <p className="text-[12px] text-slate-500 leading-relaxed mb-4">
+          Connect your Twilio account to place calls, receive voicemails, and send SMS directly from your CRM.
         </p>
 
-        <a href={route('settings.extension.download')}>
-          <Button type="button" size="sm" className="h-8 text-xs gap-1.5 mt-3">
-            <Download size={12} />
-            Download extension (.zip)
-          </Button>
-        </a>
+        <form onSubmit={save} className="space-y-3.5">
+          <div className="space-y-1">
+            <Label htmlFor="account_sid" className="text-xs">Account SID</Label>
+            <Input id="account_sid" size="sm" value={accountSid} onChange={e => { setAccountSid(e.target.value); setValidated(false); }} placeholder="AC..." className="text-xs h-9" />
+          </div>
 
-        <div className="pt-2 mt-2 border-t border-slate-100">
-          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Install it
+          <div className="space-y-1">
+            <Label htmlFor="auth_token" className="text-xs">Auth Token</Label>
+            <div className="relative">
+              <Input id="auth_token" type={showToken ? 'text' : 'password'} size="sm" value={authToken} onChange={e => { setAuthToken(e.target.value); setValidated(false); }} placeholder="Enter Auth Token" className="text-xs h-9 pr-9" />
+              <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="phone_number" className="text-xs">Twilio Phone Number</Label>
+            <Input id="phone_number" size="sm" value={phoneNumber} onChange={e => { setPhoneNumber(e.target.value); setValidated(false); }} placeholder="+1..." className="text-xs h-9" />
+          </div>
+
+          <div className="pt-2 mt-2 border-t border-slate-100">
+            <p className="text-[11.5px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Softphone Voice SDK Config (Optional)</p>
+            <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
+              Required only for placing calls directly inside your browser instead of standard Click-To-Call bridging.
+            </p>
+
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="twiml_app_sid" className="text-xs">TwiML App SID</Label>
+                <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => { setTwimlAppSid(e.target.value); setValidated(false); }} placeholder="AP..." className="text-xs h-9" />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="api_key" className="text-xs">API Key SID</Label>
+                <Input id="api_key" size="sm" value={apiKey} onChange={e => { setApiKey(e.target.value); setValidated(false); }} placeholder="SK..." className="text-xs h-9" />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="api_secret" className="text-xs">API Secret</Label>
+                <div className="relative">
+                  <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => { setApiSecret(e.target.value); setValidated(false); }} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
+                  <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                    {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {validated && (
+            <Alert className="bg-emerald-50 text-emerald-800 border-emerald-100 py-2.5">
+              <div className="flex gap-2 items-center">
+                <CheckCircle2 size={15} className="text-emerald-500" />
+                <AlertDescription className="text-[11.5px] font-medium leading-none">
+                  Verified & active (Validated {twilioSetting?.validated_at ? new Date(twilioSetting.validated_at).toLocaleString() : 'just now'})
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
+
+          {validMsg && !validated && (
+            <Alert className="bg-red-50 text-red-800 border-red-100 py-2.5">
+              <div className="flex gap-2 items-center">
+                <AlertCircle size={15} className="text-red-500" />
+                <AlertDescription className="text-[11.5px] font-medium leading-none">
+                  Validation failed: {validMsg}
+                </AlertDescription>
+              </div>
+            </Alert>
+          )}
+
+          <div className="flex gap-2 pt-2">
+            <Button type="button" variant="outline" size="sm" onClick={validate} disabled={validating || saving} className="h-8 text-xs">
+              {validating ? 'Validating...' : 'Validate & Save'}
+            </Button>
+            <Button type="submit" size="sm" disabled={validating || saving} className="h-8 text-xs">
+              {saving ? 'Saving...' : 'Save Settings'}
+            </Button>
+            {twilioSetting && (
+              <Button type="button" variant="destructive" size="sm" onClick={remove} className="h-8 text-xs ml-auto">
+                Disconnect
+              </Button>
+            )}
+          </div>
+        </form>
+
+        <div className="pt-4 mt-4 border-t border-slate-100">
+          <p className="text-[11.5px] font-bold text-slate-400 uppercase tracking-[0.08em] mb-2.5">Webhook Setup Instructions</p>
+          <p className="text-[12px] text-slate-500 leading-relaxed mb-3">
+            Copy these webhook endpoints and configure them in your Twilio Phone Number settings:
           </p>
-          <ol className="text-[12px] text-slate-600 leading-relaxed list-decimal list-inside space-y-1">
-            <li>Download the zip above and unzip it somewhere you'll keep it (don't delete the folder after installing — Chrome loads the extension from it).</li>
-            <li>Open <code className="text-[11px] bg-slate-100 px-1 py-0.5 rounded">chrome://extensions</code> in Chrome.</li>
-            <li>Turn on <strong>Developer mode</strong>, top right.</li>
-            <li>Click <strong>Load unpacked</strong> and select the unzipped <code className="text-[11px] bg-slate-100 px-1 py-0.5 rounded">lumenia-crm-extension</code> folder.</li>
-            <li>Pin the extension icon, click it, and log in with your CRM email and password.</li>
-          </ol>
-        </div>
 
-        <div className="pt-2 mt-2 border-t border-slate-100">
-          <p className="text-[11.5px] font-semibold uppercase tracking-wider text-slate-400 mb-2">
-            Use it
-          </p>
-          <ol className="text-[12px] text-slate-600 leading-relaxed list-decimal list-inside space-y-1">
-            <li>Open any linkedin.com/in/... profile page.</li>
-            <li>Click <strong>Import to CRM</strong>, which appears just under the person's name.</li>
-            <li>Reopen the extension popup and click <strong>Generate message</strong> to draft an outreach message.</li>
-            <li>Edit if you like, click <strong>Copy</strong>, then paste it into LinkedIn's own message box and send it yourself.</li>
-          </ol>
-        </div>
+          <div className="space-y-3 text-xs">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">A CALL COMES IN (Webhook)</span>
+              <div className="flex items-center bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 justify-between">
+                <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/voice</code>
+              </div>
+            </div>
 
-        <p className="text-[11px] text-slate-400 leading-relaxed pt-2 mt-2 border-t border-slate-100">
-          Chrome only allows one-click installs for extensions published on
-          the Chrome Web Store. This one reads LinkedIn's page content, which
-          typically doesn't survive Web Store review, so it's distributed as
-          a direct download instead — the Load unpacked steps above take
-          under a minute.
-        </p>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">A MESSAGE COMES IN (Webhook)</span>
+              <div className="flex items-center bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 justify-between">
+                <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/sms</code>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 leading-relaxed mt-2">
+              <strong>Local testing tip:</strong> If running locally on localhost, use a tunnel tool like ngrok to expose your server and replace <code>{origin}</code> with your ngrok URL.
+            </p>
+          </div>
+        </div>
       </Card>
     </div>
   )
@@ -1945,7 +2121,7 @@ function ExtensionTab() {
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, mailSettings,
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
-  orgFollowupEnabled, whatsappStatus, aiSetting, tags = [],
+  orgFollowupEnabled, whatsappStatus, aiSetting, twilioSetting, tags = [],
 }) {
   const [tab, setTab] = useState(() => {
     const p = new URLSearchParams(window.location.search)
@@ -1990,7 +2166,7 @@ export default function ProfileEdit({
             {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}
             {tab === 'leadgen'     && <LeadGenTab leadGenSettings={leadGenSettings} />}
             {tab === 'whatsapp'    && <WhatsappTab status={whatsappStatus} />}
-            {tab === 'extension'   && <ExtensionTab />}
+            {tab === 'twilio'      && <TwilioSettingTab twilioSetting={twilioSetting} />}
             {tab === 'maintenance' && <MaintenanceTab />}
           </div>
         </div>

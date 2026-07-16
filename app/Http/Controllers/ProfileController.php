@@ -110,6 +110,28 @@ class ProfileController extends Controller
                     'usedThisMonth' => $usage?->sent_count ?? 0,
                 ];
             })(),
+            'twilioSetting'         => (function () use ($user) {
+                $s = \App\Models\TwilioSetting::where('organization_id', $user->organization_id)->first();
+                if (!$s) return null;
+                try {
+                    $authToken = $s->auth_token;
+                    $apiSecret = $s->api_secret;
+                } catch (\Throwable) {
+                    $authToken = '';
+                    $apiSecret = '';
+                }
+                return [
+                    'account_sid'   => $s->account_sid,
+                    'auth_token'    => $authToken,
+                    'phone_number'  => $s->phone_number,
+                    'twiml_app_sid' => $s->twiml_app_sid,
+                    'api_key'       => $s->api_key,
+                    'api_secret'    => $apiSecret,
+                    'is_active'     => $s->is_active,
+                    'is_validated'  => $s->isValidated(),
+                    'validated_at'  => $s->validated_at?->toISOString(),
+                ];
+            })(),
             'tags'                  => Tag::withCount('leads')->orderBy('name')->get(),
         ]);
     }

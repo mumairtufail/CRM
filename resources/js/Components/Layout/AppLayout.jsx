@@ -4,6 +4,7 @@ import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { Toaster } from 'sonner'
 import { Eye, LogOut } from 'lucide-react'
+import FloatingDialer from '@/Components/Twilio/FloatingDialer'
 
 function ImpersonationBanner({ name }) {
   return (
@@ -79,6 +80,7 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
         </div>
       </div>
 
+      <FloatingDialer />
       <Toaster position="bottom-right" richColors closeButton expand={false} />
     </div>
   )

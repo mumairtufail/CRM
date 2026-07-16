@@ -6,6 +6,7 @@ import {
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
   LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown, BookOpen,
   MessageSquare, MessagesSquare, ClipboardList, ShieldCheck, BarChart3, LifeBuoy,
+  Phone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -43,6 +44,7 @@ const navItems = [
   { label: 'Projects',   href: '/projects',  icon: FolderKanban },
   { label: 'Inbox',      href: '/inbox',     icon: Inbox },
   { label: 'Invoices',   href: '/invoices',  icon: FileText },
+  { label: 'Twilio Dialer', href: '/twilio', icon: Phone },
   { label: 'Settings',   href: '/profile',   icon: Settings },
   { label: 'Support',    href: '/support',   icon: LifeBuoy },
   { label: 'Help & Docs', href: '/documentation', icon: BookOpen },
@@ -78,6 +80,7 @@ const COMPONENT_LABELS = {
   'Import':           'Import',
   'Profile/Edit':     'Settings',
   'Settings':         'Settings',
+  'Twilio/Index':     'Twilio Dialer',
   'Clients/Index':    'Clients',
   'Clients/Show':     'Client',
   'Clients/Create':   'New Client',

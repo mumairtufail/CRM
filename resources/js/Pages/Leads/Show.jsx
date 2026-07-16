@@ -729,7 +729,7 @@ export default function LeadShow({ lead, activities, leadStats, emailSends = [],
               </div>
               <div className="px-2 py-1.5">
                 {primaryEmail && <QuickAction icon={Mail} label="Send email" href={`mailto:${primaryEmail}`} color="text-blue-500" />}
-                {primaryPhone && <QuickAction icon={PhoneCall} label="Call" href={`tel:${primaryPhone}`} color="text-green-500" />}
+                {primaryPhone && <QuickAction icon={PhoneCall} label="Call (Twilio)" onClick={() => window.dispatchEvent(new CustomEvent('twilio-dial', { detail: { phoneNumber: primaryPhone } }))} color="text-green-500" />}
                 <QuickAction icon={Pencil} label="Edit lead" href={`/leads/${lead.id}/edit`} color="text-brand-500" />
                 <QuickAction icon={Briefcase} label="View pipeline" href="/pipeline" color="text-teal-500" />
                 <QuickAction icon={Users} label="All leads" href="/leads" color="text-slate-400" />

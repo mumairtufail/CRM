@@ -21,6 +21,10 @@ class TwilioController extends Controller
         $user = $request->user();
         $orgId = $user->organization_id;
 
+        if (!$orgId) {
+            abort(403, 'Workspace not resolved.');
+        }
+
         $calls = TwilioCall::where('organization_id', $orgId)
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'calls_page');
@@ -32,7 +36,7 @@ class TwilioController extends Controller
         $setting = TwilioSetting::where('organization_id', $orgId)->first();
 
         // Get list of recent leads with phones for quick contact dropdown
-        $leads = $request->user()->organization->leads()
+        $leads = \App\Models\Lead::where('organization_id', $orgId)
             ->with('phones')
             ->orderBy('first_name')
             ->limit(100)

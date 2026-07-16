@@ -108,3 +108,24 @@ test('twilio sms webhook creates a lead and message log if configured', function
         'first_name' => 'Twilio',
     ]);
 });
+
+test('twilio index page is rendered for authenticated user with config', function () {
+    $org = Organization::create([
+        'name' => 'Test Org',
+        'slug' => 'test-org',
+    ]);
+
+    $user = User::create([
+        'organization_id' => $org->id,
+        'name' => 'Test User',
+        'email' => 'test@test.com',
+        'password' => bcrypt('password'),
+        'role' => 'owner',
+    ]);
+
+    $this->actingAs($user);
+
+    $response = $this->get(route('twilio.index'));
+
+    $response->assertStatus(200);
+});

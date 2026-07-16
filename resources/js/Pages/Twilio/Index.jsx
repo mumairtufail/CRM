@@ -865,41 +865,47 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
               <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
-                {/* Smartphone Mockup Container */}
-                <div 
-                  className="w-[290px] rounded-[40px] shadow-2xl p-2.5 flex flex-col relative select-none"
-                  style={{
-                    background: 'linear-gradient(180deg, rgb(var(--brand-ink2)) 0%, rgb(var(--brand-900)) 50%, rgb(var(--brand-ink)) 100%)',
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(var(--brand-600) / 0.15)'
-                  }}
-                >
-                  {/* Phone screen inside bezel */}
-                  <div className="bg-white rounded-[32px] overflow-hidden flex flex-col h-[450px] relative">
-                    
-                    {/* Screen Header */}
-                    <div className="px-4 py-2.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between shrink-0">
+                {/* Minimalist Softphone Dialer Card */}
+                <div className="w-[280px] bg-white rounded-2xl border border-slate-150 shadow-xl flex flex-col overflow-hidden relative select-none h-[470px]">
+                  
+                  {/* Header with Brand Gradient */}
+                  <div 
+                    className="px-4 py-3.5 flex flex-col gap-1 shrink-0"
+                    style={{
+                      background: 'linear-gradient(135deg, rgb(var(--brand-ink2)) 0%, rgb(var(--brand-900)) 50%, rgb(var(--brand-ink)) 100%)'
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <div className={cn("w-1.5 h-1.5 rounded-full", callState !== 'idle' ? "bg-red-500 animate-pulse" : "bg-emerald-500")} />
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
                           {isSoftphone ? 'Softphone' : 'Click-to-Call'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-brand-600 font-bold uppercase tracking-wider">Twilio</span>
+                      <span className="text-[9px] text-brand-400 font-extrabold uppercase tracking-wider">Twilio</span>
                     </div>
 
-                    {/* Active call duration display */}
-                    {callState !== 'idle' && (
-                      <div className={cn(
-                        "px-4 py-2 flex justify-between items-center text-[11px] font-bold border-b border-slate-50 shrink-0",
-                        callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
-                      )}>
-                        <span className="animate-pulse">{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
-                        <span className="font-mono text-[10px]">{dialNumber}</span>
-                      </div>
-                    )}
+                    <div className="flex justify-between items-baseline mt-1">
+                      <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Agent Line</span>
+                      <span className="text-[11px] font-bold text-white truncate max-w-[140px]">
+                        {user?.name ?? 'Agent'}
+                      </span>
+                    </div>
+                  </div>
 
-                    {/* Dialer Screen Area (Scrollable Viewport) */}
-                    <div className="flex-1 overflow-y-auto min-h-0 bg-white">
+                  {/* Active call duration display */}
+                  {callState !== 'idle' && (
+                    <div className={cn(
+                      "px-4 py-2 flex justify-between items-center text-[10px] font-bold border-b border-slate-100 shrink-0",
+                      callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
+                    )}>
+                      <span className="animate-pulse">{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
+                      <span className="font-mono text-[9px]">{dialNumber}</span>
+                    </div>
+                  )}
+
+                  {/* Dialer Screen Area (Scrollable Viewport) */}
+                  <div className="flex-1 overflow-y-auto min-h-0 bg-white relative">
                       
                       {/* 1. KEYPAD TAB */}
                       {activeMockupTab === 'keypad' && (
@@ -1241,12 +1247,10 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                         )
                       })}
                     </div>
-
                   </div>
-                </div>
 
                 {/* Voice Permissions & Web Audio Tester Card */}
-                <div className="w-[290px] bg-white rounded-2xl border border-slate-150 shadow-sm p-4 space-y-3.5">
+                <div className="w-[280px] bg-white rounded-2xl border border-slate-150 shadow-sm p-4 space-y-3.5">
                   <div>
                     <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wider">Voice & Audio Tester</h3>
                     <p className="text-[11px] text-slate-400 leading-relaxed mt-0.5">

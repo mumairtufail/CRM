@@ -352,7 +352,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     const dataArray = new Uint8Array(bufferLength)
 
     const draw = () => {
-      if (!canvas) return
+      if (!canvas || !analyser) return
       animationFrameRef.current = requestAnimationFrame(draw)
       analyser.getByteFrequencyData(dataArray)
 
@@ -368,7 +368,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
       for (let i = 0; i < bufferLength; i++) {
         barHeight = dataArray[i] / 2.2
-        ctx.fillStyle = `rgba(99, 102, 241, ${Math.max(0.15, barHeight / 80)})`
+        ctx.fillStyle = `rgba(124, 58, 237, ${Math.max(0.15, barHeight / 80)})` // Purple color (#7C3AED / brand-600)
         ctx.fillRect(x, canvas.height - barHeight, barWidth - 1.5, barHeight)
         x += barWidth
       }
@@ -637,7 +637,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                 </td>
                                 <td className="py-3 px-3 font-semibold text-slate-700">{msg.from_number}</td>
                                 <td className="py-3 px-3 font-semibold text-slate-700">{msg.to_number}</td>
-                                <td className="py-3 px-3 text-slate-650 font-medium max-w-xs truncate">{msg.body}</td>
+                                <td className="py-3 px-3 text-slate-600 font-medium max-w-xs truncate">{msg.body}</td>
                                 <td className="py-3 px-3">
                                   <span className={cn(
                                     'px-2 py-0.5 rounded-full text-[10px] font-medium capitalize',
@@ -682,7 +682,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                             .map(call => (
                               <div
                                 key={call.id}
-                                className="bg-white border border-slate-100 rounded-xl p-4 flex flex-col justify-between hover:border-brand-205 transition-colors shadow-sm"
+                                className="bg-white border border-slate-100 rounded-xl p-4 flex flex-col justify-between hover:border-brand-200 transition-colors shadow-sm"
                               >
                                 <div className="flex justify-between items-start gap-4 mb-3">
                                   <div>
@@ -718,130 +718,141 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                 </div>
               </div>
 
-              {/* Right Column: Embedded Light-Mode Dialer & Voice Tester (4 columns) */}
-              <div className="lg:col-span-4 space-y-6">
+              {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
+              <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
-                {/* Embedded Dialer Card */}
-                <div className="bg-white rounded-2xl border border-slate-150 shadow-sm overflow-hidden flex flex-col">
-                  {/* Card Header */}
-                  <div className="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className={cn("w-2 h-2 rounded-full", callState !== 'idle' ? "bg-red-500 animate-pulse" : "bg-emerald-500")} />
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                        {isSoftphone ? 'Softphone Mode' : 'Click-to-Call'}
-                      </span>
-                    </div>
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase">Twilio Line</span>
+                {/* Smartphone Mockup Container */}
+                <div className="w-[290px] bg-slate-50 border-[8px] border-slate-200/90 rounded-[44px] shadow-2xl p-2.5 flex flex-col relative select-none">
+                  {/* Top speaker notch */}
+                  <div className="w-16 h-3 bg-slate-200/80 rounded-full mx-auto mb-2 mt-1 relative z-10">
+                    <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-1 bg-slate-400/40 rounded-full" />
                   </div>
 
-                  {/* Active call duration display */}
-                  {callState !== 'idle' && (
-                    <div className={cn(
-                      "px-4 py-2 flex justify-between items-center text-xs font-semibold",
-                      callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
-                    )}>
-                      <span>{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
-                      <span className="font-mono">{dialNumber}</span>
-                    </div>
-                  )}
-
-                  {/* Dialer Body */}
-                  <div className="p-4 flex flex-col items-center">
-                    {/* User Identity Display */}
-                    <div className="w-full text-center pb-2 border-b border-slate-100">
-                      <span className="text-[9.5px] font-bold text-slate-400 uppercase tracking-wider block">Agent Line</span>
-                      <span className="text-[12.5px] font-bold text-slate-700 block truncate mt-0.5">{user?.name ?? 'Agent'}</span>
+                  {/* Phone screen inside bezel */}
+                  <div className="bg-white rounded-[32px] overflow-hidden flex flex-col border border-slate-150 h-[450px] relative">
+                    
+                    {/* Screen Header */}
+                    <div className="px-4 py-2.5 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className={cn("w-1.5 h-1.5 rounded-full", callState !== 'idle' ? "bg-red-500 animate-pulse" : "bg-emerald-500")} />
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                          {isSoftphone ? 'Softphone' : 'Click-to-Call'}
+                        </span>
+                      </div>
+                      <span className="text-[9px] text-brand-600 font-bold uppercase tracking-wider">Twilio</span>
                     </div>
 
-                    {/* Dialer input */}
-                    <div className="w-full flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-2 mt-3.5">
-                      <input
-                        type="text"
-                        value={dialNumber}
-                        onChange={e => setDialNumber(e.target.value)}
-                        placeholder="Enter phone number..."
-                        disabled={callState !== 'idle'}
-                        className="bg-transparent border-none text-[16px] font-bold tracking-wider w-full focus:outline-none focus:ring-0 text-slate-800 placeholder-slate-300 p-0 h-7"
-                      />
-                      {dialNumber && callState === 'idle' && (
-                        <button onClick={deleteKey} className="text-slate-400 hover:text-slate-600 transition-colors p-1">
-                          <Delete size={14} />
-                        </button>
-                      )}
-                    </div>
+                    {/* Active call duration display */}
+                    {callState !== 'idle' && (
+                      <div className={cn(
+                        "px-4 py-2 flex justify-between items-center text-[11px] font-bold border-b border-slate-50",
+                        callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
+                      )}>
+                        <span>{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
+                        <span className="font-mono text-[10px]">{dialNumber}</span>
+                      </div>
+                    )}
 
-                    {/* Numeric Keypad Grid */}
-                    <div className="grid grid-cols-3 gap-x-5 gap-y-2.5 my-4">
-                      {[
-                        { num: '1', letters: '' },
-                        { num: '2', letters: 'ABC' },
-                        { num: '3', letters: 'DEF' },
-                        { num: '4', letters: 'GHI' },
-                        { num: '5', letters: 'JKL' },
-                        { num: '6', letters: 'MNO' },
-                        { num: '7', letters: 'PQRS' },
-                        { num: '8', letters: 'TUV' },
-                        { num: '9', letters: 'WXYZ' },
-                        { num: '*', letters: '' },
-                        { num: '0', letters: '+' },
-                        { num: '#', letters: '' },
-                      ].map(({ num, letters }) => (
-                        <button
-                          key={num}
-                          type="button"
-                          disabled={callState !== 'idle' && callState !== 'connected'}
-                          onClick={() => addKey(num)}
-                          className="w-[45px] h-[45px] rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-100"
-                        >
-                          <span className="text-[15px] font-bold text-slate-800 leading-none">{num}</span>
-                          {letters && <span className="text-[7.5px] font-bold text-slate-400 uppercase mt-0.5">{letters}</span>}
-                        </button>
-                      ))}
-                    </div>
+                    {/* Dialer Body */}
+                    <div className="p-3.5 flex-1 flex flex-col justify-between">
+                      
+                      {/* Identity Display */}
+                      <div className="w-full text-center pb-1.5 border-b border-slate-100">
+                        <span className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider block">Agent Line</span>
+                        <span className="text-[12px] font-bold text-slate-700 block truncate mt-0.5">{user?.name ?? 'Agent'}</span>
+                      </div>
 
-                    {/* Dial button controls */}
-                    <div className="w-full flex justify-center pt-1">
-                      {callState === 'idle' ? (
-                        <button
-                          type="button"
-                          onClick={handleCall}
-                          className="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center shadow-sm hover:shadow"
-                        >
-                          <PhoneCall size={18} className="text-white" />
-                        </button>
-                      ) : (
-                        <div className="flex gap-3">
-                          {isSoftphone && (
-                            <button
-                              type="button"
-                              onClick={toggleMute}
-                              className={cn(
-                                "w-11 h-11 rounded-full active:scale-95 transition-all flex items-center justify-center border border-slate-200",
-                                isMuted ? "bg-amber-500 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
-                              )}
-                            >
-                              {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                            </button>
-                          )}
+                      {/* Input Box */}
+                      <div className="w-full flex items-center justify-between bg-slate-50 border border-slate-100 rounded-xl px-3 py-1.5 mt-2">
+                        <input
+                          type="text"
+                          value={dialNumber}
+                          onChange={e => setDialNumber(e.target.value)}
+                          placeholder="Dial number..."
+                          disabled={callState !== 'idle'}
+                          className="bg-transparent border-none text-[15px] font-bold tracking-wider w-full focus:outline-none focus:ring-0 text-slate-800 placeholder-slate-300 p-0 h-6"
+                        />
+                        {dialNumber && callState === 'idle' && (
+                          <button onClick={deleteKey} className="text-slate-400 hover:text-slate-600 transition-colors p-0.5">
+                            <Delete size={13} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Numeric Keypad Grid */}
+                      <div className="grid grid-cols-3 gap-x-4 gap-y-2 my-2.5 justify-items-center">
+                        {[
+                          { num: '1', letters: '' },
+                          { num: '2', letters: 'ABC' },
+                          { num: '3', letters: 'DEF' },
+                          { num: '4', letters: 'GHI' },
+                          { num: '5', letters: 'JKL' },
+                          { num: '6', letters: 'MNO' },
+                          { num: '7', letters: 'PQRS' },
+                          { num: '8', letters: 'TUV' },
+                          { num: '9', letters: 'WXYZ' },
+                          { num: '*', letters: '' },
+                          { num: '0', letters: '+' },
+                          { num: '#', letters: '' },
+                        ].map(({ num, letters }) => (
+                          <button
+                            key={num}
+                            type="button"
+                            disabled={callState !== 'idle' && callState !== 'connected'}
+                            onClick={() => addKey(num)}
+                            className="w-[40px] h-[40px] rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-100/60"
+                          >
+                            <span className="text-[14px] font-bold text-slate-700 leading-none">{num}</span>
+                            {letters && <span className="text-[7px] font-bold text-slate-400 uppercase mt-0.5">{letters}</span>}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Call Control Button */}
+                      <div className="w-full flex justify-center">
+                        {callState === 'idle' ? (
                           <button
                             type="button"
-                            onClick={handleHangup}
-                            className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center shadow-sm"
+                            onClick={handleCall}
+                            className="w-11 h-11 rounded-full bg-brand-600 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center shadow-md shadow-brand-600/10 text-white"
                           >
-                            <PhoneOff size={18} className="text-white" />
+                            <PhoneCall size={16} />
                           </button>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="flex gap-3">
+                            {isSoftphone && (
+                              <button
+                                type="button"
+                                onClick={toggleMute}
+                                className={cn(
+                                  "w-10 h-10 rounded-full active:scale-95 transition-all flex items-center justify-center border border-slate-200",
+                                  isMuted ? "bg-amber-500 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                                )}
+                              >
+                                {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={handleHangup}
+                              className="w-11 h-11 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center shadow-sm text-white"
+                            >
+                              <PhoneOff size={16} />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
                     </div>
                   </div>
                 </div>
 
                 {/* Voice Permissions & Web Audio Tester Card */}
-                <div className="bg-white rounded-2xl border border-slate-150 shadow-sm p-4 space-y-4">
+                <div className="w-[290px] bg-white rounded-2xl border border-slate-150 shadow-sm p-4 space-y-3.5">
                   <div>
-                    <h3 className="text-[12.5px] font-bold text-slate-800 uppercase tracking-wider">Voice & Audio Tester</h3>
-                    <p className="text-[11.5px] text-slate-400 leading-relaxed mt-0.5">
-                      Verify your browser voice permissions, test speaker output, and view live microphone frequency waves.
+                    <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wider">Voice & Audio Tester</h3>
+                    <p className="text-[11px] text-slate-400 leading-relaxed mt-0.5">
+                      Verify browser microphone permissions, test speaker output, and view live wave frequencies.
                     </p>
                   </div>
 
@@ -849,26 +860,26 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                   <div className="relative">
                     <canvas
                       ref={canvasRef}
-                      width={300}
-                      height={60}
-                      className="w-full h-15 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden"
+                      width={260}
+                      height={55}
+                      className="w-full h-14 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden"
                     />
                     {!isMicTesting && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50/70 rounded-xl text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50/70 rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         Waveform Visualizer Inactive
                       </div>
                     )}
                   </div>
 
                   {/* Testing Actions */}
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     <div className="flex gap-2">
                       <Button
                         type="button"
                         onClick={startMicTest}
                         variant={isMicTesting ? "destructive" : "outline"}
                         size="sm"
-                        className="flex-1 text-xs h-8.5 rounded-lg"
+                        className="flex-1 text-[11px] h-8 rounded-lg"
                       >
                         {isMicTesting ? 'Stop Mic Test' : 'Test Microphone'}
                       </Button>
@@ -878,7 +889,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                         onClick={playTestChime}
                         variant="outline"
                         size="sm"
-                        className="flex-1 text-xs h-8.5 rounded-lg"
+                        className="flex-1 text-[11px] h-8 rounded-lg"
                       >
                         Test Speakers
                       </Button>
@@ -893,7 +904,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                           onChange={e => setIsLoopback(e.target.checked)}
                           className="rounded text-brand-600 focus:ring-0 border-slate-300 h-3.5 w-3.5"
                         />
-                        <Label htmlFor="loopback_toggle" className="text-[11px] text-slate-600 font-semibold cursor-pointer select-none">
+                        <Label htmlFor="loopback_toggle" className="text-[10px] text-slate-600 font-semibold cursor-pointer select-none">
                           Listen Back (Loopback to speakers)
                         </Label>
                       </div>

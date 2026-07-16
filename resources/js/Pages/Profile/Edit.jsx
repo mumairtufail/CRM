@@ -1892,6 +1892,10 @@ function TwilioSettingTab({ twilioSetting }) {
   const [apiKey, setApiKey]           = React.useState(twilioSetting?.api_key ?? '')
   const [apiSecret, setApiSecret]     = React.useState(twilioSetting?.api_secret ?? '')
 
+  const [showAdvanced, setShowAdvanced] = React.useState(() => {
+    return !!(twilioSetting?.twiml_app_sid || twilioSetting?.api_key || twilioSetting?.api_secret)
+  })
+
   const [showToken, setShowToken]     = React.useState(false)
   const [showSecret, setShowSecret]   = React.useState(false)
   const [validating, setValidating]   = React.useState(false)
@@ -2020,32 +2024,44 @@ function TwilioSettingTab({ twilioSetting }) {
           </div>
 
           <div className="pt-2 mt-2 border-t border-slate-100">
-            <p className="text-[11.5px] font-semibold text-slate-500 uppercase tracking-wide mb-2">Softphone Voice SDK Config (Optional)</p>
-            <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
-              Required only for placing calls directly inside your browser instead of standard Click-To-Call bridging.
-            </p>
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className="flex items-center justify-between w-full text-left py-1 text-slate-500 hover:text-slate-800 transition-colors"
+            >
+              <span className="text-[11px] font-bold uppercase tracking-wider">Browser Calling (Optional Softphone)</span>
+              <span className="text-slate-400 font-bold">{showAdvanced ? 'Collapse ↑' : 'Expand ↓'}</span>
+            </button>
 
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label htmlFor="twiml_app_sid" className="text-xs">TwiML App SID</Label>
-                <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => { setTwimlAppSid(e.target.value); setValidated(false); }} placeholder="AP..." className="text-xs h-9" />
-              </div>
+            {showAdvanced && (
+              <div className="mt-3 space-y-3.5 animate-in fade-in duration-200">
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Required only for placing calls directly inside your browser instead of standard Click-To-Call bridging.
+                </p>
 
-              <div className="space-y-1">
-                <Label htmlFor="api_key" className="text-xs">API Key SID</Label>
-                <Input id="api_key" size="sm" value={apiKey} onChange={e => { setApiKey(e.target.value); setValidated(false); }} placeholder="SK..." className="text-xs h-9" />
-              </div>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="twiml_app_sid" className="text-xs">TwiML App SID</Label>
+                    <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => { setTwimlAppSid(e.target.value); setValidated(false); }} placeholder="AP..." className="text-xs h-9" />
+                  </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="api_secret" className="text-xs">API Secret</Label>
-                <div className="relative">
-                  <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => { setApiSecret(e.target.value); setValidated(false); }} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
-                  <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
-                    {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
-                  </button>
+                  <div className="space-y-1">
+                    <Label htmlFor="api_key" className="text-xs">API Key SID</Label>
+                    <Input id="api_key" size="sm" value={apiKey} onChange={e => { setApiKey(e.target.value); setValidated(false); }} placeholder="SK..." className="text-xs h-9" />
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="api_secret" className="text-xs">API Secret</Label>
+                    <div className="relative">
+                      <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => { setApiSecret(e.target.value); setValidated(false); }} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
+                      <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                        {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           {validated && (
@@ -2086,9 +2102,9 @@ function TwilioSettingTab({ twilioSetting }) {
         </form>
 
         <div className="pt-4 mt-4 border-t border-slate-100">
-          <p className="text-[11.5px] font-bold text-slate-400 uppercase tracking-[0.08em] mb-2.5">Webhook Setup Instructions</p>
+          <p className="text-[11.5px] font-bold text-slate-400 uppercase tracking-[0.08em] mb-2.5">Webhook Configuration</p>
           <p className="text-[12px] text-slate-500 leading-relaxed mb-3">
-            Copy these webhook endpoints and configure them in your Twilio Phone Number settings:
+            Twilio webhook URLs are auto-configured for you upon validation. If you ever need to set them manually in your Twilio Console, use these URLs:
           </p>
 
           <div className="space-y-3 text-xs">
@@ -2105,10 +2121,6 @@ function TwilioSettingTab({ twilioSetting }) {
                 <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/sms</code>
               </div>
             </div>
-
-            <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-100 rounded-lg p-2 leading-relaxed mt-2">
-              <strong>Local testing tip:</strong> If running locally on localhost, use a tunnel tool like ngrok to expose your server and replace <code>{origin}</code> with your ngrok URL.
-            </p>
           </div>
         </div>
       </Card>

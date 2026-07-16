@@ -127,7 +127,7 @@ class TwilioController extends Controller
             }
         }
 
-        TwilioSetting::updateOrCreate(
+        $setting = TwilioSetting::updateOrCreate(
             ['organization_id' => $orgId],
             [
                 ...$validated,
@@ -135,6 +135,11 @@ class TwilioController extends Controller
                 'validated_at' => $shouldReset ? null : ($current ? $current->validated_at : null),
             ]
         );
+
+        if ($setting->validated_at) {
+            $service = new TwilioService($setting);
+            $service->autoConfigureWebhooks();
+        }
 
         return back()->with('success', 'Twilio settings saved.');
     }
@@ -166,7 +171,7 @@ class TwilioController extends Controller
         [$ok, $message] = $service->testConnection();
 
         if ($ok) {
-            TwilioSetting::updateOrCreate(
+            $setting = TwilioSetting::updateOrCreate(
                 ['organization_id' => $request->user()->organization_id],
                 [
                     ...$validated,
@@ -174,6 +179,9 @@ class TwilioController extends Controller
                     'validated_at' => now(),
                 ]
             );
+
+            $service = new TwilioService($setting);
+            $service->autoConfigureWebhooks();
         }
 
         return response()->json([

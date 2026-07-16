@@ -235,4 +235,38 @@ class TwilioService
             return ['success' => false, 'error' => $e->getMessage()];
         }
     }
+
+    /**
+     * Auto-configure the webhook URLs on Twilio for the configured phone number.
+     */
+    public function autoConfigureWebhooks(): bool
+    {
+        try {
+            $twilio = $this->getClient();
+            $phoneNumber = $this->setting->phone_number;
+
+            // List incoming numbers matching the phone number
+            $numbers = $twilio->incomingPhoneNumbers->read([
+                'phoneNumber' => $phoneNumber,
+                'limit' => 1
+            ]);
+
+            if (!empty($numbers)) {
+                $numberSid = $numbers[0]->sid;
+
+                // Update Voice and SMS Webhooks
+                $twilio->incomingPhoneNumbers($numberSid)->update([
+                    'voiceUrl' => route('webhooks.twilio.voice'),
+                    'smsUrl'   => route('webhooks.twilio.sms'),
+                ]);
+
+                Log::info("Twilio webhooks auto-configured for phone number: " . $phoneNumber);
+                return true;
+            }
+        } catch (\Exception $e) {
+            Log::warning("Twilio auto-webhook configuration failed: " . $e->getMessage());
+        }
+
+        return false;
+    }
 }

@@ -2019,13 +2019,13 @@ function TwilioSettingTab({ twilioSetting }) {
           <form onSubmit={save} className="space-y-4">
             <div className="space-y-1">
               <Label htmlFor="account_sid" className="text-xs">Account SID</Label>
-              <Input id="account_sid" size="sm" value={accountSid} onChange={e => { setAccountSid(e.target.value); setValidated(false); }} placeholder="AC..." className="text-xs h-9" />
+              <Input id="account_sid" size="sm" value={accountSid} onChange={e => setAccountSid(e.target.value)} placeholder="AC..." className="text-xs h-9" />
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="auth_token" className="text-xs">Auth Token</Label>
               <div className="relative">
-                <Input id="auth_token" type={showToken ? 'text' : 'password'} size="sm" value={authToken} onChange={e => { setAuthToken(e.target.value); setValidated(false); }} placeholder="Enter Auth Token" className="text-xs h-9 pr-9" />
+                <Input id="auth_token" type={showToken ? 'text' : 'password'} size="sm" value={authToken} onChange={e => setAuthToken(e.target.value)} placeholder="Enter Auth Token" className="text-xs h-9 pr-9" />
                 <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
                   {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
@@ -2033,10 +2033,17 @@ function TwilioSettingTab({ twilioSetting }) {
             </div>
 
             {!validated && (
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col gap-2">
                 <Button type="button" onClick={validate} disabled={validating} className="w-full bg-brand-600 hover:bg-brand-700 text-xs h-9 rounded-xl font-semibold gap-2">
                   {validating ? 'Verifying Account...' : 'Verify Twilio Account'}
                 </Button>
+                <button
+                  type="button"
+                  onClick={() => setValidated(true)}
+                  className="text-xs text-brand-600 hover:text-brand-700 font-semibold text-center mt-1"
+                >
+                  Configure Advanced Settings Manually
+                </button>
               </div>
             )}
 
@@ -2044,19 +2051,30 @@ function TwilioSettingTab({ twilioSetting }) {
               <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                 <div className="space-y-1">
                   <Label htmlFor="phone_number" className="text-xs">Twilio Phone Number</Label>
-                  <select
-                    id="phone_number"
-                    value={phoneNumber}
-                    onChange={e => setPhoneNumber(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 text-xs py-1.5 focus:border-brand-500 focus:ring-0 text-slate-700 h-9"
-                  >
-                    <option value="">Select a Phone Number...</option>
-                    {phoneNumbers.map(p => (
-                      <option key={p.phone_number} value={p.phone_number}>
-                        {p.friendly_name || p.phone_number}
-                      </option>
-                    ))}
-                  </select>
+                  {phoneNumbers.length > 0 ? (
+                    <select
+                      id="phone_number"
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 text-xs py-1.5 focus:border-brand-500 focus:ring-0 text-slate-700 h-9"
+                    >
+                      <option value="">Select a Phone Number...</option>
+                      {phoneNumbers.map(p => (
+                        <option key={p.phone_number} value={p.phone_number}>
+                          {p.friendly_name || p.phone_number}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <Input
+                      id="phone_number"
+                      size="sm"
+                      value={phoneNumber}
+                      onChange={e => setPhoneNumber(e.target.value)}
+                      placeholder="+1..."
+                      className="text-xs h-9"
+                    />
+                  )}
                 </div>
 
                 <div className="pt-2 mt-2 border-t border-slate-100">
@@ -2078,18 +2096,18 @@ function TwilioSettingTab({ twilioSetting }) {
                       <div className="space-y-3">
                         <div className="space-y-1">
                           <Label htmlFor="twiml_app_sid" className="text-xs">TwiML App SID</Label>
-                          <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => { setTwimlAppSid(e.target.value); setValidated(false); }} placeholder="AP..." className="text-xs h-9" />
+                          <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => setTwimlAppSid(e.target.value)} placeholder="AP..." className="text-xs h-9" />
                         </div>
 
                         <div className="space-y-1">
                           <Label htmlFor="api_key" className="text-xs">API Key SID</Label>
-                          <Input id="api_key" size="sm" value={apiKey} onChange={e => { setApiKey(e.target.value); setValidated(false); }} placeholder="SK..." className="text-xs h-9" />
+                          <Input id="api_key" size="sm" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="SK..." className="text-xs h-9" />
                         </div>
 
                         <div className="space-y-1">
                           <Label htmlFor="api_secret" className="text-xs">API Secret</Label>
                           <div className="relative">
-                            <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => { setApiSecret(e.target.value); setValidated(false); }} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
+                            <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => setApiSecret(e.target.value)} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
                             <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
                               {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
                             </button>

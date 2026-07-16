@@ -34,11 +34,43 @@ class TwilioWebhookController extends Controller
         $to = $request->input('To');
         $from = $request->input('From');
         $callSid = $request->input('CallSid');
+        $applicationSid = $request->input('ApplicationSid');
 
-        Log::info("Twilio Voice Webhook received call {$callSid} to {$to} from {$from}");
+        Log::info("Twilio Voice Webhook received call {$callSid} to {$to} from {$from} AppSid: {$applicationSid}");
 
+        // 1. Check if this is an outbound call from the browser client
+        if (!empty($applicationSid)) {
+            $setting = TwilioSetting::where('twiml_app_sid', $applicationSid)->first();
+            if (!$setting || !$setting->is_active) {
+                Log::warning("Voice Webhook Outbound: No active setting found for ApplicationSid {$applicationSid}");
+                return response("<Response><Reject /></Response>", 200)->header('Content-Type', 'text/xml');
+            }
+
+            // Create local outbound call log
+            TwilioCall::create([
+                'organization_id' => $setting->organization_id,
+                'sid'             => $callSid,
+                'from_number'     => $setting->phone_number,
+                'to_number'       => $to,
+                'direction'       => 'outbound',
+                'status'          => 'in-progress',
+            ]);
+
+            // Return TwiML to Dial the customer's phone number
+            $twiml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            $twiml .= '<Response>';
+            $twiml .= '    <Dial callerId="' . htmlspecialchars($setting->phone_number) . '">';
+            $twiml .= '        <Number>' . htmlspecialchars($to) . '</Number>';
+            $twiml .= '    </Dial>';
+            $twiml .= '</Response>';
+
+            return response($twiml, 200)->header('Content-Type', 'text/xml');
+        }
+
+        // 2. Otherwise, treat as inbound call to company number
         $setting = $this->getSettingForNumber($to);
         if (!$setting || !$setting->is_active) {
+            Log::warning("Voice Webhook Inbound: No active setting or setting is not active for To number {$to}");
             return response("<Response><Reject /></Response>", 200)
                 ->header('Content-Type', 'text/xml');
         }

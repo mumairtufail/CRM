@@ -34,6 +34,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const [callDuration, setCallDuration] = useState(0)
   const [isMuted, setIsMuted] = useState(false)
   const [isSoftphone, setIsSoftphone] = useState(false)
+  const [deviceError, setDeviceError] = useState(null)
 
   const deviceRef = useRef(null)
   const connectionRef = useRef(null)
@@ -107,11 +108,24 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   const initTwilioDevice = async () => {
     try {
+      setDeviceError(null)
       const res = await fetch('/twilio/token')
-      if (!res.ok) return
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        const errMsg = errData.error ?? 'Verification failed.'
+        setDeviceError(errMsg)
+        toast.error(`Twilio Voice calling setup failed: ${errMsg}`)
+        setIsSoftphone(false)
+        return
+      }
       
       const { token } = await res.json()
-      if (!token) return
+      if (!token) {
+        setDeviceError('No voice token received from server.')
+        toast.error('Twilio Voice calling setup failed: No token returned.')
+        setIsSoftphone(false)
+        return
+      }
 
       setIsSoftphone(true)
 
@@ -126,6 +140,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
       device.on('error', (err) => {
         console.warn('Embedded Twilio Device Error:', err)
+        setDeviceError(err.message || 'Twilio connection error.')
+        toast.error(`Twilio connection error: ${err.message || 'Please check your API Key SID, API Secret, and TwiML App configuration settings.'}`)
+        setCallState('idle')
       })
 
       device.on('connect', (conn) => {
@@ -1083,15 +1100,30 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                       {/* 5. SETTINGS TAB */}
                       {activeMockupTab === 'settings' && (
                         <div className="p-3.5 space-y-3.5 text-[11.5px] h-full overflow-y-auto">
-                          <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-xl flex items-center gap-2.5">
-                            <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-[12px] border border-emerald-100 shrink-0">
-                              ✓
+                          {deviceError ? (
+                            <div className="bg-red-50 border border-red-100 p-2.5 rounded-xl flex flex-col gap-1.5 animate-in fade-in duration-200">
+                              <div className="flex items-center gap-2 text-red-700 font-bold">
+                                <AlertCircle size={14} className="shrink-0 text-red-500" />
+                                <h4>Voice Connection Error</h4>
+                              </div>
+                              <p className="text-[10px] text-red-600/90 leading-relaxed font-medium">
+                                {deviceError}
+                              </p>
+                              <Link href="/profile?tab=twilio" className="text-[10px] text-brand-650 hover:underline font-bold mt-0.5">
+                                Fix settings in profile →
+                              </Link>
                             </div>
-                            <div>
-                              <h4 className="font-bold text-slate-700">Twilio Active</h4>
-                              <p className="text-[9.5px] text-emerald-600 font-medium">Ready for calls and SMS</p>
+                          ) : (
+                            <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-xl flex items-center gap-2.5">
+                              <div className="w-6 h-6 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-[12px] border border-emerald-100 shrink-0">
+                                ✓
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-slate-700">Twilio Active</h4>
+                                <p className="text-[9.5px] text-emerald-600 font-medium">Ready for calls and SMS</p>
+                              </div>
                             </div>
-                          </div>
+                          )}
 
                           <div className="space-y-2.5">
                             <div>

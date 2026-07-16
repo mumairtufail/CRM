@@ -477,7 +477,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [isMicTesting, analyser])
+  }, [isMicTesting, analyser, activeMockupTab])
 
   const playTestChime = () => {
     try {
@@ -865,47 +865,43 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
               <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
-                {/* Minimalist Softphone Dialer Card */}
-                <div className="w-[280px] bg-white rounded-2xl border border-slate-150 shadow-xl flex flex-col overflow-hidden relative select-none h-[470px]">
-                  
-                  {/* Header with Brand Gradient */}
-                  <div 
-                    className="px-4 py-3.5 flex flex-col gap-1 shrink-0"
-                    style={{
-                      background: 'linear-gradient(135deg, rgb(var(--brand-ink2)) 0%, rgb(var(--brand-900)) 50%, rgb(var(--brand-ink)) 100%)'
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
+                {/* iPhone Pro Mockup Container */}
+                <div 
+                  className="w-[280px] bg-slate-950 border-[10px] border-slate-900 rounded-[44px] shadow-2xl flex flex-col relative select-none"
+                  style={{
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 35px rgba(var(--brand-600) / 0.15)'
+                  }}
+                >
+                  {/* Phone screen inside bezel */}
+                  <div className="bg-white rounded-[32px] overflow-hidden flex flex-col h-[460px] relative">
+                    
+                    {/* iPhone Dynamic Island */}
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-black rounded-full z-50 shadow-inner" />
+
+                    {/* Screen Header (Pushed down for Dynamic Island) */}
+                    <div className="pt-7 px-4 pb-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
                       <div className="flex items-center gap-1.5">
                         <div className={cn("w-1.5 h-1.5 rounded-full", callState !== 'idle' ? "bg-red-500 animate-pulse" : "bg-emerald-500")} />
-                        <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                           {isSoftphone ? 'Softphone' : 'Click-to-Call'}
                         </span>
                       </div>
-                      <span className="text-[9px] text-brand-400 font-extrabold uppercase tracking-wider">Twilio</span>
+                      <span className="text-[9px] text-brand-600 font-extrabold uppercase tracking-wider">Twilio</span>
                     </div>
 
-                    <div className="flex justify-between items-baseline mt-1">
-                      <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Agent Line</span>
-                      <span className="text-[11px] font-bold text-white truncate max-w-[140px]">
-                        {user?.name ?? 'Agent'}
-                      </span>
-                    </div>
-                  </div>
+                    {/* Active call duration display */}
+                    {callState !== 'idle' && (
+                      <div className={cn(
+                        "px-4 py-2 flex justify-between items-center text-[10px] font-bold border-b border-slate-100 shrink-0",
+                        callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
+                      )}>
+                        <span className="animate-pulse">{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
+                        <span className="font-mono text-[9px]">{dialNumber}</span>
+                      </div>
+                    )}
 
-                  {/* Active call duration display */}
-                  {callState !== 'idle' && (
-                    <div className={cn(
-                      "px-4 py-2 flex justify-between items-center text-[10px] font-bold border-b border-slate-100 shrink-0",
-                      callState === 'connected' ? "bg-emerald-50 text-emerald-700" : "bg-brand-50 text-brand-700"
-                    )}>
-                      <span className="animate-pulse">{callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}</span>
-                      <span className="font-mono text-[9px]">{dialNumber}</span>
-                    </div>
-                  )}
-
-                  {/* Dialer Screen Area (Scrollable Viewport) */}
-                  <div className="flex-1 overflow-y-auto min-h-0 bg-white relative">
+                    {/* Dialer Screen Area (Scrollable Viewport) */}
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-white relative">
                       
                       {/* 1. KEYPAD TAB */}
                       {activeMockupTab === 'keypad' && (
@@ -1127,49 +1123,63 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                         </div>
                       )}
 
-                      {/* 4. VOICEMAIL TAB */}
+                      {/* 4. VOICE TESTER TAB */}
                       {activeMockupTab === 'voicemail' && (
-                        <div className="p-3 space-y-2.5 h-full overflow-y-auto">
-                          {filteredCalls.filter(c => c.status === 'voicemail').length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-48 text-center px-4">
-                              <Volume2 size={20} className="text-slate-350 mb-1.5" />
-                              <p className="text-[11px] font-semibold text-slate-400">No voicemails</p>
-                            </div>
-                          ) : (
-                            filteredCalls
-                              .filter(c => c.status === 'voicemail')
-                              .map(call => (
-                                <div
-                                  key={call.id}
-                                  className="bg-slate-50 border border-slate-100 rounded-xl p-2.5 flex flex-col justify-between hover:border-slate-200 transition-colors"
-                                >
-                                  <div className="flex justify-between items-start gap-2 mb-2">
-                                    <div className="min-w-0">
-                                      <span className="text-[7.5px] font-bold text-slate-400 uppercase tracking-wide block">From</span>
-                                      <p className="text-[11px] font-bold text-slate-700 truncate">{call.from_number}</p>
-                                    </div>
-                                    <span className="text-[8px] text-slate-400 font-mono">
-                                      {new Date(call.created_at).toLocaleString([], { month: 'short', day: 'numeric' })}
-                                    </span>
-                                  </div>
+                        <div className="p-3.5 space-y-3.5 text-[11px] h-full overflow-y-auto">
+                          <div>
+                            <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[9.5px]">Voice & Mic Tester</h4>
+                            <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
+                              Verify browser microphone permissions, test speaker output, and view live frequencies.
+                            </p>
+                          </div>
 
-                                  <div className="flex items-center gap-2 bg-white px-2 py-1.5 rounded-lg border border-slate-100">
-                                    <button
-                                      type="button"
-                                      onClick={() => playVoicemail(call)}
-                                      className={cn(
-                                        'w-5.5 h-5.5 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all',
-                                        playingVoicemail === call.id ? 'bg-amber-500 text-white' : 'bg-brand-600 text-white hover:bg-brand-700'
-                                      )}
-                                    >
-                                      {playingVoicemail === call.id ? <Pause size={9} fill="white" /> : <Play size={9} fill="white" className="ml-0.5" />}
-                                    </button>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="text-[9.5px] text-slate-500 truncate">Duration: {formatDuration(call.duration)}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))
+                          {/* Frequency Visualizer Canvas */}
+                          <div className="relative">
+                            <canvas
+                              ref={canvasRef}
+                              width={240}
+                              height={50}
+                              className="w-full h-12 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden"
+                            />
+                            {!isMicTesting && (
+                              <div className="absolute inset-0 flex items-center justify-center bg-slate-50/70 rounded-xl text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                                Waveform Inactive
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              onClick={startMicTest}
+                              variant={isMicTesting ? 'destructive' : 'outline'}
+                              className="flex-1 h-8 text-[10px] rounded-lg"
+                            >
+                              {isMicTesting ? 'Stop Mic' : 'Test Mic'}
+                            </Button>
+                            <Button
+                              type="button"
+                              onClick={playTestChime}
+                              variant="outline"
+                              className="flex-1 h-8 text-[10px] rounded-lg border-slate-200"
+                            >
+                              Test Speakers
+                            </Button>
+                          </div>
+
+                          {isMicTesting && (
+                            <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 animate-in fade-in duration-300">
+                              <input
+                                id="loopback_toggle"
+                                type="checkbox"
+                                checked={isLoopback}
+                                onChange={e => setIsLoopback(e.target.checked)}
+                                className="rounded text-brand-600 focus:ring-0 border-slate-300 h-3.5 w-3.5"
+                              />
+                              <Label htmlFor="loopback_toggle" className="text-[10px] text-slate-650 font-semibold cursor-pointer select-none">
+                                Listen Back (Loopback)
+                              </Label>
+                            </div>
                           )}
                         </div>
                       )}
@@ -1247,70 +1257,6 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                         )
                       })}
                     </div>
-                  </div>
-
-                {/* Voice Permissions & Web Audio Tester Card */}
-                <div className="w-[280px] bg-white rounded-2xl border border-slate-150 shadow-sm p-4 space-y-3.5">
-                  <div>
-                    <h3 className="text-[12px] font-bold text-slate-800 uppercase tracking-wider">Voice & Audio Tester</h3>
-                    <p className="text-[11px] text-slate-400 leading-relaxed mt-0.5">
-                      Verify browser microphone permissions, test speaker output, and view live wave frequencies.
-                    </p>
-                  </div>
-
-                  {/* Frequency Visualizer Canvas */}
-                  <div className="relative">
-                    <canvas
-                      ref={canvasRef}
-                      width={260}
-                      height={55}
-                      className="w-full h-14 bg-slate-50 rounded-xl border border-slate-100 overflow-hidden"
-                    />
-                    {!isMicTesting && (
-                      <div className="absolute inset-0 flex items-center justify-center bg-slate-50/70 rounded-xl text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Waveform Visualizer Inactive
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Testing Actions */}
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        onClick={startMicTest}
-                        variant={isMicTesting ? "destructive" : "outline"}
-                        size="sm"
-                        className="flex-1 text-[11px] h-8 rounded-lg"
-                      >
-                        {isMicTesting ? 'Stop Mic Test' : 'Test Microphone'}
-                      </Button>
-
-                      <Button
-                        type="button"
-                        onClick={playTestChime}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 text-[11px] h-8 rounded-lg"
-                      >
-                        Test Speakers
-                      </Button>
-                    </div>
-
-                    {isMicTesting && (
-                      <div className="flex items-center gap-2 p-2 bg-slate-50 rounded-xl border border-slate-100 animate-in fade-in duration-300">
-                        <input
-                          id="loopback_toggle"
-                          type="checkbox"
-                          checked={isLoopback}
-                          onChange={e => setIsLoopback(e.target.checked)}
-                          className="rounded text-brand-600 focus:ring-0 border-slate-300 h-3.5 w-3.5"
-                        />
-                        <Label htmlFor="loopback_toggle" className="text-[10px] text-slate-600 font-semibold cursor-pointer select-none">
-                          Listen Back (Loopback to speakers)
-                        </Label>
-                      </div>
-                    )}
                   </div>
                 </div>
 

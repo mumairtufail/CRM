@@ -1892,6 +1892,13 @@ function TwilioSettingTab({ twilioSetting }) {
   const [apiKey, setApiKey]           = React.useState(twilioSetting?.api_key ?? '')
   const [apiSecret, setApiSecret]     = React.useState(twilioSetting?.api_secret ?? '')
 
+  const [phoneNumbers, setPhoneNumbers] = React.useState(() => {
+    if (twilioSetting?.phone_number) {
+      return [{ friendly_name: twilioSetting.phone_number, phone_number: twilioSetting.phone_number }]
+    }
+    return []
+  })
+
   const [showAdvanced, setShowAdvanced] = React.useState(() => {
     return !!(twilioSetting?.twiml_app_sid || twilioSetting?.api_key || twilioSetting?.api_secret)
   })
@@ -1906,7 +1913,6 @@ function TwilioSettingTab({ twilioSetting }) {
   const validate = async () => {
     if (!accountSid.trim()) { toast.error('Enter Account SID first.'); return }
     if (!authToken.trim())  { toast.error('Enter Auth Token first.'); return }
-    if (!phoneNumber.trim()) { toast.error('Enter Twilio Phone Number first.'); return }
 
     setValidating(true)
     setValidated(false)
@@ -1923,23 +1929,25 @@ function TwilioSettingTab({ twilioSetting }) {
         body: JSON.stringify({
           account_sid: accountSid,
           auth_token: authToken,
-          phone_number: phoneNumber,
-          twiml_app_sid: twimlAppSid || null,
-          api_key: apiKey || null,
-          api_secret: apiSecret || null,
         }),
       })
       const data = await res.json()
       setValidated(res.ok)
-      setValidMsg(data.message ?? '')
       if (res.ok) {
-        toast.success('Twilio credentials validated successfully.')
+        setPhoneNumbers(data.phone_numbers ?? [])
+        if (data.phone_numbers && data.phone_numbers.length > 0) {
+          if (!phoneNumber || !data.phone_numbers.find(p => p.phone_number === phoneNumber)) {
+            setPhoneNumber(data.phone_numbers[0].phone_number)
+          }
+        }
+        toast.success('Twilio account verified successfully!')
       } else {
-        toast.error(data.message ?? 'Validation failed.')
+        setValidMsg(data.message ?? 'Verification failed.')
+        toast.error(data.message ?? 'Verification failed.')
       }
     } catch {
       setValidMsg('Network error. Try again.')
-      toast.error('Network error during validation.')
+      toast.error('Network error during verification.')
     } finally {
       setValidating(false)
     }
@@ -1949,7 +1957,7 @@ function TwilioSettingTab({ twilioSetting }) {
     e.preventDefault()
     if (!accountSid.trim()) { toast.error('Enter Account SID.'); return }
     if (!authToken.trim())  { toast.error('Enter Auth Token.'); return }
-    if (!phoneNumber.trim()) { toast.error('Enter Twilio Phone Number.'); return }
+    if (!phoneNumber.trim()) { toast.error('Please select a Twilio Phone Number.'); return }
 
     setSaving(true)
     try {
@@ -1996,134 +2004,167 @@ function TwilioSettingTab({ twilioSetting }) {
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://yourdomain.com'
 
   return (
-    <div className="space-y-4 max-w-xl">
-      <Card title="Twilio Settings">
-        <p className="text-[12px] text-slate-500 leading-relaxed mb-4">
-          Connect your Twilio account to place calls, receive voicemails, and send SMS directly from your CRM.
-        </p>
-
-        <form onSubmit={save} className="space-y-3.5">
-          <div className="space-y-1">
-            <Label htmlFor="account_sid" className="text-xs">Account SID</Label>
-            <Input id="account_sid" size="sm" value={accountSid} onChange={e => { setAccountSid(e.target.value); setValidated(false); }} placeholder="AC..." className="text-xs h-9" />
+    <div className="space-y-4 max-w-5xl">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Column: Form Settings */}
+        <div className="lg:col-span-7 bg-white p-5 sm:p-6 rounded-2xl border border-slate-100 shadow-sm space-y-4">
+          <div className="border-b border-slate-100 pb-3">
+            <h3 className="text-[14px] font-bold text-slate-800 uppercase tracking-wider">Twilio Integration</h3>
+            <p className="text-[12px] text-slate-500 leading-relaxed mt-1">
+              Connect your Twilio account to place calls, receive voicemails, and send SMS directly from your CRM.
+            </p>
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="auth_token" className="text-xs">Auth Token</Label>
-            <div className="relative">
-              <Input id="auth_token" type={showToken ? 'text' : 'password'} size="sm" value={authToken} onChange={e => { setAuthToken(e.target.value); setValidated(false); }} placeholder="Enter Auth Token" className="text-xs h-9 pr-9" />
-              <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
-                {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
-              </button>
+          <form onSubmit={save} className="space-y-4">
+            <div className="space-y-1">
+              <Label htmlFor="account_sid" className="text-xs">Account SID</Label>
+              <Input id="account_sid" size="sm" value={accountSid} onChange={e => { setAccountSid(e.target.value); setValidated(false); }} placeholder="AC..." className="text-xs h-9" />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="phone_number" className="text-xs">Twilio Phone Number</Label>
-            <Input id="phone_number" size="sm" value={phoneNumber} onChange={e => { setPhoneNumber(e.target.value); setValidated(false); }} placeholder="+1..." className="text-xs h-9" />
-          </div>
+            <div className="space-y-1">
+              <Label htmlFor="auth_token" className="text-xs">Auth Token</Label>
+              <div className="relative">
+                <Input id="auth_token" type={showToken ? 'text' : 'password'} size="sm" value={authToken} onChange={e => { setAuthToken(e.target.value); setValidated(false); }} placeholder="Enter Auth Token" className="text-xs h-9 pr-9" />
+                <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+            </div>
 
-          <div className="pt-2 mt-2 border-t border-slate-100">
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-              className="flex items-center justify-between w-full text-left py-1 text-slate-500 hover:text-slate-800 transition-colors"
-            >
-              <span className="text-[11px] font-bold uppercase tracking-wider">Browser Calling (Optional Softphone)</span>
-              <span className="text-slate-400 font-bold">{showAdvanced ? 'Collapse ↑' : 'Expand ↓'}</span>
-            </button>
+            {!validated && (
+              <div className="pt-2">
+                <Button type="button" onClick={validate} disabled={validating} className="w-full bg-brand-600 hover:bg-brand-700 text-xs h-9 rounded-xl font-semibold gap-2">
+                  {validating ? 'Verifying Account...' : 'Verify Twilio Account'}
+                </Button>
+              </div>
+            )}
 
-            {showAdvanced && (
-              <div className="mt-3 space-y-3.5 animate-in fade-in duration-200">
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Required only for placing calls directly inside your browser instead of standard Click-To-Call bridging.
-                </p>
+            {validated && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="space-y-1">
+                  <Label htmlFor="phone_number" className="text-xs">Twilio Phone Number</Label>
+                  <select
+                    id="phone_number"
+                    value={phoneNumber}
+                    onChange={e => setPhoneNumber(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 text-xs py-1.5 focus:border-brand-500 focus:ring-0 text-slate-700 h-9"
+                  >
+                    <option value="">Select a Phone Number...</option>
+                    {phoneNumbers.map(p => (
+                      <option key={p.phone_number} value={p.phone_number}>
+                        {p.friendly_name || p.phone_number}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <Label htmlFor="twiml_app_sid" className="text-xs">TwiML App SID</Label>
-                    <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => { setTwimlAppSid(e.target.value); setValidated(false); }} placeholder="AP..." className="text-xs h-9" />
-                  </div>
+                <div className="pt-2 mt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdvanced(!showAdvanced)}
+                    className="flex items-center justify-between w-full text-left py-1 text-slate-500 hover:text-slate-800 transition-colors"
+                  >
+                    <span className="text-[11px] font-bold uppercase tracking-wider">Browser Calling (Optional Softphone)</span>
+                    <span className="text-slate-400 font-bold">{showAdvanced ? 'Collapse ↑' : 'Expand ↓'}</span>
+                  </button>
 
-                  <div className="space-y-1">
-                    <Label htmlFor="api_key" className="text-xs">API Key SID</Label>
-                    <Input id="api_key" size="sm" value={apiKey} onChange={e => { setApiKey(e.target.value); setValidated(false); }} placeholder="SK..." className="text-xs h-9" />
-                  </div>
+                  {showAdvanced && (
+                    <div className="mt-3 space-y-3.5 animate-in fade-in duration-200">
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Required only for placing calls directly inside your browser instead of standard Click-To-Call bridging.
+                      </p>
 
-                  <div className="space-y-1">
-                    <Label htmlFor="api_secret" className="text-xs">API Secret</Label>
-                    <div className="relative">
-                      <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => { setApiSecret(e.target.value); setValidated(false); }} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
-                      <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
-                        {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
-                      </button>
+                      <div className="space-y-3">
+                        <div className="space-y-1">
+                          <Label htmlFor="twiml_app_sid" className="text-xs">TwiML App SID</Label>
+                          <Input id="twiml_app_sid" size="sm" value={twimlAppSid} onChange={e => { setTwimlAppSid(e.target.value); setValidated(false); }} placeholder="AP..." className="text-xs h-9" />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label htmlFor="api_key" className="text-xs">API Key SID</Label>
+                          <Input id="api_key" size="sm" value={apiKey} onChange={e => { setApiKey(e.target.value); setValidated(false); }} placeholder="SK..." className="text-xs h-9" />
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label htmlFor="api_secret" className="text-xs">API Secret</Label>
+                          <div className="relative">
+                            <Input id="api_secret" type={showSecret ? 'text' : 'password'} size="sm" value={apiSecret} onChange={e => { setApiSecret(e.target.value); setValidated(false); }} placeholder="Enter API Secret" className="text-xs h-9 pr-9" />
+                            <button type="button" onClick={() => setShowSecret(!showSecret)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                              {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+                  )}
+                </div>
+
+                <Alert className="bg-emerald-50 text-emerald-800 border-emerald-100 py-2.5">
+                  <div className="flex gap-2 items-center">
+                    <CheckCircle2 size={15} className="text-emerald-500" />
+                    <AlertDescription className="text-[11.5px] font-medium leading-none">
+                      Verified & active (Validated {twilioSetting?.validated_at ? new Date(twilioSetting.validated_at).toLocaleString() : 'just now'})
+                    </AlertDescription>
                   </div>
+                </Alert>
+
+                <div className="flex gap-2 pt-2">
+                  <Button type="submit" size="sm" disabled={saving} className="h-8 text-xs bg-emerald-600 hover:bg-emerald-700">
+                    {saving ? 'Saving...' : 'Save & Activate Twilio'}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setValidated(false)} className="h-8 text-xs">
+                    Change Credentials
+                  </Button>
+                  {twilioSetting && (
+                    <Button type="button" variant="destructive" size="sm" onClick={remove} className="h-8 text-xs ml-auto">
+                      Disconnect
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
-          </div>
 
-          {validated && (
-            <Alert className="bg-emerald-50 text-emerald-800 border-emerald-100 py-2.5">
-              <div className="flex gap-2 items-center">
-                <CheckCircle2 size={15} className="text-emerald-500" />
-                <AlertDescription className="text-[11.5px] font-medium leading-none">
-                  Verified & active (Validated {twilioSetting?.validated_at ? new Date(twilioSetting.validated_at).toLocaleString() : 'just now'})
-                </AlertDescription>
-              </div>
-            </Alert>
-          )}
-
-          {validMsg && !validated && (
-            <Alert className="bg-red-50 text-red-800 border-red-100 py-2.5">
-              <div className="flex gap-2 items-center">
-                <AlertCircle size={15} className="text-red-500" />
-                <AlertDescription className="text-[11.5px] font-medium leading-none">
-                  Validation failed: {validMsg}
-                </AlertDescription>
-              </div>
-            </Alert>
-          )}
-
-          <div className="flex gap-2 pt-2">
-            <Button type="button" variant="outline" size="sm" onClick={validate} disabled={validating || saving} className="h-8 text-xs">
-              {validating ? 'Validating...' : 'Validate & Save'}
-            </Button>
-            <Button type="submit" size="sm" disabled={validating || saving} className="h-8 text-xs">
-              {saving ? 'Saving...' : 'Save Settings'}
-            </Button>
-            {twilioSetting && (
-              <Button type="button" variant="destructive" size="sm" onClick={remove} className="h-8 text-xs ml-auto">
-                Disconnect
-              </Button>
+            {validMsg && !validated && (
+              <Alert className="bg-red-50 text-red-800 border-red-100 py-2.5 animate-in shake duration-300">
+                <div className="flex gap-2 items-center">
+                  <AlertCircle size={15} className="text-red-500" />
+                  <AlertDescription className="text-[11.5px] font-medium leading-none">
+                    Validation failed: {validMsg}
+                  </AlertDescription>
+                </div>
+              </Alert>
             )}
-          </div>
-        </form>
+          </form>
+        </div>
 
-        <div className="pt-4 mt-4 border-t border-slate-100">
-          <p className="text-[11.5px] font-bold text-slate-400 uppercase tracking-[0.08em] mb-2.5">Webhook Configuration</p>
-          <p className="text-[12px] text-slate-500 leading-relaxed mb-3">
-            Twilio webhook URLs are auto-configured for you upon validation. If you ever need to set them manually in your Twilio Console, use these URLs:
-          </p>
+        {/* Right Column: Webhook Instructions */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+            <h3 className="text-[13px] font-bold text-slate-800 uppercase tracking-wider">Webhook Configuration</h3>
+            <p className="text-[11.5px] text-slate-500 leading-relaxed">
+              Twilio webhook URLs are auto-configured for your phone number upon validation. If you ever need to set them manually in your Twilio Console, use these URLs:
+            </p>
 
-          <div className="space-y-3 text-xs">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">A CALL COMES IN (Webhook)</span>
-              <div className="flex items-center bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 justify-between">
-                <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/voice</code>
+            <div className="space-y-3 text-xs pt-2">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">A CALL COMES IN (Webhook)</span>
+                <div className="flex items-center bg-slate-50 px-2.5 py-2 rounded-xl border border-slate-100 justify-between">
+                  <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/voice</code>
+                </div>
               </div>
-            </div>
 
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">A MESSAGE COMES IN (Webhook)</span>
-              <div className="flex items-center bg-slate-100 px-2.5 py-1.5 rounded-lg border border-slate-200 justify-between">
-                <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/sms</code>
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">A MESSAGE COMES IN (Webhook)</span>
+                <div className="flex items-center bg-slate-50 px-2.5 py-2 rounded-xl border border-slate-100 justify-between">
+                  <code className="text-slate-700 truncate select-all">{origin}/api/webhooks/twilio/sms</code>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </Card>
+
+      </div>
     </div>
   )
 }

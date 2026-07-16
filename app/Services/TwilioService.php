@@ -269,4 +269,26 @@ class TwilioService
 
         return false;
     }
+
+    /**
+     * Fetch all active incoming phone numbers from Twilio account.
+     */
+    public function fetchPhoneNumbers(): array
+    {
+        try {
+            $twilio = $this->getClient();
+            $numbers = $twilio->incomingPhoneNumbers->read(['limit' => 50]);
+            $list = [];
+            foreach ($numbers as $num) {
+                $list[] = [
+                    'friendly_name' => $num->friendlyName,
+                    'phone_number'  => $num->phoneNumber,
+                ];
+            }
+            return $list;
+        } catch (\Exception $e) {
+            Log::error("Failed to fetch Twilio numbers: " . $e->getMessage());
+            return [];
+        }
+    }
 }

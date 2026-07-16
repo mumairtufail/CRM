@@ -68,6 +68,7 @@ class HandleInertiaRequests extends Middleware
                 'user'        => $resolvedUser,
                 'guard'       => $resolvedGuard,
                 'permissions' => $this->permissionsFor($webUser),
+                'twilio_configured' => $tenant->check() ? \App\Models\TwilioSetting::where('organization_id', $tenant->id())->whereNotNull('validated_at')->exists() : false,
             ],
             'organization' => $organization ? [
                 'id'   => $organization->id,

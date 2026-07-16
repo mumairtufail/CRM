@@ -13,17 +13,12 @@ export default function FloatingDialer() {
   const user = props?.auth?.user
   
   // Only mount if organization has validated Twilio credentials
-  const [hasTwilio, setHasTwilio] = useState(false)
+  const [hasTwilio, setHasTwilio] = useState(() => {
+    return !!props?.auth?.twilio_configured
+  })
   
   useEffect(() => {
-    // Check if twilio settings are present in backend sharing context
-    // We can fetch from backend or check if settings are available in session
-    // Let's make an async check on mount to see if Twilio is active.
-    fetch('/twilio/token')
-      .then(res => {
-        if (res.ok) setHasTwilio(true)
-      })
-      .catch(() => setHasTwilio(false))
+    setHasTwilio(!!props?.auth?.twilio_configured)
   }, [props])
 
   const [isOpen, setIsOpen] = useState(() => {

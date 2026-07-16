@@ -152,42 +152,29 @@ class TwilioController extends Controller
         $validated = $request->validate([
             'account_sid'   => 'required|string|max:100',
             'auth_token'    => 'required|string|max:200',
-            'phone_number'  => 'required|string|max:30',
-            'twiml_app_sid' => 'nullable|string|max:100',
-            'api_key'       => 'nullable|string|max:100',
-            'api_secret'    => 'nullable|string|max:200',
         ]);
 
         $tempSetting = new TwilioSetting([
             'account_sid'   => $request->account_sid,
             'auth_token'    => $request->auth_token,
-            'phone_number'  => $request->phone_number,
-            'twiml_app_sid' => $request->twiml_app_sid,
-            'api_key'       => $request->api_key,
-            'api_secret'    => $request->api_secret,
         ]);
 
         $service = new TwilioService($tempSetting);
         [$ok, $message] = $service->testConnection();
 
         if ($ok) {
-            $setting = TwilioSetting::updateOrCreate(
-                ['organization_id' => $request->user()->organization_id],
-                [
-                    ...$validated,
-                    'is_active'    => true,
-                    'validated_at' => now(),
-                ]
-            );
-
-            $service = new TwilioService($setting);
-            $service->autoConfigureWebhooks();
+            $phoneNumbers = $service->fetchPhoneNumbers();
+            return response()->json([
+                'success' => true,
+                'message' => 'Twilio connection verified successfully!',
+                'phone_numbers' => $phoneNumbers,
+            ]);
         }
 
         return response()->json([
-            'success' => $ok,
+            'success' => false,
             'message' => $message,
-        ], $ok ? 200 : 422);
+        ], 422);
     }
 
     /**

@@ -61,13 +61,28 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const filteredLeads = quickLeads.filter(lead => {
-    const query = leadSearchQuery.toLowerCase()
-    const name = (lead.name ?? '').toLowerCase()
-    const email = (lead.email ?? '').toLowerCase()
-    const phone = (lead.phone ?? '').toLowerCase()
-    return name.includes(query) || email.includes(query) || phone.includes(query)
-  })
+  const [searchResults, setSearchResults] = useState(quickLeads)
+
+  // Debounced search for leads against all leads in DB
+  useEffect(() => {
+    const fetchLeads = async () => {
+      try {
+        const res = await fetch(`/twilio/leads?q=${encodeURIComponent(leadSearchQuery)}`)
+        if (res.ok) {
+          const data = await res.json()
+          setSearchResults(data)
+        }
+      } catch (e) {
+        console.error('Failed to search leads:', e)
+      }
+    }
+
+    const delayDebounce = setTimeout(() => {
+      fetchLeads()
+    }, 300)
+
+    return () => clearTimeout(delayDebounce)
+  }, [leadSearchQuery, quickLeads])
 
   // Web Audio Tester States
   const [audioContext, setAudioContext] = useState(null)
@@ -606,10 +621,10 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
                     {isDropdownOpen && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-150 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50 divide-y divide-slate-50">
-                        {filteredLeads.length === 0 ? (
+                        {searchResults.length === 0 ? (
                           <div className="p-3 text-xs text-slate-450 text-center">No matching leads with phone numbers</div>
                         ) : (
-                          filteredLeads.map(lead => (
+                          searchResults.map(lead => (
                             <button
                               key={lead.id}
                               type="button"

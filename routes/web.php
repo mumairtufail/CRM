@@ -458,6 +458,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/twilio/call',  [TwilioController::class, 'placeCall'])->name('twilio.call');
     Route::post('/twilio/sms',   [TwilioController::class, 'sendSms'])->name('twilio.sms');
     Route::post('/twilio/sync',  [TwilioController::class, 'syncLogs'])->name('twilio.sync');
+    Route::get('/twilio/leads',  [TwilioController::class, 'searchLeads'])->name('twilio.leads');
 
     Route::post('/settings/cache/clear', [ProfileController::class, 'clearLeadsCache'])->name('settings.cache.clear');
 

@@ -271,4 +271,48 @@ class TwilioController extends Controller
         TwilioSetting::where('organization_id', $request->user()->organization_id)->delete();
         return back()->with('success', 'Twilio configuration removed.');
     }
+
+    /**
+     * Search all leads by name, email, or phone number.
+     */
+    public function searchLeads(Request $request)
+    {
+        $orgId = $request->user()->organization_id;
+        $q = trim($request->input('q', ''));
+
+        if (empty($q)) {
+            // Return top 15 leads by default
+            $leads = \App\Models\Lead::where('organization_id', $orgId)
+                ->with('phones')
+                ->orderBy('first_name')
+                ->limit(15)
+                ->get();
+        } else {
+            // Search all leads
+            $leads = \App\Models\Lead::where('organization_id', $orgId)
+                ->with('phones')
+                ->where(function ($query) use ($q) {
+                    $query->where('first_name', 'like', "%{$q}%")
+                        ->orWhere('last_name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhereHas('phones', function ($pQuery) use ($q) {
+                            $pQuery->where('phone', 'like', "%{$q}%");
+                        });
+                })
+                ->orderBy('first_name')
+                ->limit(30)
+                ->get();
+        }
+
+        $results = $leads->map(function ($lead) {
+            return [
+                'id'    => $lead->id,
+                'name'  => $lead->full_name,
+                'email' => $lead->email,
+                'phone' => $lead->phones->first()?->phone,
+            ];
+        })->filter(fn($l) => !empty($l['phone']))->values();
+
+        return response()->json($results);
+    }
 }

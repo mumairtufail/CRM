@@ -293,6 +293,20 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     toast.info('Call ended.')
   }
 
+  const handleAccept = () => {
+    if (connectionRef.current) {
+      try {
+        connectionRef.current.accept()
+        setCallState('connected')
+        startTimer()
+        toast.success('Call connected.')
+      } catch (e) {
+        console.error('Failed to accept incoming call:', e)
+        toast.error('Failed to answer call.')
+      }
+    }
+  }
+
   const toggleMute = () => {
     if (connectionRef.current) {
       const nextMuted = !isMuted
@@ -622,13 +636,17 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     {isDropdownOpen && (
                       <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-150 rounded-xl shadow-lg max-h-60 overflow-y-auto z-50 divide-y divide-slate-50">
                         {searchResults.length === 0 ? (
-                          <div className="p-3 text-xs text-slate-450 text-center">No matching leads with phone numbers</div>
+                          <div className="p-3 text-xs text-slate-450 text-center">No matching leads found</div>
                         ) : (
                           searchResults.map(lead => (
                             <button
                               key={lead.id}
                               type="button"
                               onClick={() => {
+                                if (!lead.phone) {
+                                  toast.warning(`${lead.name} does not have a phone number.`)
+                                  return
+                                }
                                 triggerCall(lead.phone)
                                 setLeadSearchQuery(lead.name)
                                 setSelectedQuickLead(lead.phone)
@@ -638,7 +656,11 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                             >
                               <div className="flex justify-between items-baseline w-full">
                                 <span className="text-xs font-bold text-slate-700">{lead.name}</span>
-                                <span className="text-[10px] font-mono font-bold text-brand-600">{lead.phone}</span>
+                                {lead.phone ? (
+                                  <span className="text-[10px] font-mono font-bold text-brand-600">{lead.phone}</span>
+                                ) : (
+                                  <span className="text-[10px] text-amber-600 font-semibold italic">No phone number</span>
+                                )}
                               </div>
                               {lead.email && (
                                 <span className="text-[10px] text-slate-400 truncate">{lead.email}</span>
@@ -880,15 +902,103 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
               <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
                 
-                {/* iPhone Pro Mockup Container */}
+                {/* iPhone Pro Mockup Container (Brushed Metal) */}
                 <div 
-                  className="w-[280px] bg-slate-950 border-[10px] border-slate-900 rounded-[44px] shadow-2xl flex flex-col relative select-none"
+                  className="w-[280px] rounded-[44px] shadow-2xl p-[3px] flex flex-col relative select-none"
                   style={{
-                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4), 0 0 35px rgba(var(--brand-600) / 0.15)'
+                    background: 'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 50%, #94a3b8 100%)', // Brushed aluminum/titanium style gradient
+                    border: '1.5px solid #cbd5e1',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 35px rgba(var(--brand-600) / 0.15)'
                   }}
                 >
-                  {/* Phone screen inside bezel */}
-                  <div className="bg-white rounded-[32px] overflow-hidden flex flex-col h-[460px] relative">
+                  {/* Inner Black Screen Bezel */}
+                  <div className="bg-black p-[7px] rounded-[41px] flex flex-col w-full h-full relative">
+                    
+                    {/* Phone screen inside bezel */}
+                    <div className="bg-white rounded-[34px] overflow-hidden flex flex-col h-[460px] relative">
+                      
+                      {/* Active call overlay screen */}
+                      {callState !== 'idle' && (
+                        <div className="absolute inset-0 bg-slate-900 text-white flex flex-col justify-between p-6 z-[60] animate-in fade-in zoom-in duration-200">
+                          {/* Status bar mock */}
+                          <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-4">
+                            <span>{isSoftphone ? 'Softphone' : 'Click-to-Call'}</span>
+                            <span>Twilio</span>
+                          </div>
+
+                          {/* Caller Info */}
+                          <div className="flex flex-col items-center mt-6">
+                            <div className="w-16 h-16 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xl font-bold text-slate-200 shadow-inner">
+                              {dialNumber ? dialNumber.replace(/[^0-9]/g, '').slice(-4) : 'User'}
+                            </div>
+                            <h3 className="text-sm font-bold mt-3 text-slate-100 truncate max-w-[200px]">
+                              {dialNumber || 'Unknown Caller'}
+                            </h3>
+                            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-wider animate-pulse">
+                              {callState === 'connected' ? `Connected: ${formatTime(callDuration)}` : `${callState}...`}
+                            </p>
+                          </div>
+
+                          {/* Mid Visualizer (if connected) */}
+                          <div className="flex-1 flex items-center justify-center my-4">
+                            {callState === 'connected' && (
+                              <div className="flex items-center gap-1">
+                                <span className="w-1 h-4 bg-brand-400 rounded-full animate-pulse" />
+                                <span className="w-1 h-6 bg-brand-500 rounded-full animate-pulse delay-75" />
+                                <span className="w-1 h-3 bg-brand-300 rounded-full animate-pulse delay-150" />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Controls */}
+                          <div className="flex flex-col items-center gap-4 mb-4">
+                            {callState === 'ringing' ? (
+                              <div className="flex gap-8 justify-center w-full">
+                                {/* Decline Button */}
+                                <button
+                                  type="button"
+                                  onClick={handleHangup}
+                                  className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center shadow-lg text-white"
+                                >
+                                  <PhoneOff size={16} />
+                                </button>
+                                {/* Accept Button */}
+                                <button
+                                  type="button"
+                                  onClick={handleAccept}
+                                  className="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center shadow-lg text-white"
+                                >
+                                  <PhoneCall size={16} />
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex gap-6 justify-center w-full">
+                                {/* Mute Button */}
+                                {isSoftphone && (
+                                  <button
+                                    type="button"
+                                    onClick={toggleMute}
+                                    className={cn(
+                                      "w-11 h-11 rounded-full active:scale-95 transition-all flex items-center justify-center border border-slate-700",
+                                      isMuted ? "bg-amber-500 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                    )}
+                                  >
+                                    {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                                  </button>
+                                )}
+                                {/* End Call Button */}
+                                <button
+                                  type="button"
+                                  onClick={handleHangup}
+                                  className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 active:scale-95 transition-all flex items-center justify-center shadow-lg text-white"
+                                >
+                                  <PhoneOff size={16} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     
                     {/* iPhone Dynamic Island */}
                     <div className="absolute top-2 left-1/2 -translate-x-1/2 w-16 h-3.5 bg-black rounded-full z-50 shadow-inner" />
@@ -1271,6 +1381,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     </div>
                   </div>
                 </div>
+              </div>
 
               </div>
             </div>

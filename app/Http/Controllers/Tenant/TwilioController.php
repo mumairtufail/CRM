@@ -44,7 +44,7 @@ class TwilioController extends Controller
             ->map(function ($lead) {
                 return [
                     'id'    => $lead->id,
-                    'name'  => $lead->fullName(),
+                    'name'  => $lead->full_name,
                     'phone' => $lead->phones->first()?->phone,
                 ];
             })->filter(fn($l) => !empty($l['phone']))->values();

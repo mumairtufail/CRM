@@ -103,28 +103,17 @@ class TwilioController extends Controller
         ]);
 
         $orgId = $request->user()->organization_id;
-        $current = TwilioSetting::where('organization_id', $orgId)->first();
 
-        $shouldReset = true;
-        if ($current) {
-            try {
-                $decryptedAuthToken = $current->auth_token;
-                $decryptedApiSecret = $current->api_secret;
-            } catch (\Throwable) {
-                $decryptedAuthToken = '';
-                $decryptedApiSecret = '';
-            }
+        // Verify the connection works before saving
+        $tempSetting = new TwilioSetting([
+            'account_sid' => $validated['account_sid'],
+            'auth_token'  => $validated['auth_token'],
+        ]);
+        $service = new TwilioService($tempSetting);
+        [$ok, $message] = $service->testConnection();
 
-            if (
-                $current->account_sid === $validated['account_sid'] &&
-                $decryptedAuthToken   === $validated['auth_token'] &&
-                $current->phone_number === $validated['phone_number'] &&
-                $current->twiml_app_sid === ($validated['twiml_app_sid'] ?? null) &&
-                $current->api_key     === ($validated['api_key'] ?? null) &&
-                $decryptedApiSecret   === ($validated['api_secret'] ?? null)
-            ) {
-                $shouldReset = false;
-            }
+        if (!$ok) {
+            return back()->withErrors(['account_sid' => 'Twilio connection test failed: ' . $message]);
         }
 
         $setting = TwilioSetting::updateOrCreate(
@@ -132,14 +121,12 @@ class TwilioController extends Controller
             [
                 ...$validated,
                 'is_active'    => true,
-                'validated_at' => $shouldReset ? null : ($current ? $current->validated_at : null),
+                'validated_at' => now(),
             ]
         );
 
-        if ($setting->validated_at) {
-            $service = new TwilioService($setting);
-            $service->autoConfigureWebhooks();
-        }
+        $service = new TwilioService($setting);
+        $service->autoConfigureWebhooks();
 
         return back()->with('success', 'Twilio settings saved.');
     }

@@ -880,12 +880,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
                     {/* Screen Header (Pushed down for Dynamic Island) */}
                     <div className="pt-7 px-4 pb-2 bg-slate-50 border-b border-slate-100 flex items-center justify-between shrink-0">
-                      <div className="flex items-center gap-1.5">
-                        <div className={cn("w-1.5 h-1.5 rounded-full", callState !== 'idle' ? "bg-red-500 animate-pulse" : "bg-emerald-500")} />
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                          {isSoftphone ? 'Softphone' : 'Click-to-Call'}
-                        </span>
-                      </div>
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
+                        {isSoftphone ? 'Softphone' : 'Click-to-Call'}
+                      </span>
                       <span className="text-[9px] text-brand-600 font-extrabold uppercase tracking-wider">Twilio</span>
                     </div>
 

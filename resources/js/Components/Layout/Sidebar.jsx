@@ -266,7 +266,6 @@ export default function Sidebar({ open, onToggle }) {
                             <CIcon size={13} strokeWidth={active ? 2.2 : 1.8}
                               className={cn('shrink-0', active ? 'text-brand-300' : 'group-hover/child:text-white/70')} />
                             <span className="text-[12.5px] font-medium truncate">{childLabel}</span>
-                            {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 opacity-80" />}
                           </Link>
                         )
                       })}
@@ -291,10 +290,7 @@ export default function Sidebar({ open, onToggle }) {
                 <Icon size={15} strokeWidth={active ? 2.2 : 1.8}
                   className={cn('shrink-0 transition-colors', active ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
                 {open && (
-                  <>
-                    <span className="text-[13px] font-medium truncate">{label}</span>
-                    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400 opacity-80" />}
-                  </>
+                  <span className="text-[13px] font-medium truncate">{label}</span>
                 )}
               </Link>
             )

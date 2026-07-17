@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\ImportJob;
 use App\Models\Lead;
+use App\Models\LeadEmail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -37,11 +39,12 @@ class ImportController extends Controller
         [$headers, $rows] = $this->parseCsvFile($fullPath);
 
         $job = ImportJob::create([
-            'source'       => 'csv',
-            'status'       => 'preview',
-            'preview_data' => $rows,
-            'total_rows'   => count($rows),
-            'file_path'    => $path,
+            'source'        => 'csv',
+            'status'        => 'preview',
+            'preview_data'  => $rows,
+            'total_rows'    => count($rows),
+            'file_path'     => $path,
+            'duplicate_map' => $this->findDuplicateEmailMap($request->user()->organization_id, $rows),
         ]);
 
         return redirect()->route('import.index', ['job' => $job->id]);
@@ -183,10 +186,11 @@ class ImportController extends Controller
             }
 
             $job = ImportJob::create([
-                'source'       => 'google_sheet',
-                'status'       => 'preview',
-                'preview_data' => $rows,
-                'total_rows'   => count($rows),
+                'source'        => 'google_sheet',
+                'status'        => 'preview',
+                'preview_data'  => $rows,
+                'total_rows'    => count($rows),
+                'duplicate_map' => $this->findDuplicateEmailMap($request->user()->organization_id, $rows),
             ]);
 
             Log::channel('import')->info('uploadFromSheets: job created', ['job_id' => $job->id]);
@@ -205,23 +209,30 @@ class ImportController extends Controller
 
     // ── Confirm import ────────────────────────────────────────────────────────
 
-    public function confirm(ImportJob $job)
+    public function confirm(Request $request, ImportJob $job)
     {
         if ($job->status !== 'preview') {
             return redirect()->route('import.index');
         }
 
-        $rows     = $job->preview_data ?? [];
-        $imported = 0;
-        $skipped  = 0;
-        $errors   = [];
-        $source   = $job->source ?? 'csv';
+        $rows        = $job->preview_data ?? [];
+        $duplicates  = $job->duplicate_map ?? [];
+        $resolutions = $request->input('resolutions', []);
+        $imported    = 0;
+        $updated     = 0;
+        $skipped     = 0;
+        $errors      = [];
+        $source      = $job->source ?? 'csv';
+        $sourceLabel = $source === 'google_sheet' ? 'Google Sheets' : 'CSV';
 
         foreach ($rows as $i => $row) {
-            $firstName = $row['first_name'] ?? $row['First Name'] ?? $row['firstname'] ?? null;
-            if (empty($firstName)) {
+            $firstName = trim($row['first_name'] ?? $row['First Name'] ?? $row['firstname'] ?? '');
+            $dup       = $duplicates[$i] ?? null;
+            $action    = $dup ? ($resolutions[$i] ?? 'skip') : 'create';
+
+            if ($dup && $action === 'skip') {
                 $skipped++;
-                $errors[] = "Row {$i}: missing first_name";
+                $errors[] = "Row {$i}: duplicate email ({$dup['email']}) — kept existing lead #{$dup['lead_id']}";
                 continue;
             }
 
@@ -235,7 +246,7 @@ class ImportController extends Controller
                     }
                 }
 
-                $lead = Lead::create([
+                $attributes = [
                     'first_name'     => $firstName,
                     'last_name'      => $row['last_name']    ?? $row['Last Name']    ?? $row['lastname']   ?? null,
                     'company'        => $row['company']      ?? $row['Company']      ?? null,
@@ -252,19 +263,49 @@ class ImportController extends Controller
                     'priority'       => $row['priority']     ?? $row['Priority']     ?? 'medium',
                     'social_handles' => empty($socialHandles) ? null : $socialHandles,
                     'source'         => $source,
-                ]);
+                ];
 
                 $email = $row['email'] ?? $row['Email'] ?? $row['email_address'] ?? null;
+                $phone = $row['phone'] ?? $row['Phone'] ?? $row['phone_number']  ?? null;
+
+                if ($dup && $action === 'replace') {
+                    $lead = Lead::findOrFail($dup['lead_id']);
+                    $lead->fill($attributes);
+                    $lead->save();
+
+                    if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $lead->emails()->updateOrCreate(
+                            ['email' => $email],
+                            ['type' => 'work', 'is_primary' => true]
+                        );
+                    }
+                    if ($phone) {
+                        $lead->phones()->updateOrCreate(
+                            ['phone' => $phone],
+                            ['type' => 'mobile', 'is_primary' => true]
+                        );
+                    }
+
+                    Activity::create([
+                        'lead_id'     => $lead->id,
+                        'user_id'     => auth()->id(),
+                        'type'        => 'import',
+                        'description' => "Updated via {$sourceLabel} (duplicate email replaced)",
+                    ]);
+
+                    $updated++;
+                    continue;
+                }
+
+                $lead = Lead::create($attributes + ['created_by' => auth()->id()]);
+
                 if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     $lead->emails()->create(['email' => $email, 'type' => 'work', 'is_primary' => true]);
                 }
-
-                $phone = $row['phone'] ?? $row['Phone'] ?? $row['phone_number'] ?? null;
                 if ($phone) {
                     $lead->phones()->create(['phone' => $phone, 'type' => 'mobile', 'is_primary' => true]);
                 }
 
-                $sourceLabel = $source === 'google_sheet' ? 'Google Sheets' : 'CSV';
                 Activity::create([
                     'lead_id'     => $lead->id,
                     'user_id'     => auth()->id(),
@@ -282,12 +323,12 @@ class ImportController extends Controller
         $job->update([
             'status'        => 'completed',
             'imported_rows' => $imported,
+            'updated_rows'  => $updated,
             'skipped_rows'  => $skipped,
             'errors'        => $errors,
         ]);
 
-        return redirect()->route('leads.index')
-            ->with('success', "Imported {$imported} leads" . ($skipped ? " ({$skipped} skipped)" : ''));
+        return redirect()->route('import.index', ['job' => $job->id]);
     }
 
     // ── Cancel / delete pending import job ────────────────────────────────────
@@ -296,6 +337,61 @@ class ImportController extends Controller
     {
         $job->delete();
         return redirect()->route('import.index');
+    }
+
+    // ── Duplicate email detection ────────────────────────────────────────────
+    // Batches the lookup (one query) instead of hitting the DB per row, since
+    // an upload can contain up to 500 rows.
+
+    private function findDuplicateEmailMap(int $organizationId, array $rows): array
+    {
+        $emails = collect($rows)
+            ->map(fn ($row) => $this->extractField($row, ['email', 'Email', 'email_address']))
+            ->filter()
+            ->map(fn ($e) => strtolower($e))
+            ->unique();
+
+        if ($emails->isEmpty()) {
+            return [];
+        }
+
+        $matches = LeadEmail::whereIn(DB::raw('LOWER(email)'), $emails)
+            ->whereHas('lead', fn ($q) => $q->where('organization_id', $organizationId))
+            ->with('lead')
+            ->get()
+            ->keyBy(fn ($leadEmail) => strtolower($leadEmail->email));
+
+        $map = [];
+        foreach ($rows as $i => $row) {
+            $email = $this->extractField($row, ['email', 'Email', 'email_address']);
+            if (!$email) {
+                continue;
+            }
+
+            $match = $matches->get(strtolower($email));
+            if ($match) {
+                $map[$i] = [
+                    'lead_id' => $match->lead->id,
+                    'name'    => $match->lead->full_name,
+                    'company' => $match->lead->company,
+                    'email'   => $match->email,
+                    'phone'   => $match->lead->primary_phone,
+                ];
+            }
+        }
+
+        return $map;
+    }
+
+    private function extractField(array $row, array $keys): ?string
+    {
+        foreach ($keys as $key) {
+            if (!empty($row[$key])) {
+                return trim($row[$key]);
+            }
+        }
+
+        return null;
     }
 
     // ── Shared CSV parser ─────────────────────────────────────────────────────

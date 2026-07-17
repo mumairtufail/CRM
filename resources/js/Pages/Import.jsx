@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react'
+import { Head, Link, router } from '@inertiajs/react'
 import { useRef, useState } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
@@ -9,7 +9,8 @@ import {
 } from '@/Components/ui/select'
 import {
   Upload, FileText, CheckCircle, XCircle, AlertCircle,
-  Download, Sheet, Loader2, ExternalLink, Info
+  Download, Sheet, Loader2, ExternalLink, Info,
+  ArrowRight, ChevronDown, ChevronUp, RotateCcw, Users
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -165,6 +166,165 @@ function PreviewTable({ rows, headers }) {
   )
 }
 
+// ── Duplicate resolution ────────────────────────────────────────────────────
+const DUP_ACTIONS = [
+  { value: 'create',  label: 'Create new lead' },
+  { value: 'replace', label: 'Replace existing' },
+  { value: 'skip',    label: 'Keep existing (skip)' },
+]
+
+function DuplicatesCard({ duplicateMap, previewRows, resolutions, setResolutions }) {
+  const entries = Object.entries(duplicateMap)
+
+  const applyToAll = value => {
+    setResolutions(Object.fromEntries(entries.map(([i]) => [i, value])))
+  }
+
+  return (
+    <div className="form-card border-amber-200">
+      <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="flex items-center gap-2">
+          <Users size={13} className="text-amber-500" />
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+            {entries.length} possible duplicate{entries.length === 1 ? '' : 's'} — choose an action for each
+          </p>
+        </div>
+        <Select onValueChange={applyToAll}>
+          <SelectTrigger className="h-7 w-48 text-[11.5px]">
+            <SelectValue placeholder="Apply to all…" />
+          </SelectTrigger>
+          <SelectContent>
+            {DUP_ACTIONS.map(a => (
+              <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="divide-y divide-slate-100">
+        {entries.map(([rowIndex, existing]) => {
+          const incoming = previewRows[rowIndex] ?? {}
+          const incomingName = [incoming.first_name, incoming.last_name].filter(Boolean).join(' ')
+            || incoming.company || '—'
+
+          return (
+            <div key={rowIndex} className="grid grid-cols-[1fr_auto_1fr_13rem] gap-3 items-center px-4 py-2.5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Incoming — row {Number(rowIndex) + 1}</p>
+                <p className="text-[13px] font-medium text-slate-700 truncate">{incomingName}</p>
+                <p className="text-[11px] text-slate-400 truncate">{incoming.email}</p>
+              </div>
+              <ArrowRight size={14} className="text-slate-300 shrink-0" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Existing lead</p>
+                <p className="text-[13px] font-medium text-slate-700 truncate">{existing.name?.trim() || existing.company || '—'}</p>
+                <p className="text-[11px] text-slate-400 truncate">{existing.email}</p>
+              </div>
+              <Select value={resolutions[rowIndex] ?? ''} onValueChange={v => setResolutions(r => ({ ...r, [rowIndex]: v }))}>
+                <SelectTrigger className={cn('h-8 text-[12px]', !resolutions[rowIndex] && 'border-amber-300 text-amber-600')}>
+                  <SelectValue placeholder="Choose action…" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DUP_ACTIONS.map(a => (
+                    <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── Results screen ───────────────────────────────────────────────────────────
+function StatBadge({ label, value, tone }) {
+  const tones = {
+    emerald: 'bg-emerald-50 text-emerald-700',
+    blue:    'bg-blue-50 text-blue-700',
+    amber:   'bg-amber-50 text-amber-700',
+  }
+  return (
+    <div className={cn('flex items-baseline gap-1.5 rounded-lg px-3.5 py-2', tones[tone])}>
+      <span className="text-[18px] font-bold leading-none">{value}</span>
+      <span className="text-[11.5px] font-medium">{label}</span>
+    </div>
+  )
+}
+
+function ResultsView({ job }) {
+  const [showErrors, setShowErrors] = useState(false)
+  const errors = job.errors ?? []
+
+  return (
+    <>
+      <div className="flex items-center gap-2">
+        <span className={cn(
+          'inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full',
+          job.source === 'google_sheet' ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700'
+        )}>
+          {job.source === 'google_sheet' ? <Sheet size={11} /> : <FileText size={11} />}
+          {job.source === 'google_sheet' ? 'Google Sheets' : 'CSV Upload'}
+        </span>
+      </div>
+
+      <div className="form-card px-4 py-4">
+        <div className="flex items-center gap-2 mb-3">
+          <CheckCircle size={16} className="text-emerald-500" />
+          <p className="text-[14px] font-semibold text-slate-700">Import complete</p>
+        </div>
+        <div className="flex flex-wrap gap-2.5">
+          <StatBadge label="Imported" value={job.imported_rows} tone="emerald" />
+          {job.updated_rows > 0 && <StatBadge label="Updated" value={job.updated_rows} tone="blue" />}
+          {job.skipped_rows > 0 && <StatBadge label="Skipped" value={job.skipped_rows} tone="amber" />}
+        </div>
+      </div>
+
+      {errors.length > 0 && (
+        <div className="form-card">
+          <button
+            type="button"
+            onClick={() => setShowErrors(s => !s)}
+            className="w-full flex items-center justify-between px-4 py-2.5"
+            style={showErrors ? { borderBottom: '1px solid rgba(0,0,0,0.06)' } : undefined}
+          >
+            <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+              {errors.length} row{errors.length === 1 ? '' : 's'} skipped — {showErrors ? 'hide' : 'show'} details
+            </p>
+            {showErrors ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
+          </button>
+          {showErrors && (
+            <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+              {errors.map((message, i) => (
+                <p key={i} className="px-4 py-2 text-[12px] text-slate-500">{message}</p>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 pt-1">
+        <Link
+          href="/leads"
+          className="h-9 px-5 inline-flex items-center text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90"
+          style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
+        >
+          View leads
+        </Link>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-9 text-[12.5px] border-slate-200"
+          onClick={() => router.get('/import')}
+        >
+          <RotateCcw size={13} className="mr-1.5" /> Import another file
+        </Button>
+      </div>
+    </>
+  )
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 export default function Import({ importJob }) {
   const [mode, setMode] = useState('csv')
@@ -185,6 +345,7 @@ export default function Import({ importJob }) {
 
   // Shared preview
   const [confirming, setConfirming] = useState(false)
+  const [resolutions, setResolutions] = useState({})
 
   // ── CSV handlers ──
   const handleFile = file => {
@@ -261,7 +422,7 @@ export default function Import({ importJob }) {
   const handleConfirm = () => {
     if (!importJob) return
     setConfirming(true)
-    router.post(`/import/${importJob.id}/confirm`, {}, {
+    router.post(`/import/${importJob.id}/confirm`, { resolutions }, {
       onFinish: () => setConfirming(false),
       onError:  () => { toast.error('Import failed'); setConfirming(false) },
     })
@@ -277,6 +438,10 @@ export default function Import({ importJob }) {
   const missingCols  = ['first_name'].filter(c => !headers.some(h => h.toLowerCase().replace(/\s/g,'_') === c))
   const isGSUrl      = gsUrl.includes('docs.google.com/spreadsheets')
 
+  const duplicateMap     = importJob?.duplicate_map ?? {}
+  const dupIndices       = Object.keys(duplicateMap)
+  const hasUnresolvedDup = dupIndices.some(i => !resolutions[i])
+
   return (
     <>
       <Head title="Import" />
@@ -285,8 +450,10 @@ export default function Import({ importJob }) {
 
         <div className="max-w-6xl space-y-3">
 
-          {/* ── If a job is in preview, show the shared preview UI ── */}
-          {importJob ? (
+          {/* ── If a job just finished, show the results screen ── */}
+          {importJob?.status === 'completed' ? (
+            <ResultsView job={importJob} />
+          ) : importJob ? (
             <>
               {/* Source badge */}
               <div className="flex items-center gap-2">
@@ -338,11 +505,21 @@ export default function Import({ importJob }) {
                 </div>
               </div>
 
+              {/* Duplicate emails — one action per row before anything is saved */}
+              {dupIndices.length > 0 && (
+                <DuplicatesCard
+                  duplicateMap={duplicateMap}
+                  previewRows={previewRows}
+                  resolutions={resolutions}
+                  setResolutions={setResolutions}
+                />
+              )}
+
               {/* Action buttons */}
               <div className="flex items-center gap-3 pt-1">
                 <button
                   onClick={handleConfirm}
-                  disabled={confirming || missingCols.length > 0}
+                  disabled={confirming || missingCols.length > 0 || hasUnresolvedDup}
                   className="h-9 px-5 text-[12.5px] font-semibold text-white rounded-lg transition-all hover:opacity-90 disabled:opacity-50"
                   style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
                 >
@@ -351,6 +528,9 @@ export default function Import({ importJob }) {
                 <Button variant="outline" onClick={handleCancel} disabled={confirming} size="sm" className="h-9 text-[12.5px] border-slate-200">
                   Cancel
                 </Button>
+                {hasUnresolvedDup && (
+                  <span className="text-[12px] text-amber-600">Choose an action for every duplicate above to continue</span>
+                )}
               </div>
             </>
           ) : (

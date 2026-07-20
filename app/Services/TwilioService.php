@@ -137,6 +137,9 @@ class TwilioService
             throw new \Exception("Twilio API Key, API Secret, and TwiML App SID must be configured in settings for browser softphone calling.");
         }
 
+        // Twilio Client identities may only contain alpha-numeric and underscore characters.
+        $clientName = preg_replace('/[^A-Za-z0-9_]/', '_', $clientName);
+
         $token = new AccessToken(
             $accountSid,
             $apiKey,

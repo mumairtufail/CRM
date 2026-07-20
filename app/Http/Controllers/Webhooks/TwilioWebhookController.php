@@ -107,6 +107,9 @@ class TwilioWebhookController extends Controller
             'status'          => 'ringing',
         ]);
 
+        // Twilio Client identities may only contain alpha-numeric and underscore characters.
+        $targetClient = preg_replace('/[^A-Za-z0-9_]/', '_', $targetClient);
+
         $voicemailUrl = route('webhooks.twilio.voicemail', ['org_id' => $setting->organization_id]);
 
         // Build TwiML Response

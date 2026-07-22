@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Activity;
 use App\Models\EmailSend;
 use App\Models\Lead;
+use App\Models\TwilioCall;
 use App\Models\User;
 use App\Models\WhatsappSend;
 use App\Support\ComputesFirstContactSpeed;
@@ -50,12 +51,15 @@ class ReportController extends Controller
         $totalContactHours = array_sum(array_column($contactSpeedRows, 'sum_hours'));
         $totalContactCount = array_sum(array_column($contactSpeedRows, 'count'));
 
+        $orgCallsQuery = TwilioCall::whereBetween('created_at', [$from, $to]);
         $summary = [
             'leads_created'          => $funnel['total'],
             'contact_rate'           => $funnel['contact_rate'],
             'win_rate'               => $funnel['win_rate_of_closed'],
             'emails_sent'            => $engagement['email']['sent'],
             'whatsapp_sent'          => $engagement['whatsapp']['sent'],
+            'calls_placed'           => (clone $orgCallsQuery)->count(),
+            'call_minutes'           => round((clone $orgCallsQuery)->sum('duration') / 60, 1),
             'active_agents'          => Activity::whereBetween('created_at', [$from, $to])->distinct('user_id')->count('user_id'),
             'org_avg_hours_to_contact' => $totalContactCount > 0 ? round($totalContactHours / $totalContactCount, 1) : null,
         ];
@@ -110,6 +114,10 @@ class ReportController extends Controller
         $whatsappSent = WhatsappSend::whereHas('lead', fn ($q) => $q->where('assigned_to', $user->id))
             ->where('status', 'sent')->whereBetween('sent_at', [$from, $to])->count();
 
+        $callsQuery = TwilioCall::where('user_id', $user->id)->whereBetween('created_at', [$from, $to]);
+        $callsCount = (clone $callsQuery)->count();
+        $callMinutes = round((clone $callsQuery)->sum('duration') / 60, 1);
+
         $channelCounts = Activity::where('user_id', $user->id)
             ->whereNotNull('meta->channel')
             ->where(function ($q) {
@@ -130,6 +138,8 @@ class ReportController extends Controller
             'conversion_rate' => $closedCount > 0 ? round($wonCount / $closedCount * 100) : 0,
             'emails_sent'     => $emailsSent,
             'whatsapp_sent'   => $whatsappSent,
+            'calls_count'     => $callsCount,
+            'call_minutes'    => $callMinutes,
             'channel_counts'  => $channelCounts,
         ];
     }

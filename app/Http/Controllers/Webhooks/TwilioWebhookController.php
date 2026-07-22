@@ -8,11 +8,15 @@ use App\Models\TwilioCall;
 use App\Models\TwilioMessage;
 use App\Models\Lead;
 use App\Models\LeadPhone;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class TwilioWebhookController extends Controller
 {
+    /** Dial recording mode: separate agent/customer audio channels for clean playback. */
+    private const RECORDING_MODE = 'record-from-answer-dual';
+
     /**
      * Helper to lookup TwilioSetting by matching the twilio phone number.
      */
@@ -24,6 +28,43 @@ class TwilioWebhookController extends Controller
             $cleanSettingPhone = preg_replace('/[^0-9]/', '', $setting->phone_number);
             return $cleanSettingPhone === $cleanNumber;
         });
+    }
+
+    /**
+     * Resolve the local agent User behind a browser softphone call from its
+     * Twilio Client identity (e.g. "client:john_example_com"), since identities
+     * are the agent's email with non-alphanumerics sanitized to underscores.
+     */
+    private function resolveUserByClientIdentity(int $organizationId, ?string $from): ?User
+    {
+        if (!$from || !str_starts_with($from, 'client:')) {
+            return null;
+        }
+
+        $identity = substr($from, 7);
+
+        return User::where('organization_id', $organizationId)
+            ->get(['id', 'email'])
+            ->first(fn ($user) => preg_replace('/[^A-Za-z0-9_]/', '_', $user->email) === $identity);
+    }
+
+    /**
+     * Recording + status-callback attributes shared by every <Dial> we emit,
+     * so every answered call is recorded and its final status/duration is captured.
+     */
+    private function dialAttributes(int $organizationId, bool $voicemailFallback = false): string
+    {
+        $recordingCallback = route('webhooks.twilio.recording-status');
+        $dialStatusParams = ['org_id' => $organizationId];
+        if ($voicemailFallback) {
+            $dialStatusParams['fallback'] = 'voicemail';
+        }
+        $dialStatusCallback = route('webhooks.twilio.dial-status', $dialStatusParams);
+
+        return 'record="' . self::RECORDING_MODE . '" '
+            . 'recordingStatusCallback="' . htmlspecialchars($recordingCallback) . '" '
+            . 'recordingStatusCallbackEvent="completed" '
+            . 'action="' . htmlspecialchars($dialStatusCallback) . '"';
     }
 
     /**
@@ -46,9 +87,12 @@ class TwilioWebhookController extends Controller
                 return response("<Response><Reject /></Response>", 200)->header('Content-Type', 'text/xml');
             }
 
+            $callingUser = $this->resolveUserByClientIdentity($setting->organization_id, $from);
+
             // Create local outbound call log
             TwilioCall::create([
                 'organization_id' => $setting->organization_id,
+                'user_id'         => $callingUser?->id,
                 'sid'             => $callSid,
                 'from_number'     => $setting->phone_number,
                 'to_number'       => $to,
@@ -59,7 +103,7 @@ class TwilioWebhookController extends Controller
             // Return TwiML to Dial the customer's phone number
             $twiml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
             $twiml .= '<Response>';
-            $twiml .= '    <Dial callerId="' . htmlspecialchars($setting->phone_number) . '">';
+            $twiml .= '    <Dial callerId="' . htmlspecialchars($setting->phone_number) . '" ' . $this->dialAttributes($setting->organization_id) . '>';
             $twiml .= '        <Number>' . htmlspecialchars($to) . '</Number>';
             $twiml .= '    </Dial>';
             $twiml .= '</Response>';
@@ -78,6 +122,7 @@ class TwilioWebhookController extends Controller
         // Determine who to dial (client name)
         $cleanFrom = preg_replace('/[^0-9]/', '', $from);
         $targetClient = 'agent';
+        $resolvedUser = null;
 
         // Try to find if this phone belongs to a lead
         $leadPhone = LeadPhone::whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE ?", ["%{$cleanFrom}%"])
@@ -88,18 +133,21 @@ class TwilioWebhookController extends Controller
             $assignedUser = $lead->assignedUser;
             if ($assignedUser) {
                 $targetClient = $assignedUser->email;
+                $resolvedUser = $assignedUser;
             }
         } else {
             // Default to owner's email
             $owner = $setting->organization->owner;
             if ($owner) {
                 $targetClient = $owner->email;
+                $resolvedUser = $owner;
             }
         }
 
         // Create a local Call record as inbound ringing
         TwilioCall::create([
             'organization_id' => $setting->organization_id,
+            'user_id'         => $resolvedUser?->id,
             'sid'             => $callSid,
             'from_number'     => $from,
             'to_number'       => $to,
@@ -110,17 +158,14 @@ class TwilioWebhookController extends Controller
         // Twilio Client identities may only contain alpha-numeric and underscore characters.
         $targetClient = preg_replace('/[^A-Za-z0-9_]/', '_', $targetClient);
 
-        $voicemailUrl = route('webhooks.twilio.voicemail', ['org_id' => $setting->organization_id]);
-
-        // Build TwiML Response
+        // Build TwiML Response. The voicemail fallback (Say/Record) now lives in the
+        // dial-status action callback, since attaching `action` to <Dial> hands control
+        // of "what happens next" entirely to that callback's response.
         $twiml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $twiml .= '<Response>';
-        $twiml .= '    <Dial callerId="' . $to . '" timeout="20">';
+        $twiml .= '    <Dial callerId="' . $to . '" timeout="20" ' . $this->dialAttributes($setting->organization_id, voicemailFallback: true) . '>';
         $twiml .= '        <Client>' . htmlspecialchars($targetClient) . '</Client>';
         $twiml .= '    </Dial>';
-        $twiml .= '    <Say>No agents are currently available. Please leave a message after the beep.</Say>';
-        $twiml .= '    <Record action="' . htmlspecialchars($voicemailUrl) . '" maxLength="60" playBeep="true" />';
-        $twiml .= '    <Say>Thank you for calling. Goodbye.</Say>';
         $twiml .= '</Response>';
 
         return response($twiml, 200)->header('Content-Type', 'text/xml');
@@ -196,12 +241,80 @@ class TwilioWebhookController extends Controller
         // Bridge the call to the Lead's phone number
         $twiml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
         $twiml .= '<Response>';
-        $twiml .= '    <Dial callerId="' . htmlspecialchars($setting->phone_number) . '">';
+        $twiml .= '    <Dial callerId="' . htmlspecialchars($setting->phone_number) . '" ' . $this->dialAttributes($setting->organization_id) . '>';
         $twiml .= '        <Number>' . htmlspecialchars($to) . '</Number>';
         $twiml .= '    </Dial>';
         $twiml .= '</Response>';
 
         return response($twiml, 200)->header('Content-Type', 'text/xml');
+    }
+
+    /**
+     * <Dial action> callback: fires once the dialed leg finishes (answered or not).
+     * Persists the call's final status/duration, and — for inbound calls where the
+     * agent didn't pick up — falls back to the voicemail Say/Record flow that used
+     * to sit statically after the <Dial> in handleVoice().
+     */
+    public function handleDialStatus(Request $request)
+    {
+        $callSid = $request->input('CallSid');
+        $dialStatus = $request->input('DialCallStatus'); // completed | busy | no-answer | failed | canceled
+        $dialDuration = $request->input('DialCallDuration');
+
+        Log::info("Twilio Dial Status Callback: call={$callSid} status={$dialStatus} duration={$dialDuration}");
+
+        $call = TwilioCall::where('sid', $callSid)->first();
+        if ($call) {
+            $call->update([
+                'status'   => $dialStatus ?: $call->status,
+                'duration' => $dialDuration !== null ? (int) $dialDuration : $call->duration,
+            ]);
+        }
+
+        if ($request->query('fallback') === 'voicemail' && $dialStatus !== 'completed') {
+            $orgId = $request->query('org_id');
+            $voicemailUrl = route('webhooks.twilio.voicemail', ['org_id' => $orgId]);
+
+            $twiml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+            $twiml .= '<Response>';
+            $twiml .= '    <Say>No agents are currently available. Please leave a message after the beep.</Say>';
+            $twiml .= '    <Record action="' . htmlspecialchars($voicemailUrl) . '" maxLength="60" playBeep="true" />';
+            $twiml .= '    <Say>Thank you for calling. Goodbye.</Say>';
+            $twiml .= '</Response>';
+
+            return response($twiml, 200)->header('Content-Type', 'text/xml');
+        }
+
+        $twiml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<Response><Hangup/></Response>';
+        return response($twiml, 200)->header('Content-Type', 'text/xml');
+    }
+
+    /**
+     * Recording status callback: fires once the dual-channel recording for an
+     * answered call has finished processing and is ready to fetch.
+     */
+    public function handleRecordingStatus(Request $request)
+    {
+        $callSid = $request->input('CallSid');
+        $recordingSid = $request->input('RecordingSid');
+        $recordingUrl = $request->input('RecordingUrl');
+        $recordingStatus = $request->input('RecordingStatus');
+        $recordingDuration = $request->input('RecordingDuration');
+
+        Log::info("Twilio Recording Status Callback: call={$callSid} recording={$recordingSid} status={$recordingStatus}");
+
+        if ($recordingStatus === 'completed' && $callSid) {
+            $call = TwilioCall::where('sid', $callSid)->first();
+            if ($call) {
+                $call->update([
+                    'recording_url' => $recordingUrl,
+                    'recording_sid' => $recordingSid,
+                    'duration'      => $call->duration ?: $recordingDuration,
+                ]);
+            }
+        }
+
+        return response('', 200);
     }
 
     /**

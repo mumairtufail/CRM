@@ -102,6 +102,7 @@ class TwilioService
 
         $localCall = TwilioCall::create([
             'organization_id' => $this->setting->organization_id,
+            'user_id'         => \Illuminate\Support\Facades\Auth::id(),
             'sid'             => $call->sid,
             'from_number'     => $this->setting->phone_number,
             'to_number'       => $to,

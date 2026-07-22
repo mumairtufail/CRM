@@ -10,7 +10,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
 import {
   BarChart3, Users, Mail, MessageSquare, ChevronLeft, ChevronRight, TrendingUp,
-  Globe, MapPin, X, Percent, UserCheck, Clock, Star,
+  Globe, MapPin, X, Percent, UserCheck, Clock, Star, Phone,
 } from 'lucide-react'
 import { CONTACT_CHANNELS } from '@/Components/Common/OutreachChannels'
 import GlassCard from '@/Components/Common/GlassCard'
@@ -128,16 +128,17 @@ export default function ReportsIndex({
         </div>
 
         {/* KPI strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-2.5">
           <KpiTile title="Leads Created" value={summary.leads_created} icon={Users}       color="blue"  index={0}
             sparkline={(leadsTrend ?? []).map(d => d.count)} />
           <KpiTile title="Contact Rate" value={`${summary.contact_rate}%`}  icon={Percent}     color="teal"  index={1} />
           <KpiTile title="Win Rate"     value={`${summary.win_rate}%`}     icon={TrendingUp}  color="green" index={2} />
           <KpiTile title="Emails Sent"  value={summary.emails_sent}        icon={Mail}        color="purple" index={3} href="/campaigns" />
           <KpiTile title="WhatsApp Sent" value={summary.whatsapp_sent}     icon={MessageSquare} color="green" index={4} />
-          <KpiTile title="Active Agents" value={summary.active_agents}    icon={UserCheck}   color="blue"  index={5} />
+          <KpiTile title="Calls Placed" value={summary.calls_placed}      icon={Phone}       color="amber" index={5} href="/twilio" />
+          <KpiTile title="Active Agents" value={summary.active_agents}    icon={UserCheck}   color="blue"  index={6} />
           <KpiTile title="Avg Hrs to Contact" value={summary.org_avg_hours_to_contact != null ? `${summary.org_avg_hours_to_contact}h` : '—'}
-            icon={Clock} color="amber" index={6} />
+            icon={Clock} color="amber" index={7} />
         </div>
 
         <GlassCard>
@@ -237,7 +238,7 @@ export default function ReportsIndex({
         <GlassCard>
           <SectionHeader title="Agent Performance" icon={Users} />
           <div className="overflow-x-auto">
-            <table className="w-full text-[12.5px] min-w-[760px]">
+            <table className="w-full text-[12.5px] min-w-[880px]">
               <thead>
                 <tr className="text-left text-[10.5px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100">
                   <th className="px-4 py-2 sticky left-0 bg-white/90 backdrop-blur-sm">Agent</th>
@@ -248,6 +249,8 @@ export default function ReportsIndex({
                   <th className="px-3 py-2 text-right w-28">Conv. %</th>
                   <th className="px-3 py-2 text-right">Emails</th>
                   <th className="px-3 py-2 text-right">WhatsApp</th>
+                  <th className="px-3 py-2 text-right">Calls</th>
+                  <th className="px-3 py-2 text-right">Call Mins</th>
                   <th className="px-3 py-2 text-right">Avg. Hrs to Contact</th>
                   <th className="px-3 py-2">Channels</th>
                 </tr>
@@ -289,6 +292,8 @@ export default function ReportsIndex({
                       </td>
                       <td className="px-3 py-1.5 text-slate-600 text-right">{row.emails_sent}</td>
                       <td className="px-3 py-1.5 text-slate-600 text-right">{row.whatsapp_sent}</td>
+                      <td className="px-3 py-1.5 text-slate-600 text-right">{row.calls_count}</td>
+                      <td className="px-3 py-1.5 text-slate-600 text-right">{row.call_minutes}</td>
                       <td className="px-3 py-1.5 text-slate-600 text-right">
                         {row.avg_hours_to_contact != null ? `${row.avg_hours_to_contact}h` : '—'}
                         {row.contact_sample_size > 0 && <span className="text-slate-300 text-[10px] ml-1">(n={row.contact_sample_size})</span>}
@@ -302,7 +307,7 @@ export default function ReportsIndex({
                   )
                 })}
                 {agentRows.length === 0 && (
-                  <tr><td colSpan={10} className="text-center py-8 text-slate-400">No active agents</td></tr>
+                  <tr><td colSpan={12} className="text-center py-8 text-slate-400">No active agents</td></tr>
                 )}
               </tbody>
             </table>

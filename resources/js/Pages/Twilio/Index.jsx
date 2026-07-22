@@ -128,6 +128,29 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     }
   }
 
+  // Wires up per-call lifecycle events (accept/disconnect/cancel/reject/error).
+  // These live on the Call object returned by connect()/incoming — the Device
+  // itself has no 'connect' or 'disconnect' event.
+  const bindCallEvents = (call) => {
+    call.on('accept', () => {
+      setCallState('connected')
+      startTimer()
+    })
+    const endThisCall = () => {
+      connectionRef.current = null
+      endCallState()
+    }
+    call.on('disconnect', endThisCall)
+    call.on('cancel', endThisCall)
+    call.on('reject', endThisCall)
+    call.on('error', (err) => {
+      console.warn('Call error:', err)
+      toast.error(`Call error: ${err.message || 'Unable to connect audio for this call.'}`)
+      connectionRef.current = null
+      setCallState('idle')
+    })
+  }
+
   // ─── Twilio Device Setup ──────────────────────────────────────────────────────
   useEffect(() => {
     if (twilioSetting) {
@@ -150,7 +173,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         const errData = await res.json().catch(() => ({}))
         const errMsg = errData.error ?? 'Verification failed.'
         setDeviceError(errMsg)
-        toast.error(`Twilio Voice calling setup failed: ${errMsg}`)
+        toast.error(`Dialer calling setup failed: ${errMsg}`)
         setIsSoftphone(false)
         return
       }
@@ -158,7 +181,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
       const { token } = await res.json()
       if (!token) {
         setDeviceError('No voice token received from server.')
-        toast.error('Twilio Voice calling setup failed: No token returned.')
+        toast.error('Dialer calling setup failed: No token returned.')
         setIsSoftphone(false)
         return
       }
@@ -180,26 +203,19 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
       })
 
       device.on('error', (err) => {
-        console.warn('Embedded Twilio Device Error:', err)
-        setDeviceError(err.message || 'Twilio connection error.')
-        toast.error(`Twilio connection error: ${err.message || 'Please check your API Key SID, API Secret, and TwiML App configuration settings.'}`)
+        console.warn('Embedded Dialer Device Error:', err)
+        setDeviceError(err.message || 'Dialer connection error.')
+        toast.error(`Dialer connection error: ${err.message || 'Please check your calling settings configuration.'}`)
         setCallState('idle')
       })
 
-      device.on('connect', (conn) => {
-        connectionRef.current = conn
-        setCallState('connected')
-        startTimer()
-      })
-
-      device.on('disconnect', () => {
-        connectionRef.current = null
-        endCallState()
-      })
-
+      // NOTE: Device itself only ever emits error/incoming/registered/unregistered/
+      // tokenWillExpire — 'connect' and 'disconnect' are events on the individual
+      // Call object, not the Device. bindCallEvents() wires those up per-call.
       device.on('incoming', (conn) => {
         setCallState('ringing')
         connectionRef.current = conn
+        bindCallEvents(conn)
         toast.info(`Incoming call from ${conn.parameters.From}`, {
           action: {
             label: 'Answer',
@@ -218,6 +234,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   // ─── Call Timer ─────────────────────────────────────────────────────────────
   const startTimer = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+    }
     setCallDuration(0)
     timerRef.current = setInterval(() => {
       setCallDuration(d => d + 1)
@@ -276,11 +295,8 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
       try {
         const call = await deviceRef.current.connect({ params: { To: dialNumber } })
-        call.on('error', (err) => {
-          console.warn('Call error:', err)
-          toast.error(`Call error: ${err.message || 'Unable to connect audio for this call.'}`)
-          setCallState('idle')
-        })
+        connectionRef.current = call
+        bindCallEvents(call)
       } catch (e) {
         console.error('Failed to start call:', e)
         toast.error('Failed to start the call.')
@@ -329,9 +345,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const handleAccept = () => {
     if (connectionRef.current) {
       try {
+        // Call state flips to 'connected' via the 'accept' listener bound in
+        // bindCallEvents() when the incoming call arrived, not here.
         connectionRef.current.accept()
-        setCallState('connected')
-        startTimer()
         toast.success('Call connected.')
       } catch (e) {
         console.error('Failed to accept incoming call:', e)
@@ -370,7 +386,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
       if (audioRef.current) {
         audioRef.current.pause()
       }
-      const audio = new Audio(call.recording_url)
+      // Twilio's recording_url requires HTTP Basic Auth and can't be fetched
+      // directly by the browser — stream it through our own authenticated proxy.
+      const audio = new Audio(`/twilio/calls/${call.id}/recording`)
       audio.play()
       audio.onended = () => setPlayingVoicemail(null)
       audioRef.current = audio
@@ -661,12 +679,12 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   return (
     <>
-      <Head title="Twilio Dialer & logs" />
-      <AppLayout title="Twilio Communications">
+      <Head title="Dialer & Logs" />
+      <AppLayout title="Dialer">
         {/* Header Section */}
         <div className="px-4 sm:px-6 pt-4 pb-5 border-b border-slate-100 bg-white flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-[20px] font-bold text-slate-800 tracking-tight">Twilio Hub</h1>
+            <h1 className="text-[20px] font-bold text-slate-800 tracking-tight">Dialer Hub</h1>
             <p className="text-[13px] text-slate-500 mt-0.5">Place calls, send messages, and review voicemail logs</p>
           </div>
           <div className="flex gap-2">
@@ -682,7 +700,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
             </Button>
             <Link href="/profile?tab=twilio">
               <Button size="sm" className="h-9 text-xs bg-brand-600 hover:bg-brand-700">
-                Configure Twilio Settings
+                Configure Settings
               </Button>
             </Link>
           </div>
@@ -691,7 +709,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         {!twilioSetting ? (
           <div className="p-10 text-center max-w-lg mx-auto mt-10" style={glassCard}>
             <AlertCircle size={40} className="text-amber-500 mx-auto mb-3" />
-            <h3 className="text-[16px] font-bold text-slate-800">Twilio is not configured</h3>
+            <h3 className="text-[16px] font-bold text-slate-800">Dialer is not configured</h3>
             <p className="text-[13px] text-slate-500 mt-1 mb-5">
               Configure your Account SID and phone number in settings to start calling and messaging.
             </p>
@@ -830,6 +848,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                               <th className="py-2.5 px-3">Direction</th>
                               <th className="py-2.5 px-3">From</th>
                               <th className="py-2.5 px-3">To</th>
+                              <th className="py-2.5 px-3">Agent</th>
                               <th className="py-2.5 px-3">Status</th>
                               <th className="py-2.5 px-3">Duration</th>
                               <th className="py-2.5 px-3">Date / Time</th>
@@ -849,6 +868,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                 </td>
                                 <td className="py-3 px-3 font-semibold text-slate-700">{call.from_number}</td>
                                 <td className="py-3 px-3 font-semibold text-slate-700">{call.to_number}</td>
+                                <td className="py-3 px-3 text-slate-600">{call.user?.name ?? '—'}</td>
                                 <td className="py-3 px-3">
                                   <span className={cn(
                                     'px-2 py-0.5 rounded-full text-[10px] font-medium capitalize',
@@ -864,14 +884,27 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                   {new Date(call.created_at).toLocaleString()}
                                 </td>
                                 <td className="py-3 px-3 text-right">
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => triggerCall(call.direction === 'inbound' ? call.from_number : call.to_number)}
-                                    className="h-7 text-[10px] rounded-lg border-slate-200"
-                                  >
-                                    Call Back
-                                  </Button>
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    {call.recording_url && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => playVoicemail(call)}
+                                        title="Play call recording"
+                                        className="h-7 w-7 p-0 rounded-lg border-slate-200"
+                                      >
+                                        {playingVoicemail === call.id ? <Pause size={12} /> : <Play size={12} />}
+                                      </Button>
+                                    )}
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => triggerCall(call.direction === 'inbound' ? call.from_number : call.to_number)}
+                                      className="h-7 text-[10px] rounded-lg border-slate-200"
+                                    >
+                                      Call Back
+                                    </Button>
+                                  </div>
                                 </td>
                               </tr>
                             ))}
@@ -1022,7 +1055,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                           {/* Status bar mock */}
                           <div className="flex justify-between items-center text-[9px] font-bold text-slate-400 uppercase tracking-wider mt-4">
                             <span>{isSoftphone ? 'Softphone' : 'Click-to-Call'}</span>
-                            <span>Twilio</span>
+                            <span>Dialer</span>
                           </div>
 
                           {/* Caller Info */}
@@ -1107,7 +1140,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                       <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">
                         {isSoftphone ? 'Softphone' : 'Click-to-Call'}
                       </span>
-                      <span className="text-[9px] text-brand-600 font-extrabold uppercase tracking-wider">Twilio</span>
+                      <span className="text-[9px] text-brand-600 font-extrabold uppercase tracking-wider">Dialer</span>
                     </div>
 
                     {/* Active call duration display */}
@@ -1465,7 +1498,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                 ✓
                               </div>
                               <div>
-                                <h4 className="font-bold text-slate-700">Twilio Active</h4>
+                                <h4 className="font-bold text-slate-700">Dialer Active</h4>
                                 <p className="text-[9.5px] text-emerald-600 font-medium">Ready for calls and SMS</p>
                               </div>
                             </div>

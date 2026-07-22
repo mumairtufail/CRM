@@ -12,6 +12,7 @@ class TwilioCall extends Model
 
     protected $fillable = [
         'organization_id',
+        'user_id',
         'sid',
         'from_number',
         'to_number',
@@ -19,8 +20,14 @@ class TwilioCall extends Model
         'status',
         'duration',
         'recording_url',
+        'recording_sid',
         'voicemail_text',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Get the lead associated with this call based on the phone number.

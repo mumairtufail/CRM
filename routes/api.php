@@ -12,6 +12,8 @@ Route::post('/webhooks/twilio/voice',        [TwilioWebhookController::class, 'h
 Route::post('/webhooks/twilio/voicemail',    [TwilioWebhookController::class, 'handleVoicemail'])->name('webhooks.twilio.voicemail');
 Route::post('/webhooks/twilio/voice-bridge', [TwilioWebhookController::class, 'handleVoiceBridge'])->name('webhooks.twilio.voice-bridge');
 Route::post('/webhooks/twilio/sms',          [TwilioWebhookController::class, 'handleSms'])->name('webhooks.twilio.sms');
+Route::post('/webhooks/twilio/dial-status',      [TwilioWebhookController::class, 'handleDialStatus'])->name('webhooks.twilio.dial-status');
+Route::post('/webhooks/twilio/recording-status', [TwilioWebhookController::class, 'handleRecordingStatus'])->name('webhooks.twilio.recording-status');
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 

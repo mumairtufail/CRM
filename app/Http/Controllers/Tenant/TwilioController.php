@@ -8,6 +8,7 @@ use App\Models\TwilioCall;
 use App\Models\TwilioMessage;
 use App\Services\TwilioService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -26,6 +27,7 @@ class TwilioController extends Controller
         }
 
         $calls = TwilioCall::where('organization_id', $orgId)
+            ->with('user:id,name')
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'calls_page');
 
@@ -74,6 +76,7 @@ class TwilioController extends Controller
         $orgId = $request->user()->organization_id;
 
         $calls = TwilioCall::where('organization_id', $orgId)
+            ->with('user:id,name')
             ->orderBy('created_at', 'desc')
             ->limit(30)
             ->get();
@@ -270,6 +273,39 @@ class TwilioController extends Controller
     {
         TwilioSetting::where('organization_id', $request->user()->organization_id)->delete();
         return back()->with('success', 'Twilio configuration removed.');
+    }
+
+    /**
+     * Stream a call recording's audio through the server so the browser never needs
+     * direct access to Twilio credentials (Twilio's recording media URLs require
+     * HTTP Basic Auth and are not fetchable straight from the browser).
+     */
+    public function streamRecording(Request $request, TwilioCall $call)
+    {
+        if ($call->organization_id !== $request->user()->organization_id) {
+            abort(404);
+        }
+
+        if (!$call->recording_url) {
+            abort(404, 'No recording available for this call.');
+        }
+
+        $setting = TwilioSetting::where('organization_id', $call->organization_id)->first();
+        if (!$setting) {
+            abort(404);
+        }
+
+        $mediaUrl = rtrim($call->recording_url, '/') . '.mp3';
+
+        $response = Http::withBasicAuth($setting->account_sid, $setting->auth_token)->get($mediaUrl);
+
+        if (!$response->successful()) {
+            abort(502, 'Unable to fetch recording from Twilio.');
+        }
+
+        return response($response->body(), 200)
+            ->header('Content-Type', 'audio/mpeg')
+            ->header('Cache-Control', 'private, max-age=3600');
     }
 
     /**

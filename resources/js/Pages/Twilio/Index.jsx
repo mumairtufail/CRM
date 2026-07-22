@@ -244,7 +244,29 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
     if (isSoftphone && deviceRef.current) {
       setCallState('connecting')
-      deviceRef.current.connect({ params: { To: dialNumber } })
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+          stream.getTracks().forEach(track => track.stop())
+        })
+      } catch (e) {
+        console.error('Microphone permission denied or unavailable:', e)
+        toast.error('Microphone access is blocked. Please allow microphone permissions for this site in your browser settings and try again.')
+        setCallState('idle')
+        return
+      }
+
+      try {
+        const call = await deviceRef.current.connect({ params: { To: dialNumber } })
+        call.on('error', (err) => {
+          console.warn('Call error:', err)
+          toast.error(`Call error: ${err.message || 'Unable to connect audio for this call.'}`)
+          setCallState('idle')
+        })
+      } catch (e) {
+        console.error('Failed to start call:', e)
+        toast.error('Failed to start the call.')
+        setCallState('idle')
+      }
     } else {
       // Click-to-Call bridging
       setCallState('connecting')

@@ -886,6 +886,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     >
                       Call Logs
                     </button>
+                    {/* SMS Inbox disabled — incoming webhook needs a public HTTPS URL (APP_URL is localhost), so nothing was ever arriving here.
                     <button
                       onClick={() => setActiveTab('sms')}
                       className={cn(
@@ -895,6 +896,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     >
                       SMS Inbox
                     </button>
+                    */}
                     <button
                       onClick={() => setActiveTab('voicemails')}
                       className={cn(
@@ -1605,7 +1607,8 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                       {[
                         { id: 'keypad', label: 'Keypad', icon: Phone },
                         { id: 'recent', label: 'Recent', icon: Clock },
-                        { id: 'messages', label: 'SMS', icon: MessageSquare },
+                        // SMS disabled — see note above the "SMS Inbox" tab
+                        // { id: 'messages', label: 'SMS', icon: MessageSquare },
                         { id: 'voicemail', label: 'Voice', icon: Volume2 },
                         { id: 'settings', label: 'Status', icon: HelpCircle },
                       ].map(tabItem => {

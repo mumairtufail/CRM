@@ -7,10 +7,12 @@ import { Input } from '@/Components/ui/input'
 import { Label } from '@/Components/ui/label'
 import { Alert, AlertDescription } from '@/Components/ui/alert'
 import { Card } from '@/Components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog'
 import {
   Phone, PhoneCall, PhoneOff, PhoneForwarded, MessageSquare,
   Clock, Volume2, VolumeX, Delete, HelpCircle, X, Play, Pause,
-  AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, ChevronLeft, User, Send
+  AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, ChevronLeft, User, Send,
+  RotateCcw, RotateCw,
 } from 'lucide-react'
 
 function PaginationBar({ paginator, pageParam, onPageChange }) {
@@ -60,7 +62,8 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const [msgSearch, setMsgSearch] = useState('')
   const [selectedQuickLead, setSelectedQuickLead] = useState('')
 
-  const [playingVoicemail, setPlayingVoicemail] = useState(null)
+  const [recordingModalCall, setRecordingModalCall] = useState(null)
+  const [playerState, setPlayerState] = useState({ isPlaying: false, currentTime: 0, duration: 0 })
   const audioRef = useRef(null)
 
   // Embedded Dialer States
@@ -420,24 +423,40 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     setDialNumber(prev => prev.slice(0, -1))
   }
 
-  const playVoicemail = (call) => {
+  const openRecordingModal = (call) => {
     if (!call.recording_url) return
+    setPlayerState({ isPlaying: false, currentTime: 0, duration: 0 })
+    setRecordingModalCall(call)
+  }
 
-    if (playingVoicemail === call.id) {
+  const closeRecordingModal = () => {
+    if (audioRef.current) {
       audioRef.current.pause()
-      setPlayingVoicemail(null)
-    } else {
-      if (audioRef.current) {
-        audioRef.current.pause()
-      }
-      // Twilio's recording_url requires HTTP Basic Auth and can't be fetched
-      // directly by the browser — stream it through our own authenticated proxy.
-      const audio = new Audio(`/twilio/calls/${call.id}/recording`)
-      audio.play()
-      audio.onended = () => setPlayingVoicemail(null)
-      audioRef.current = audio
-      setPlayingVoicemail(call.id)
     }
+    setRecordingModalCall(null)
+  }
+
+  const togglePlayback = () => {
+    if (!audioRef.current) return
+    if (audioRef.current.paused) {
+      audioRef.current.play()
+    } else {
+      audioRef.current.pause()
+    }
+  }
+
+  const seekTo = (time) => {
+    if (audioRef.current) {
+      audioRef.current.currentTime = time
+    }
+  }
+
+  const skip = (deltaSecs) => {
+    if (!audioRef.current) return
+    audioRef.current.currentTime = Math.min(
+      Math.max(0, audioRef.current.currentTime + deltaSecs),
+      playerState.duration || 0
+    )
   }
 
   const formatDuration = (secs) => {
@@ -933,11 +952,11 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                       <Button
                                         size="sm"
                                         variant="outline"
-                                        onClick={() => playVoicemail(call)}
+                                        onClick={() => openRecordingModal(call)}
                                         title="Play call recording"
                                         className="h-7 w-7 p-0 rounded-lg border-slate-200"
                                       >
-                                        {playingVoicemail === call.id ? <Pause size={12} /> : <Play size={12} />}
+                                        <Play size={12} />
                                       </Button>
                                     )}
                                     <Button
@@ -1059,13 +1078,10 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
                                 <div className="flex items-center gap-3.5 bg-slate-50 px-3 py-2.5 rounded-xl border border-slate-100">
                                   <button
-                                    onClick={() => playVoicemail(call)}
-                                    className={cn(
-                                      'w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all',
-                                      playingVoicemail === call.id ? 'bg-amber-500 text-white' : 'bg-brand-600 text-white hover:bg-brand-700'
-                                    )}
+                                    onClick={() => openRecordingModal(call)}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all bg-brand-600 text-white hover:bg-brand-700"
                                   >
-                                    {playingVoicemail === call.id ? <Pause size={12} fill="white" /> : <Play size={12} fill="white" className="ml-0.5" />}
+                                    <Play size={12} fill="white" className="ml-0.5" />
                                   </button>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Recording File</p>
@@ -1602,6 +1618,73 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
           </div>
         )}
       </AppLayout>
+
+      <Dialog open={!!recordingModalCall} onOpenChange={(open) => !open && closeRecordingModal()}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Call Recording</DialogTitle>
+            <DialogDescription>
+              {recordingModalCall && (
+                <>
+                  {recordingModalCall.direction === 'inbound'
+                    ? `From ${recordingModalCall.from_number}`
+                    : `To ${recordingModalCall.to_number}`}
+                  {' · '}
+                  {new Date(recordingModalCall.created_at).toLocaleString()}
+                </>
+              )}
+            </DialogDescription>
+          </DialogHeader>
+
+          {recordingModalCall && (
+            <div className="space-y-4">
+              <audio
+                ref={audioRef}
+                src={`/twilio/calls/${recordingModalCall.id}/recording`}
+                autoPlay
+                onLoadedMetadata={e => setPlayerState(s => ({ ...s, duration: e.target.duration || 0 }))}
+                onTimeUpdate={e => setPlayerState(s => ({ ...s, currentTime: e.target.currentTime }))}
+                onPlay={() => setPlayerState(s => ({ ...s, isPlaying: true }))}
+                onPause={() => setPlayerState(s => ({ ...s, isPlaying: false }))}
+                onEnded={() => setPlayerState(s => ({ ...s, isPlaying: false, currentTime: 0 }))}
+                className="hidden"
+              />
+
+              <div className="space-y-1.5">
+                <input
+                  type="range"
+                  min={0}
+                  max={playerState.duration || 0}
+                  step={0.1}
+                  value={Math.min(playerState.currentTime, playerState.duration || 0)}
+                  onChange={e => seekTo(Number(e.target.value))}
+                  className="w-full accent-brand-600 cursor-pointer"
+                />
+                <div className="flex justify-between text-[11px] text-slate-500 font-mono">
+                  <span>{formatTime(Math.floor(playerState.currentTime))}</span>
+                  <span>{formatTime(Math.floor(playerState.duration || 0))}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-4">
+                <Button variant="outline" size="icon" className="h-10 w-10 rounded-full" onClick={() => skip(-10)} title="Back 10s">
+                  <RotateCcw size={16} />
+                </Button>
+                <Button
+                  size="icon"
+                  className="h-14 w-14 rounded-full bg-brand-600 hover:bg-brand-700"
+                  onClick={togglePlayback}
+                >
+                  {playerState.isPlaying ? <Pause size={20} fill="white" /> : <Play size={20} fill="white" className="ml-0.5" />}
+                </Button>
+                <Button variant="outline" size="icon" className="h-10 w-10 rounded-full" onClick={() => skip(10)} title="Forward 10s">
+                  <RotateCw size={16} />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

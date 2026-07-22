@@ -267,6 +267,24 @@ class TwilioController extends Controller
     }
 
     /**
+     * Fetch the live account balance from Twilio for the "remaining credits" display in settings.
+     */
+    public function balance(Request $request)
+    {
+        $setting = TwilioSetting::where('organization_id', $request->user()->organization_id)->first();
+        if (!$setting || !$setting->isValidated()) {
+            return response()->json(['error' => 'Twilio settings are not configured or validated.'], 400);
+        }
+
+        try {
+            $service = new TwilioService($setting);
+            return response()->json(['success' => true] + $service->fetchBalance());
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Remove Twilio configuration.
      */
     public function destroy(Request $request)

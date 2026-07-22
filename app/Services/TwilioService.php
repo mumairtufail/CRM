@@ -276,6 +276,19 @@ class TwilioService
     }
 
     /**
+     * Fetch the current account balance and currency from Twilio.
+     */
+    public function fetchBalance(): array
+    {
+        $balance = $this->getClient()->api->v2010->accounts($this->setting->account_sid)->balance->fetch();
+
+        return [
+            'balance'  => $balance->balance,
+            'currency' => $balance->currency,
+        ];
+    }
+
+    /**
      * Fetch all active incoming phone numbers from Twilio account.
      */
     public function fetchPhoneNumbers(): array

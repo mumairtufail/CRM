@@ -22,7 +22,7 @@ import {
   CheckCircle2, Sparkles, AlertCircle, ShieldCheck,
   Zap, Key, Wifi, Globe, Phone, PenLine, BookOpen, ChevronRight,
   MessageSquare, Database, Tag as TagIcon, Pencil, Trash2,
-  Puzzle, Download,
+  Puzzle, Download, Wallet, RefreshCw,
 } from 'lucide-react'
 
 // lucide-react (this version) has no LinkedIn glyph — small inline brand icon.
@@ -1910,6 +1910,37 @@ function TwilioSettingTab({ twilioSetting }) {
   const [validMsg, setValidMsg]       = React.useState('')
   const [saving, setSaving]           = React.useState(false)
 
+  const [balance, setBalance]               = React.useState(null)
+  const [balanceLoading, setBalanceLoading] = React.useState(false)
+  const [balanceError, setBalanceError]     = React.useState('')
+
+  const fetchBalance = React.useCallback(async () => {
+    setBalanceLoading(true)
+    setBalanceError('')
+    try {
+      const res = await fetch(route('twilio.balance'), {
+        headers: { Accept: 'application/json' },
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setBalance(data)
+      } else {
+        setBalanceError(data.error ?? 'Unable to fetch balance.')
+      }
+    } catch {
+      setBalanceError('Network error while fetching balance.')
+    } finally {
+      setBalanceLoading(false)
+    }
+  }, [])
+
+  React.useEffect(() => {
+    if (!validated) return
+    fetchBalance()
+    const interval = setInterval(fetchBalance, 60000)
+    return () => clearInterval(interval)
+  }, [validated, fetchBalance])
+
   const validate = async () => {
     if (!accountSid.trim()) { toast.error('Enter Account SID first.'); return }
     if (!authToken.trim())  { toast.error('Enter Auth Token first.'); return }
@@ -2158,6 +2189,40 @@ function TwilioSettingTab({ twilioSetting }) {
 
         {/* Right Column: Webhook Instructions */}
         <div className="lg:col-span-5 space-y-4">
+          {validated && (
+            <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-[13px] font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <Wallet size={14} className="text-brand-600" />
+                  Account Balance
+                </h3>
+                <button
+                  type="button"
+                  onClick={fetchBalance}
+                  disabled={balanceLoading}
+                  title="Refresh balance"
+                  className="text-slate-400 hover:text-slate-700 disabled:opacity-50"
+                >
+                  <RefreshCw size={14} className={balanceLoading ? 'animate-spin' : ''} />
+                </button>
+              </div>
+
+              {balanceError ? (
+                <p className="text-[11.5px] text-red-600 leading-relaxed">{balanceError}</p>
+              ) : balance ? (
+                <div>
+                  <span className="text-2xl font-bold text-slate-800">
+                    {Number(balance.balance).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                  </span>
+                  <span className="ml-1.5 text-xs font-semibold text-slate-400 uppercase">{balance.currency}</span>
+                  <p className="text-[10.5px] text-slate-400 mt-1">Remaining credit on your Twilio account · auto-refreshes every minute</p>
+                </div>
+              ) : (
+                <p className="text-[11.5px] text-slate-400">{balanceLoading ? 'Loading balance...' : 'No balance data yet.'}</p>
+              )}
+            </div>
+          )}
+
           <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm space-y-3">
             <h3 className="text-[13px] font-bold text-slate-800 uppercase tracking-wider">Webhook Configuration</h3>
             <p className="text-[11.5px] text-slate-500 leading-relaxed">

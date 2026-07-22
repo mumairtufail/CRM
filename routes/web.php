@@ -451,6 +451,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/settings/twilio',          [TwilioController::class, 'store'])->name('twilio.store');
     Route::post('/settings/twilio/validate', [TwilioController::class, 'validateCredentials'])->name('twilio.validate');
     Route::delete('/settings/twilio',        [TwilioController::class, 'destroy'])->name('twilio.destroy');
+    Route::get('/settings/twilio/balance',   [TwilioController::class, 'balance'])->name('twilio.balance');
 
     // Twilio Dialer & Dashboard
     Route::get('/twilio',       [TwilioController::class, 'index'])->name('twilio.index');

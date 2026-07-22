@@ -518,6 +518,20 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
    }
 
   // ─── Audio Input/Output Device Selection ───────────────────────────────────
+  const AUDIO_DEVICE_STORAGE_KEYS = { input: 'twilio_softphone_input_device', output: 'twilio_softphone_output_device' }
+
+  // Resolve which device to use: keep the current selection if it's still connected,
+  // otherwise fall back to the user's last saved choice, otherwise fall back to the
+  // browser's "default" pseudo-device (which Windows keeps pointed at whatever device
+  // is currently set as the system default — e.g. it switches to a headset when plugged in).
+  const pickAudioDevice = (currentId, devices, storageKey) => {
+    if (currentId && devices.some(d => d.deviceId === currentId)) return currentId
+    const saved = typeof window !== 'undefined' ? window.localStorage.getItem(storageKey) : null
+    if (saved && devices.some(d => d.deviceId === saved)) return saved
+    const osDefault = devices.find(d => d.deviceId === 'default')
+    return (osDefault ?? devices[0])?.deviceId ?? ''
+  }
+
   const refreshAudioDevices = async () => {
     if (!navigator.mediaDevices?.enumerateDevices) return
     try {
@@ -526,8 +540,8 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
       const outputs = devices.filter(d => d.kind === 'audiooutput')
       setInputDevices(inputs)
       setOutputDevices(outputs)
-      setSelectedInputId(prev => (prev && inputs.some(d => d.deviceId === prev)) ? prev : (inputs[0]?.deviceId ?? ''))
-      setSelectedOutputId(prev => (prev && outputs.some(d => d.deviceId === prev)) ? prev : (outputs[0]?.deviceId ?? ''))
+      setSelectedInputId(prev => pickAudioDevice(prev, inputs, AUDIO_DEVICE_STORAGE_KEYS.input))
+      setSelectedOutputId(prev => pickAudioDevice(prev, outputs, AUDIO_DEVICE_STORAGE_KEYS.output))
     } catch (e) {
       console.warn('Unable to list audio devices:', e)
     }
@@ -542,6 +556,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   const handleInputDeviceChange = async (deviceId) => {
     setSelectedInputId(deviceId)
+    window.localStorage.setItem(AUDIO_DEVICE_STORAGE_KEYS.input, deviceId)
     if (deviceRef.current?.audio) {
       try {
         await deviceRef.current.audio.setInputDevice(deviceId)
@@ -557,6 +572,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
   const handleOutputDeviceChange = async (deviceId) => {
     setSelectedOutputId(deviceId)
+    window.localStorage.setItem(AUDIO_DEVICE_STORAGE_KEYS.output, deviceId)
     if (deviceRef.current?.audio?.isOutputSelectionSupported) {
       try {
         await deviceRef.current.audio.speakerDevices.set(deviceId)

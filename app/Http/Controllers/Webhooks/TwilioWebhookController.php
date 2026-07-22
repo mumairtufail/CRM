@@ -88,6 +88,7 @@ class TwilioWebhookController extends Controller
             }
 
             $callingUser = $this->resolveUserByClientIdentity($setting->organization_id, $from);
+            Log::info("Twilio Voice Webhook: resolved calling user for From={$from} in org {$setting->organization_id}: " . ($callingUser ? "user #{$callingUser->id} ({$callingUser->email})" : 'none'));
 
             // Create local outbound call log
             TwilioCall::create([

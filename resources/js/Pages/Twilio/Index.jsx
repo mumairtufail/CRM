@@ -10,8 +10,42 @@ import { Card } from '@/Components/ui/card'
 import {
   Phone, PhoneCall, PhoneOff, PhoneForwarded, MessageSquare,
   Clock, Volume2, VolumeX, Delete, HelpCircle, X, Play, Pause,
-  AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, User, Send
+  AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, ChevronLeft, User, Send
 } from 'lucide-react'
+
+function PaginationBar({ paginator, pageParam, onPageChange }) {
+  if (!paginator || paginator.last_page <= 1) return null
+  return (
+    <div className="flex items-center justify-between px-3 py-2.5 border-t border-slate-100">
+      <p className="text-[11px] text-slate-400">
+        Showing {paginator.from}–{paginator.to} of {paginator.total}
+      </p>
+      <div className="flex items-center gap-1.5">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-lg border-slate-200"
+          onClick={() => onPageChange(pageParam, paginator.current_page - 1)}
+          disabled={paginator.current_page === 1}
+        >
+          <ChevronLeft size={13} />
+        </Button>
+        <span className="text-[11px] font-semibold text-slate-500 px-1">
+          {paginator.current_page} / {paginator.last_page}
+        </span>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 w-7 p-0 rounded-lg border-slate-200"
+          onClick={() => onPageChange(pageParam, paginator.current_page + 1)}
+          disabled={paginator.current_page === paginator.last_page}
+        >
+          <ChevronRight size={13} />
+        </Button>
+      </div>
+    </div>
+  )
+}
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
@@ -126,6 +160,16 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     } finally {
       setSyncing(false)
     }
+  }
+
+  const goToPage = (pageParam, page) => {
+    const params = new URLSearchParams(window.location.search)
+    params.set(pageParam, page)
+    router.get(`${window.location.pathname}?${params.toString()}`, {}, {
+      preserveState: true,
+      preserveScroll: true,
+      only: [pageParam === 'calls_page' ? 'calls' : 'messages'],
+    })
   }
 
   // Wires up per-call lifecycle events (accept/disconnect/cancel/reject/error).
@@ -911,6 +955,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                           </tbody>
                         </table>
                       </div>
+                      <PaginationBar paginator={calls} pageParam="calls_page" onPageChange={goToPage} />
                     </div>
                   )}
 
@@ -981,6 +1026,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                           </tbody>
                         </table>
                       </div>
+                      <PaginationBar paginator={messages} pageParam="messages_page" onPageChange={goToPage} />
                     </div>
                   )}
 

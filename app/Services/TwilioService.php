@@ -202,17 +202,18 @@ class TwilioService
                 }
 
                 $direction = ($call->from === $this->setting->phone_number) ? 'outbound' : 'inbound';
-                
-                // Determine voicemail status (if it was recorded)
-                $status = $call->status;
-                $recordingUrl = null;
 
-                // Let's fetch recordings associated with this call
-                $recordings = $twilio->recordings->read(['callSid' => $call->sid, 'limit' => 1]);
-                if (!empty($recordings)) {
-                    $recordingUrl = $recordings[0]->uri;
-                    if ($direction === 'inbound' && in_array($status, ['completed', 'no-answer'])) {
-                        $status = 'voicemail';
+                // Our own webhooks (dial-status, recording-status, voicemail) are the
+                // authoritative source for status/duration/recording_url now that every
+                // answered call is recorded too — sync should only fill in gaps for
+                // calls it doesn't already have data for, never clobber what's there.
+                $existing = TwilioCall::where('sid', $call->sid)->first();
+
+                $recordingUrl = $existing->recording_url ?? null;
+                if (!$recordingUrl) {
+                    $recordings = $twilio->recordings->read(['callSid' => $call->sid, 'limit' => 1]);
+                    if (!empty($recordings)) {
+                        $recordingUrl = "https://api.twilio.com" . $recordings[0]->uri;
                     }
                 }
 
@@ -223,9 +224,9 @@ class TwilioService
                         'from_number'     => $call->from,
                         'to_number'       => $call->to,
                         'direction'       => $direction,
-                        'status'          => $status,
-                        'duration'        => $call->duration,
-                        'recording_url'   => $recordingUrl ? "https://api.twilio.com" . $recordingUrl : null,
+                        'status'          => $existing->status ?? $call->status,
+                        'duration'        => $existing->duration ?? $call->duration,
+                        'recording_url'   => $recordingUrl,
                         'created_at'      => $call->dateCreated,
                         'updated_at'      => $call->dateUpdated,
                     ]

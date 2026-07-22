@@ -13,9 +13,14 @@ import { LogoMark } from '@/Components/Common/Logo'
 import usePermissions from '@/Hooks/usePermissions'
 
 const navItems = [
+  { label: 'Campaigns',  href: '/campaigns', icon: Mail, module: 'email_campaigns' },
+  { label: 'Clients',    href: '/clients',   icon: Briefcase },
   { label: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Team',       href: '/settings/team', icon: ShieldCheck, permission: 'team.view' },
-  { label: 'Reports',    href: '/reports',   icon: BarChart3, permission: 'reports.view' },
+  { label: 'Dialer', href: '/twilio', icon: Phone },
+  { label: 'Forms',      href: '/forms',    icon: ClipboardList },
+  { label: 'Help & Docs', href: '/documentation', icon: BookOpen },
+  { label: 'Inbox',      href: '/inbox',     icon: Inbox },
+  { label: 'Invoices',   href: '/invoices',  icon: FileText },
   {
     label: 'Leads',
     icon: Users,
@@ -28,8 +33,10 @@ const navItems = [
     ],
   },
   { label: 'Pipeline',   href: '/pipeline', icon: Kanban },
-  { label: 'Campaigns',  href: '/campaigns', icon: Mail, module: 'email_campaigns' },
-  { label: 'Forms',      href: '/forms',    icon: ClipboardList },
+  { label: 'Projects',   href: '/projects',  icon: FolderKanban },
+  { label: 'Reports',    href: '/reports',   icon: BarChart3, permission: 'reports.view' },
+  { label: 'Support',    href: '/support',   icon: LifeBuoy },
+  { label: 'Team',       href: '/settings/team', icon: ShieldCheck, permission: 'team.view' },
   {
     label: 'WhatsApp',
     icon: MessageSquare,
@@ -40,14 +47,7 @@ const navItems = [
       { label: 'Conversations',    href: '/whatsapp/conversations',  icon: MessagesSquare },
     ],
   },
-  { label: 'Clients',    href: '/clients',   icon: Briefcase },
-  { label: 'Projects',   href: '/projects',  icon: FolderKanban },
-  { label: 'Inbox',      href: '/inbox',     icon: Inbox },
-  { label: 'Invoices',   href: '/invoices',  icon: FileText },
-  { label: 'Dialer', href: '/twilio', icon: Phone },
   { label: 'Settings',   href: '/profile',   icon: Settings },
-  { label: 'Support',    href: '/support',   icon: LifeBuoy },
-  { label: 'Help & Docs', href: '/documentation', icon: BookOpen },
 ]
 
 const quickActions = [

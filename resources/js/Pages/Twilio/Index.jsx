@@ -92,6 +92,12 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const [isMicTesting, setIsMicTesting] = useState(false)
   const [isLoopback, setIsLoopback] = useState(false)
 
+  // Audio input/output device selection
+  const [inputDevices, setInputDevices] = useState([])
+  const [outputDevices, setOutputDevices] = useState([])
+  const [selectedInputId, setSelectedInputId] = useState('')
+  const [selectedOutputId, setSelectedOutputId] = useState('')
+
   const canvasRef = useRef(null)
   const loopbackGainNodeRef = useRef(null)
   const animationFrameRef = useRef(null)
@@ -168,6 +174,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
       device.on('registered', () => {
         console.log('Embedded Twilio Softphone Registered & Ready')
+        if (selectedOutputId && device.audio?.isOutputSelectionSupported) {
+          device.audio.speakerDevices.set(selectedOutputId).catch(e => console.warn('Failed to set speaker device:', e))
+        }
       })
 
       device.on('error', (err) => {
@@ -245,7 +254,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     if (isSoftphone && deviceRef.current) {
       setCallState('connecting')
       try {
-        await navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+        await navigator.mediaDevices.getUserMedia({
+          audio: selectedInputId ? { deviceId: { exact: selectedInputId } } : true,
+        }).then(stream => {
           stream.getTracks().forEach(track => track.stop())
         })
       } catch (e) {
@@ -253,6 +264,14 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         toast.error('Microphone access is blocked. Please allow microphone permissions for this site in your browser settings and try again.')
         setCallState('idle')
         return
+      }
+
+      if (selectedInputId && deviceRef.current.audio) {
+        try {
+          await deviceRef.current.audio.setInputDevice(selectedInputId)
+        } catch (e) {
+          console.warn('Failed to set input device before call, using default:', e)
+        }
       }
 
       try {
@@ -417,6 +436,55 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
      }
    }
 
+  // ─── Audio Input/Output Device Selection ───────────────────────────────────
+  const refreshAudioDevices = async () => {
+    if (!navigator.mediaDevices?.enumerateDevices) return
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices()
+      const inputs = devices.filter(d => d.kind === 'audioinput')
+      const outputs = devices.filter(d => d.kind === 'audiooutput')
+      setInputDevices(inputs)
+      setOutputDevices(outputs)
+      setSelectedInputId(prev => (prev && inputs.some(d => d.deviceId === prev)) ? prev : (inputs[0]?.deviceId ?? ''))
+      setSelectedOutputId(prev => (prev && outputs.some(d => d.deviceId === prev)) ? prev : (outputs[0]?.deviceId ?? ''))
+    } catch (e) {
+      console.warn('Unable to list audio devices:', e)
+    }
+  }
+
+  useEffect(() => {
+    refreshAudioDevices()
+    if (!navigator.mediaDevices?.addEventListener) return
+    navigator.mediaDevices.addEventListener('devicechange', refreshAudioDevices)
+    return () => navigator.mediaDevices.removeEventListener('devicechange', refreshAudioDevices)
+  }, [])
+
+  const handleInputDeviceChange = async (deviceId) => {
+    setSelectedInputId(deviceId)
+    if (deviceRef.current?.audio) {
+      try {
+        await deviceRef.current.audio.setInputDevice(deviceId)
+      } catch (e) {
+        console.warn('Failed to switch input device:', e)
+      }
+    }
+    // Restart the mic tester on the newly selected device so the waveform reflects it
+    if (isMicTesting) {
+      stopMicTest()
+    }
+  }
+
+  const handleOutputDeviceChange = async (deviceId) => {
+    setSelectedOutputId(deviceId)
+    if (deviceRef.current?.audio?.isOutputSelectionSupported) {
+      try {
+        await deviceRef.current.audio.speakerDevices.set(deviceId)
+      } catch (e) {
+        console.warn('Failed to switch output device:', e)
+      }
+    }
+  }
+
   // ─── Voice Wave Visualizer & Audio Tester ──────────────────────────────────
   const startMicTest = async () => {
     if (isMicTesting) {
@@ -425,9 +493,12 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: selectedInputId ? { deviceId: { exact: selectedInputId } } : true,
+      })
       setMicStream(stream)
-      
+      refreshAudioDevices() // device labels are only populated after permission is granted
+
       const AudioCtx = window.AudioContext || window.webkitAudioContext
       const ctx = new AudioCtx()
       const src = ctx.createMediaStreamSource(stream)
@@ -522,7 +593,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     }
   }, [isMicTesting, analyser, activeMockupTab])
 
-  const playTestChime = () => {
+  const playTestChime = async () => {
     try {
       const AudioCtx = window.AudioContext || window.webkitAudioContext
       const ctx = new AudioCtx()
@@ -537,7 +608,25 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.45)
 
       osc.connect(gain)
-      gain.connect(ctx.destination)
+
+      const canSelectOutput = selectedOutputId && typeof HTMLMediaElement !== 'undefined'
+        && typeof HTMLMediaElement.prototype.setSinkId === 'function'
+
+      if (canSelectOutput) {
+        const dest = ctx.createMediaStreamDestination()
+        gain.connect(dest)
+        const audioEl = new Audio()
+        audioEl.srcObject = dest.stream
+        await audioEl.setSinkId(selectedOutputId)
+        await audioEl.play()
+        setTimeout(() => {
+          audioEl.pause()
+          ctx.close()
+        }, 700)
+      } else {
+        gain.connect(ctx.destination)
+        setTimeout(() => ctx.close(), 700)
+      }
 
       osc.start()
       osc.stop(ctx.currentTime + 0.5)
@@ -1263,6 +1352,44 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                             <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
                               Verify browser microphone permissions, test speaker output, and view live frequencies.
                             </p>
+                          </div>
+
+                          {/* Input / Output Device Selection */}
+                          <div className="space-y-1.5">
+                            <div>
+                              <label className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                <Mic size={9} /> Microphone
+                              </label>
+                              <select
+                                value={selectedInputId}
+                                onChange={e => handleInputDeviceChange(e.target.value)}
+                                className="w-full mt-0.5 h-7.5 text-[10px] rounded-lg border border-slate-200 bg-white px-2 text-slate-700 focus:outline-none focus:border-brand-500"
+                              >
+                                {inputDevices.length === 0 && <option value="">No microphone detected</option>}
+                                {inputDevices.map((d, i) => (
+                                  <option key={d.deviceId || i} value={d.deviceId}>
+                                    {d.label || `Microphone ${i + 1}`}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-[8.5px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                                <Volume2 size={9} /> Speaker
+                              </label>
+                              <select
+                                value={selectedOutputId}
+                                onChange={e => handleOutputDeviceChange(e.target.value)}
+                                className="w-full mt-0.5 h-7.5 text-[10px] rounded-lg border border-slate-200 bg-white px-2 text-slate-700 focus:outline-none focus:border-brand-500"
+                              >
+                                {outputDevices.length === 0 && <option value="">No speaker detected</option>}
+                                {outputDevices.map((d, i) => (
+                                  <option key={d.deviceId || i} value={d.deviceId}>
+                                    {d.label || `Speaker ${i + 1}`}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
                           </div>
 
                           {/* Frequency Visualizer Canvas */}

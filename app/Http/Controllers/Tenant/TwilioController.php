@@ -332,15 +332,33 @@ class TwilioController extends Controller
 
         $mediaUrl = rtrim($call->recording_url, '/') . '.mp3';
 
-        $response = Http::withBasicAuth($setting->account_sid, $setting->auth_token)->get($mediaUrl);
+        // Forward the browser's Range header to Twilio and relay its response as-is
+        // (200 or 206) — without this, <audio> can't determine duration reliably or
+        // seek to an arbitrary point, since it has no way to fetch a byte range.
+        $httpClient = Http::withBasicAuth($setting->account_sid, $setting->auth_token);
+        if ($range = $request->header('Range')) {
+            $httpClient = $httpClient->withHeaders(['Range' => $range]);
+        }
 
-        if (!$response->successful()) {
+        $response = $httpClient->get($mediaUrl);
+
+        if (!$response->successful() && $response->status() !== 206) {
             abort(502, 'Unable to fetch recording from Twilio.');
         }
 
-        return response($response->body(), 200)
-            ->header('Content-Type', 'audio/mpeg')
-            ->header('Cache-Control', 'private, max-age=3600');
+        $headers = [
+            'Content-Type'  => 'audio/mpeg',
+            'Accept-Ranges' => 'bytes',
+            'Cache-Control' => 'private, max-age=3600',
+        ];
+        if ($response->header('Content-Range')) {
+            $headers['Content-Range'] = $response->header('Content-Range');
+        }
+        if ($response->header('Content-Length')) {
+            $headers['Content-Length'] = $response->header('Content-Length');
+        }
+
+        return response($response->body(), $response->status(), $headers);
     }
 
     /**

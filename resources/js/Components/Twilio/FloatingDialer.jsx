@@ -508,6 +508,11 @@ export default function FloatingDialer() {
                     Tap a key to send a tone (e.g. IVR menus)
                   </p>
                 )}
+                {callState === 'connected' && !isSoftphone && (
+                  <p className="text-[10px] text-amber-600 font-semibold -mb-1 text-center px-2 leading-snug">
+                    This call is bridged to your real phone — press keys on that phone for IVR menus, not here.
+                  </p>
+                )}
 
                 {/* Keypad Grid */}
                 <div className="grid grid-cols-3 gap-x-5 gap-y-2.5 my-3">

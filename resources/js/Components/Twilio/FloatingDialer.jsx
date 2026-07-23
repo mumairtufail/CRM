@@ -62,19 +62,36 @@ export default function FloatingDialer() {
   const connectionRef = useRef(null)
   const timerRef = useRef(null)
   const audioRef = useRef(null)
+  const dtmfTimeoutRef = useRef(null)
 
-  // Listen to window-level 'twilio-dial' event (for quick click-to-dial on Lead Detail)
+  // Brief "Sent 1" feedback when a DTMF tone goes out mid-call
+  const [lastDtmf, setLastDtmf] = useState(null)
+
+  // Mirrors `isSoftphone` state for the 'twilio-dial' listener below, which is
+  // registered once on mount — reading the state var there would close over its
+  // stale (initial) value instead of the value at call time.
+  const isSoftphoneRef = useRef(false)
+  useEffect(() => { isSoftphoneRef.current = isSoftphone }, [isSoftphone])
+
+  // Listen to window-level 'twilio-dial' event (quick click-to-dial on Lead
+  // Detail). Passing `autoCall: true` in the event detail dials immediately
+  // instead of just pre-filling the keypad.
   useEffect(() => {
     const handleGlobalDial = (e) => {
-      if (e.detail?.phoneNumber) {
-        setDialNumber(e.detail.phoneNumber)
-        setIsOpen(true)
-        setActiveTab('keypad')
-        try {
-          sessionStorage.setItem('crm_dialer_open', 'true')
-          sessionStorage.setItem('crm_dialer_number', e.detail.phoneNumber)
-          sessionStorage.setItem('crm_dialer_tab', 'keypad')
-        } catch {}
+      const number = e.detail?.phoneNumber
+      if (!number) return
+
+      setDialNumber(number)
+      setIsOpen(true)
+      setActiveTab('keypad')
+      try {
+        sessionStorage.setItem('crm_dialer_open', 'true')
+        sessionStorage.setItem('crm_dialer_number', number)
+        sessionStorage.setItem('crm_dialer_tab', 'keypad')
+      } catch {}
+
+      if (e.detail?.autoCall) {
+        handleCall(number)
       }
     }
     window.addEventListener('twilio-dial', handleGlobalDial)
@@ -228,16 +245,21 @@ export default function FloatingDialer() {
     fetchLogs()
   }
 
-  // Handle Call trigger
-  const handleCall = async () => {
-    if (!dialNumber.trim()) {
+  // Handle Call trigger. `numberOverride` lets the 'twilio-dial' listener (which
+  // is registered once on mount, see above) dial immediately with a fresh
+  // number instead of relying on `dialNumber` state, which it would otherwise
+  // read as stale until the next render.
+  const handleCall = async (numberOverride) => {
+    const to = (numberOverride ?? dialNumber).trim()
+    if (!to) {
       toast.error('Please enter a phone number.')
       return
     }
+    setDialNumber(to)
 
-    if (isSoftphone && deviceRef.current) {
+    if (isSoftphoneRef.current && deviceRef.current) {
       setCallState('connecting')
-      deviceRef.current.connect({ params: { To: dialNumber } })
+      deviceRef.current.connect({ params: { To: to } })
     } else {
       // Fallback Click-to-Call bridging
       setCallState('connecting')
@@ -249,7 +271,7 @@ export default function FloatingDialer() {
             'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
             Accept: 'application/json',
           },
-          body: JSON.stringify({ to: dialNumber }),
+          body: JSON.stringify({ to }),
         })
         const data = await res.json()
         if (res.ok) {
@@ -318,13 +340,22 @@ export default function FloatingDialer() {
 
   // Format call duration MM:SS
   const formatTime = (secs) => {
+    if (!Number.isFinite(secs)) return '00:00'
     const mins = Math.floor(secs / 60)
-    const remaining = secs % 60
+    const remaining = Math.floor(secs % 60)
     return `${mins.toString().padStart(2, '0')}:${remaining.toString().padStart(2, '0')}`
   }
 
-  // Dial keys helper
+  // Dial keys helper — mid-call (softphone), a keypress sends a DTMF tone
+  // down the live connection instead of editing the (already-dialed) number.
   const addKey = (key) => {
+    if (callState === 'connected' && isSoftphone && connectionRef.current) {
+      connectionRef.current.sendDigits(key)
+      setLastDtmf(key)
+      if (dtmfTimeoutRef.current) clearTimeout(dtmfTimeoutRef.current)
+      dtmfTimeoutRef.current = setTimeout(() => setLastDtmf(null), 1200)
+      return
+    }
     setDialNumber(prev => prev + key)
   }
 
@@ -407,22 +438,39 @@ export default function FloatingDialer() {
             </button>
           </div>
 
-          {/* Active Call Banner */}
+          {/* Active Call Banner — persists across every tab; click it to jump
+              straight back to the keypad/call screen (e.g. to send a DTMF
+              tone for "press 1 for an agent" IVR prompts). */}
           {callState !== 'idle' && (
-            <div
+            <button
+              type="button"
+              onClick={() => setActiveTab('keypad')}
               className={cn(
-                'px-4 py-2 flex items-center justify-between text-xs transition-colors border-b border-slate-50',
-                callState === 'connected' ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700'
+                'w-full px-4 py-2 flex items-center justify-between text-xs transition-colors border-b border-slate-50 text-left',
+                callState === 'connected' ? 'bg-emerald-50 text-emerald-700' : 'bg-brand-50 text-brand-700',
+                activeTab !== 'keypad' && 'hover:brightness-95 cursor-pointer'
               )}
             >
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-current animate-ping" />
-                <span className="font-semibold capitalize tracking-wide">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="w-2 h-2 rounded-full bg-current animate-ping shrink-0" />
+                <span className="font-semibold capitalize tracking-wide truncate">
                   {callState === 'connected' ? `In Call: ${formatTime(callDuration)}` : `${callState}...`}
                 </span>
+                {lastDtmf && (
+                  <span className="text-[10px] font-bold bg-white/60 px-1.5 py-0.5 rounded shrink-0">
+                    Sent {lastDtmf}
+                  </span>
+                )}
               </div>
-              <span className="font-mono text-[11px] font-bold">{dialNumber}</span>
-            </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="font-mono text-[11px] font-bold">{dialNumber}</span>
+                {activeTab !== 'keypad' && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold underline underline-offset-2">
+                    <Phone size={11} /> Back to call
+                  </span>
+                )}
+              </div>
+            </button>
           )}
 
           {/* Tab Content */}
@@ -455,6 +503,12 @@ export default function FloatingDialer() {
                   )}
                 </div>
 
+                {callState === 'connected' && isSoftphone && (
+                  <p className="text-[10px] text-emerald-600 font-semibold -mb-1">
+                    Tap a key to send a tone (e.g. IVR menus)
+                  </p>
+                )}
+
                 {/* Keypad Grid */}
                 <div className="grid grid-cols-3 gap-x-5 gap-y-2.5 my-3">
                   {[
@@ -474,7 +528,7 @@ export default function FloatingDialer() {
                     <button
                       key={num}
                       type="button"
-                      disabled={callState !== 'idle' && callState !== 'connected'}
+                      disabled={callState !== 'idle' && !(callState === 'connected' && isSoftphone)}
                       onClick={() => addKey(num)}
                       className="w-[48px] h-[48px] rounded-full bg-slate-50 hover:bg-slate-100 active:scale-95 transition-all flex flex-col items-center justify-center border border-slate-100"
                     >
@@ -489,7 +543,7 @@ export default function FloatingDialer() {
                   {callState === 'idle' ? (
                     <button
                       type="button"
-                      onClick={handleCall}
+                      onClick={() => handleCall()}
                       className="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center shadow-md shadow-emerald-600/10"
                     >
                       <PhoneCall size={18} className="text-white" />

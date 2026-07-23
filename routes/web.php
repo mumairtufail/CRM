@@ -43,6 +43,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\FormController;
 use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ErrorReportController;
 use App\Http\Controllers\TeamMemberController;
 use App\Http\Controllers\SmtpCredentialController;
 use App\Http\Controllers\OrganizationSettingsController;
@@ -123,6 +124,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/',                              [AdminDashboardController::class, 'index'])->name('dashboard');
     Route::get('/users',                         [AdminUserController::class, 'index'])->name('users.index');
     Route::post('/users/{user}/impersonate',     [AdminUserController::class, 'impersonate'])->name('users.impersonate');
+    Route::get('/activity-log',                  [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-log.index');
+    Route::get('/error-log',                     [\App\Http\Controllers\Admin\ErrorLogController::class, 'index'])->name('error-log.index');
     Route::get('/organizations',                 [AdminOrganizationController::class, 'index'])->name('organizations.index');
     Route::patch('/organizations/{organization:id}/plan', [AdminOrganizationController::class, 'updatePlan'])->name('organizations.plan.update');
     Route::delete('/organizations/{organization:id}', [AdminOrganizationController::class, 'destroy'])->name('organizations.destroy');
@@ -250,6 +253,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Stop impersonating — available to the impersonated user (not super-admin gated).
     Route::post('/impersonate/leave', [ImpersonationController::class, 'leave'])->name('impersonate.leave');
+
+    // Frontend error reporting (throttled — a broken page shouldn't be able to flood the DB)
+    Route::post('/errors/report', [ErrorReportController::class, 'store'])->middleware('throttle:20,1')->name('errors.report');
 
     // Notifications
     Route::get('/notifications',                       [NotificationController::class, 'index'])->name('notifications.index');
@@ -461,6 +467,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/twilio/sync',  [TwilioController::class, 'syncLogs'])->name('twilio.sync');
     Route::get('/twilio/leads',  [TwilioController::class, 'searchLeads'])->name('twilio.leads');
     Route::get('/twilio/calls/{call}/recording', [TwilioController::class, 'streamRecording'])->name('twilio.recording');
+    Route::delete('/twilio/calls/bulk',   [TwilioController::class, 'bulkDestroyCalls'])->name('twilio.calls.bulk-destroy');
+    Route::delete('/twilio/calls/{call}', [TwilioController::class, 'destroyCall'])->name('twilio.calls.destroy');
 
     Route::post('/settings/cache/clear', [ProfileController::class, 'clearLeadsCache'])->name('settings.cache.clear');
 

@@ -5,8 +5,28 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { Component } from 'react';
+import { reportError } from './lib/reportError';
 
 const appName = import.meta.env.VITE_APP_NAME || 'LumeniaCRM';
+
+// Catch anything that escapes React's render tree (async callbacks, timers,
+// event handlers not wrapped by an error boundary) so it still ends up in
+// the same /admin/error-log as render-time crashes and backend exceptions.
+window.addEventListener('error', (event) => {
+    reportError({
+        message: event.message,
+        file: event.filename,
+        line: event.lineno,
+        stack: event.error?.stack,
+    });
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    reportError({
+        message: event.reason?.message ?? String(event.reason ?? 'Unhandled promise rejection'),
+        stack: event.reason?.stack,
+    });
+});
 
 class ErrorBoundary extends Component {
     constructor(props) {
@@ -16,6 +36,14 @@ class ErrorBoundary extends Component {
 
     static getDerivedStateFromError() {
         return { hasError: true };
+    }
+
+    componentDidCatch(error, info) {
+        reportError({
+            message: error?.message ?? 'React render error',
+            stack: error?.stack,
+            context: { componentStack: info?.componentStack },
+        });
     }
 
     render() {

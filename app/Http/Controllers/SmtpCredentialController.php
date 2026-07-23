@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SmtpCredential;
+use App\Services\ActivityLogger;
 use App\Services\MailService;
 use Illuminate\Http\Request;
 use Webklex\PHPIMAP\ClientManager;
@@ -30,7 +31,9 @@ class SmtpCredentialController extends Controller
             'imap_encryption' => 'nullable|in:ssl,tls,none',
         ]);
 
-        $request->user()->smtpCredentials()->create($data);
+        $credential = $request->user()->smtpCredentials()->create($data);
+
+        ActivityLogger::log('smtp.settings_updated', $credential, description: "Added SMTP account {$credential->name}");
 
         return back()->with('smtp_success', 'SMTP account added.');
     }
@@ -58,6 +61,8 @@ class SmtpCredentialController extends Controller
         }
 
         $smtpCredential->update($data);
+
+        ActivityLogger::log('smtp.settings_updated', $smtpCredential, description: "Updated SMTP account {$smtpCredential->name}");
 
         return back()->with('smtp_success', 'SMTP account updated.');
     }

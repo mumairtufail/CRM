@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Project;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -75,6 +76,8 @@ class ProjectController extends Controller
             'status' => $validated['status'] ?? 'planning',
         ]);
 
+        ActivityLogger::log('project.created', $project, description: "Created project {$project->name}");
+
         return redirect()->route('projects.show', $project)->with('success', 'Project created.');
     }
 
@@ -130,11 +133,15 @@ class ProjectController extends Controller
 
         $project->update(array_filter($validated, fn ($v) => $v !== null));
 
+        ActivityLogger::log('project.updated', $project, description: "Updated project {$project->name}");
+
         return response()->json(['ok' => true]);
     }
 
     public function destroy(Project $project)
     {
+        ActivityLogger::log('project.deleted', description: "Deleted project {$project->name}", properties: ['project_id' => $project->id, 'project_name' => $project->name]);
+
         foreach ($project->documents as $doc) {
             \Storage::disk('public')->delete($doc->file_path);
         }

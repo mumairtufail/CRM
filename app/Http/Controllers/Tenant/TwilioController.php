@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TwilioSetting;
 use App\Models\TwilioCall;
 use App\Models\TwilioMessage;
+use App\Services\ActivityLogger;
 use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -27,6 +28,7 @@ class TwilioController extends Controller
         }
 
         $calls = TwilioCall::where('organization_id', $orgId)
+            ->when(!$user->hasPermission('twilio.view_all'), fn ($q) => $q->where('user_id', $user->id))
             ->with('user:id,name')
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'calls_page');
@@ -73,9 +75,11 @@ class TwilioController extends Controller
      */
     public function logs(Request $request)
     {
-        $orgId = $request->user()->organization_id;
+        $user = $request->user();
+        $orgId = $user->organization_id;
 
         $calls = TwilioCall::where('organization_id', $orgId)
+            ->when(!$user->hasPermission('twilio.view_all'), fn ($q) => $q->where('user_id', $user->id))
             ->with('user:id,name')
             ->orderBy('created_at', 'desc')
             ->limit(30)
@@ -131,6 +135,8 @@ class TwilioController extends Controller
 
         $service = new TwilioService($setting);
         $service->autoConfigureWebhooks();
+
+        ActivityLogger::log('twilio.settings_updated', $setting, description: 'Twilio settings updated');
 
         return back()->with('success', 'Twilio settings saved.');
     }
@@ -213,6 +219,9 @@ class TwilioController extends Controller
         try {
             $service = new TwilioService($setting);
             $call = $service->placeCall($validated['to'], $agentPhone);
+
+            ActivityLogger::log('dialer.call_placed', description: "Placed call to {$validated['to']}", properties: ['to' => $validated['to']]);
+
             return response()->json(['success' => true, 'call' => $call]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -237,6 +246,9 @@ class TwilioController extends Controller
         try {
             $service = new TwilioService($setting);
             $msg = $service->sendSms($validated['to'], $validated['body']);
+
+            ActivityLogger::log('dialer.sms_sent', description: "Sent SMS to {$validated['to']}", properties: ['to' => $validated['to']]);
+
             return response()->json(['success' => true, 'message' => $msg]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
@@ -290,6 +302,9 @@ class TwilioController extends Controller
     public function destroy(Request $request)
     {
         TwilioSetting::where('organization_id', $request->user()->organization_id)->delete();
+
+        ActivityLogger::log('twilio.settings_removed', description: 'Twilio configuration removed');
+
         return back()->with('success', 'Twilio configuration removed.');
     }
 
@@ -324,6 +339,54 @@ class TwilioController extends Controller
         return response($response->body(), 200)
             ->header('Content-Type', 'audio/mpeg')
             ->header('Cache-Control', 'private, max-age=3600');
+    }
+
+    /**
+     * Delete a single call log record.
+     */
+    public function destroyCall(Request $request, TwilioCall $call)
+    {
+        $user = $request->user();
+
+        if ($call->organization_id !== $user->organization_id) {
+            abort(404);
+        }
+
+        if (!$user->hasPermission('twilio.delete')) {
+            abort(403, 'You do not have permission to delete call records.');
+        }
+
+        if (!$user->hasPermission('twilio.view_all') && $call->user_id !== $user->id) {
+            abort(403, 'You can only delete your own call records.');
+        }
+
+        $call->delete();
+
+        return back()->with('success', 'Call record deleted.');
+    }
+
+    /**
+     * Delete multiple call log records at once.
+     */
+    public function bulkDestroyCalls(Request $request)
+    {
+        $user = $request->user();
+
+        if (!$user->hasPermission('twilio.delete')) {
+            abort(403, 'You do not have permission to delete call records.');
+        }
+
+        $validated = $request->validate([
+            'ids'   => 'required|array|min:1',
+            'ids.*' => 'integer',
+        ]);
+
+        $deleted = TwilioCall::where('organization_id', $user->organization_id)
+            ->when(!$user->hasPermission('twilio.view_all'), fn ($q) => $q->where('user_id', $user->id))
+            ->whereIn('id', $validated['ids'])
+            ->delete();
+
+        return response()->json(['success' => true, 'deleted' => $deleted]);
     }
 
     /**

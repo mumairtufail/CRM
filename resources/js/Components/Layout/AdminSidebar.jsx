@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react'
 import {
   LayoutDashboard, Users, Building2,
   Settings, PanelLeftClose, PanelLeftOpen, Mail, MessageSquare,
-  MessageCircle, LifeBuoy, CreditCard, BookOpen, Bot,
+  MessageCircle, LifeBuoy, CreditCard, BookOpen, Bot, ScrollText, AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -17,6 +17,8 @@ const navItems = [
   { label: 'Support Cases', href: '/admin/support',           icon: LifeBuoy },
   { label: 'WhatsApp',      href: '/admin/whatsapp-settings', icon: MessageCircle },
   { label: 'Chatbot Chats', href: '/admin/chatbot-conversations', icon: Bot },
+  { label: 'Activity Log',  href: '/admin/activity-log',      icon: ScrollText },
+  { label: 'Error Log',     href: '/admin/error-log',         icon: AlertTriangle },
 ]
 
 export default function AdminSidebar({ open, onToggle }) {

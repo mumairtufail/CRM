@@ -1,5 +1,5 @@
 import { Link, usePage, router } from '@inertiajs/react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import {
   LayoutDashboard, Users, Kanban, Mail, Upload,
   Tag, Settings, PanelLeftClose, PanelLeftOpen,
@@ -13,18 +13,13 @@ import { LogoMark } from '@/Components/Common/Logo'
 import usePermissions from '@/Hooks/usePermissions'
 
 const navItems = [
-  { label: 'Campaigns',  href: '/campaigns', icon: Mail, module: 'email_campaigns' },
-  { label: 'Clients',    href: '/clients',   icon: Briefcase },
-  { label: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard },
-  { label: 'Dialer', href: '/twilio', icon: Phone },
-  { label: 'Forms',      href: '/forms',    icon: ClipboardList },
-  { label: 'Help & Docs', href: '/documentation', icon: BookOpen },
-  { label: 'Inbox',      href: '/inbox',     icon: Inbox },
-  { label: 'Invoices',   href: '/invoices',  icon: FileText },
+  { label: 'Dashboard',  href: '/dashboard', icon: LayoutDashboard, section: 'Overview' },
+
   {
     label: 'Leads',
     icon: Users,
     group: true,
+    section: 'Sales',
     children: [
       { label: 'All Leads',      href: '/leads',           icon: Users },
       { label: 'Groups',         href: '/groups',          icon: UsersRound },
@@ -32,22 +27,33 @@ const navItems = [
       { label: 'AI Lead Search', href: '/lead-generation', icon: Sparkles },
     ],
   },
-  { label: 'Pipeline',   href: '/pipeline', icon: Kanban },
-  { label: 'Projects',   href: '/projects',  icon: FolderKanban },
-  { label: 'Reports',    href: '/reports',   icon: BarChart3, permission: 'reports.view' },
-  { label: 'Support',    href: '/support',   icon: LifeBuoy },
-  { label: 'Team',       href: '/settings/team', icon: ShieldCheck, permission: 'team.view' },
+  { label: 'Pipeline',   href: '/pipeline', icon: Kanban, section: 'Sales' },
+  { label: 'Clients',    href: '/clients',   icon: Briefcase, section: 'Sales' },
+
+  { label: 'Campaigns',  href: '/campaigns', icon: Mail, module: 'email_campaigns', section: 'Communication' },
   {
     label: 'WhatsApp',
     icon: MessageSquare,
     group: true,
     module: 'whatsapp_campaigns',
+    section: 'Communication',
     children: [
       { label: 'WA Campaigns',     href: '/whatsapp/campaigns',     icon: MessageSquare },
       { label: 'Conversations',    href: '/whatsapp/conversations',  icon: MessagesSquare },
     ],
   },
-  { label: 'Settings',   href: '/profile',   icon: Settings },
+  { label: 'Dialer',     href: '/twilio',    icon: Phone, section: 'Communication' },
+  { label: 'Inbox',      href: '/inbox',     icon: Inbox, section: 'Communication' },
+
+  { label: 'Forms',      href: '/forms',     icon: ClipboardList, section: 'Work' },
+  { label: 'Projects',   href: '/projects',  icon: FolderKanban, section: 'Work' },
+  { label: 'Invoices',   href: '/invoices',  icon: FileText, section: 'Work' },
+
+  { label: 'Reports',    href: '/reports',   icon: BarChart3, permission: 'reports.view', section: 'Insights' },
+  { label: 'Team',       href: '/settings/team', icon: ShieldCheck, permission: 'team.view', section: 'Insights' },
+
+  { label: 'Support',    href: '/support',   icon: LifeBuoy, section: 'Help' },
+  { label: 'Help & Docs', href: '/documentation', icon: BookOpen, section: 'Help' },
 ]
 
 const quickActions = [
@@ -209,32 +215,46 @@ export default function Sidebar({ open, onToggle }) {
         <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none min-h-0">
 
         {/* ── Navigation ────────────────────────── */}
-        {open && (
-          <p className="px-4 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">Navigation</p>
-        )}
+        <nav className={cn('px-2 space-y-0.5', open ? 'py-2' : 'py-2')}>
+          {visibleNavItems.map((item, idx) => {
+            const prevSection = idx > 0 ? visibleNavItems[idx - 1].section : null
+            const sectionBreak = idx > 0 && item.section !== prevSection
 
-        <nav className={cn('px-2 space-y-0.5', open ? 'py-1' : 'py-2')}>
-          {visibleNavItems.map((item) => {
+            const sectionDivider = sectionBreak && (
+              open ? (
+                <p className="px-3 pt-4 pb-1 text-[9.5px] font-bold uppercase tracking-[0.14em] text-white/20">
+                  {item.section}
+                </p>
+              ) : (
+                <div className="mx-2.5 my-2 border-t border-white/[0.07]" />
+              )
+            )
+
             if (item.group) {
               const { label, icon: Icon, children } = item
               const groupActive = children.some(c => url === c.href || url.startsWith(c.href))
               if (!open) {
                 return (
-                  <button key={label} title={label}
-                    onClick={() => { onToggle(); setGroupsOpen(prev => ({ ...prev, [label]: true })) }}
-                    className={cn(
-                      'relative w-full flex justify-center p-[11px] rounded-[10px] transition-all duration-150 group/nav',
-                      groupActive ? 'bg-brand-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
-                    )}
-                  >
-                    {groupActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />}
-                    <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
-                      className={cn('shrink-0 transition-colors', groupActive ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
-                  </button>
+                  <Fragment key={label}>
+                    {sectionDivider}
+                    <button title={label}
+                      onClick={() => { onToggle(); setGroupsOpen(prev => ({ ...prev, [label]: true })) }}
+                      className={cn(
+                        'relative w-full flex justify-center p-[11px] rounded-[10px] transition-all duration-150 group/nav',
+                        groupActive ? 'bg-brand-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                      )}
+                    >
+                      {groupActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />}
+                      <Icon size={15} strokeWidth={groupActive ? 2.2 : 1.8}
+                        className={cn('shrink-0 transition-colors', groupActive ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
+                    </button>
+                  </Fragment>
                 )
               }
               return (
-                <div key={label}>
+                <Fragment key={label}>
+                {sectionDivider}
+                <div>
                   <button
                     onClick={() => setGroupsOpen(prev => ({ ...prev, [label]: !prev[label] }))}
                     className={cn(
@@ -272,27 +292,31 @@ export default function Sidebar({ open, onToggle }) {
                     </div>
                   </div>
                 </div>
+                </Fragment>
               )
             }
 
             const { label, href, icon: Icon } = item
             const active = url === href || (href !== '/' && url.startsWith(href))
             return (
-              <Link key={href} href={href} title={!open ? label : undefined}
-                onClick={closeMobile}
-                className={cn(
-                  'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
-                  open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
-                  active ? 'bg-brand-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
-                )}
-              >
-                {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />}
-                <Icon size={15} strokeWidth={active ? 2.2 : 1.8}
-                  className={cn('shrink-0 transition-colors', active ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
-                {open && (
-                  <span className="text-[13px] font-medium truncate">{label}</span>
-                )}
-              </Link>
+              <Fragment key={href}>
+                {sectionDivider}
+                <Link href={href} title={!open ? label : undefined}
+                  onClick={closeMobile}
+                  className={cn(
+                    'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
+                    open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
+                    active ? 'bg-brand-600/[0.18] text-white' : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+                  )}
+                >
+                  {active && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />}
+                  <Icon size={15} strokeWidth={active ? 2.2 : 1.8}
+                    className={cn('shrink-0 transition-colors', active ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
+                  {open && (
+                    <span className="text-[13px] font-medium truncate">{label}</span>
+                  )}
+                </Link>
+              </Fragment>
             )
           })}
         </nav>
@@ -342,8 +366,28 @@ export default function Sidebar({ open, onToggle }) {
         </div>
       </div>
 
-      {/* ── Bottom — user + logout ─────────────── */}
+      {/* ── Bottom — settings + user + logout ──── */}
       <div className="px-2 pb-3 border-t border-white/[0.055] pt-2 space-y-0.5">
+        <Link
+          href="/profile"
+          title={!open ? 'Settings' : undefined}
+          onClick={closeMobile}
+          className={cn(
+            'relative flex items-center rounded-[10px] transition-all duration-150 group/nav',
+            open ? 'gap-3 px-3 py-[9px]' : 'justify-center p-[11px]',
+            (url === '/profile' || url.startsWith('/profile'))
+              ? 'bg-brand-600/[0.18] text-white'
+              : 'text-white/40 hover:text-white/75 hover:bg-white/[0.06]'
+          )}
+        >
+          {(url === '/profile' || url.startsWith('/profile')) && (
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-r-full bg-brand-400" />
+          )}
+          <Settings size={15} strokeWidth={url.startsWith('/profile') ? 2.2 : 1.8}
+            className={cn('shrink-0 transition-colors', url.startsWith('/profile') ? 'text-brand-300' : 'group-hover/nav:text-white/75')} />
+          {open && <span className="text-[13px] font-medium">Settings</span>}
+        </Link>
+
         {open && user && (
           <div className="flex items-center gap-2.5 px-3 py-2 mb-0.5">
             <div className="w-6 h-6 rounded-full bg-brand-600/60 flex items-center justify-center shrink-0 text-[10px] font-bold text-white">

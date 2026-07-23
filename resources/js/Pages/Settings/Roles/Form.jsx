@@ -19,6 +19,8 @@ const GROUP_LABELS = {
   team: 'Team',
   settings: 'Settings',
   dashboard: 'Dashboard',
+  reports: 'Reports',
+  twilio: 'Dialer',
 }
 
 export default function RoleForm({ role, permissionGroups, selectedIds }) {

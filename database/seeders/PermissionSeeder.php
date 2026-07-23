@@ -69,6 +69,11 @@ class PermissionSeeder extends Seeder
         'reports' => [
             'reports.view' => 'View reports & analytics',
         ],
+        'twilio' => [
+            'twilio.view_own' => 'View own call records',
+            'twilio.view_all' => 'View all team members\' call records',
+            'twilio.delete'   => 'Delete call records',
+        ],
     ];
 
     /**
@@ -81,6 +86,7 @@ class PermissionSeeder extends Seeder
         'whatsapp.view_conversations', 'whatsapp.send_messages',
         'inbox.view', 'inbox.send',
         'dashboard.view_own',
+        'twilio.view_own',
     ];
 
     public function run(): void

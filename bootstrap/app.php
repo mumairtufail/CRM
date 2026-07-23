@@ -36,6 +36,13 @@ return Application::configure(basePath: dirname(__DIR__))
         );
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        // Persist uncaught exceptions to the DB (see App\Services\ErrorLogger)
+        // so the superadmin can review them from /admin/error-log — in addition
+        // to Laravel's normal storage/logs/laravel.log output, not instead of it.
+        $exceptions->report(function (\Throwable $e) {
+            \App\Services\ErrorLogger::reportException($e);
+        });
+
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );

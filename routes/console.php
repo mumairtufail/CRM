@@ -17,6 +17,12 @@ Schedule::command('forms:sweep-abandoned-sessions')->everyFifteenMinutes();
 // Auto-disable tenants whose WhatsApp failure rate crosses a threshold in a rolling window
 Schedule::command('whatsapp:check-failure-rates')->everyFiveMinutes();
 
+// Purge activity log rows past the retention window (config/activitylog.php, default 30 days)
+Schedule::command('activitylogs:prune')->daily();
+
+// Purge error log rows past the same retention window
+Schedule::command('errorlogs:prune')->daily();
+
 // Process queued jobs (campaigns etc.) — stops after queue is empty so it doesn't
 // stay alive as a persistent process, which shared hosting doesn't support
 Schedule::command('queue:work --stop-when-empty --tries=3 --max-time=55')

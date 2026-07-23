@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Client;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -65,6 +66,8 @@ class ClientController extends Controller
             'currency' => $validated['currency'] ?? 'USD',
         ]);
 
+        ActivityLogger::log('client.created', $client, description: "Created client {$client->name}");
+
         return redirect()->route('clients.show', $client)->with('success', 'Client created.');
     }
 
@@ -102,11 +105,15 @@ class ClientController extends Controller
 
         $client->update(array_filter($validated, fn ($v) => $v !== null));
 
+        ActivityLogger::log('client.updated', $client, description: "Updated client {$client->name}");
+
         return response()->json(['ok' => true]);
     }
 
     public function destroy(Client $client)
     {
+        ActivityLogger::log('client.deleted', description: "Deleted client {$client->name}", properties: ['client_id' => $client->id, 'client_name' => $client->name]);
+
         // Delete associated document files
         foreach ($client->documents as $doc) {
             \Storage::disk('public')->delete($doc->file_path);

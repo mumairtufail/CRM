@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { reportError } from '@/lib/reportError'
 
 export default function FloatingDialer() {
   const { props } = usePage()
@@ -152,6 +153,21 @@ export default function FloatingDialer() {
 
       device.on('error', (error) => {
         console.warn('Twilio Device Error:', error)
+        reportError({
+          message: `Twilio Device error: ${error.message || error.code || 'unknown'}`,
+          context: { code: error.code, source: 'FloatingDialer' },
+        })
+      })
+
+      device.on('tokenWillExpire', async () => {
+        try {
+          const res = await fetch('/twilio/token')
+          if (!res.ok) return
+          const { token: freshToken } = await res.json()
+          if (freshToken) device.updateToken(freshToken)
+        } catch (e) {
+          console.warn('Failed to refresh Twilio token:', e)
+        }
       })
 
       device.on('connect', (conn) => {

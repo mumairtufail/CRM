@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Invoice;
 use App\Models\Lead;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -106,6 +107,8 @@ class InvoiceController extends Controller
             ]);
         }
 
+        ActivityLogger::log('invoice.created', $invoice, description: "Created invoice {$invoice->invoice_number}");
+
         return redirect()->route('invoices.show', $invoice)
             ->with('success', "Invoice {$invoice->invoice_number} created.");
     }
@@ -121,6 +124,8 @@ class InvoiceController extends Controller
 
     public function update(Request $request, Invoice $invoice)
     {
+        $oldStatus = $invoice->status;
+
         $validated = $request->validate([
             'lead_id'      => 'nullable|exists:leads,id',
             'invoice_number' => 'required|string|unique:invoices,invoice_number,' . $invoice->id,
@@ -164,6 +169,12 @@ class InvoiceController extends Controller
             ]);
         }
 
+        if ($oldStatus !== 'paid' && $invoice->status === 'paid') {
+            ActivityLogger::log('invoice.paid', $invoice, description: "Marked invoice {$invoice->invoice_number} as paid");
+        } else {
+            ActivityLogger::log('invoice.updated', $invoice, description: "Updated invoice {$invoice->invoice_number}");
+        }
+
         return redirect()->route('invoices.show', $invoice)
             ->with('success', "Invoice {$invoice->invoice_number} updated.");
     }
@@ -178,12 +189,17 @@ class InvoiceController extends Controller
             'sent_at'       => now(),
         ]);
 
+        ActivityLogger::log('invoice.sent', $invoice, description: "Sent invoice {$invoice->invoice_number} to {$request->email}");
+
         return back()->with('success', "Invoice marked as sent to {$request->email}.");
     }
 
     public function destroy(Invoice $invoice)
     {
         $number = $invoice->invoice_number;
+
+        ActivityLogger::log('invoice.deleted', description: "Deleted invoice {$number}", properties: ['invoice_id' => $invoice->id, 'invoice_number' => $number]);
+
         $invoice->delete();
 
         return redirect()->route('invoices.index')

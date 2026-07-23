@@ -8,11 +8,14 @@ import { Label } from '@/Components/ui/label'
 import { Alert, AlertDescription } from '@/Components/ui/alert'
 import { Card } from '@/Components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog'
+import { Checkbox } from '@/Components/ui/checkbox'
+import usePermissions from '@/Hooks/usePermissions'
+import { reportError } from '@/lib/reportError'
 import {
   Phone, PhoneCall, PhoneOff, PhoneForwarded, MessageSquare,
   Clock, Volume2, VolumeX, Delete, HelpCircle, X, Play, Pause,
   AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, ChevronLeft, User, Send,
-  RotateCcw, RotateCw,
+  RotateCcw, RotateCw, Trash2,
 } from 'lucide-react'
 
 function PaginationBar({ paginator, pageParam, onPageChange }) {
@@ -54,6 +57,7 @@ import { cn } from '@/lib/utils'
 export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads }) {
   const { auth } = usePage().props
   const user = auth?.user
+  const { can } = usePermissions()
 
   // Tabs and general state
   const [activeTab, setActiveTab] = useState('calls')
@@ -175,6 +179,39 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     })
   }
 
+  // ─── Call Log Selection & Deletion ─────────────────────────────────────────
+  const [selectedCallIds, setSelectedCallIds] = useState([])
+
+  const toggleCallSelected = (id) => {
+    setSelectedCallIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
+  const toggleAllCallsSelected = (ids) => {
+    setSelectedCallIds(prev => ids.every(id => prev.includes(id)) ? prev.filter(id => !ids.includes(id)) : [...new Set([...prev, ...ids])])
+  }
+
+  const deleteCall = (call) => {
+    if (!window.confirm('Delete this call record? This cannot be undone.')) return
+    router.delete(`/twilio/calls/${call.id}`, {
+      preserveScroll: true,
+      preserveState: true,
+      only: ['calls'],
+      onSuccess: () => setSelectedCallIds(prev => prev.filter(id => id !== call.id)),
+    })
+  }
+
+  const deleteSelectedCalls = () => {
+    if (selectedCallIds.length === 0) return
+    if (!window.confirm(`Delete ${selectedCallIds.length} call record(s)? This cannot be undone.`)) return
+    router.delete('/twilio/calls/bulk', {
+      data: { ids: selectedCallIds },
+      preserveScroll: true,
+      preserveState: true,
+      only: ['calls'],
+      onSuccess: () => setSelectedCallIds([]),
+    })
+  }
+
   // Wires up per-call lifecycle events (accept/disconnect/cancel/reject/error).
   // These live on the Call object returned by connect()/incoming — the Device
   // itself has no 'connect' or 'disconnect' event.
@@ -254,11 +291,26 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         setDeviceError(err.message || 'Dialer connection error.')
         toast.error(`Dialer connection error: ${err.message || 'Please check your calling settings configuration.'}`)
         setCallState('idle')
+        reportError({
+          message: `Twilio Device error: ${err.message || err.code || 'unknown'}`,
+          context: { code: err.code, source: 'Twilio/Index dialer' },
+        })
       })
 
       // NOTE: Device itself only ever emits error/incoming/registered/unregistered/
       // tokenWillExpire — 'connect' and 'disconnect' are events on the individual
       // Call object, not the Device. bindCallEvents() wires those up per-call.
+      device.on('tokenWillExpire', async () => {
+        try {
+          const res = await fetch('/twilio/token')
+          if (!res.ok) return
+          const { token: freshToken } = await res.json()
+          if (freshToken) device.updateToken(freshToken)
+        } catch (e) {
+          console.warn('Failed to refresh Twilio token:', e)
+        }
+      })
+
       device.on('incoming', (conn) => {
         setCallState('ringing')
         connectionRef.current = conn
@@ -911,21 +963,43 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                   {/* 1. CALL LOGS */}
                   {activeTab === 'calls' && (
                     <div className="p-4 space-y-4 bg-white">
-                      <div className="relative w-full max-w-sm">
-                        <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
-                        <Input
-                          size="sm"
-                          placeholder="Search phone number..."
-                          value={callSearch}
-                          onChange={e => setCallSearch(e.target.value)}
-                          className="pl-9 text-xs h-9 rounded-xl"
-                        />
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <div className="relative w-full max-w-sm">
+                          <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                          <Input
+                            size="sm"
+                            placeholder="Search phone number..."
+                            value={callSearch}
+                            onChange={e => setCallSearch(e.target.value)}
+                            className="pl-9 text-xs h-9 rounded-xl"
+                          />
+                        </div>
+                        {can('twilio.delete') && selectedCallIds.length > 0 && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={deleteSelectedCalls}
+                            className="h-9 text-xs rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <Trash2 size={13} className="mr-1.5" />
+                            Delete {selectedCallIds.length} selected
+                          </Button>
+                        )}
                       </div>
 
                       <div className="overflow-x-auto">
                         <table className="w-full text-left text-xs border-collapse">
                           <thead>
                             <tr className="border-b border-slate-100 text-slate-400 font-bold uppercase tracking-wider">
+                              {can('twilio.delete') && (
+                                <th className="py-2.5 px-3 w-8">
+                                  <Checkbox
+                                    checked={filteredCalls.length > 0 && filteredCalls.every(c => selectedCallIds.includes(c.id))}
+                                    onCheckedChange={() => toggleAllCallsSelected(filteredCalls.map(c => c.id))}
+                                    aria-label="Select all calls"
+                                  />
+                                </th>
+                              )}
                               <th className="py-2.5 px-3">Direction</th>
                               <th className="py-2.5 px-3">From</th>
                               <th className="py-2.5 px-3">To</th>
@@ -939,6 +1013,15 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                           <tbody className="divide-y divide-slate-50">
                             {filteredCalls.map(call => (
                               <tr key={call.id} className="hover:bg-slate-50/50">
+                                {can('twilio.delete') && (
+                                  <td className="py-3 px-3">
+                                    <Checkbox
+                                      checked={selectedCallIds.includes(call.id)}
+                                      onCheckedChange={() => toggleCallSelected(call.id)}
+                                      aria-label={`Select call ${call.id}`}
+                                    />
+                                  </td>
+                                )}
                                 <td className="py-3 px-3">
                                   <span className={cn(
                                     'px-2 py-0.5 rounded-full font-bold uppercase text-[9px] tracking-wider border',
@@ -985,6 +1068,17 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                     >
                                       Call Back
                                     </Button>
+                                    {can('twilio.delete') && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => deleteCall(call)}
+                                        title="Delete call record"
+                                        className="h-7 w-7 p-0 rounded-lg border-slate-200 text-red-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                                      >
+                                        <Trash2 size={12} />
+                                      </Button>
+                                    )}
                                   </div>
                                 </td>
                               </tr>

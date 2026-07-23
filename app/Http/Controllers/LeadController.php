@@ -9,6 +9,7 @@ use App\Models\LeadForm;
 use App\Models\LeadGroup;
 use App\Models\Tag;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use App\Support\LeadsCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -292,6 +293,8 @@ class LeadController extends Controller
             'description' => "Lead created via {$lead->source}",
         ]);
 
+        ActivityLogger::log('lead.created', $lead, description: "Created lead {$lead->full_name}");
+
         return redirect()->route('leads.show', $lead)->with('success', 'Lead created.');
     }
 
@@ -429,6 +432,8 @@ class LeadController extends Controller
             ]);
         }
 
+        ActivityLogger::log('lead.updated', $lead, description: "Updated lead {$lead->full_name}");
+
         return redirect()->route('leads.show', $lead)->with('success', 'Lead updated.');
     }
 
@@ -536,6 +541,8 @@ class LeadController extends Controller
             'meta'        => ['lead_name' => $lead->full_name, 'company' => $lead->company],
         ]);
 
+        ActivityLogger::log('lead.deleted', description: "Deleted lead {$lead->full_name}", properties: ['lead_id' => $lead->id, 'lead_name' => $lead->full_name]);
+
         $lead->delete();
 
         return redirect()->route('leads.index')->with('success', 'Lead deleted.');
@@ -561,6 +568,8 @@ class LeadController extends Controller
         }
 
         Lead::whereIn('id', $request->ids)->delete();
+
+        ActivityLogger::log('lead.deleted', description: count($request->ids) . ' leads deleted (bulk)', properties: ['lead_ids' => $request->ids]);
 
         return redirect()->route('leads.index')->with('success', count($request->ids) . ' leads deleted.');
     }

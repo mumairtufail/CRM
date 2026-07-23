@@ -9,14 +9,27 @@ import { Alert, AlertDescription } from '@/Components/ui/alert'
 import { Card } from '@/Components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/Components/ui/dialog'
 import { Checkbox } from '@/Components/ui/checkbox'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select'
+import StatusBadge from '@/Components/Common/StatusBadge'
 import usePermissions from '@/Hooks/usePermissions'
 import { reportError } from '@/lib/reportError'
 import {
   Phone, PhoneCall, PhoneOff, PhoneForwarded, MessageSquare,
   Clock, Volume2, VolumeX, Delete, HelpCircle, X, Play, Pause,
   AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, ChevronLeft, User, Send,
-  RotateCcw, RotateCw, Trash2,
+  RotateCcw, RotateCw, Trash2, CheckCircle2, UsersRound,
 } from 'lucide-react'
+
+// Keep in sync with LeadController's status options (Leads/Index.jsx STATUS_OPTIONS).
+const LEAD_STATUS_OPTIONS = [
+  { value: 'new',         label: 'New' },
+  { value: 'contacted',   label: 'Contacted' },
+  { value: 'qualified',   label: 'Qualified' },
+  { value: 'proposal',    label: 'Proposal' },
+  { value: 'negotiation', label: 'Negotiation' },
+  { value: 'won',         label: 'Won' },
+  { value: 'lost',        label: 'Lost' },
+]
 
 function PaginationBar({ paginator, pageParam, onPageChange }) {
   if (!paginator || paginator.last_page <= 1) return null
@@ -54,7 +67,7 @@ function PaginationBar({ paginator, pageParam, onPageChange }) {
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 
-export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads }) {
+export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads, leadGroups }) {
   const { auth } = usePage().props
   const user = auth?.user
   const { can } = usePermissions()
@@ -125,6 +138,96 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
 
     return () => clearTimeout(delayDebounce)
   }, [leadSearchQuery, quickLeads])
+
+  // ─── "Leads" tab — browse/call leads filtered by group & status ───────────
+  const [leadsTabGroup, setLeadsTabGroup] = useState('all')
+  const [leadsTabStatus, setLeadsTabStatus] = useState('all')
+  const [leadsTabSearch, setLeadsTabSearch] = useState('')
+  const [leadsTabResults, setLeadsTabResults] = useState([])
+  const [leadsTabLoading, setLeadsTabLoading] = useState(false)
+  const [markingContactedId, setMarkingContactedId] = useState(null)
+
+  useEffect(() => {
+    if (activeTab !== 'leads') return
+
+    const params = new URLSearchParams()
+    if (leadsTabSearch) params.set('q', leadsTabSearch)
+    if (leadsTabGroup !== 'all') params.set('group', leadsTabGroup)
+    if (leadsTabStatus !== 'all') params.set('status', leadsTabStatus)
+
+    setLeadsTabLoading(true)
+    const delayDebounce = setTimeout(async () => {
+      try {
+        const res = await fetch(`/twilio/leads?${params.toString()}`)
+        if (res.ok) setLeadsTabResults(await res.json())
+      } catch (e) {
+        console.error('Failed to load leads:', e)
+      } finally {
+        setLeadsTabLoading(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(delayDebounce)
+  }, [activeTab, leadsTabGroup, leadsTabStatus, leadsTabSearch])
+
+  // Auto-dials a lead's number immediately (used by the Leads tab's Call button),
+  // rather than just pre-filling the keypad like triggerCall() does elsewhere.
+  const callLeadNow = (lead) => {
+    if (!lead.phone) {
+      toast.warning(`${lead.name} does not have a phone number.`)
+      return
+    }
+    setActiveMockupTab('keypad')
+    handleCall(lead.phone)
+  }
+
+  const markLeadContactedViaCall = async (lead) => {
+    const alreadyContacted = !!lead.contact_channels?.call
+    setMarkingContactedId(lead.id)
+    try {
+      const res = await fetch(`/leads/${lead.id}/channels`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ channel: 'call', value: !alreadyContacted }),
+      })
+      if (!res.ok) throw new Error()
+      setLeadsTabResults(prev => prev.map(l => l.id !== lead.id ? l : {
+        ...l,
+        contact_channels: { ...l.contact_channels, call: alreadyContacted ? undefined : new Date().toISOString() },
+      }))
+      toast.success(alreadyContacted ? 'Unmarked as contacted' : 'Marked contacted via call')
+    } catch {
+      toast.error('Could not update contact status')
+    } finally {
+      setMarkingContactedId(null)
+    }
+  }
+
+  const changeLeadStatus = async (lead, newStatus) => {
+    if (newStatus === lead.status) return
+    const prevStatus = lead.status
+    setLeadsTabResults(prev => prev.map(l => l.id === lead.id ? { ...l, status: newStatus } : l))
+    try {
+      const res = await fetch(`/leads/${lead.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!res.ok) throw new Error()
+      toast.success(`Status → ${newStatus}`)
+    } catch {
+      setLeadsTabResults(prev => prev.map(l => l.id === lead.id ? { ...l, status: prevStatus } : l))
+      toast.error('Failed to update status')
+    }
+  }
 
   // Web Audio Tester States
   const [audioContext, setAudioContext] = useState(null)
@@ -363,11 +466,15 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     toast.info(`Pre-filled dialer with ${phone}`)
   }
 
-  const handleCall = async () => {
-    if (!dialNumber.trim()) {
+  // `numberOverride` lets callers (e.g. the Leads tab's "Call" button) dial
+  // immediately without waiting on the `dialNumber` state to re-render first.
+  const handleCall = async (numberOverride) => {
+    const to = (numberOverride ?? dialNumber).trim()
+    if (!to) {
       toast.error('Please enter a phone number.')
       return
     }
+    setDialNumber(to)
 
     if (isSoftphone && deviceRef.current) {
       setCallState('connecting')
@@ -393,7 +500,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
       }
 
       try {
-        const call = await deviceRef.current.connect({ params: { To: dialNumber } })
+        const call = await deviceRef.current.connect({ params: { To: to } })
         connectionRef.current = call
         bindCallEvents(call)
       } catch (e) {
@@ -412,7 +519,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
             'X-CSRF-TOKEN': document.head.querySelector('meta[name="csrf-token"]')?.content ?? '',
             Accept: 'application/json',
           },
-          body: JSON.stringify({ to: dialNumber }),
+          body: JSON.stringify({ to }),
         })
         const data = await res.json()
         if (res.ok) {
@@ -519,8 +626,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   }
 
   const formatTime = (secs) => {
+    if (!Number.isFinite(secs)) return '00:00'
     const mins = Math.floor(secs / 60)
-    const remaining = secs % 60
+    const remaining = Math.floor(secs % 60)
     return `${mins.toString().padStart(2, '0')}:${remaining.toString().padStart(2, '0')}`
   }
 
@@ -958,6 +1066,15 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                     >
                       Voicemails
                     </button>
+                    <button
+                      onClick={() => setActiveTab('leads')}
+                      className={cn(
+                        'px-5 py-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2',
+                        activeTab === 'leads' ? 'border-brand-600 text-brand-600 bg-white' : 'border-transparent text-slate-400 hover:text-slate-600'
+                      )}
+                    >
+                      Leads
+                    </button>
                   </div>
 
                   {/* 1. CALL LOGS */}
@@ -1032,7 +1149,13 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                 </td>
                                 <td className="py-3 px-3 font-semibold text-slate-700">{call.from_number}</td>
                                 <td className="py-3 px-3 font-semibold text-slate-700">{call.to_number}</td>
-                                <td className="py-3 px-3 text-slate-600">{call.user?.name ?? '—'}</td>
+                                <td className="py-3 px-3 text-slate-600">
+                                  {call.user ? (
+                                    <Link href={route('settings.team.show', call.user.id)} className="hover:text-brand-600 hover:underline">
+                                      {call.user.name}
+                                    </Link>
+                                  ) : '—'}
+                                </td>
                                 <td className="py-3 px-3">
                                   <span className={cn(
                                     'px-2 py-0.5 rounded-full text-[10px] font-medium capitalize',
@@ -1202,6 +1325,129 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                 </div>
                               </div>
                             ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 4. LEADS — browse leads by group/status, call one instantly */}
+                  {activeTab === 'leads' && (
+                    <div className="p-4 space-y-3 bg-white">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="relative flex-1 min-w-[160px] max-w-xs">
+                          <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                          <Input
+                            placeholder="Search leads..."
+                            value={leadsTabSearch}
+                            onChange={e => setLeadsTabSearch(e.target.value)}
+                            className="pl-9 text-xs h-9 rounded-xl"
+                          />
+                        </div>
+
+                        <Select value={leadsTabGroup} onValueChange={setLeadsTabGroup}>
+                          <SelectTrigger className="h-9 w-auto gap-1.5 text-xs rounded-xl border-slate-200">
+                            <UsersRound size={13} className="opacity-60" />
+                            <SelectValue placeholder="Any group" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all" className="text-xs">All groups</SelectItem>
+                            {(leadGroups ?? []).map(g => (
+                              <SelectItem key={g.id} value={String(g.id)} className="text-xs">{g.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <Select value={leadsTabStatus} onValueChange={setLeadsTabStatus}>
+                          <SelectTrigger className="h-9 w-auto gap-1.5 text-xs rounded-xl border-slate-200">
+                            <SelectValue placeholder="Any status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all" className="text-xs">All statuses</SelectItem>
+                            {LEAD_STATUS_OPTIONS.map(s => (
+                              <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        <span className="text-[11px] text-slate-400 ml-auto">
+                          {leadsTabLoading ? 'Loading…' : `${leadsTabResults.length} lead${leadsTabResults.length !== 1 ? 's' : ''}`}
+                        </span>
+                      </div>
+
+                      <div className="border border-slate-100 rounded-xl divide-y divide-slate-50 max-h-[420px] overflow-y-auto">
+                        {leadsTabResults.length === 0 ? (
+                          <div className="py-10 text-center text-slate-400">
+                            <UsersRound size={22} className="mx-auto mb-2 text-slate-300" />
+                            <p className="text-xs">{leadsTabLoading ? 'Loading leads…' : 'No leads match these filters.'}</p>
+                          </div>
+                        ) : (
+                          leadsTabResults.map(lead => {
+                            const contactedViaCall = !!lead.contact_channels?.call
+                            return (
+                              <div key={lead.id} className="flex flex-wrap items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50/60 transition-colors">
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-[12.5px] font-bold text-slate-700 truncate">{lead.name}</p>
+                                  <p className="text-[10.5px] text-slate-400 truncate">
+                                    {lead.phone ?? 'No phone'}{lead.company ? ` · ${lead.company}` : ''}
+                                  </p>
+                                </div>
+
+                                {lead.groups?.length > 0 && (
+                                  <div className="hidden sm:flex items-center gap-1">
+                                    {lead.groups.slice(0, 2).map(g => (
+                                      <span
+                                        key={g.id}
+                                        className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-full border whitespace-nowrap"
+                                        style={{
+                                          background: (g.color ?? '#6366f1') + '18',
+                                          borderColor: (g.color ?? '#6366f1') + '40',
+                                          color: g.color ?? '#6366f1',
+                                        }}
+                                      >
+                                        {g.name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+
+                                <Select value={lead.status} onValueChange={v => changeLeadStatus(lead, v)}>
+                                  <SelectTrigger className="h-7 w-auto gap-1 text-[11px] border-0 bg-transparent shadow-none focus:ring-0 px-1 [&>svg]:w-3 [&>svg]:h-3 [&>svg]:opacity-40">
+                                    <StatusBadge status={lead.status} size="sm" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {LEAD_STATUS_OPTIONS.map(s => (
+                                      <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => callLeadNow(lead)}
+                                    disabled={!lead.phone}
+                                    title={lead.phone ? `Call ${lead.phone}` : 'No phone number'}
+                                    className="h-7 w-7 p-0 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-30"
+                                  >
+                                    <PhoneCall size={12} />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => markLeadContactedViaCall(lead)}
+                                    disabled={markingContactedId === lead.id}
+                                    title={contactedViaCall ? 'Contacted via call — click to unmark' : 'Mark contacted via call'}
+                                    className={cn(
+                                      'h-7 gap-1 text-[10px] rounded-lg px-2',
+                                      contactedViaCall ? 'border-brand-200 bg-brand-50 text-brand-700' : 'border-slate-200 text-slate-500'
+                                    )}
+                                  >
+                                    <CheckCircle2 size={11} /> {contactedViaCall ? 'Contacted' : 'Mark'}
+                                  </Button>
+                                </div>
+                              </div>
+                            )
+                          })
                         )}
                       </div>
                     </div>
@@ -1391,7 +1637,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                             {callState === 'idle' ? (
                               <button
                                 type="button"
-                                onClick={handleCall}
+                                onClick={() => handleCall()}
                                 className="w-11 h-11 rounded-full bg-brand-600 hover:bg-brand-700 active:scale-95 transition-all flex items-center justify-center shadow-md shadow-brand-600/10 text-white"
                               >
                                 <PhoneCall size={16} />
@@ -1755,8 +2001,9 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                 ref={audioRef}
                 src={`/twilio/calls/${recordingModalCall.id}/recording`}
                 autoPlay
-                onLoadedMetadata={e => setPlayerState(s => ({ ...s, duration: e.target.duration || 0 }))}
-                onTimeUpdate={e => setPlayerState(s => ({ ...s, currentTime: e.target.currentTime }))}
+                onLoadedMetadata={e => setPlayerState(s => ({ ...s, duration: Number.isFinite(e.target.duration) ? e.target.duration : 0 }))}
+                onDurationChange={e => setPlayerState(s => ({ ...s, duration: Number.isFinite(e.target.duration) ? e.target.duration : s.duration }))}
+                onTimeUpdate={e => setPlayerState(s => ({ ...s, currentTime: Number.isFinite(e.target.currentTime) ? e.target.currentTime : s.currentTime }))}
                 onPlay={() => setPlayerState(s => ({ ...s, isPlaying: true }))}
                 onPause={() => setPlayerState(s => ({ ...s, isPlaying: false }))}
                 onEnded={() => setPlayerState(s => ({ ...s, isPlaying: false, currentTime: 0 }))}

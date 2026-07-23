@@ -143,7 +143,9 @@ export default function TeamIndex({ members, roles }) {
               {members.map(m => (
                 <tr key={m.id} className="border-b border-slate-50 last:border-0">
                   <td className="px-4 py-2.5">
-                    <p className="font-medium text-slate-800">{m.name}</p>
+                    <Link href={route('settings.team.show', m.id)} className="font-medium text-slate-800 hover:text-brand-600 hover:underline">
+                      {m.name}
+                    </Link>
                     <p className="text-slate-400 text-[12px]">{m.email}</p>
                   </td>
                   <td className="px-4 py-2.5 text-slate-600">{m.role?.name ?? <span className="text-amber-600">No role</span>}</td>

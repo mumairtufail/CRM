@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lead;
 use App\Models\Role;
+use App\Models\TwilioCall;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -34,6 +36,35 @@ class TeamMemberController extends Controller
         return Inertia::render('Settings/Team/Index', [
             'members' => $members,
             'roles'   => Role::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    public function show(Request $request, User $user): Response
+    {
+        abort_if($user->organization_id !== $request->user()->organization_id, 404);
+
+        $calls = TwilioCall::where('user_id', $user->id);
+
+        return Inertia::render('Settings/Team/Show', [
+            'member' => [
+                'id'         => $user->id,
+                'name'       => $user->name,
+                'email'      => $user->email,
+                'is_active'  => $user->is_active,
+                'is_owner'   => $user->isOwner(),
+                'role'       => $user->assignedRole ? ['id' => $user->assignedRole->id, 'name' => $user->assignedRole->name] : null,
+                'created_at' => $user->created_at->format('M j, Y'),
+            ],
+            'stats' => [
+                'assigned_leads'  => Lead::where('assigned_to', $user->id)->count(),
+                'total_calls'     => (clone $calls)->count(),
+                'completed_calls' => (clone $calls)->where('status', 'completed')->count(),
+                'call_duration'   => (int) (clone $calls)->sum('duration'),
+            ],
+            'recentCalls' => (clone $calls)
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get(['id', 'direction', 'from_number', 'to_number', 'status', 'duration', 'created_at']),
         ]);
     }
 

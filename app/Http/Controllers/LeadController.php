@@ -46,7 +46,7 @@ class LeadController extends Controller
         $cacheKey = "leads:idx2:{$orgId}:v{$version}:" . md5(serialize($request->all()));
 
         $leadsPayload = Cache::remember($cacheKey, 1800, function () use ($request, $perPage) {
-            $query = Lead::with(['emails', 'groups', 'leadForm:id,name']);
+            $query = Lead::with(['emails', 'phones', 'groups', 'leadForm:id,name']);
 
             if ($search = $request->input('search')) {
                 $query->search($search);
@@ -121,6 +121,7 @@ class LeadController extends Controller
                 'status'           => $lead->status,
                 'priority'         => $lead->priority,
                 'deal_value'       => $lead->deal_value,
+                'primary_phone'    => $lead->primary_phone,
                 'linkedin_url'     => $lead->linkedin_url,
                 'social_handles'   => $lead->social_handles,
                 'contact_channels' => $lead->contact_channels,
@@ -450,6 +451,10 @@ class LeadController extends Controller
             'description' => "Status changed from {$old} to {$lead->status}",
             'meta'        => ['old_status' => $old, 'new_status' => $lead->status],
         ]);
+
+        if ($request->wantsJson()) {
+            return response()->json(['ok' => true, 'status' => $lead->status]);
+        }
 
         return back();
     }

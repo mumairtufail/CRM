@@ -47,10 +47,11 @@ class TwilioController extends Controller
             ->get()
             ->map(function ($lead) {
                 return [
-                    'id'    => $lead->id,
-                    'name'  => $lead->full_name,
-                    'email' => $lead->primary_email,
-                    'phone' => $lead->phones->first()?->phone,
+                    'id'     => $lead->id,
+                    'name'   => $lead->full_name,
+                    'email'  => $lead->primary_email,
+                    'phone'  => $lead->phones->first()?->phone,
+                    'status' => $lead->status,
                 ];
             })->filter(fn($l) => !empty($l['phone']))->values();
 
@@ -67,6 +68,7 @@ class TwilioController extends Controller
                 'validated_at'  => $setting->validated_at?->toISOString(),
             ] : null,
             'quickLeads'     => $leads,
+            'leadGroups'     => \App\Models\LeadGroup::orderBy('name')->get(['id', 'name', 'color']),
         ]);
     }
 
@@ -390,47 +392,49 @@ class TwilioController extends Controller
     }
 
     /**
-     * Search all leads by name, email, or phone number.
+     * Search all leads by name, email, or phone number — optionally narrowed to a
+     * lead group and/or status, for both the Quick Dial dropdown and the Dialer
+     * Hub's "Leads" tab.
      */
     public function searchLeads(Request $request)
     {
-        $orgId = $request->user()->organization_id;
-        $q = trim($request->input('q', ''));
+        $orgId    = $request->user()->organization_id;
+        $q        = trim($request->input('q', ''));
+        $groupId  = $request->input('group');
+        $status   = $request->input('status');
+        $filtered = $q !== '' || $groupId || $status;
 
-        if (empty($q)) {
-            // Return top 15 leads by default
-            $leads = \App\Models\Lead::where('organization_id', $orgId)
-                ->with(['phones', 'emails'])
-                ->orderBy('first_name')
-                ->limit(15)
-                ->get();
-        } else {
-            // Search all leads
-            $leads = \App\Models\Lead::where('organization_id', $orgId)
-                ->with(['phones', 'emails'])
-                ->where(function ($query) use ($q) {
-                    $query->where('first_name', 'like', "%{$q}%")
+        $leads = \App\Models\Lead::where('organization_id', $orgId)
+            ->with(['phones', 'emails', 'groups'])
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($sub) use ($q) {
+                    $sub->where('first_name', 'like', "%{$q}%")
                         ->orWhere('last_name', 'like', "%{$q}%")
-                        ->orWhereHas('emails', function ($eQuery) use ($q) {
-                            $eQuery->where('email', 'like', "%{$q}%");
-                        })
-                        ->orWhereHas('phones', function ($pQuery) use ($q) {
-                            $pQuery->where('phone', 'like', "%{$q}%");
-                        });
-                })
-                ->orderBy('first_name')
-                ->limit(30)
-                ->get();
-        }
+                        ->orWhere('company', 'like', "%{$q}%")
+                        ->orWhereHas('emails', fn ($e) => $e->where('email', 'like', "%{$q}%"))
+                        ->orWhereHas('phones', fn ($p) => $p->where('phone', 'like', "%{$q}%"));
+                });
+            })
+            ->when($groupId, fn ($query) => $query->whereHas('groups', fn ($g) => $g->where('lead_groups.id', (int) $groupId)))
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->orderBy('first_name')
+            // Default (no filters) is the "recent leads" quick-dial list, kept short;
+            // once a group/status/search narrows things down, show more.
+            ->limit($filtered ? 150 : 15)
+            ->get();
 
-        $results = $leads->map(function ($lead) {
-            return [
-                'id'    => $lead->id,
-                'name'  => $lead->full_name,
-                'email' => $lead->primary_email,
-                'phone' => $lead->phones->first()?->phone,
-            ];
-        })->filter(fn($l) => !empty($l['phone']))->values();
+        $results = $leads->map(fn ($lead) => [
+            'id'               => $lead->id,
+            'name'             => $lead->full_name,
+            'email'            => $lead->primary_email,
+            'phone'            => $lead->phones->first()?->phone,
+            'company'          => $lead->company,
+            'status'           => $lead->status,
+            'contact_channels' => $lead->contact_channels,
+            'groups'           => $lead->groups->map(fn ($g) => [
+                'id' => $g->id, 'name' => $g->name, 'color' => $g->color,
+            ])->all(),
+        ])->filter(fn ($l) => !empty($l['phone']))->values();
 
         return response()->json($results);
     }

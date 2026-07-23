@@ -384,6 +384,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Team management
     Route::get('/settings/team',             [TeamMemberController::class, 'index'])->name('settings.team.index');
+    Route::get('/settings/team/{user}',      [TeamMemberController::class, 'show'])->name('settings.team.show');
     Route::post('/settings/team',            [TeamMemberController::class, 'store'])->middleware('permission:team.manage')->name('settings.team.store');
     Route::patch('/settings/team/{user}',    [TeamMemberController::class, 'update'])->middleware('permission:team.manage')->name('settings.team.update');
     Route::delete('/settings/team/{user}',   [TeamMemberController::class, 'destroy'])->middleware('permission:team.manage')->name('settings.team.destroy');

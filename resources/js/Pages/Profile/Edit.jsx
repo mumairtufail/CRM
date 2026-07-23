@@ -33,6 +33,7 @@ const LinkedinIcon = ({ size = 12, className }) => (
 )
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import usePermissions from '@/Hooks/usePermissions'
 
 // ─── Primitives ───────────────────────────────────────────────────────────────
 
@@ -324,6 +325,8 @@ function DeleteForm() {
 
 function WorkspaceTab() {
   const { auth, organization } = usePage().props
+  const { can } = usePermissions()
+  const canManage = can('team.manage')
   const logoInputRef = useRef()
   const [logoPreview, setLogoPreview] = useState(
     auth.user.company_logo ? `/storage/${auth.user.company_logo}` : null
@@ -332,6 +335,20 @@ function WorkspaceTab() {
 
   const [orgName, setOrgName]     = useState(organization?.name ?? '')
   const [savingName, setSavingName] = useState(false)
+
+  const [callbackPhone, setCallbackPhone] = useState(auth.user.callback_phone ?? '')
+  const [savingCallback, setSavingCallback] = useState(false)
+
+  const saveCallbackPhone = e => {
+    e.preventDefault()
+    setSavingCallback(true)
+    router.post('/profile/callback-phone', { callback_phone: callbackPhone.trim() }, {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Callback phone updated'),
+      onError:   () => toast.error('Failed to update callback phone'),
+      onFinish:  () => setSavingCallback(false),
+    })
+  }
 
   const saveOrgName = e => {
     e.preventDefault()
@@ -389,28 +406,41 @@ function WorkspaceTab() {
 
   return (
     <div className="space-y-3 max-w-xl">
+      {!canManage && (
+        <Alert>
+          <AlertDescription className="text-[12px]">
+            Workspace name and branding are shared across your whole team — only workspace admins can edit them here. Your own callback phone below is still yours to set.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card title="Workspace name">
         <form onSubmit={saveOrgName} className="space-y-3">
-          <Field label="Workspace name" hint="Shown in the sidebar and used to identify your workspace across the app.">
-            <Input value={orgName} onChange={e => setOrgName(e.target.value)}
-              className="h-8 text-[13px]" placeholder="Acme Inc." />
-          </Field>
-          <SaveBtn processing={savingName} label="Save name" />
+          <fieldset disabled={!canManage} className="space-y-3">
+            <Field label="Workspace name" hint="Shown in the sidebar and used to identify your workspace across the app.">
+              <Input value={orgName} onChange={e => setOrgName(e.target.value)}
+                className="h-8 text-[13px]" placeholder="Acme Inc." />
+            </Field>
+            {canManage && <SaveBtn processing={savingName} label="Save name" />}
+          </fieldset>
         </form>
       </Card>
 
       <Card title="Workspace branding">
         <form onSubmit={submit} className="space-y-3">
+          <fieldset disabled={!canManage} className="space-y-3">
           <Field label="Company logo" hint="Used in email signatures and other documents — not shown in the sidebar.">
             <div className="flex items-center gap-3">
               {logoPreview ? (
                 <div className="relative shrink-0">
                   <img src={logoPreview} alt="logo"
                     className="w-12 h-12 rounded-lg object-contain border border-slate-200 bg-white p-1" />
-                  <button type="button" onClick={removeLogo} disabled={removingLogo}
-                    className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600">
-                    <X size={9} />
-                  </button>
+                  {canManage && (
+                    <button type="button" onClick={removeLogo} disabled={removingLogo}
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600">
+                      <X size={9} />
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div onClick={() => logoInputRef.current?.click()}
@@ -451,7 +481,7 @@ function WorkspaceTab() {
                 </div>
               </Field>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Phone number">
+                <Field label="Public contact phone">
                   <div className="relative">
                     <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <Input value={data.company_phone} onChange={e => setData('company_phone', e.target.value)}
@@ -476,7 +506,21 @@ function WorkspaceTab() {
             </div>
           </div>
 
-          <SaveBtn processing={processing} label="Save workspace" />
+          {canManage && <SaveBtn processing={processing} label="Save workspace" />}
+          </fieldset>
+        </form>
+      </Card>
+
+      <Card title="Your callback phone">
+        <form onSubmit={saveCallbackPhone} className="space-y-3">
+          <Field label="Callback phone" hint="Personal to you — used for click-to-call bridging (Twilio rings this number to connect you to the lead). Not shown to anyone else.">
+            <div className="relative">
+              <Phone size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input value={callbackPhone} onChange={e => setCallbackPhone(e.target.value)}
+                className="h-8 text-[13px] pl-7" placeholder="+1 (555) 000-1234" />
+            </div>
+          </Field>
+          <SaveBtn processing={savingCallback} label="Save callback phone" />
         </form>
       </Card>
     </div>
@@ -940,7 +984,7 @@ function TagsTab({ tags }) {
   )
 }
 
-function SmtpTab({ credentials }) {
+function SmtpTab({ credentials, orgDefault }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing]       = useState(null)
   const openAdd    = ()   => { setEditing(null); setDialogOpen(true) }
@@ -949,6 +993,16 @@ function SmtpTab({ credentials }) {
 
   return (
     <div className="space-y-3 max-w-xl">
+      {orgDefault && credentials.length === 0 && (
+        <Alert>
+          <AlertDescription className="text-[12px]">
+            You haven't added a personal SMTP account, so you're currently sending and receiving through
+            your workspace's default: <strong>{orgDefault.name}</strong> ({orgDefault.from_email}).
+            Add your own below if you'd rather use a personal mailbox.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card
         title="SMTP accounts"
         badge={
@@ -992,6 +1046,9 @@ function SmtpTab({ credentials }) {
 // ─── Mail settings tab ────────────────────────────────────────────────────────
 
 function MailTab({ mailSettings, orgFollowupEnabled }) {
+  const { can } = usePermissions()
+  const canManage = can('team.manage')
+
   const { data, setData, patch, processing } = useForm({
     mail_batch_size:  mailSettings.batch_size,
     mail_batch_delay: mailSettings.batch_delay,
@@ -1060,9 +1117,10 @@ function MailTab({ mailSettings, orgFollowupEnabled }) {
             {/* Toggle switch */}
             <button
               type="button"
+              disabled={!canManage}
               onClick={() => setFollowupEnabled(v => !v)}
               className={cn(
-                'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none',
+                'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50',
                 followupEnabled ? 'bg-brand-600' : 'bg-slate-200'
               )}
               role="switch"
@@ -1077,16 +1135,20 @@ function MailTab({ mailSettings, orgFollowupEnabled }) {
             </button>
           </div>
 
-          <div className="flex justify-end">
-            <Button
-              size="sm"
-              disabled={savingFollowup}
-              onClick={saveFollowup}
-              className="h-7 text-[12px] px-3 bg-gradient-to-r from-brand-600 to-brand2-600 text-white border-0 hover:opacity-90"
-            >
-              {savingFollowup ? 'Saving…' : 'Save follow-up setting'}
-            </Button>
-          </div>
+          {canManage ? (
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                disabled={savingFollowup}
+                onClick={saveFollowup}
+                className="h-7 text-[12px] px-3 bg-gradient-to-r from-brand-600 to-brand2-600 text-white border-0 hover:opacity-90"
+              >
+                {savingFollowup ? 'Saving…' : 'Save follow-up setting'}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-[11.5px] text-slate-400">Only workspace admins can change this.</p>
+          )}
         </div>
       </Card>
 
@@ -2255,7 +2317,7 @@ function TwilioSettingTab({ twilioSetting }) {
 // ─── Page root ────────────────────────────────────────────────────────────────
 
 export default function ProfileEdit({
-  mustVerifyEmail, smtpCredentials, mailSettings,
+  mustVerifyEmail, smtpCredentials, orgDefaultSmtp, mailSettings,
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
   orgFollowupEnabled, whatsappStatus, aiSetting, twilioSetting, tags = [],
 }) {
@@ -2296,7 +2358,7 @@ export default function ProfileEdit({
             {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
             {tab === 'workspace' && <WorkspaceTab />}
             {tab === 'tags'      && <TagsTab tags={tags} />}
-            {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} />}
+            {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} orgDefault={orgDefaultSmtp} />}
             {tab === 'mail'      && <MailTab mailSettings={mailSettings} orgFollowupEnabled={orgFollowupEnabled} />}
             {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
             {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}

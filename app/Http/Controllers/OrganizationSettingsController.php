@@ -11,12 +11,15 @@ class OrganizationSettingsController extends Controller
 {
     public function update(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        abort_unless($user->isOwner() || $user->hasPermission('team.manage'), 403, 'Only workspace admins can edit these settings.');
+
         $request->validate([
             'followup_enabled' => 'sometimes|boolean',
             'name'             => 'sometimes|required|string|max:150',
         ]);
 
-        $org = app(TenantContext::class)->get() ?? $request->user()?->organization;
+        $org = app(TenantContext::class)->get() ?? $user->organization;
 
         if (! $org) {
             return Redirect::back()->withErrors(['org' => 'No workspace found.']);

@@ -50,11 +50,17 @@ class ProfileController extends Controller
         return Inertia::render('Profile/Edit', [
             'mustVerifyEmail'    => $user instanceof MustVerifyEmail,
             'status'             => session('status'),
+            'canManageWorkspace' => $user->isOwner() || $user->hasPermission('team.manage'),
             'leadGenSettings'    => [
                 'provider' => $orgSettings['lead_generation_provider'] ?? null,
                 'enabled'  => $orgSettings['lead_generation_enabled'] ?? false,
                 'hasKey'   => !empty($orgSettings['lead_generation_api_key']),
             ],
+            'orgDefaultSmtp'     => (function () use ($user) {
+                if ($user->activeSmtpCredential) return null;
+                $ownerCred = $user->organization?->owner?->activeSmtpCredential;
+                return $ownerCred ? ['name' => $ownerCred->name, 'from_email' => $ownerCred->from_email] : null;
+            })(),
             'smtpCredentials'    => $user->smtpCredentials()->get()->map(function ($c) {
                 try {
                     $password = $c->password; // decrypted by the model cast
@@ -151,6 +157,9 @@ class ProfileController extends Controller
 
     public function updateWorkspace(Request $request): RedirectResponse
     {
+        $user = $request->user();
+        abort_unless($user->isOwner() || $user->hasPermission('team.manage'), 403, 'Only workspace admins can edit these settings.');
+
         $request->validate([
             'company_name'    => 'nullable|string|max:150',
             'company_website' => 'nullable|string|max:255',
@@ -160,7 +169,6 @@ class ProfileController extends Controller
             'logo'            => 'nullable|image|mimes:jpg,jpeg,png,gif,webp,svg|max:2048',
         ]);
 
-        $user = $request->user();
         $user->company_name     = $request->input('company_name', $user->company_name);
         $user->company_website  = $request->input('company_website', $user->company_website);
         $user->company_phone    = $request->input('company_phone', $user->company_phone);
@@ -183,6 +191,8 @@ class ProfileController extends Controller
     public function removeLogo(Request $request): RedirectResponse
     {
         $user = $request->user();
+        abort_unless($user->isOwner() || $user->hasPermission('team.manage'), 403, 'Only workspace admins can edit these settings.');
+
         if ($user->company_logo) {
             Storage::disk('public')->delete($user->company_logo);
             $user->company_logo = null;
@@ -190,6 +200,21 @@ class ProfileController extends Controller
         }
 
         return Redirect::route('profile.edit');
+    }
+
+    /**
+     * Personal callback number for Twilio click-to-call bridging — unlike
+     * workspace branding, this stays per-agent, so any user may set their own.
+     */
+    public function updateCallbackPhone(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'callback_phone' => 'nullable|string|max:50',
+        ]);
+
+        $request->user()->update($validated);
+
+        return Redirect::route('profile.edit')->with('status', 'callback-phone-updated');
     }
 
     public function saveLeadProvider(Request $request): JsonResponse

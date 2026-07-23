@@ -13,7 +13,7 @@ class InboxController extends Controller
     public function index(Request $request)
     {
         $user   = $request->user();
-        $cred   = $user->smtpCredentials()->where('is_active', true)->first();
+        $cred   = $user->effectiveSmtpCredential();
         $folder = $request->get('folder', 'inbox');
         $search = trim((string) $request->get('search', ''));
 
@@ -109,7 +109,7 @@ class InboxController extends Controller
 
     public function sync(Request $request)
     {
-        $cred = $request->user()->smtpCredentials()->where('is_active', true)->first();
+        $cred = $request->user()->effectiveSmtpCredential();
 
         if (!$cred) {
             return response()->json([
@@ -137,7 +137,7 @@ class InboxController extends Controller
 
     public function syncStatus(Request $request)
     {
-        $cred = $request->user()->smtpCredentials()->where('is_active', true)->first();
+        $cred = $request->user()->effectiveSmtpCredential();
         return response()->json([
             'last_fetched_at' => $cred?->last_fetched_at?->toISOString(),
             'inbox_count'     => FetchedEmail::inbox()->count(),

@@ -322,6 +322,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const bindCallEvents = (call) => {
     call.on('accept', () => {
       setCallState('connected')
+      setShowInCallKeypad(true)
       startTimer()
     })
     const endThisCall = () => {
@@ -527,6 +528,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
         if (res.ok) {
           toast.success('Ringing your phone to connect call...')
           setCallState('connected')
+          setShowInCallKeypad(true)
           startTimer()
         } else {
           toast.error(data.error ?? 'Failed to place call.')
@@ -963,7 +965,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               
               {/* Left Column: Logs, SMS & Voicemails (8 columns) */}
-              <div className="lg:col-span-8 space-y-6">
+              <div className="lg:col-span-8 space-y-6 order-2 lg:order-1">
                 {/* Quick dial dropdown card (Searchable) */}
                 <div className="rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center relative z-[40]" style={glassCard}>
                   <span className="text-[12.5px] font-semibold text-slate-500 shrink-0">Quick Dial Lead:</span>
@@ -1471,8 +1473,8 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
               </div>
 
               {/* Right Column: Embedded Smartphone Dialer & Voice Tester (4 columns) */}
-              <div className="lg:col-span-4 space-y-6 flex flex-col items-center">
-                
+              <div className="lg:col-span-4 space-y-6 flex flex-col items-center order-1 lg:order-2">
+
                 {/* iPhone Pro Mockup Container (Purple Metallic Frame) */}
                 <div 
                   className="w-[280px] bg-white rounded-[44px] overflow-hidden flex flex-col relative select-none"
@@ -1507,20 +1509,28 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                           </div>
 
                           {/* Mid Visualizer / In-Call Keypad (if connected) */}
-                          <div className="flex-1 flex items-center justify-center my-4">
+                          <div className="flex-1 flex flex-col items-center justify-center my-4">
                             {callState === 'connected' && showInCallKeypad ? (
-                              <div className="grid grid-cols-3 gap-x-3.5 gap-y-2 justify-items-center">
-                                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map(num => (
-                                  <button
-                                    key={num}
-                                    type="button"
-                                    onClick={() => addKey(num)}
-                                    className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center border border-slate-700 text-[13px] font-bold text-slate-100"
-                                  >
-                                    {num}
-                                  </button>
-                                ))}
-                              </div>
+                              <>
+                                <div className="grid grid-cols-3 gap-x-3.5 gap-y-2 justify-items-center">
+                                  {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map(num => (
+                                    <button
+                                      key={num}
+                                      type="button"
+                                      disabled={!isSoftphone}
+                                      onClick={() => addKey(num)}
+                                      className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center border border-slate-700 text-[13px] font-bold text-slate-100 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-slate-800"
+                                    >
+                                      {num}
+                                    </button>
+                                  ))}
+                                </div>
+                                {!isSoftphone && (
+                                  <p className="text-[9.5px] text-amber-400 text-center mt-3 max-w-[200px] leading-snug">
+                                    This call is bridged to your real phone — press keys on that phone to navigate IVR menus, not here.
+                                  </p>
+                                )}
+                              </>
                             ) : callState === 'connected' && (
                               <div className="flex items-center gap-1">
                                 <span className="w-1 h-4 bg-brand-400 rounded-full animate-pulse" />

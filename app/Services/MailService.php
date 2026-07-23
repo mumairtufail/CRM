@@ -21,7 +21,7 @@ class MailService
 
     public static function forUser(User $user): ?static
     {
-        $cred = $user->activeSmtpCredential;
+        $cred = $user->effectiveSmtpCredential();
         return $cred ? new static($cred) : null;
     }
 

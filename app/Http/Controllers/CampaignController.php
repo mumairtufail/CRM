@@ -638,7 +638,7 @@ class CampaignController extends Controller
      */
     private function resolveSender(\App\Models\User $user): array
     {
-        $cred = $user->activeSmtpCredential;
+        $cred = $user->effectiveSmtpCredential();
 
         return [
             'from_name'  => $cred->from_name  ?? $user->name,

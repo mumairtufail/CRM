@@ -213,9 +213,9 @@ class TwilioController extends Controller
         }
 
         // Get Agent's phone number
-        $agentPhone = $request->user()->company_phone;
+        $agentPhone = $request->user()->callback_phone;
         if (empty($agentPhone)) {
-            return response()->json(['error' => 'You must set your "Company phone" in Workspace settings to place click-to-call bridged connections.'], 400);
+            return response()->json(['error' => 'You must set your "Callback phone" in Workspace settings to place click-to-call bridged connections.'], 400);
         }
 
         try {

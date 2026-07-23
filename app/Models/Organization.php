@@ -14,7 +14,10 @@ class Organization extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'owner_id', 'settings', 'plan_id', 'plan_status', 'plan_assigned_at'];
+    protected $fillable = [
+        'name', 'slug', 'owner_id', 'settings', 'plan_id', 'plan_status', 'plan_assigned_at',
+        'company_name', 'company_logo', 'company_website', 'company_phone', 'company_email', 'company_linkedin',
+    ];
 
     protected $casts = [
         'settings'         => 'array',

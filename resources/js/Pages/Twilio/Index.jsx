@@ -17,7 +17,7 @@ import {
   Phone, PhoneCall, PhoneOff, PhoneForwarded, MessageSquare,
   Clock, Volume2, VolumeX, Delete, HelpCircle, X, Play, Pause,
   AlertCircle, RefreshCw, Mic, MicOff, Search, ChevronRight, ChevronLeft, User, Send,
-  RotateCcw, RotateCw, Trash2, CheckCircle2, UsersRound,
+  RotateCcw, RotateCw, Trash2, CheckCircle2, UsersRound, Grid3x3,
 } from 'lucide-react'
 
 // Keep in sync with LeadController's status options (Leads/Index.jsx STATUS_OPTIONS).
@@ -90,6 +90,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
   const [isMuted, setIsMuted] = useState(false)
   const [isSoftphone, setIsSoftphone] = useState(false)
   const [deviceError, setDeviceError] = useState(null)
+  const [showInCallKeypad, setShowInCallKeypad] = useState(false)
 
   const deviceRef = useRef(null)
   const connectionRef = useRef(null)
@@ -456,6 +457,7 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
     stopTimer()
     setCallState('idle')
     setCallDuration(0)
+    setShowInCallKeypad(false)
     router.reload({ only: ['calls'] })
   }
 
@@ -1383,12 +1385,23 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                         ) : (
                           leadsTabResults.map(lead => {
                             const contactedViaCall = !!lead.contact_channels?.call
+                            const hasName = !!lead.name?.trim()
+                            const displayName = hasName ? lead.name : (lead.company || 'Unnamed Lead')
+                            const subtitleParts = [lead.phone || 'No phone']
+                            if (hasName && lead.company) subtitleParts.push(lead.company)
                             return (
-                              <div key={lead.id} className="flex flex-wrap items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50/60 transition-colors">
+                              <div
+                                key={lead.id}
+                                role="button"
+                                tabIndex={0}
+                                onClick={() => router.visit(route('leads.show', lead.id))}
+                                onKeyDown={e => { if (e.key === 'Enter') router.visit(route('leads.show', lead.id)) }}
+                                className="flex flex-wrap items-center gap-2.5 px-3 py-2.5 hover:bg-slate-50/60 transition-colors cursor-pointer"
+                              >
                                 <div className="min-w-0 flex-1">
-                                  <p className="text-[12.5px] font-bold text-slate-700 truncate">{lead.name}</p>
+                                  <p className="text-[12.5px] font-bold text-slate-700 truncate">{displayName}</p>
                                   <p className="text-[10.5px] text-slate-400 truncate">
-                                    {lead.phone ?? 'No phone'}{lead.company ? ` · ${lead.company}` : ''}
+                                    {subtitleParts.join(' · ')}
                                   </p>
                                 </div>
 
@@ -1410,18 +1423,20 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                                   </div>
                                 )}
 
-                                <Select value={lead.status} onValueChange={v => changeLeadStatus(lead, v)}>
-                                  <SelectTrigger className="h-7 w-auto gap-1 text-[11px] border-0 bg-transparent shadow-none focus:ring-0 px-1 [&>svg]:w-3 [&>svg]:h-3 [&>svg]:opacity-40">
-                                    <StatusBadge status={lead.status} size="sm" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {LEAD_STATUS_OPTIONS.map(s => (
-                                      <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <div onClick={e => e.stopPropagation()}>
+                                  <Select value={lead.status} onValueChange={v => changeLeadStatus(lead, v)}>
+                                    <SelectTrigger className="h-7 w-auto gap-1 text-[11px] border-0 bg-transparent shadow-none focus:ring-0 px-1 [&>svg]:w-3 [&>svg]:h-3 [&>svg]:opacity-40">
+                                      <StatusBadge status={lead.status} size="sm" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {LEAD_STATUS_OPTIONS.map(s => (
+                                        <SelectItem key={s.value} value={s.value} className="text-xs">{s.label}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
 
-                                <div className="flex items-center gap-1 shrink-0">
+                                <div className="flex items-center gap-1 shrink-0" onClick={e => e.stopPropagation()}>
                                   <Button
                                     size="sm"
                                     onClick={() => callLeadNow(lead)}
@@ -1491,9 +1506,22 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                             </p>
                           </div>
 
-                          {/* Mid Visualizer (if connected) */}
+                          {/* Mid Visualizer / In-Call Keypad (if connected) */}
                           <div className="flex-1 flex items-center justify-center my-4">
-                            {callState === 'connected' && (
+                            {callState === 'connected' && showInCallKeypad ? (
+                              <div className="grid grid-cols-3 gap-x-3.5 gap-y-2 justify-items-center">
+                                {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map(num => (
+                                  <button
+                                    key={num}
+                                    type="button"
+                                    onClick={() => addKey(num)}
+                                    className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-700 active:scale-95 transition-all flex items-center justify-center border border-slate-700 text-[13px] font-bold text-slate-100"
+                                  >
+                                    {num}
+                                  </button>
+                                ))}
+                              </div>
+                            ) : callState === 'connected' && (
                               <div className="flex items-center gap-1">
                                 <span className="w-1 h-4 bg-brand-400 rounded-full animate-pulse" />
                                 <span className="w-1 h-6 bg-brand-500 rounded-full animate-pulse delay-75" />
@@ -1525,6 +1553,20 @@ export default function TwilioIndex({ calls, messages, twilioSetting, quickLeads
                               </div>
                             ) : (
                               <div className="flex gap-6 justify-center w-full">
+                                {/* Keypad Toggle (DTMF digits for IVR menus) */}
+                                {callState === 'connected' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setShowInCallKeypad(v => !v)}
+                                    title="Keypad"
+                                    className={cn(
+                                      "w-11 h-11 rounded-full active:scale-95 transition-all flex items-center justify-center border border-slate-700",
+                                      showInCallKeypad ? "bg-brand-600 text-white" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                    )}
+                                  >
+                                    <Grid3x3 size={16} />
+                                  </button>
+                                )}
                                 {/* Mute Button */}
                                 {isSoftphone && (
                                   <button

@@ -11,7 +11,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/Components/ui/dialog'
-import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X, Sparkles } from 'lucide-react'
+import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X, Sparkles, Check, Info, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
 import RichEditor from '@/Components/Common/RichEditor'
 import AiComposeModal from '@/Components/Campaigns/AiComposeModal'
@@ -213,7 +213,7 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
                         )}
                         style={active ? { background: t.color, borderColor: t.color } : {}}
                       >
-                        {active && <span className="mr-1">✓</span>}
+                        {active && <Check size={11} className="mr-1 inline" />}
                         {t.name}
                       </button>
                     )
@@ -262,7 +262,7 @@ function RecipientSelector({ data, setData, leadCount, groups, tags, recipientCo
                     </span>
                     {active && (
                       <div className="w-4 h-4 rounded-full bg-brand-600 flex items-center justify-center shrink-0">
-                        <span className="text-white text-[9px]">✓</span>
+                        <Check size={10} className="text-white" strokeWidth={3} />
                       </div>
                     )}
                   </button>
@@ -430,7 +430,7 @@ function FollowUpStepCard({ stepNumber, step, prevDelayHours, errors, onUpdate, 
   )
 }
 
-export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], forms = [], sender = null, activeTemplate = null, campaign = null, orgFollowupEnabled = false, aiConfigured = false }) {
+export default function CampaignCreate({ statuses, leadCount, groups = [], tags = [], forms = [], sender = null, activeTemplate = null, campaign = null, aiConfigured = false }) {
   const isEdit = !!campaign
   const [previewOpen, setPreviewOpen] = useState(false)
   const [previewStep, setPreviewStep] = useState(null) // null = closed, number = step index
@@ -699,8 +699,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                 </div>
 
                 {/* Follow-up sequence */}
-                {orgFollowupEnabled && (
-                  <div className="form-card">
+                <div className="form-card">
                     {/* Card header + master toggle */}
                     <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
                       <div className="flex items-center gap-2">
@@ -742,7 +741,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                         <div className="space-y-3">
                           {/* Engagement stop notice */}
                           <div className="flex items-start gap-1.5 rounded-lg bg-slate-50 border border-slate-100 px-2.5 py-2">
-                            <span className="text-slate-400 mt-0.5 shrink-0 text-[11px]">ℹ</span>
+                            <Info size={13} className="text-slate-400 mt-0.5 shrink-0" />
                             <p className="text-[11px] text-slate-500 leading-relaxed">
                               The sequence stops automatically for each lead the moment they open or click any email. All delays are measured from the original email's send date.
                             </p>
@@ -751,7 +750,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                           {/* Empty state warning */}
                           {data.followup_steps.length === 0 && (
                             <div className="flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-100 px-3 py-2.5">
-                              <span className="text-amber-500 text-[12px]">⚠</span>
+                              <AlertTriangle size={13} className="text-amber-500 shrink-0" />
                               <p className="text-[12px] text-amber-700">Add at least one follow-up step below.</p>
                             </div>
                           )}
@@ -789,8 +788,7 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 pb-4">
@@ -838,7 +836,6 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
           onClose={() => setAiComposeOpen(false)}
           forms={forms}
           aiConfigured={aiConfigured}
-          orgFollowupEnabled={orgFollowupEnabled}
           onApply={handleAiApply}
         />
 

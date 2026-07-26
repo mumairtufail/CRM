@@ -12,7 +12,6 @@ use App\Models\LeadGroup;
 use App\Models\Tag;
 use App\Services\AiService;
 use App\Services\MailService;
-use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -57,8 +56,6 @@ class CampaignController extends Controller
             'color' => $t->color,
         ]);
 
-        $org = app(TenantContext::class)->get() ?? $request->user()?->organization;
-
         return Inertia::render('Campaigns/Create', [
             'statuses'            => $statuses,
             'leadCount'           => $leadCount,
@@ -67,7 +64,6 @@ class CampaignController extends Controller
             'forms'               => $this->formsForSelect(),
             'sender'              => $this->resolveSender($request->user()),
             'activeTemplate'      => $request->user()->activeEmailTemplate?->name,
-            'orgFollowupEnabled'  => $org?->isFollowupEnabled() ?? false,
             'aiConfigured'        => AiService::forCurrentTenant()?->isConfigured() ?? false,
         ]);
     }
@@ -145,8 +141,6 @@ class CampaignController extends Controller
             'color' => $t->color,
         ]);
 
-        $org = app(TenantContext::class)->get() ?? $request->user()?->organization;
-
         return Inertia::render('Campaigns/Create', [
             'statuses'           => $statuses,
             'leadCount'          => $leadCount,
@@ -155,7 +149,6 @@ class CampaignController extends Controller
             'forms'              => $this->formsForSelect(),
             'sender'             => $this->resolveSender($request->user()),
             'activeTemplate'     => $request->user()->activeEmailTemplate?->name,
-            'orgFollowupEnabled' => $org?->isFollowupEnabled() ?? false,
             'aiConfigured'       => AiService::forCurrentTenant()?->isConfigured() ?? false,
             'campaign'           => [
                 'id'               => $campaign->id,

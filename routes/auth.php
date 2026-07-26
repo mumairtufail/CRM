@@ -19,6 +19,9 @@ Route::middleware('guest')->group(function () {
 
     Route::post('register', [RegisteredUserController::class, 'store']);
 
+    Route::post('register/draft', [RegisteredUserController::class, 'saveDraft'])
+        ->name('register.draft');
+
     Route::get('register/verify', [RegisteredUserController::class, 'showVerifyForm'])
         ->name('register.verify');
 

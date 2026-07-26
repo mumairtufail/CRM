@@ -109,7 +109,7 @@ const REWRITE_TARGETS = [
 ]
 
 export default function AiComposeModal({
-  open, onClose, forms = [], aiConfigured = false, orgFollowupEnabled = false, onApply,
+  open, onClose, forms = [], aiConfigured = false, onApply,
 }) {
   const [step, setStep] = useState('inputs') // 'inputs' | 'review'
   const [hook, setHook] = useState('')
@@ -382,8 +382,7 @@ export default function AiComposeModal({
               </div>
             )}
 
-            {orgFollowupEnabled && (
-              <div className="space-y-1.5 border-t pt-3">
+            <div className="space-y-1.5 border-t pt-3">
                 <Label className="text-xs">Want suggested follow-ups for this?</Label>
                 <div className="flex flex-wrap gap-1.5">
                   {FOLLOWUP_COUNT_OPTIONS.map(o => (
@@ -435,8 +434,7 @@ export default function AiComposeModal({
                     </button>
                   </div>
                 )}
-              </div>
-            )}
+            </div>
 
             <DialogFooter className="gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => setStep('inputs')} className="gap-1">
@@ -445,7 +443,7 @@ export default function AiComposeModal({
               <div className="flex-1" />
               <Button
                 onClick={handleApply}
-                disabled={followupCount > 0 && orgFollowupEnabled && !followupSteps}
+                disabled={followupCount > 0 && !followupSteps}
                 className="text-white"
                 style={gradientStyle}
               >

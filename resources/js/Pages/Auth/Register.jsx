@@ -1,11 +1,12 @@
 import { useForm, Head, Link } from '@inertiajs/react'
 import { Input } from '@/Components/ui/input'
 import { Eye, EyeOff, Check, Building, Globe, User, Mail, Lock, ArrowLeft, ArrowRight } from 'lucide-react'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import Logo from '@/Components/Common/Logo'
 // Google sign-in is still being finished (see routes/auth.php) — temporarily disabled.
 // import GoogleButton from '@/Components/Auth/GoogleButton'
 import { motion, AnimatePresence } from 'framer-motion'
+import axios from 'axios'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -40,19 +41,30 @@ function Asterisk() {
   return <span style={{ color: '#ef4444', marginLeft: 2 }}>*</span>
 }
 
-export default function Register({ appDomain }) {
+export default function Register({ appDomain, draft }) {
   const [showPass, setShowPass] = useState(false)
   const [touched, setTouched] = useState({})
-  const [step, setStep] = useState(1)
+  // Resume on step 2 if we're restoring a draft that already had account details.
+  const [step, setStep] = useState(draft && (draft.name || draft.email) ? 2 : 1)
 
   const { data, setData, post, processing, errors, reset } = useForm({
-    workspace: '',
-    slug: '',
-    name: '',
-    email: '',
+    workspace: draft?.workspace || '',
+    slug: draft?.slug || '',
+    name: draft?.name || '',
+    email: draft?.email || '',
     password: '',
     password_confirmation: '',
   })
+
+  // Fire-and-forget: mirrors the non-sensitive fields to the session so a page
+  // reload (or coming back later) restores what was already typed.
+  const dataRef = useRef(data)
+  dataRef.current = data
+  const saveDraft = useCallback((fields) => {
+    const payload = {}
+    fields.forEach(f => { payload[f] = dataRef.current[f] })
+    axios.post(route('register.draft'), payload).catch(() => {})
+  }, [])
 
   // Client error shows once a field is touched; server errors always show.
   const errorFor = useCallback((field) => {
@@ -63,7 +75,10 @@ export default function Register({ appDomain }) {
 
   const markTouched = useCallback((field) => {
     setTouched(t => (t[field] ? t : { ...t, [field]: true }))
-  }, [])
+    if (field !== 'password' && field !== 'password_confirmation') {
+      saveDraft([field])
+    }
+  }, [saveDraft])
 
   const handleNextStep = (e) => {
     e.preventDefault()
@@ -79,7 +94,8 @@ export default function Register({ appDomain }) {
       else document.getElementById('slug')?.focus()
       return
     }
-    
+
+    saveDraft(['workspace', 'slug'])
     setStep(2)
   }
 
@@ -106,7 +122,20 @@ export default function Register({ appDomain }) {
       return
     }
 
-    post(route('register'), { onFinish: () => reset('password', 'password_confirmation') })
+    post(route('register'), {
+      // Only clear passwords once we know they were actually used — clearing them on
+      // every response (including failures) was making unrelated errors, like a taken
+      // slug, look like a blank/invalid password to the user.
+      onSuccess: () => reset('password', 'password_confirmation'),
+      onError: (errs) => {
+        // The error may belong to a step-1 field (workspace/slug) that isn't even
+        // rendered while on step 2 — jump back so the user actually sees it.
+        if (errs.workspace || errs.slug) {
+          setTouched(t => ({ ...t, workspace: true, slug: true }))
+          setStep(1)
+        }
+      },
+    })
   }
 
   const pwOk = data.password.length >= 8

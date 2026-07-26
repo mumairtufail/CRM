@@ -89,7 +89,6 @@ class ProfileController extends Controller
                 'batch_size'  => $user->mail_batch_size  ?? 10,
                 'batch_delay' => $user->mail_batch_delay ?? 5,
             ],
-            'orgFollowupEnabled'    => (bool) ($orgSettings['followup_enabled'] ?? false),
             'emailTemplates'        => $allTemplates->values(),
             'activeTemplateId'      => $user->active_template_id,
             'smtpSuccess'           => session('smtp_success'),

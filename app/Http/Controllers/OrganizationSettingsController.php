@@ -15,20 +15,13 @@ class OrganizationSettingsController extends Controller
         abort_unless($user->isOwner() || $user->hasPermission('team.manage'), 403, 'Only workspace admins can edit these settings.');
 
         $request->validate([
-            'followup_enabled' => 'sometimes|boolean',
-            'name'             => 'sometimes|required|string|max:150',
+            'name' => 'sometimes|required|string|max:150',
         ]);
 
         $org = app(TenantContext::class)->get() ?? $user->organization;
 
         if (! $org) {
             return Redirect::back()->withErrors(['org' => 'No workspace found.']);
-        }
-
-        if ($request->has('followup_enabled')) {
-            $settings                     = $org->settings ?? [];
-            $settings['followup_enabled'] = (bool) $request->input('followup_enabled');
-            $org->settings                = $settings;
         }
 
         if ($request->has('name')) {

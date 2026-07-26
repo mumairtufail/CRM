@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Support\TenantContext;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,6 +24,14 @@ class RegisteredUserController extends Controller
     use CreatesOrganizationWithOwner;
 
     /**
+     * Fields we're willing to persist to the session as the user progresses
+     * through the registration wizard. Never includes password fields.
+     */
+    private const DRAFT_FIELDS = ['workspace', 'slug', 'name', 'email'];
+
+    private const DRAFT_SESSION_KEY = 'register_draft';
+
+    /**
      * Display the registration view.
      */
     public function create(): Response
@@ -29,7 +39,34 @@ class RegisteredUserController extends Controller
         return Inertia::render('Auth/Register', [
             // Only set when subdomain tenancy is configured; drives the slug hint.
             'appDomain' => config('app.domain'),
+            // Restores in-progress registration data (e.g. after a page reload) so the
+            // user never has to retype fields they already entered.
+            'draft' => session(self::DRAFT_SESSION_KEY, []),
         ]);
+    }
+
+    /**
+     * Persist partial registration data to the session as the user fills out the
+     * wizard, so a reload (or a validation error on a field from an earlier step)
+     * doesn't wipe what they've already typed. Never stores password fields.
+     */
+    public function saveDraft(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'workspace' => 'nullable|string|max:150',
+            'slug'      => 'nullable|string|max:60',
+            'name'      => 'nullable|string|max:255',
+            'email'     => 'nullable|string|max:255',
+        ]);
+
+        $draft = array_merge(
+            session(self::DRAFT_SESSION_KEY, []),
+            array_intersect_key($data, array_flip(self::DRAFT_FIELDS))
+        );
+
+        session([self::DRAFT_SESSION_KEY => $draft]);
+
+        return response()->json(['saved' => true]);
     }
 
     /**
@@ -40,6 +77,10 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        // Keep whatever was entered so a reload (or a fix-and-resubmit after a
+        // server-side error) doesn't lose progress, regardless of what fails below.
+        session([self::DRAFT_SESSION_KEY => $request->only(self::DRAFT_FIELDS)]);
+
         $validated = $request->validate([
             'workspace' => 'required|string|max:150',
             'slug'      => [
@@ -51,14 +92,44 @@ class RegisteredUserController extends Controller
             'email'     => 'required|string|lowercase|email|max:255|unique:'.User::class,
             'password'  => ['required', 'confirmed', Rules\Password::defaults()],
         ], [
-            'slug.regex' => 'The workspace URL may only contain lowercase letters, numbers, and hyphens.',
+            'workspace.required' => 'Please enter a workspace name.',
+            'slug.regex'         => 'The workspace URL may only contain lowercase letters, numbers, and hyphens.',
+            'slug.unique'        => 'This workspace URL is already taken. Please choose another.',
+            'name.required'      => 'Please enter your name.',
+            'email.required'     => 'Please enter your email address.',
+            'email.email'        => 'Please enter a valid email address.',
+            'email.unique'       => 'An account with this email already exists.',
+            'password.required'  => 'Please enter a password.',
+            'password.confirmed' => 'The password confirmation does not match.',
         ]);
 
-        $user = $this->createOrganizationWithOwner($validated['workspace'], ($validated['slug'] ?? '') ?: null, [
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
-        ]);
+        try {
+            $user = $this->createOrganizationWithOwner($validated['workspace'], ($validated['slug'] ?? '') ?: null, [
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
+        } catch (QueryException $e) {
+            // Two concurrent registrations can both pass the uniqueness check above and
+            // then collide on the DB-level unique constraint; surface it as a normal
+            // field error instead of a 500.
+            if (str_contains($e->getMessage(), 'organizations_slug_unique')) {
+                throw ValidationException::withMessages([
+                    'slug' => 'This workspace URL was just taken by someone else. Please choose another.',
+                ]);
+            }
+
+            if (str_contains($e->getMessage(), 'users_email_unique')) {
+                throw ValidationException::withMessages([
+                    'email' => 'An account with this email already exists.',
+                ]);
+            }
+
+            throw $e;
+        }
+
+        // Registration succeeded; nothing left to restore on reload.
+        session()->forget(self::DRAFT_SESSION_KEY);
 
         // Generate a 6-digit email verification code
         $code = rand(100000, 999999);

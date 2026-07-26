@@ -59,11 +59,6 @@ class Organization extends Model
         return $this->hasMany(SupportCase::class);
     }
 
-    public function isFollowupEnabled(): bool
-    {
-        return (bool) ($this->settings['followup_enabled'] ?? false);
-    }
-
     /**
      * Whether this tenant's active plan unlocks the given module key.
      * Modules not in the catalog (e.g. core CRM) are always available.

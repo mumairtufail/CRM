@@ -20,12 +20,8 @@ class SendCampaignFollowUps extends Command
 
         EmailCampaign::where('followup_enabled', true)
             ->whereIn('status', ['sending', 'sent'])
-            ->with(['organization'])
             ->chunkById(100, function ($campaigns) use (&$dispatched) {
                 foreach ($campaigns as $campaign) {
-                    $org = $campaign->organization ?? \App\Models\Organization::find($campaign->organization_id);
-                    if (! $org || ! $org->isFollowupEnabled()) continue;
-
                     $user = User::where('organization_id', $campaign->organization_id)
                         ->where('role', 'owner')
                         ->first();

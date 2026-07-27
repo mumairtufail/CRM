@@ -342,7 +342,14 @@ export default function LeadGenerationIndex({ configured, providerName }) {
       if (data.not_configured) router.visit('/profile')
       throw new Error(data.message || `Request failed (${res.status})`)
     }
-    return res.json()
+    try {
+      return await res.json()
+    } catch {
+      // The server responded 2xx but the body wasn't JSON (e.g. a redirected-to
+      // HTML page) — surface a message users can act on instead of the raw
+      // browser parse error.
+      throw new Error('Unexpected response from the server. Please try again.')
+    }
   }
 
   // ── Handlers ─────────────────────────────────────────────────────────────

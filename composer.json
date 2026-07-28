@@ -13,6 +13,8 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.28",
         "laravel/tinker": "^3.0",
+        "paddlehq/paddle-php-sdk": "^1.17",
+        "php-http/guzzle7-adapter": "^1.1",
         "tightenco/ziggy": "^2.0",
         "twilio/sdk": "*",
         "webklex/laravel-imap": "^6.2"

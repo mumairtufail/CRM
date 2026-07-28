@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useForm, Head, usePage } from '@inertiajs/react';
+import { Link, useForm, Head, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Mail, FileText, Upload, Users, PenTool, Link2,
@@ -15,6 +15,8 @@ import ActivityShowcase from '@/Components/Marketing/ActivityShowcase';
 import ModuleShowcase, { MODULES } from '@/Components/Marketing/ModuleShowcase';
 import DotGrid from '@/Components/Marketing/DotGrid';
 import { cn } from '@/lib/utils';
+import { TIERS } from '@/lib/pricingTiers';
+import { getPaddle } from '@/lib/paddle';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
 
@@ -29,7 +31,7 @@ const stagger = {
 
 // ─── Hero rotating word ───────────────────────────────────────────────────────
 
-const HERO_WORDS = ['finds your leads', 'writes your follow-ups', 'answers your WhatsApp', 'closes your deals'];
+const HERO_WORDS = ['finds your leads', 'writes your follow-ups', 'sends your invoices', 'closes your deals'];
 
 function RotatingWord() {
     const [index, setIndex] = useState(0);
@@ -75,13 +77,13 @@ const FREE_TOOLS = [
 
 const WHY_CHOOSE_US = [
     { icon: Layers,    title: 'One workspace, not five tools',  description: 'Leads, campaigns, pipeline, invoicing, and support all live in the same place, so nothing gets lost switching tabs.' },
-    { icon: Sparkles,  title: 'AI that does the work, not just autocomplete', description: 'It finds prospects, drafts follow-ups, and answers WhatsApp chats itself, from a knowledge base you write.' },
+    { icon: Sparkles,  title: 'AI that does the work, not just autocomplete', description: 'It finds prospects and drafts follow-ups today, and will answer WhatsApp chats itself once that launches, all from a knowledge base you write.' },
     { icon: Shield,    title: 'Your data stays yours',           description: 'Every workspace is isolated at the database level, so agencies running multiple clients never risk a leak between accounts.' },
     { icon: Clock,     title: 'Real people when you need them',  description: 'Email us and hear back within one business day, not a support ticket that disappears into a queue.' },
 ];
 
 const TESTIMONIALS = [
-    { name: 'Marcus Reid',     role: 'Sales Manager, USA',        avatar: 'MR', text: 'Our WhatsApp number used to get messages that just sat there until someone had time. Now the bot answers from the FAQ we wrote ourselves, and about a third of those chats turn into a real lead before I even see them.' },
+    { name: 'Marcus Reid',     role: 'Sales Manager, USA',        avatar: 'MR', text: 'I dial straight from a lead\'s profile now, and every call, in or out, lands on their timeline automatically with the recording attached. I stopped digging through a separate Twilio dashboard just to remember who I actually reached.' },
     { name: 'Priya Nair',      role: 'Founder, India',            avatar: 'PN', text: 'I typed "marketing directors at Shopify stores under 50 employees, UK" and had 40 verified people with emails in under a minute. I used to pay a VA a week to build that same list by hand.' },
     { name: 'Dana Whitfield',  role: 'Growth Lead, USA',          avatar: 'DW', text: 'Turned on automated follow ups in April and picked up 11 deals that month from people who never replied to the first email. That is money we were just leaving on the table before.' },
     { name: 'Julien Marchand', role: 'Founder, Canada',           avatar: 'JM', text: 'I used to run three spreadsheets just to remember who I had called that week. Now it is one board. Drag a card and it is done. Gets me back a solid afternoon every week I used to lose untangling my own mess.' },
@@ -104,18 +106,75 @@ const FAQS = [
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
+export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = null }) {
     const { props } = usePage();
     const seo = props.seo || {};
+    const userEmail = props.auth?.user?.email || undefined;
 
     const [mobileOpen, setMobileOpen] = useState(false);
     const [openFaq,    setOpenFaq]    = useState(null);
     const [scrolled,   setScrolled]   = useState(false);
     const [contactSent, setContactSent] = useState(false);
 
+    const [billingCycle, setBillingCycle] = useState('month');
+    const [pricePreviews, setPricePreviews] = useState({});
+    const [previewError, setPreviewError] = useState(false);
+    const [checkoutTier, setCheckoutTier] = useState(null);
+
     const contact = useForm({
         name: '', email: '', company: '', phone: '', subject: '', message: '',
     });
+
+    useEffect(() => {
+        let cancelled = false;
+        setPreviewError(false);
+
+        getPaddle(paddle)
+            .then((instance) => instance.PricePreview({
+                items: TIERS.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
+                ...(country ? { address: { countryCode: country } } : {}),
+            }))
+            .then((result) => {
+                if (cancelled) return;
+                const lineItems = result?.data?.details?.lineItems || [];
+                const byPriceId = {};
+                lineItems.forEach((item) => { byPriceId[item.price.id] = item.formattedTotals; });
+                setPricePreviews(byPriceId);
+            })
+            .catch(() => { if (!cancelled) setPreviewError(true); });
+
+        return () => { cancelled = true };
+    }, [billingCycle, country, paddle.environment, paddle.clientToken]);
+
+    const organizationId = props.organization?.id;
+
+    // Checkout only ever runs for a signed-in user's own organization — an
+    // anonymous click sends them to create a workspace first, since fulfillment
+    // (the Paddle webhook) needs a real organization_id to attach the
+    // subscription to and grant access on.
+    const openCheckout = (tier) => {
+        if (!userEmail || !organizationId) {
+            router.visit('/register');
+            return;
+        }
+
+        setCheckoutTier(tier.slug);
+        getPaddle(paddle)
+            .then((instance) => {
+                instance.Checkout.open({
+                    items: [{ priceId: tier.priceId[billingCycle], quantity: 1 }],
+                    customer: { email: userEmail },
+                    customData: { plan_slug: tier.slug, organization_id: organizationId },
+                    settings: {
+                        displayMode: 'overlay',
+                        variant: 'one-page',
+                        successUrl: `${window.location.origin}/welcome`,
+                    },
+                });
+            })
+            .catch(() => setPreviewError(true))
+            .finally(() => setCheckoutTier(null));
+    };
 
     useEffect(() => {
         const fn = () => setScrolled(window.scrollY > 20);
@@ -166,14 +225,14 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         operatingSystem: 'Web',
                         description: seo.meta_description || undefined,
                         url: `https://${appUrl}/`,
-                        offers: plans.length > 0
-                            ? plans.map(plan => ({
-                                '@type': 'Offer',
-                                name: plan.name,
-                                price: String(plan.price_monthly ?? '0'),
-                                priceCurrency: 'USD',
-                            }))
-                            : undefined,
+                        // Prices are localized per visitor via Paddle at render time, so a
+                        // static catalog price here would go stale/mismatched — omitted
+                        // rather than hardcoding a number that isn't what anyone is charged.
+                        offers: TIERS.map(tier => ({
+                            '@type': 'Offer',
+                            name: tier.name,
+                            priceCurrency: 'USD',
+                        })),
                     })}
                 </script>
                 <script type="application/ld+json">
@@ -306,16 +365,19 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                             { name: 'People Data Labs', logo: '/images/integrations/pdl.png' },
                             { name: 'Gmail', logo: '/images/integrations/gmail.svg' },
                             { name: 'Outlook', logo: '/images/integrations/outlook.png' },
-                            { name: 'WhatsApp Business', logo: '/images/integrations/whatsapp.svg' },
+                            { name: 'WhatsApp Business', logo: '/images/integrations/whatsapp.svg', soon: true },
                             { name: 'OpenAI', logo: '/images/integrations/openai.svg' },
                             { name: 'Claude', logo: '/images/integrations/claude.svg' },
                             { name: 'Kimi', logo: '/images/integrations/kimi.svg' },
-                        ].map(({ name, logo }) => (
+                        ].map(({ name, logo, soon }) => (
                             <span key={name}
                                   className="flex flex-col items-center gap-2 opacity-80 hover:opacity-100 transition-opacity cursor-default">
                                 <img src={logo} alt={`${name} logo`} loading="lazy"
                                      className="h-7 w-7 object-contain rounded-md" />
-                                <span className="text-slate-500 text-xs font-semibold text-center leading-tight">{name}</span>
+                                <span className="text-slate-500 text-xs font-semibold text-center leading-tight">
+                                    {name}
+                                    {soon && <span className="block text-brand-500 text-[10px] font-bold uppercase tracking-wide mt-0.5">Coming soon</span>}
+                                </span>
                             </span>
                         ))}
                     </div>
@@ -541,85 +603,92 @@ export default function Welcome({ appUrl, plans = [], chatbot = {} }) {
                         </motion.p>
                     </motion.div>
 
-                    {plans.length > 0 && (
-                        <motion.div
-                            variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                            className={cn(
-                                'grid grid-cols-1 gap-6 items-stretch',
-                                plans.length === 1 && 'max-w-sm mx-auto',
-                                plans.length === 2 && 'md:grid-cols-2 max-w-3xl mx-auto',
-                                plans.length >= 3 && 'md:grid-cols-3'
-                            )}
-                        >
-                            {plans.map((plan) => (
+                    <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }}
+                                className="flex justify-center mb-12">
+                        <div className="inline-flex items-center p-1 rounded-full bg-white/5 border border-white/10">
+                            {[['month', 'Monthly'], ['year', 'Yearly']].map(([value, label]) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => setBillingCycle(value)}
+                                    className={cn(
+                                        'px-5 py-2 rounded-full text-sm font-semibold transition-all',
+                                        billingCycle === value ? 'bg-white text-slate-900' : 'text-white/50 hover:text-white',
+                                    )}
+                                >
+                                    {label}
+                                </button>
+                            ))}
+                        </div>
+                    </motion.div>
+
+                    <motion.div
+                        variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
+                    >
+                        {TIERS.map((tier, i) => {
+                            const featured = i === 1;
+                            const priceId = tier.priceId[billingCycle];
+                            const formattedTotal = pricePreviews[priceId]?.total;
+                            return (
                                 <motion.div
-                                    key={plan.id}
+                                    key={tier.slug}
                                     variants={fadeUp}
                                     className="relative rounded-2xl p-8 flex flex-col border"
                                     style={{
-                                        background: plan.is_featured ? 'rgb(var(--brand-600) / 0.08)' : 'rgba(255,255,255,0.025)',
-                                        borderColor: plan.is_featured ? 'rgb(var(--brand-600) / 0.5)' : 'rgba(255,255,255,0.08)',
+                                        background: featured ? 'rgb(var(--brand-600) / 0.08)' : 'rgba(255,255,255,0.025)',
+                                        borderColor: featured ? 'rgb(var(--brand-600) / 0.5)' : 'rgba(255,255,255,0.08)',
                                     }}
                                 >
-                                    {plan.is_featured && (
+                                    {featured && (
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold text-white whitespace-nowrap"
                                             style={{ background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' }}>
                                             <Star className="w-3 h-3 fill-white" /> Most Popular
                                         </div>
                                     )}
 
-                                    <h3 className="text-white font-bold text-xl mb-1.5">{plan.name}</h3>
-                                    <p className="text-white/40 text-sm mb-6 min-h-[40px]">{plan.tagline}</p>
+                                    <h3 className="text-white font-bold text-xl mb-1.5">{tier.name}</h3>
+                                    <p className="text-white/40 text-sm mb-6 min-h-[40px]">{tier.description}</p>
 
-                                    <div className="mb-6 flex items-baseline gap-2">
-                                        {plan.price_monthly_original && (
-                                            <span className="text-lg line-through text-white/30">${Number(plan.price_monthly_original).toFixed(0)}</span>
+                                    <div className="mb-6 flex items-baseline gap-2 min-h-[44px]">
+                                        {formattedTotal ? (
+                                            <>
+                                                <span className="text-4xl font-black text-white">{formattedTotal}</span>
+                                                <span className="text-white/35 text-sm font-medium">/{billingCycle === 'month' ? 'mo' : 'yr'}</span>
+                                            </>
+                                        ) : (
+                                            <span className="text-white/30 text-sm">{previewError ? 'Price unavailable' : 'Loading price…'}</span>
                                         )}
-                                        <span className="text-4xl font-black text-white">${Number(plan.price_monthly ?? 0).toFixed(0)}</span>
-                                        <span className="text-white/35 text-sm font-medium">/mo</span>
                                     </div>
 
                                     <div className="flex-1 space-y-3 mb-8">
-                                        {plan.description ? (
-                                            <div
-                                                className="plan-rich-description text-white/70 text-sm space-y-2"
-                                                dangerouslySetInnerHTML={{ __html: plan.description }}
-                                            />
-                                        ) : (
-                                            <>
-                                                <div className="flex items-start gap-2.5 text-white/70 text-sm">
-                                                    <Check className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
-                                                    Core CRM, leads, pipeline, invoicing, reports, team
-                                                </div>
-                                                {plan.modules.map((m) => (
-                                                    <div key={m.id} className="flex items-start gap-2.5 text-white/70 text-sm">
-                                                        <Check className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
-                                                        {m.name}
-                                                    </div>
-                                                ))}
-                                            </>
-                                        )}
+                                        {tier.features.map((feature) => (
+                                            <div key={feature} className="flex items-start gap-2.5 text-white/70 text-sm">
+                                                <Check className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
+                                                {feature}
+                                            </div>
+                                        ))}
                                     </div>
 
-                                    <Link href="/register"
+                                    <button
+                                        type="button"
+                                        onClick={() => openCheckout(tier)}
+                                        disabled={checkoutTier === tier.slug}
                                         className={cn(
-                                            'group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-px',
-                                            plan.is_featured
+                                            'group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-60 disabled:hover:translate-y-0',
+                                            featured
                                                 ? 'text-white hover:opacity-90 hover:shadow-2xl hover:shadow-brand-500/25'
                                                 : 'text-white/70 border border-white/15 hover:bg-white/5 hover:text-white'
                                         )}
-                                        style={plan.is_featured ? { background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' } : undefined}
+                                        style={featured ? { background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' } : undefined}
                                     >
-                                        {plan.cta_text || 'Get started'}
+                                        {!userEmail ? 'Create free account' : checkoutTier === tier.slug ? 'Opening…' : 'Subscribe'}
                                         <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-                                    </Link>
-                                    {plan.cta_text?.toLowerCase().includes('upgrade') && (
-                                        <p className="text-white/30 text-xs mt-2.5 text-center">Sign up free, then contact us to upgrade.</p>
-                                    )}
+                                    </button>
                                 </motion.div>
-                            ))}
-                        </motion.div>
-                    )}
+                            );
+                        })}
+                    </motion.div>
                 </div>
             </section>
 

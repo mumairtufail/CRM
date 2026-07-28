@@ -21,7 +21,8 @@ export default function SiteFooter({ className = '' }) {
                 { label: 'Invoicing', href: homeAnchor('#features') },
                 { label: 'AI Prospecting', href: homeAnchor('#integrations') },
                 { label: 'Clients and Projects', href: homeAnchor('#features') },
-                { label: 'WhatsApp Automation', href: homeAnchor('#whatsapp') },
+                { label: 'Dialer & Call Logs', href: homeAnchor('#modules') },
+                { label: 'WhatsApp Automation (Soon)', href: homeAnchor('#modules') },
             ],
         },
         {

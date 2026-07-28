@@ -52,20 +52,36 @@ use App\Http\Controllers\TagController;
 use Illuminate\Support\Facades\Route;
 
 // Landing page — default public route
-Route::get('/', function () {
+Route::get('/', function (\Illuminate\Http\Request $request) {
     $chatbot = \App\Models\SystemSetting::getChatbot();
+
+    // Never silently default the Paddle environment — a misconfigured/missing
+    // value must fail loudly rather than quietly falling back to sandbox or
+    // production, since that risk is exactly what real money moving through
+    // the wrong Paddle account looks like.
+    $paddleEnvironment = config('services.paddle.environment');
+    abort_unless(
+        in_array($paddleEnvironment, ['sandbox', 'production'], true),
+        500,
+        'PADDLE_ENVIRONMENT must be set to "sandbox" or "production".'
+    );
 
     return inertia('Welcome', [
         'appUrl' => preg_replace('#^https?://#', '', rtrim(config('app.url'), '/')),
-        'plans'  => \App\Models\Plan::where('is_active', true)
-            ->with('modules:id,key,name')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'tagline', 'price_monthly', 'is_featured', 'cta_text']),
         'chatbot' => [
             'enabled'         => $chatbot['enabled'],
             'agent_name'      => $chatbot['agent_name'],
             'welcome_message' => $chatbot['welcome_message'],
         ],
+        // Client-side token only — PADDLE_API_KEY (server-only) never reaches this.
+        'paddle' => [
+            'environment' => $paddleEnvironment,
+            'clientToken' => config('services.paddle.client_token'),
+        ],
+        // Best-effort from a reverse-proxy/CDN header; null when absent, on
+        // purpose — Paddle.PricePreview() auto-detects from IP when no
+        // country is passed, and we must never invent one.
+        'country' => \App\Support\GeoCountry::fromRequest($request),
     ]);
 })->name('home');
 
@@ -84,6 +100,7 @@ Route::get('/products', function () {
     ]);
 })->name('products');
 Route::get('/changelog',              fn () => inertia('Changelog'))->name('changelog');
+Route::get('/welcome',                fn () => inertia('CheckoutWelcome'))->name('checkout.welcome');
 Route::get('/privacy-policy',         fn () => inertia('Legal/PrivacyPolicy'))->name('legal.privacy');
 Route::get('/terms-and-conditions',   fn () => inertia('Legal/TermsAndConditions'))->name('legal.terms');
 Route::get('/refund-policy',          fn () => inertia('Legal/RefundPolicy'))->name('legal.refund');
@@ -382,6 +399,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Organization-level settings (follow-up toggle, etc.)
     Route::post('/organization/settings', [OrganizationSettingsController::class, 'update'])->name('organization.settings.update');
+
+    // Paddle customer portal — mints a session for the signed-in user's own org and redirects there
+    Route::get('/settings/billing/portal', [\App\Http\Controllers\BillingPortalController::class, 'redirect'])->name('settings.billing.portal');
 
     // Team management
     Route::get('/settings/team',             [TeamMemberController::class, 'index'])->name('settings.team.index');

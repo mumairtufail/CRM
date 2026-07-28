@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\LeadImportController;
 use App\Http\Controllers\Api\LeadOutreachMessageController;
 use App\Http\Controllers\Webhooks\TwilioWebhookController;
+use App\Http\Controllers\Webhooks\PaddleWebhookController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -14,6 +15,9 @@ Route::post('/webhooks/twilio/voice-bridge', [TwilioWebhookController::class, 'h
 Route::post('/webhooks/twilio/sms',          [TwilioWebhookController::class, 'handleSms'])->name('webhooks.twilio.sms');
 Route::post('/webhooks/twilio/dial-status',      [TwilioWebhookController::class, 'handleDialStatus'])->name('webhooks.twilio.dial-status');
 Route::post('/webhooks/twilio/recording-status', [TwilioWebhookController::class, 'handleRecordingStatus'])->name('webhooks.twilio.recording-status');
+
+// Paddle Webhooks — fulfillment/provisioning (see App\Http\Controllers\Webhooks\PaddleWebhookController)
+Route::post('/webhooks/paddle', [PaddleWebhookController::class, 'handle'])->name('webhooks.paddle');
 
 Route::post('/auth/login', [AuthController::class, 'login']);
 

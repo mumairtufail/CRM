@@ -8,14 +8,14 @@ const STEPS = [
     { id: 3, icon: Kanban,        category: 'Sales Pipeline',         title: 'Work the pipeline', content: 'A Kanban board for every deal. Drag a card to change its stage and see every call, email, and note on it.', nextId: 4 },
     { id: 4, icon: Mail,          category: 'Email Campaigns',        title: 'Send & follow up',  content: 'Write the email once and set a follow up timeline. Anyone who has not opened it gets a reminder automatically.', nextId: 5 },
     { id: 5, icon: Eye,           category: 'Open & Click Tracking',  title: 'See who is warm',   content: 'Track who opened your email and who clicked through, down to the form they filled out afterward.', nextId: 6 },
-    { id: 6, icon: MessageSquare, category: 'WhatsApp Campaigns',     title: 'Run it on WhatsApp', content: 'Send the same campaigns and automatic follow ups on WhatsApp, from the same lead list.', nextId: 7 },
+    { id: 6, icon: MessageSquare, category: 'WhatsApp Campaigns (Soon)', title: 'Run it on WhatsApp', content: 'Send the same campaigns and automatic follow ups on WhatsApp, from the same lead list, once this launches.', nextId: 7 },
     { id: 7, icon: Bot,           category: 'AI Configuration',       title: 'Let AI answer',      content: 'Connect OpenAI, Kimi, or Claude and give it your own knowledge base. It replies to leads and moves them into your pipeline the moment they show interest.', nextId: 8 },
     { id: 8, icon: Inbox,         category: 'Inbox',                  title: 'One inbox',          content: 'Read replies, check what already went out, or draft a new message, all from one inbox.', nextId: null },
 ];
 
 const HIGHLIGHTS = [
     'Every step logged on the lead automatically',
-    'Works the same over email and WhatsApp',
+    'Calls and emails on one shared timeline',
     'AI keeps replying and qualifying after hours',
 ];
 

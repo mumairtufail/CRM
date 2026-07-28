@@ -1,4 +1,4 @@
-import { Sparkles, Mail, CheckCircle2, Users, Clock, MessageSquare, Kanban, FileText, Bot } from 'lucide-react';
+import { Sparkles, Mail, CheckCircle2, Users, Clock, Phone, Kanban, FileText, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import DisplayCards from '@/Components/ui/display-cards';
 
@@ -22,7 +22,7 @@ const fanClass = (i) =>
 const RAW_CARDS = [
     { icon: Sparkles,      title: 'Lead found',      description: 'AI matched a new prospect',            date: 'Just now' },
     { icon: Users,         title: 'Batch created',   description: '42 leads sorted automatically',        date: '5 min ago' },
-    { icon: MessageSquare, title: 'WhatsApp reply',  description: 'AI answered a pricing question',        date: '10 min ago' },
+    { icon: Phone,         title: 'Call logged',     description: 'Inbound call matched to the lead automatically', date: '10 min ago' },
     { icon: Bot,           title: 'AI qualified',    description: 'Conversation flagged high intent',      date: '30 min ago' },
     { icon: Mail,          title: 'Email opened',    description: 'Clicked the pricing link',              date: '2 hours ago' },
     { icon: Kanban,        title: 'Stage changed',   description: 'Moved to Proposal after a call',        date: '3 hours ago' },

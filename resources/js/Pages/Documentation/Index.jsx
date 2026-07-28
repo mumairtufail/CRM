@@ -6,7 +6,7 @@ import {
   Kanban, Upload, Sparkles, Mail, MousePointerClick, Inbox, Briefcase,
   FolderKanban, FileText, Bell, Settings, ShieldCheck, ChevronRight,
   Lightbulb, AlertTriangle, Info, ArrowUp,
-  MessageCircle, BarChart3, LifeBuoy, Shield, ClipboardList,
+  MessageCircle, BarChart3, LifeBuoy, Shield, ClipboardList, Phone,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -334,6 +334,32 @@ function buildSections() {
           <Lead>Open any thread to see the full back-and-forth and reply yourself at any time — your reply always overrides the bot. Message status (sent, delivered, read) is shown next to each bubble.</Lead>
           <SubHead>WA Campaigns</SubHead>
           <Lead>Send one WhatsApp message to many leads at once, the same way you would an email campaign — choose all leads, a filtered segment, or a group, personalize with tokens like <Token>{'{{first_name}}'}</Token>, and optionally add a single automatic follow-up message after a delay.</Lead>
+        </>
+      ),
+    },
+    {
+      id: 'dialer', title: 'Dialer', icon: Phone,
+      keywords: 'dialer twilio call phone inbound outbound recording voicemail sms click to call callback',
+      body: (
+        <>
+          <Lead>Call leads straight from the CRM and get every inbound and outbound call logged automatically. Go to <em>Dialer</em>. This connects to your own Twilio account — there's a setup step before you can place a call.</Lead>
+          <SubHead>Connect your Twilio account</SubHead>
+          <Steps items={[
+            <>In <em>Settings → Twilio</em>, enter your Account SID, Auth Token, and the Twilio phone number you want to call from.</>,
+            <>Set your <strong>Callback phone</strong> in Workspace settings — this is the phone that actually rings on your end when you click to call.</>,
+            <>Click <strong>Save</strong>. The CRM tests the connection and configures the Twilio webhooks for you automatically.</>,
+          ]} />
+          <Callout type="note">This is bring-your-own-account: you supply your own Twilio credentials and pay Twilio directly for call and SMS usage.</Callout>
+          <SubHead>Placing a call</SubHead>
+          <Lead>Open a lead, click <strong>Call</strong>, and the CRM bridges your callback phone with the lead's number. You can also quick-dial by searching any lead's name, company, or number from the Dialer page.</Lead>
+          <SubHead>Call logs</SubHead>
+          <Bullets items={[
+            <>Every call — inbound or outbound — is matched to a lead automatically by phone number and logged with direction, duration, and status.</>,
+            <>Recordings and voicemail transcripts attach to the call log where available, playable right from the Dialer page.</>,
+            <>Every logged call also appears on the lead's own <strong>activity timeline</strong>, next to their emails and WhatsApp messages.</>,
+          ]} />
+          <SubHead>SMS</SubHead>
+          <Lead>Send a one-off text to a lead from the same connected Twilio number; sent and received messages are logged the same way as calls.</Lead>
         </>
       ),
     },

@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Search, Kanban, Mail, MessageCircle, Bot, Receipt } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, Kanban, Mail, Phone, MessageCircle, Bot, Receipt } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const MODULES = [
@@ -21,6 +21,13 @@ export const MODULES = [
         alt: 'A sales team reviewing deals together around a computer',
     },
     {
+        tag: 'Dialer & Call Logs',
+        icon: Phone,
+        title: 'Call a lead from their profile. The log writes itself.',
+        copy: "Connect your own Twilio number and dial straight from a lead's profile. Every call, inbound or outbound, is matched to the right lead automatically and logged with duration and recording, right next to their emails on the same timeline.",
+        alt: 'A person on a call using a headset',
+    },
+    {
         tag: 'Email Campaigns',
         icon: Mail,
         title: 'Send once. Let the follow up handle itself.',
@@ -30,9 +37,10 @@ export const MODULES = [
     },
     {
         tag: 'WhatsApp Campaigns',
+        badge: 'Coming soon',
         icon: MessageCircle,
         title: 'The same playbook, on the channel people actually reply to.',
-        copy: "Run campaigns and automatic follow ups over WhatsApp using the same lead list and the same rules as email. Every message lands on the lead's timeline, right next to their emails and calls.",
+        copy: "Run campaigns and automatic follow ups over WhatsApp using the same lead list and the same rules as email, once this launches. Every message will land on the lead's timeline, right next to their emails and calls.",
         image: '/images/marketing/whatsapp-chat.jpg',
         alt: 'A hand holding a phone open to WhatsApp',
     },
@@ -57,7 +65,7 @@ export const MODULES = [
 function ModuleStepper({ activeIndex, onSelect }) {
     return (
         <div className="mt-2">
-            {MODULES.map(({ tag, icon: Icon }, i) => {
+            {MODULES.map(({ tag, badge, icon: Icon }, i) => {
                 const active = i === activeIndex;
                 const past = i < activeIndex;
                 return (
@@ -87,11 +95,16 @@ function ModuleStepper({ activeIndex, onSelect }) {
                         <div className={cn('pb-5 pt-1.5 min-w-0', i === MODULES.length - 1 && 'pb-1.5')}>
                             <div
                                 className={cn(
-                                    'text-sm font-bold transition-colors duration-200 truncate',
+                                    'text-sm font-bold transition-colors duration-200 truncate flex items-center gap-1.5',
                                     active ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600',
                                 )}
                             >
                                 {tag}
+                                {badge && (
+                                    <span className="text-[9px] font-bold uppercase tracking-wide text-brand-500 bg-brand-50 rounded-full px-1.5 py-0.5 shrink-0">
+                                        {badge}
+                                    </span>
+                                )}
                             </div>
                             <motion.p
                                 initial={false}
@@ -204,22 +217,33 @@ export default function ModuleShowcase() {
                     onScroll={updateEdges}
                     className="flex flex-col divide-y divide-slate-100 max-h-[480px] overflow-y-auto snap-y snap-mandatory scroll-smooth pr-1"
                 >
-                    {MODULES.map(({ tag, title, copy, image, alt }, i) => (
+                    {MODULES.map(({ tag, badge, title, copy, image, alt, icon: Icon }, i) => (
                         <div
                             key={tag}
                             data-row
                             ref={(el) => (rowRefs.current[i] = el)}
                             className="flex gap-5 py-5 first:pt-0 last:pb-0 snap-start"
                         >
-                            <img
-                                src={image}
-                                alt={alt}
-                                loading="lazy"
-                                className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover shrink-0 border border-slate-100"
-                            />
+                            {image ? (
+                                <img
+                                    src={image}
+                                    alt={alt}
+                                    loading="lazy"
+                                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl object-cover shrink-0 border border-slate-100"
+                                />
+                            ) : (
+                                <div
+                                    role="img"
+                                    aria-label={alt}
+                                    className="w-24 h-24 sm:w-28 sm:h-28 rounded-xl shrink-0 border border-slate-100 bg-brand-50 flex items-center justify-center"
+                                >
+                                    <Icon className="w-8 h-8 text-brand-600" strokeWidth={1.5} />
+                                </div>
+                            )}
                             <div className="min-w-0">
-                                <span className="inline-block text-[11px] font-bold uppercase tracking-wide text-brand-600 bg-brand-50 rounded-full px-2.5 py-0.5 mb-1.5">
+                                <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-brand-600 bg-brand-50 rounded-full px-2.5 py-0.5 mb-1.5">
                                     {tag}
+                                    {badge && <span className="text-brand-500">· {badge}</span>}
                                 </span>
                                 <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">{title}</h3>
                                 <p

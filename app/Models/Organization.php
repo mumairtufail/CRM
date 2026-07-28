@@ -17,6 +17,7 @@ class Organization extends Model
     protected $fillable = [
         'name', 'slug', 'owner_id', 'settings', 'plan_id', 'plan_status', 'plan_assigned_at',
         'company_name', 'company_logo', 'company_website', 'company_phone', 'company_email', 'company_linkedin',
+        'paddle_customer_id',
     ];
 
     protected $casts = [
@@ -57,6 +58,22 @@ class Organization extends Model
     public function supportCases(): HasMany
     {
         return $this->hasMany(SupportCase::class);
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * The most recent Paddle subscription that currently grants paid access, if any.
+     */
+    public function activeSubscription(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->whereIn('status', Subscription::ACCESS_GRANTING_STATUSES)
+            ->latest('id')
+            ->first();
     }
 
     /**

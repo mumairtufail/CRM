@@ -45,8 +45,9 @@ Admin sidebar background specifically: `linear-gradient(180deg, #0D0B18 0%, #130
 
 ## 3. Public-Facing Pages (no auth required)
 
-**Landing page** (`/`, `Pages/Welcome.jsx`) — sections in order:
-Nav → Hero (headline, CTA, testimonial avatar strip) → Integration strip ("Works with": Gmail, Outlook, WhatsApp Business, SendGrid, Mailgun, Brevo, Google Sheets, CSV Import) → Stats (500+ workspaces, 50k+ leads tracked, 99.9% uptime, 4.9★ rating) → Features (`#features`: Lead Management, Email Campaigns, Sales Pipeline, Invoicing, AI Prospecting, Clients & Projects) → AI Data Partners / AI Prospecting showcase (`#integrations`) → Pipeline highlight → Campaign highlight → WhatsApp Automation → Lead History Timeline (mock activity feed) → How it works (`#how-it-works`: create workspace → add leads → work your pipeline) → Automation + Business Impact → Testimonials → Free Tools Showcase (`#free-tools`) → Pricing (`#pricing`, pulls live plan data) → FAQ (`#faq`) → Contact Us (`#contact`: email/phone/HQ + contact form) → Final CTA → Footer.
+**Landing page** (`/`, `Pages/Welcome.jsx`) — no fabricated stats/trust-badge section (removed; there are no real usage numbers to show yet). Sections in order:
+Nav → Hero (rotating headline, CTA) → "Works with" integration strip (Apollo.io, People Data Labs, Gmail, Outlook, WhatsApp Business *(coming soon)*, OpenAI, Claude, Kimi) → Why Choose Us (`#why-us`) → Modules in depth (`#modules`: AI Prospecting, Sales Pipeline, Dialer & Call Logs, Email Campaigns, WhatsApp Campaigns *(coming soon)*, AI Configuration, Invoicing & Clients) → How it works (`#flow`, `FeatureOrbit`) → Secondary tools (`#tools`: Import Your Own List, Custom Forms, Team & Reporting) → Free Tools showcase (`#free-tools`) → Testimonials → Pricing (`#pricing`, pulls live plan data) → Live Timeline (mock activity feed, `ActivityShowcase`) → FAQ (`#faq`) → Contact Us (`#contact`: email/phone/HQ + contact form) → Final CTA → Footer.
+WhatsApp is a real, working feature (see §4) but is marked "coming soon" on the public landing page/footer rather than advertised as generally available — a deliberate positioning choice, not a build gap.
 Also includes the live **AI chat widget** (floating, bottom-right; see §6).
 
 **Blog** — public index (paginated, 9/page, tags/author/read-time) and single-post view by slug.
@@ -72,6 +73,7 @@ Also includes the live **AI chat widget** (floating, bottom-right; see §6).
 - **Projects** — per-client projects with tasks and documents.
 - **Invoices** — line-item invoices tied to a lead (subtotal/tax/total, issue/due dates, status), "send to client" email action.
 - **Campaigns (Email)** — gated to Pro+ plans. Bulk email to a group/form audience; send/stop/resume-followups/clone/log; automatic follow-up sequences for non-openers; open/click tracking.
+- **Dialer** — not module-gated (available on every plan). Bring-your-own Twilio account (`TwilioSetting`, per-tenant, encrypted credentials); click-to-call bridges the agent's callback phone with the lead's number; every inbound and outbound call is auto-matched to a lead by phone number and logged (`TwilioCall`: direction, duration, status, recording, voicemail transcript) onto the lead's activity timeline; also supports one-off outbound SMS. Call/SMS logs also sync via `SyncTwilioLogs` console command.
 - **WhatsApp** — gated to Premium:
   - *Campaigns* — bulk WhatsApp broadcasts to groups.
   - *Conversations* — two-way WhatsApp inbox per lead.
@@ -136,6 +138,7 @@ Activity, Admin, AiProviderSetting, Blog, ChatbotConversation, ChatbotMessage, C
 
 - **Email (SMTP/IMAP)** — `MailService` sends via a per-tenant, per-user active SMTP credential (dynamic mailer config per send); IMAP paired for the Inbox feature; separate superadmin SMTP path for system emails.
 - **WhatsApp Business Cloud API** — `WhatsappService` wraps Meta's Cloud API using centrally pooled platform credentials (tenants never hold their own Meta app credentials); inbound webhook is signature-validated; unmatched inbound messages queue for admin triage.
+- **Twilio (Dialer)** — `TwilioService`, bring-your-own per-tenant credentials (`TwilioSetting`); Voice SDK bridges click-to-call, inbound/outbound webhooks (`TwilioWebhookController`) log calls to `TwilioCall`, recordings streamed server-side (never exposing Twilio Basic Auth to the browser).
 - **AI provider integration (Claude / OpenAI / Kimi)** — `AiService` is a single dispatcher (per-org, per-current-tenant, or per-admin) that talks to Anthropic's API directly, or any OpenAI-compatible endpoint (OpenAI itself, or Kimi via NVIDIA NIM). Reused across: AI Lead Generation prompt parsing, the WhatsApp bot, the public AI Chatbot, and Admin blog AI tools.
 - **Lead import** — CSV or Google Sheets, with column mapping/preview and job tracking.
 - **AI-powered lead prospecting** — pluggable providers (Apollo.io, People Data Labs); free-text ICP → structured filters → provider search → de-dupe → import.

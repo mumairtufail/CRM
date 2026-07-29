@@ -75,21 +75,33 @@ class BillingController extends Controller
      */
     public function pause(Subscription $subscription): RedirectResponse
     {
-        PaddleService::client()->subscriptions->pause(
+        $result = PaddleService::client()->subscriptions->pause(
             $subscription->paddle_subscription_id,
             new PauseSubscription(effectiveFrom: SubscriptionEffectiveFrom::NextBillingPeriod()),
         );
+        $this->applyPaddleState($subscription, $result);
 
         return back()->with('success', "Subscription for {$subscription->organization?->name} will pause at the end of the current period.");
     }
 
     public function resume(Subscription $subscription): RedirectResponse
     {
-        PaddleService::client()->subscriptions->resume(
+        $result = PaddleService::client()->subscriptions->resume(
             $subscription->paddle_subscription_id,
             new ResumeSubscription(effectiveFrom: SubscriptionResumeEffectiveFrom::Immediately()),
         );
+        $this->applyPaddleState($subscription, $result);
 
         return back()->with('success', "Subscription for {$subscription->organization?->name} resumed.");
+    }
+
+    /** Same immediate local-mirror update as the tenant-side controller — see its docblock. */
+    private function applyPaddleState(Subscription $local, $paddleSubscription): void
+    {
+        $local->update([
+            'status'                  => $paddleSubscription->status->getValue(),
+            'scheduled_change_action' => $paddleSubscription->scheduledChange?->action->getValue(),
+            'scheduled_change_at'     => $paddleSubscription->scheduledChange?->effectiveAt,
+        ]);
     }
 }

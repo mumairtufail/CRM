@@ -29,7 +29,7 @@ class SendCampaignBatch implements ShouldQueue
 
     public function handle(): void
     {
-        $campaign = EmailCampaign::with('leadForm')->find($this->campaignId);
+        $campaign = EmailCampaign::with(['leadForm', 'attachments'])->find($this->campaignId);
         $user     = User::find($this->userId);
 
         if (! $campaign || ! $user) return;
@@ -122,7 +122,7 @@ class SendCampaignBatch implements ShouldQueue
 
                 \Illuminate\Support\Facades\Mail::mailer('dynamic')
                     ->to($email, $lead->full_name)
-                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName, $subject, $messageId));
+                    ->send(new CampaignMail($campaign, $lead, $html, $fromEmail, $fromName, $subject, $messageId, $campaign->attachments));
 
                 $emailSend->update(['status' => 'sent', 'sent_at' => now(), 'error_message' => null]);
 

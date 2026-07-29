@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import EmptyState from '@/Components/Common/EmptyState'
+import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 import { Badge } from '@/Components/ui/badge'
 import { Button } from '@/Components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
@@ -62,21 +63,23 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
 
   const [pausing, setPausing] = useState(false)
   const [resuming, setResuming] = useState(false)
+  const [pauseConfirmOpen, setPauseConfirmOpen] = useState(false)
 
-  const pauseSubscription = () => {
-    if (!confirm('Pause your subscription? You\'ll keep full access until the end of the current billing period, then it pauses until you resume it.')) return
+  const confirmPause = () => {
     setPausing(true)
     router.post('/billing/pause', {}, {
-      onSuccess: () => toast.success('Subscription will pause at the end of this billing period.'),
+      onSuccess: () => { toast.success('Subscription will pause at the end of this billing period.'); setPauseConfirmOpen(false) },
       onError: () => toast.error('Failed to pause subscription.'),
       onFinish: () => setPausing(false),
     })
   }
 
+  // Also used to cancel a scheduled-but-not-yet-effective pause — resume()
+  // is the correct call for both, per BillingController::resume().
   const resumeSubscription = () => {
     setResuming(true)
     router.post('/billing/resume', {}, {
-      onSuccess: () => toast.success('Subscription resumed.'),
+      onSuccess: () => toast.success(isPaused ? 'Subscription resumed.' : 'Scheduled pause canceled — staying on your current plan.'),
       onError: () => toast.error('Failed to resume subscription.'),
       onFinish: () => setResuming(false),
     })
@@ -111,13 +114,13 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
               <div className="flex items-center gap-2">
                 <StatusBadge status={plan?.status} />
                 {isPaused && <Badge variant="secondary">Paused</Badge>}
-                {isPaused ? (
+                {(isPaused || isPausing) ? (
                   <Button type="button" variant="outline" size="sm" disabled={resuming} onClick={resumeSubscription} className="h-8 text-xs gap-1.5">
-                    <PlayCircle size={12} /> {resuming ? 'Resuming…' : 'Resume subscription'}
+                    <PlayCircle size={12} /> {resuming ? 'Resuming…' : isPaused ? 'Resume subscription' : 'Cancel scheduled pause'}
                   </Button>
-                ) : (!isPausing && subscription) && (
-                  <Button type="button" variant="outline" size="sm" disabled={pausing} onClick={pauseSubscription} className="h-8 text-xs gap-1.5">
-                    <PauseCircle size={12} /> {pausing ? 'Pausing…' : 'Pause subscription'}
+                ) : subscription && (
+                  <Button type="button" variant="outline" size="sm" onClick={() => setPauseConfirmOpen(true)} className="h-8 text-xs gap-1.5">
+                    <PauseCircle size={12} /> Pause subscription
                   </Button>
                 )}
                 <a href="/settings/billing/portal">
@@ -217,6 +220,18 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
           )}
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={pauseConfirmOpen}
+        onOpenChange={setPauseConfirmOpen}
+        title="Pause your subscription?"
+        description="You'll keep full access until the end of the current billing period, then it pauses until you resume it."
+        onConfirm={confirmPause}
+        loading={pausing}
+        confirmText="Pause subscription"
+        loadingText="Pausing…"
+        variant="default"
+      />
     </>
   )
 }

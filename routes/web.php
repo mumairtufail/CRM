@@ -83,8 +83,10 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         // country is passed, and we must never invent one.
         'country' => \App\Support\GeoCountry::fromRequest($request),
         // DB-driven — admin-editable via /admin/plans, synced to real Paddle
-        // products/prices there. See Plan::paddleTiers().
-        'tiers' => \App\Models\Plan::paddleTiers(),
+        // products/prices there. Includes the Free tier (no Paddle product),
+        // unlike Plan::paddleTiers() which BillingController::index() uses
+        // for in-app plan changes. See Plan::publicPricingTiers().
+        'tiers' => \App\Models\Plan::publicPricingTiers(),
     ]);
 })->name('home');
 
@@ -146,6 +148,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/activity-log',                  [\App\Http\Controllers\Admin\ActivityLogController::class, 'index'])->name('activity-log.index');
     Route::get('/error-log',                     [\App\Http\Controllers\Admin\ErrorLogController::class, 'index'])->name('error-log.index');
     Route::get('/organizations',                 [AdminOrganizationController::class, 'index'])->name('organizations.index');
+    Route::post('/organizations',                [AdminOrganizationController::class, 'store'])->name('organizations.store');
     Route::patch('/organizations/{organization:id}/plan', [AdminOrganizationController::class, 'updatePlan'])->name('organizations.plan.update');
     Route::delete('/organizations/{organization:id}', [AdminOrganizationController::class, 'destroy'])->name('organizations.destroy');
     Route::post('/organizations/bulk-delete', [AdminOrganizationController::class, 'bulkDestroy'])->name('organizations.bulk-destroy');

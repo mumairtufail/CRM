@@ -17,12 +17,14 @@ class Organization extends Model
     protected $fillable = [
         'name', 'slug', 'owner_id', 'settings', 'plan_id', 'plan_status', 'plan_assigned_at',
         'company_name', 'company_logo', 'company_website', 'company_phone', 'company_email', 'company_linkedin',
-        'paddle_customer_id',
+        'paddle_customer_id', 'expires_at', 'is_internal',
     ];
 
     protected $casts = [
         'settings'         => 'array',
         'plan_assigned_at' => 'datetime',
+        'expires_at'       => 'datetime',
+        'is_internal'      => 'boolean',
     ];
 
     public function owner(): BelongsTo
@@ -102,5 +104,20 @@ class Organization extends Model
     public function getRouteKeyName(): string
     {
         return 'slug';
+    }
+
+    /**
+     * Lead cap from the current plan, or null when unlimited.
+     */
+    public function leadLimit(): ?int
+    {
+        return $this->plan?->lead_limit;
+    }
+
+    public function hasReachedLeadLimit(): bool
+    {
+        $limit = $this->leadLimit();
+
+        return $limit !== null && $this->leads()->count() >= $limit;
     }
 }

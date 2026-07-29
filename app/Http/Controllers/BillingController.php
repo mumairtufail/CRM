@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Services\PaddleService;
 use App\Support\GeoCountry;
@@ -99,27 +100,48 @@ class BillingController extends Controller
         $subscription = $request->user()->organization->activeSubscription();
         abort_unless($subscription, 404, 'No active subscription to pause.');
 
-        PaddleService::client()->subscriptions->pause(
+        $result = PaddleService::client()->subscriptions->pause(
             $subscription->paddle_subscription_id,
             new PauseSubscription(effectiveFrom: SubscriptionEffectiveFrom::NextBillingPeriod()),
         );
+        $this->applyPaddleState($subscription, $result);
 
         return back()->with('success', 'Your subscription will pause at the end of the current billing period.');
     }
 
     public function resume(Request $request): RedirectResponse
     {
-        // latestSubscription(), not activeSubscription() — a genuinely paused
-        // subscription (as opposed to one merely scheduled to pause) has
-        // status `paused`, which activeSubscription() deliberately excludes.
+        // latestSubscription(), not activeSubscription() — this needs to find
+        // a subscription that's either already `paused`, or merely scheduled
+        // to pause (still `active`) — activeSubscription() only covers the
+        // second case, and resume() is the correct call for both: it either
+        // cancels the pending pause or reactivates an already-paused one.
         $subscription = $request->user()->organization->latestSubscription();
         abort_unless($subscription, 404, 'No subscription to resume.');
 
-        PaddleService::client()->subscriptions->resume(
+        $result = PaddleService::client()->subscriptions->resume(
             $subscription->paddle_subscription_id,
             new ResumeSubscription(effectiveFrom: SubscriptionResumeEffectiveFrom::Immediately()),
         );
+        $this->applyPaddleState($subscription, $result);
 
-        return back()->with('success', 'Your subscription has been resumed.');
+        return back()->with('success', 'Your subscription is active again.');
+    }
+
+    /**
+     * Writes Paddle's just-returned live state onto our local mirror
+     * immediately, rather than waiting for the async webhook to eventually
+     * deliver the same subscription.updated event — otherwise the "pause
+     * pending" / "paused" banner (AppLayout, driven by this row) would keep
+     * showing the stale state for however long webhook delivery takes. The
+     * webhook still lands afterward and confirms/re-applies the same values.
+     */
+    private function applyPaddleState(Subscription $local, $paddleSubscription): void
+    {
+        $local->update([
+            'status'                  => $paddleSubscription->status->getValue(),
+            'scheduled_change_action' => $paddleSubscription->scheduledChange?->action->getValue(),
+            'scheduled_change_at'     => $paddleSubscription->scheduledChange?->effectiveAt,
+        ]);
     }
 }

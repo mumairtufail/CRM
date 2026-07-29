@@ -44,4 +44,9 @@ class EmailCampaign extends Model
     {
         return $this->belongsTo(LeadForm::class);
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(EmailCampaignAttachment::class, 'email_campaign_id');
+    }
 }

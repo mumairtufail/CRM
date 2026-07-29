@@ -76,12 +76,14 @@ class HandleInertiaRequests extends Middleware
                 'slug' => $organization->slug,
             ] : null,
             'plan' => $organization ? (function () use ($organization) {
-                // Scheduled-change info powers the persistent "your plan is
-                // pausing/canceling on X" banner (AppLayout) — a scheduled
-                // change doesn't revoke access early, but the customer should
-                // still see it coming everywhere in the app, not just on the
-                // Billing page.
-                $activeSubscription = $organization->activeSubscription();
+                // Powers the persistent "your plan is pausing/paused" banner
+                // (AppLayout) everywhere in the app, not just the Billing
+                // page. latestSubscription(), not activeSubscription() — an
+                // already-paused subscription has status `paused`, which
+                // activeSubscription() deliberately excludes, and the banner
+                // needs to keep showing (with a Resume action) for exactly
+                // that state, not just the scheduled countdown before it.
+                $latestSubscription = $organization->latestSubscription();
 
                 return [
                     'name'    => $organization->plan?->name,
@@ -89,10 +91,10 @@ class HandleInertiaRequests extends Middleware
                     'modules' => $organization->plan_status === 'active' && $organization->plan_id
                         ? Plan::cachedModuleKeys($organization->plan_id)
                         : [],
-                    'subscription' => $activeSubscription ? [
-                        'status'                  => $activeSubscription->status,
-                        'scheduled_change_action' => $activeSubscription->scheduled_change_action,
-                        'scheduled_change_at'     => $activeSubscription->scheduled_change_at?->toIso8601String(),
+                    'subscription' => $latestSubscription ? [
+                        'status'                  => $latestSubscription->status,
+                        'scheduled_change_action' => $latestSubscription->scheduled_change_action,
+                        'scheduled_change_at'     => $latestSubscription->scheduled_change_at?->toIso8601String(),
                     ] : null,
                 ];
             })() : null,

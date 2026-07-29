@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\EmailAttachment;
 use App\Models\EmailSend;
 use App\Models\FetchedEmail;
 use App\Models\LeadEmail;
@@ -13,6 +14,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Webklex\PHPIMAP\ClientManager;
 
 class FetchEmailsJob implements ShouldQueue
@@ -21,6 +23,12 @@ class FetchEmailsJob implements ShouldQueue
 
     public int $tries   = 3;
     public int $timeout = 120;
+
+    // Per-message caps so one oversized/abusive inbound email can't blow up
+    // sync memory or storage — matches the 20 MB per-file limit used for
+    // outgoing compose/reply attachments.
+    private const MAX_ATTACHMENTS_PER_MESSAGE = 15;
+    private const MAX_ATTACHMENT_BYTES        = 20 * 1024 * 1024;
 
     public function __construct(
         public readonly int $organizationId,
@@ -206,6 +214,10 @@ class FetchEmailsJob implements ShouldQueue
             $fetched = FetchedEmail::create($attrs);
             $saved++;
 
+            if (! empty($item['attachments'])) {
+                $this->storeAttachments($fetched, $item['attachments']);
+            }
+
             if ($notify && $item['from_email']) {
                 $toNotify[] = [
                     'fetched'    => $fetched,
@@ -263,6 +275,7 @@ class FetchEmailsJob implements ShouldQueue
             'from_email'  => $fromEmail,
             'subject'     => $subject,
             'reply_ids'   => $this->replyTargetIds($message),
+            'attachments' => $this->extractAttachments($message),
             'attrs'       => [
                 'organization_id'    => $this->organizationId,
                 'smtp_credential_id' => $cred->id,
@@ -279,6 +292,76 @@ class FetchEmailsJob implements ShouldQueue
                 'sent_at'            => $date,
             ],
         ];
+    }
+
+    /**
+     * Persist parsed attachment data (from extractAttachments) to the public
+     * disk and create the corresponding EmailAttachment rows.
+     *
+     * @param array<int, array{name: string, mime: ?string, content: string}> $attachments
+     */
+    private function storeAttachments(FetchedEmail $fetched, array $attachments): void
+    {
+        foreach ($attachments as $att) {
+            try {
+                $path = "email-attachments/{$this->organizationId}/{$fetched->id}/" . uniqid() . '_' . $att['name'];
+                Storage::disk('public')->put($path, $att['content']);
+
+                EmailAttachment::create([
+                    'organization_id'  => $this->organizationId,
+                    'fetched_email_id' => $fetched->id,
+                    'file_path'        => $path,
+                    'original_name'    => $att['name'],
+                    'mime_type'        => $att['mime'],
+                    'size'             => strlen($att['content']),
+                ]);
+            } catch (\Throwable $e) {
+                $this->log('warning', 'Failed to store one attachment', [
+                    'email_id' => $fetched->id,
+                    'name'     => $att['name'],
+                    'error'    => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Pull attachment name/mime/bytes out of an IMAP message, without touching
+     * the database — capped in count and per-file size so one oversized or
+     * abusive inbound email can't blow up sync memory/storage.
+     *
+     * @return array<int, array{name: string, mime: ?string, content: string}>
+     */
+    private function extractAttachments($message): array
+    {
+        if (! $message->hasAttachments()) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($message->getAttachments() as $attachment) {
+            if (count($out) >= self::MAX_ATTACHMENTS_PER_MESSAGE) {
+                break;
+            }
+
+            try {
+                $content = $attachment->getContent();
+                if ($content === null || strlen($content) === 0 || strlen($content) > self::MAX_ATTACHMENT_BYTES) {
+                    continue;
+                }
+
+                $out[] = [
+                    'name'    => $attachment->getName() ?: 'attachment',
+                    'mime'    => $attachment->getMimeType(),
+                    'content' => $content,
+                ];
+            } catch (\Throwable $e) {
+                // Skip a single unparseable attachment rather than failing the whole message.
+            }
+        }
+
+        return $out;
     }
 
     /**

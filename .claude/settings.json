@@ -1,7 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(php -l app/Http/Controllers/Admin/DiscountController.php)",
+      "Bash(awk 'NR>=76 && NR<=125' app/Http/Controllers/CampaignController.php)",
+      "Bash(php -l app/Jobs/FetchEmailsJob.php)",
+      "Bash(php -l app/Http/Controllers/InboxController.php)",
+      "Bash(php -l app/Http/Controllers/Admin/OrganizationController.php)",
+      "Bash(php -l app/Http/Controllers/Auth/Concerns/CreatesOrganizationWithOwner.php)",
+      "Bash(php -l app/Http/Middleware/CheckOrganizationExpiry.php)",
+      "Bash(php -l bootstrap/app.php)",
+      "Bash(php -l app/Http/Controllers/LeadController.php)",
+      "Bash(php -l app/Http/Controllers/ImportController.php)"
     ]
   }
 }

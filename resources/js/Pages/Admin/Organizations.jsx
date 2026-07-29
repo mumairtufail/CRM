@@ -1,4 +1,4 @@
-import { Head, router } from '@inertiajs/react'
+import { Head, router, useForm } from '@inertiajs/react'
 import { useCallback, useState, useEffect } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
 import PageHeader from '@/Components/Common/PageHeader'
@@ -7,7 +7,8 @@ import SearchInput from '@/Components/Common/SearchInput'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/Components/ui/dialog'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/Components/ui/select'
 import { Switch } from '@/Components/ui/switch'
-import { Users, UserCircle, CreditCard, Pencil, Trash2 } from 'lucide-react'
+import { Badge } from '@/Components/ui/badge'
+import { Users, UserCircle, CreditCard, Pencil, Trash2, Plus, Clock, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import ConfirmDialog from '@/Components/Common/ConfirmDialog'
@@ -15,6 +16,8 @@ import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 function ChangePlanDialog({ organization, plans, onOpenChange }) {
   const [planId, setPlanId] = useState(organization.plan?.id ? String(organization.plan.id) : '')
   const [active, setActive] = useState(organization.plan_status === 'active')
+  const [isInternal, setIsInternal] = useState(!!organization.is_internal)
+  const [expiresAt, setExpiresAt] = useState(organization.expires_at ? organization.expires_at.slice(0, 10) : '')
   const [saving, setSaving] = useState(false)
 
   // `plans` only lists currently-active plans. If this org is sitting on a plan
@@ -28,6 +31,8 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
     router.patch(`/admin/organizations/${organization.id}/plan`, {
       plan_id: planId || null,
       plan_status: active ? 'active' : 'inactive',
+      is_internal: isInternal,
+      expires_at: expiresAt || null,
     }, {
       preserveScroll: true,
       onSuccess: () => { toast.success(`Updated ${organization.name}'s plan`); onOpenChange(false) },
@@ -65,6 +70,25 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
             </div>
             <Switch checked={active} onCheckedChange={setActive} />
           </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Internal account</p>
+              <p className="text-xs text-slate-400">Staff/partner workspace — no subscription required</p>
+            </div>
+            <Switch checked={isInternal} onCheckedChange={setIsInternal} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Expires on (optional)</label>
+            <input
+              type="date"
+              value={expiresAt}
+              onChange={e => setExpiresAt(e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+            <p className="text-xs text-slate-400 mt-1">Past this date, the workspace is locked out except Support. Leave blank for no expiry.</p>
+          </div>
         </div>
 
         <DialogFooter>
@@ -88,6 +112,152 @@ function ChangePlanDialog({ organization, plans, onOpenChange }) {
   )
 }
 
+function emptyCreateForm() {
+  return {
+    workspace: '',
+    name: '',
+    email: '',
+    password: '',
+    password_confirmation: '',
+    plan_id: '',
+    is_internal: false,
+    expires_at: '',
+  }
+}
+
+function CreateOrganizationDialog({ open, onOpenChange, plans, onCreated }) {
+  const form = useForm(emptyCreateForm())
+
+  useEffect(() => {
+    if (!open) { form.reset(); form.clearErrors() }
+  }, [open])
+
+  const submit = () => {
+    form.post('/admin/organizations', {
+      preserveScroll: true,
+      onSuccess: () => { toast.success('Workspace created'); onCreated() },
+      onError: () => toast.error('Please check the form for errors'),
+    })
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Create workspace</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4 max-h-[68vh] overflow-y-auto pr-1">
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Workspace name</label>
+            <input
+              value={form.data.workspace}
+              onChange={e => form.setData('workspace', e.target.value)}
+              placeholder="e.g. Acme Demo"
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+            {form.errors.workspace && <p className="text-xs text-red-500 mt-1">{form.errors.workspace}</p>}
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Owner name</label>
+              <input
+                value={form.data.name}
+                onChange={e => form.setData('name', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {form.errors.name && <p className="text-xs text-red-500 mt-1">{form.errors.name}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Owner email</label>
+              <input
+                type="email"
+                value={form.data.email}
+                onChange={e => form.setData('email', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {form.errors.email && <p className="text-xs text-red-500 mt-1">{form.errors.email}</p>}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
+              <input
+                type="password"
+                value={form.data.password}
+                onChange={e => form.setData('password', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {form.errors.password && <p className="text-xs text-red-500 mt-1">{form.errors.password}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Confirm password</label>
+              <input
+                type="password"
+                value={form.data.password_confirmation}
+                onChange={e => form.setData('password_confirmation', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Plan</label>
+            <Select value={form.data.plan_id} onValueChange={v => form.setData('plan_id', v)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Free (default)" />
+              </SelectTrigger>
+              <SelectContent>
+                {plans.map(p => (
+                  <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border border-slate-200 px-3 py-2.5">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Internal account</p>
+              <p className="text-xs text-slate-400">Staff/partner workspace — no subscription required</p>
+            </div>
+            <Switch checked={form.data.is_internal} onCheckedChange={v => form.setData('is_internal', v)} />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Expires on (optional)</label>
+            <input
+              type="date"
+              value={form.data.expires_at}
+              onChange={e => form.setData('expires_at', e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+            />
+            <p className="text-xs text-slate-400 mt-1">Great for demo accounts. Past this date, they're locked out except Support.</p>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={submit}
+            disabled={form.processing}
+            className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all hover:opacity-90 disabled:opacity-60"
+            style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
+          >
+            {form.processing ? 'Creating…' : 'Create workspace'}
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function AdminOrganizations({ organizations, filters, plans }) {
   const [loading, setLoading] = useState(false)
   const [planTarget, setPlanTarget] = useState(null)
@@ -96,6 +266,7 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
   const [deleting, setDeleting] = useState(false)
   const [selectedIds, setSelectedIds] = useState([])
   const [deleteMode, setDeleteMode] = useState('single') // 'single' | 'bulk'
+  const [createOpen, setCreateOpen] = useState(false)
 
   const requestDeleteOrg = (org) => {
     setDeleteMode('single')
@@ -240,21 +411,34 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
     {
       id: 'plan',
       header: 'Plan',
-      size: 160,
-      cell: ({ row }) => (
-        <button
-          onClick={() => setPlanTarget(row.original)}
-          className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-lg hover:bg-brand-50 transition-colors"
-        >
-          <CreditCard size={13} className="text-brand-400 shrink-0" />
-          <span className="text-sm text-gray-700 font-medium">{row.original.plan?.name ?? 'No plan'}</span>
-          <span className={cn(
-            'w-1.5 h-1.5 rounded-full shrink-0',
-            row.original.plan_status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'
-          )} />
-          <Pencil size={11} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-        </button>
-      ),
+      size: 220,
+      cell: ({ row }) => {
+        const expired = row.original.expires_at && new Date(row.original.expires_at) < new Date()
+        return (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setPlanTarget(row.original)}
+              className="group inline-flex items-center gap-2 px-2.5 py-1 rounded-lg hover:bg-brand-50 transition-colors"
+            >
+              <CreditCard size={13} className="text-brand-400 shrink-0" />
+              <span className="text-sm text-gray-700 font-medium">{row.original.plan?.name ?? 'No plan'}</span>
+              <span className={cn(
+                'w-1.5 h-1.5 rounded-full shrink-0',
+                row.original.plan_status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'
+              )} />
+              <Pencil size={11} className="text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+            </button>
+            {row.original.is_internal && (
+              <Badge variant="secondary" className="gap-1"><ShieldCheck size={11} /> Internal</Badge>
+            )}
+            {row.original.expires_at && (
+              <Badge variant={expired ? 'destructive' : 'outline'} className="gap-1">
+                <Clock size={11} /> {expired ? 'Expired' : 'Expires'} {new Date(row.original.expires_at).toLocaleDateString()}
+              </Badge>
+            )}
+          </div>
+        )
+      },
     },
     {
       accessorKey: 'created_at',
@@ -294,15 +478,25 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
             placeholder="Search by name or URL…"
             className="w-full sm:w-72"
           />
-          {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            {selectedIds.length > 0 && (
+              <button
+                onClick={requestBulkDelete}
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-red-500/10 transition-colors cursor-pointer animate-in fade-in slide-in-from-top-1 duration-200"
+              >
+                <Trash2 size={14} />
+                Delete Selected ({selectedIds.length})
+              </button>
+            )}
             <button
-              onClick={requestBulkDelete}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-[13px] font-bold shadow-sm shadow-red-500/10 transition-colors cursor-pointer self-start sm:self-auto animate-in fade-in slide-in-from-top-1 duration-200"
+              onClick={() => setCreateOpen(true)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-white rounded-lg text-[13px] font-bold shadow-sm transition-all hover:opacity-90 cursor-pointer"
+              style={{ background: 'linear-gradient(135deg,rgb(var(--brand-600)),rgb(var(--brand2-600)))' }}
             >
-              <Trash2 size={14} />
-              Delete Selected ({selectedIds.length})
+              <Plus size={14} />
+              Create Workspace
             </button>
-          )}
+          </div>
         </div>
 
         <DataTable
@@ -320,6 +514,13 @@ export default function AdminOrganizations({ organizations, filters, plans }) {
             onOpenChange={(open) => { if (!open) setPlanTarget(null) }}
           />
         )}
+
+        <CreateOrganizationDialog
+          open={createOpen}
+          onOpenChange={setCreateOpen}
+          plans={plans}
+          onCreated={() => { setCreateOpen(false); router.reload({ only: ['organizations'] }) }}
+        />
 
         <ConfirmDialog
           open={isDeleteDialogOpen}

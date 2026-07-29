@@ -28,17 +28,43 @@ function ImpersonationBanner({ name }) {
 
 const SCHEDULED_CHANGE_LABEL = { pause: 'pause', cancel: 'cancel' }
 
-// A scheduled pause/cancel doesn't revoke access early — they keep everything
-// they already paid for until the effective date — but they should still see
-// it coming from anywhere in the app, not just the Billing page.
-function ScheduledChangeBanner({ action, effectiveAt }) {
-  const label = SCHEDULED_CHANGE_LABEL[action] || action
+// Covers both states: scheduled-to-pause (still active, access untouched
+// until the date) and actually-paused (access already revoked) — stays
+// visible across the whole app for either, with a one-click way back for
+// both, since "I can't find how to undo this" is exactly the failure mode
+// this replaces.
+function SubscriptionBanner({ subscription }) {
+  const [resuming, setResuming] = useState(false)
+  const isPaused = subscription.status === 'paused'
+  const isPausing = subscription.scheduled_change_action === 'pause'
+
+  if (!isPaused && !isPausing) return null
+
+  const resume = () => {
+    setResuming(true)
+    router.post('/billing/resume', {}, {
+      preserveScroll: true,
+      onSuccess: () => toast.success(isPaused ? 'Subscription resumed.' : 'Scheduled pause canceled — staying on your current plan.'),
+      onError: () => toast.error('Failed to resume subscription.'),
+      onFinish: () => setResuming(false),
+    })
+  }
+
   return (
     <div className="flex items-center justify-center gap-3 px-4 py-2 bg-amber-500 text-white text-[12.5px] font-medium shrink-0">
       <PauseCircle size={14} className="shrink-0" />
       <span className="truncate">
-        Your plan is set to {label} on <strong className="font-bold">{new Date(effectiveAt).toLocaleDateString()}</strong> — you keep full access until then.
+        {isPaused
+          ? 'Your plan is currently paused.'
+          : <>Your plan is set to {SCHEDULED_CHANGE_LABEL[subscription.scheduled_change_action]} on <strong className="font-bold">{new Date(subscription.scheduled_change_at).toLocaleDateString()}</strong> — you keep full access until then.</>}
       </span>
+      <button
+        onClick={resume}
+        disabled={resuming}
+        className="rounded-md bg-white/15 hover:bg-white/25 px-2.5 py-1 transition-colors font-semibold shrink-0 disabled:opacity-60"
+      >
+        {resuming ? 'Resuming…' : isPaused ? 'Resume now' : 'Cancel scheduled pause'}
+      </button>
       <Link href="/billing" className="rounded-md bg-white/15 hover:bg-white/25 px-2.5 py-1 transition-colors font-semibold shrink-0">
         Manage plan
       </Link>
@@ -62,7 +88,6 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
     return getInitialSidebar()
   })
   const { impersonating, plan } = usePage().props
-  const scheduledChange = plan?.subscription?.scheduled_change_action
 
   useEffect(() => {
     document.body.classList.add('overflow-hidden')
@@ -94,9 +119,7 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'rgb(var(--brand-tint))' }}>
       {impersonating && <ImpersonationBanner name={impersonating.name} />}
-      {scheduledChange && (
-        <ScheduledChangeBanner action={scheduledChange} effectiveAt={plan.subscription.scheduled_change_at} />
-      )}
+      {plan?.subscription && <SubscriptionBanner subscription={plan.subscription} />}
 
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Mobile backdrop — closes sidebar when tapped outside */}

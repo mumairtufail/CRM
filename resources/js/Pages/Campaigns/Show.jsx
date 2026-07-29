@@ -10,9 +10,21 @@ import {
 import {
   ChevronLeft, Send, Eye, Users, Pencil, Trash2, MousePointerClick,
   Loader2, StopCircle, RefreshCw, Terminal, RotateCcw, RotateCw, PauseCircle, FileText,
+  Image as ImageIcon, Video, Music, FileArchive, FileSpreadsheet, File as FileIcon,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { toast } from 'sonner'
+
+function mimeIcon(mime) {
+  if (!mime) return FileIcon
+  if (mime.startsWith('image/')) return ImageIcon
+  if (mime.startsWith('video/')) return Video
+  if (mime.startsWith('audio/')) return Music
+  if (mime.includes('zip') || mime.includes('compressed')) return FileArchive
+  if (mime.includes('sheet') || mime.includes('excel')) return FileSpreadsheet
+  if (mime === 'application/pdf' || mime.includes('word') || mime.includes('document')) return FileText
+  return FileIcon
+}
 
 const STATUS_STYLE = {
   draft:     'bg-gray-100 text-gray-600',
@@ -621,6 +633,30 @@ export default function CampaignShow({ campaign, sends }) {
                     </div>
                   )}
                 </div>
+                {campaign.attachments?.length > 0 && (
+                  <div className="pt-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-1.5">Attachments</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {campaign.attachments.map(a => {
+                        const Icon = mimeIcon(a.mime_type)
+                        return (
+                          <a
+                            key={a.id}
+                            href={a.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download={a.original_name}
+                            className="inline-flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11.5px] text-slate-600 hover:border-brand-300 hover:text-brand-600 transition-colors max-w-[240px]"
+                          >
+                            <Icon size={13} className="text-slate-400 shrink-0" />
+                            <span className="truncate">{a.original_name}</span>
+                            <span className="text-slate-400 shrink-0">· {a.formatted_size}</span>
+                          </a>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

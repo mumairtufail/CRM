@@ -7,6 +7,8 @@ import {
   Inbox, Star, Trash2, RefreshCw, Mail, MailOpen,
   StarOff, RotateCcw, Trash, AlertCircle, Settings,
   ChevronRight, User, Clock, PenLine, X, Send, Reply, SearchX,
+  Paperclip, Image as ImageIcon, Video, Music, FileText, FileArchive,
+  FileSpreadsheet, File as FileIcon,
 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -43,6 +45,134 @@ function avatarGradient(email) {
   let hash = 0
   for (const c of (email ?? '')) hash = (hash * 31 + c.charCodeAt(0)) & 0xffffffff
   return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length]
+}
+
+// ─── Attachments — shared between Compose and inline Reply ───────────────────
+// Limits mirror the server (InboxController::attachmentValidationRules) —
+// checked client-side purely for instant feedback, not as the source of truth.
+const MAX_ATTACHMENT_BYTES       = 20 * 1024 * 1024
+const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024
+const MAX_ATTACHMENTS            = 10
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1048576).toFixed(1)} MB`
+}
+
+function mimeIcon(mime) {
+  if (!mime) return FileIcon
+  if (mime.startsWith('image/')) return ImageIcon
+  if (mime.startsWith('video/')) return Video
+  if (mime.startsWith('audio/')) return Music
+  if (mime.includes('zip') || mime.includes('compressed')) return FileArchive
+  if (mime.includes('sheet') || mime.includes('excel')) return FileSpreadsheet
+  if (mime === 'application/pdf' || mime.includes('word') || mime.includes('document')) return FileText
+  return FileIcon
+}
+
+// File picker for a not-yet-sent message — validates count/size for instant
+// feedback; the server re-validates regardless.
+function AttachmentPicker({ files, onChange }) {
+  const inputRef  = useRef(null)
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0)
+
+  const addFiles = (fileList) => {
+    const incoming = Array.from(fileList)
+
+    const oversized = incoming.find(f => f.size > MAX_ATTACHMENT_BYTES)
+    if (oversized) {
+      toast.error(`"${oversized.name}" is over the 20 MB per-file limit.`)
+      return
+    }
+
+    let next = [...files, ...incoming]
+    if (next.length > MAX_ATTACHMENTS) {
+      toast.error(`Max ${MAX_ATTACHMENTS} attachments per email.`)
+      next = next.slice(0, MAX_ATTACHMENTS)
+    }
+
+    if (next.reduce((sum, f) => sum + f.size, 0) > MAX_TOTAL_ATTACHMENT_BYTES) {
+      toast.error('Combined attachments must be under 25 MB.')
+      return
+    }
+
+    onChange(next)
+  }
+
+  const removeFile = (idx) => onChange(files.filter((_, i) => i !== idx))
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="h-7 px-2.5 rounded-lg text-[11.5px] font-medium text-slate-500 border border-slate-200 hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+        >
+          <Paperclip size={12} /> Attach files
+        </button>
+        {files.length > 0 && (
+          <span className="text-[10.5px] text-slate-400">
+            {files.length} file{files.length !== 1 ? 's' : ''} · {formatBytes(totalSize)}
+          </span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={e => { if (e.target.files.length) addFiles(e.target.files); e.target.value = '' }}
+        />
+      </div>
+      {files.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {files.map((f, i) => {
+            const Icon = mimeIcon(f.type)
+            return (
+              <span key={i} className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-lg bg-slate-100 text-[11px] text-slate-600 max-w-[220px]">
+                <Icon size={11} className="text-slate-400 shrink-0" />
+                <span className="truncate">{f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  className="shrink-0 h-4 w-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Read-only list of already-sent/received attachments on a stored email.
+function AttachmentList({ attachments }) {
+  if (!attachments?.length) return null
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-3">
+      {attachments.map(a => {
+        const Icon = mimeIcon(a.mime_type)
+        return (
+          <a
+            key={a.id}
+            href={a.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={a.original_name}
+            className="inline-flex items-center gap-1.5 pl-2 pr-2.5 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11.5px] text-slate-600 hover:border-brand-300 hover:text-brand-600 transition-colors max-w-[240px]"
+          >
+            <Icon size={13} className="text-slate-400 shrink-0" />
+            <span className="truncate">{a.original_name}</span>
+            <span className="text-slate-400 shrink-0">· {a.formatted_size}</span>
+          </a>
+        )
+      })}
+    </div>
+  )
 }
 
 // ─── No SMTP / No IMAP banners ────────────────────────────────────────────────
@@ -283,8 +413,9 @@ const EmailListItem = memo(function EmailListItem({ email, active, onSelect }) {
           </p>
 
           {/* Row 3: snippet */}
-          <p className="text-[11px] text-slate-400 truncate leading-relaxed">
-            {email.snippet || 'No preview available'}
+          <p className="text-[11px] text-slate-400 truncate leading-relaxed flex items-center gap-1">
+            {email.attachment_count > 0 && <Paperclip size={10} className="shrink-0 text-slate-400" />}
+            <span className="truncate">{email.snippet || 'No preview available'}</span>
           </p>
         </div>
       </div>
@@ -387,6 +518,7 @@ function EmailList({ emails, selectedId, onSelect, folder, syncing, search }) {
 function ReadingPane({
   email, bodyLoading, onClose, onStar, onTrash, onRestore, onDelete, folder,
   replyOpen, replyBody, onReplyBodyChange, onOpenReply, onCancelReply, onSendReply, replySending,
+  replyAttachments, onReplyAttachmentsChange,
 }) {
   // Rewrite all links to open in new tab — iframe sandbox blocks navigation otherwise
   const safeBodyHtml = useMemo(() => {
@@ -479,6 +611,7 @@ function ReadingPane({
               <Clock size={10} className="text-slate-300" />
               <span className="text-[11px] text-slate-400">{sentDate}</span>
             </div>
+            <AttachmentList attachments={email.attachments} />
           </div>
         </div>
       </div>
@@ -535,6 +668,9 @@ function ReadingPane({
               autoFocus
               className="w-full px-3.5 py-3 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none resize-none"
             />
+            <div className="px-3.5 pb-3">
+              <AttachmentPicker files={replyAttachments} onChange={onReplyAttachmentsChange} />
+            </div>
             <div className="flex items-center justify-end gap-2 px-3.5 py-2.5 border-t border-slate-100 bg-slate-50/50">
               <button
                 type="button"
@@ -563,12 +699,13 @@ function ReadingPane({
 // ─── Compose dialog ───────────────────────────────────────────────────────────
 
 function ComposeDialog({ open, onClose, activeTemplate }) {
-  const [toEmail, setToEmail]   = useState('')
-  const [subject, setSubject]   = useState('')
-  const [body, setBody]         = useState('')
-  const [sending, setSending]   = useState(false)
+  const [toEmail, setToEmail]         = useState('')
+  const [subject, setSubject]         = useState('')
+  const [body, setBody]               = useState('')
+  const [sending, setSending]         = useState(false)
+  const [attachments, setAttachments] = useState([])
 
-  const reset = () => { setToEmail(''); setSubject(''); setBody(''); setSending(false) }
+  const reset = () => { setToEmail(''); setSubject(''); setBody(''); setSending(false); setAttachments([]) }
 
   const handleClose = () => { reset(); onClose() }
 
@@ -579,14 +716,19 @@ function ComposeDialog({ open, onClose, activeTemplate }) {
     }
     setSending(true)
     try {
+      const fd = new FormData()
+      fd.append('to_email', toEmail.trim())
+      fd.append('subject', subject.trim())
+      fd.append('body_html', body)
+      attachments.forEach(f => fd.append('attachments[]', f))
+
       const res = await fetch('/inbox/send', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
         },
-        body: JSON.stringify({ to_email: toEmail.trim(), subject: subject.trim(), body_html: body }),
+        body: fd,
       })
       const json = await res.json()
       if (json.ok) {
@@ -651,6 +793,7 @@ function ComposeDialog({ open, onClose, activeTemplate }) {
               className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-[13px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-400 resize-none"
             />
           </div>
+          <AttachmentPicker files={attachments} onChange={setAttachments} />
         </div>
 
         <DialogFooter className="gap-2">
@@ -694,6 +837,7 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
   const [searchTerm, setSearchTerm]   = useState(initialSearch ?? '')
   const [replyOpen, setReplyOpen]     = useState(false)
   const [replyBody, setReplyBody]     = useState('')
+  const [replyAttachments, setReplyAttachments] = useState([])
   const [replySending, setReplySending] = useState(false)
   const bodyCache = useRef(new Map())
   const pollRef   = useRef(null)
@@ -709,6 +853,7 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
     setSearchTerm(initialSearch ?? '')
     setReplyOpen(false)
     setReplyBody('')
+    setReplyAttachments([])
   }, [initialEmails, initialCounts, initialCredential, initialSearch])
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -743,6 +888,7 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
     setSelected(email)
     setReplyOpen(false)
     setReplyBody('')
+    setReplyAttachments([])
 
     // Mark as read optimistically
     if (!email.is_read) {
@@ -805,11 +951,13 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
   const handleOpenReply = useCallback(() => {
     setReplyOpen(true)
     setReplyBody('')
+    setReplyAttachments([])
   }, [])
 
   const handleCancelReply = useCallback(() => {
     setReplyOpen(false)
     setReplyBody('')
+    setReplyAttachments([])
   }, [])
 
   const handleSendReply = useCallback(async () => {
@@ -819,20 +967,24 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
     }
     setReplySending(true)
     try {
+      const fd = new FormData()
+      fd.append('body_html', replyBody)
+      replyAttachments.forEach(f => fd.append('attachments[]', f))
+
       const res = await fetch(`/inbox/${selected.id}/reply`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           Accept: 'application/json',
           'X-CSRF-TOKEN': csrf(),
         },
-        body: JSON.stringify({ body_html: replyBody }),
+        body: fd,
       })
       const json = await res.json()
       if (json.ok) {
         toast.success('Reply sent!')
         setReplyOpen(false)
         setReplyBody('')
+        setReplyAttachments([])
       } else {
         toast.error(json.error || 'Failed to send reply.')
       }
@@ -841,7 +993,7 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
     } finally {
       setReplySending(false)
     }
-  }, [selected, replyBody])
+  }, [selected, replyBody, replyAttachments])
 
   const handleSync = useCallback(async () => {
     if (syncing) return
@@ -1012,6 +1164,8 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
                 onCancelReply={handleCancelReply}
                 onSendReply={handleSendReply}
                 replySending={replySending}
+                replyAttachments={replyAttachments}
+                onReplyAttachmentsChange={setReplyAttachments}
               />
             )}
           </div>

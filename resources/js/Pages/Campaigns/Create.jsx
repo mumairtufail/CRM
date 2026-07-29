@@ -1,5 +1,5 @@
 import { Head, Link, useForm } from '@inertiajs/react'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import { Button } from '@/Components/ui/button'
 import { Input } from '@/Components/ui/input'
@@ -11,7 +11,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/Components/ui/dialog'
-import { ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X, Sparkles, Check, Info, AlertTriangle } from 'lucide-react'
+import {
+  ChevronLeft, Eye, Users, UsersRound, Filter, Layers, RefreshCw, Plus, X, Sparkles, Check, Info, AlertTriangle,
+  Paperclip, Image as ImageIcon, Video, Music, FileText, FileArchive, FileSpreadsheet, File as FileIcon,
+} from 'lucide-react'
 import { toast } from 'sonner'
 import RichEditor from '@/Components/Common/RichEditor'
 import AiComposeModal from '@/Components/Campaigns/AiComposeModal'
@@ -61,6 +64,125 @@ const STEP_DELAY_OPTIONS = [
 const STATUS_OPTIONS = [
   'new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost', 'unqualified',
 ]
+
+// ─── Attachments ────────────────────────────────────────────────────────────
+// Limits mirror the server (CampaignController::attachmentValidationRules) —
+// checked client-side purely for instant feedback, not as the source of truth.
+const MAX_ATTACHMENT_BYTES       = 20 * 1024 * 1024
+const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024
+const MAX_ATTACHMENTS            = 10
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / 1048576).toFixed(1)} MB`
+}
+
+function mimeIcon(mime) {
+  if (!mime) return FileIcon
+  if (mime.startsWith('image/')) return ImageIcon
+  if (mime.startsWith('video/')) return Video
+  if (mime.startsWith('audio/')) return Music
+  if (mime.includes('zip') || mime.includes('compressed')) return FileArchive
+  if (mime.includes('sheet') || mime.includes('excel')) return FileSpreadsheet
+  if (mime === 'application/pdf' || mime.includes('word') || mime.includes('document')) return FileText
+  return FileIcon
+}
+
+// New (not-yet-uploaded) files queued for this send, plus any existing
+// attachments already saved on the campaign (edit mode) that can be removed.
+function AttachmentManager({ existing, onRemoveExisting, files, onFilesChange }) {
+  const inputRef  = useRef(null)
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0) + existing.reduce((sum, a) => sum + a.size, 0)
+
+  const addFiles = (fileList) => {
+    const incoming = Array.from(fileList)
+
+    const oversized = incoming.find(f => f.size > MAX_ATTACHMENT_BYTES)
+    if (oversized) {
+      toast.error(`"${oversized.name}" is over the 20 MB per-file limit.`)
+      return
+    }
+
+    let next = [...files, ...incoming]
+    if (next.length + existing.length > MAX_ATTACHMENTS) {
+      toast.error(`Max ${MAX_ATTACHMENTS} attachments per campaign.`)
+      next = next.slice(0, Math.max(0, MAX_ATTACHMENTS - existing.length))
+    }
+
+    const newTotal = next.reduce((sum, f) => sum + f.size, 0) + existing.reduce((sum, a) => sum + a.size, 0)
+    if (newTotal > MAX_TOTAL_ATTACHMENT_BYTES) {
+      toast.error('Combined attachments must be under 25 MB.')
+      return
+    }
+
+    onFilesChange(next)
+  }
+
+  const removeFile = (idx) => onFilesChange(files.filter((_, i) => i !== idx))
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="h-7 px-2.5 rounded-lg text-[11.5px] font-medium text-slate-500 border border-slate-200 hover:bg-slate-50 flex items-center gap-1.5 transition-colors"
+        >
+          <Paperclip size={12} /> Attach files
+        </button>
+        {(files.length > 0 || existing.length > 0) && (
+          <span className="text-[10.5px] text-slate-400">
+            {files.length + existing.length} file{files.length + existing.length !== 1 ? 's' : ''} · {formatBytes(totalSize)}
+          </span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={e => { if (e.target.files.length) addFiles(e.target.files); e.target.value = '' }}
+        />
+      </div>
+      {(existing.length > 0 || files.length > 0) && (
+        <div className="flex flex-wrap gap-1.5">
+          {existing.map(a => {
+            const Icon = mimeIcon(a.mime_type)
+            return (
+              <span key={`existing-${a.id}`} className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-lg bg-slate-100 text-[11px] text-slate-600 max-w-[220px]">
+                <Icon size={11} className="text-slate-400 shrink-0" />
+                <a href={a.url} target="_blank" rel="noopener noreferrer" className="truncate hover:text-brand-600">{a.original_name}</a>
+                <button
+                  type="button"
+                  onClick={() => onRemoveExisting(a.id)}
+                  className="shrink-0 h-4 w-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            )
+          })}
+          {files.map((f, i) => {
+            const Icon = mimeIcon(f.type)
+            return (
+              <span key={`new-${i}`} className="inline-flex items-center gap-1.5 pl-2 pr-1 py-1 rounded-lg bg-slate-100 text-[11px] text-slate-600 max-w-[220px]">
+                <Icon size={11} className="text-slate-400 shrink-0" />
+                <span className="truncate">{f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  className="shrink-0 h-4 w-4 rounded-full flex items-center justify-center hover:bg-slate-200 text-slate-400 hover:text-slate-600"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
 
 function Field({ label, error, hint, children }) {
   return (
@@ -439,16 +561,25 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
   const [aiComposeOpen, setAiComposeOpen] = useState(false)
 
   const { data, setData, post, put, processing, errors } = useForm({
-    name:             campaign?.name             ?? '',
-    subject:          campaign?.subject          ?? '',
-    body_html:        campaign?.body_html        ?? '',
-    recipient_mode:   campaign?.recipient_mode   ?? 'all',
-    group_id:         campaign?.group_id         ?? null,
-    lead_form_id:     campaign?.lead_form_id     ?? null,
-    filters:          campaign?.filters          ?? { statuses: [], tag_ids: [] },
-    followup_enabled: campaign?.followup_enabled ?? false,
-    followup_steps:   campaign?.followup_steps   ?? [],
+    name:                   campaign?.name             ?? '',
+    subject:                campaign?.subject          ?? '',
+    body_html:              campaign?.body_html        ?? '',
+    recipient_mode:         campaign?.recipient_mode   ?? 'all',
+    group_id:               campaign?.group_id         ?? null,
+    lead_form_id:           campaign?.lead_form_id     ?? null,
+    filters:                campaign?.filters          ?? { statuses: [], tag_ids: [] },
+    followup_enabled:       campaign?.followup_enabled ?? false,
+    followup_steps:         campaign?.followup_steps   ?? [],
+    attachments:            [],
+    remove_attachment_ids:  [],
   })
+
+  const [existingAttachments, setExistingAttachments] = useState(campaign?.attachments ?? [])
+
+  const removeExistingAttachment = (id) => {
+    setExistingAttachments(prev => prev.filter(a => a.id !== id))
+    setData('remove_attachment_ids', [...data.remove_attachment_ids, id])
+  }
 
   // Fetch recipient count whenever relevant fields change
   const fetchCount = useCallback(async (formData) => {
@@ -695,6 +826,17 @@ export default function CampaignCreate({ statuses, leadCount, groups = [], tags 
                     {errors.body_html && (
                       <p className="text-red-500 text-[11px] mt-1.5">{errors.body_html}</p>
                     )}
+                    <div className="mt-3 pt-3 border-t border-slate-100">
+                      <AttachmentManager
+                        existing={existingAttachments}
+                        onRemoveExisting={removeExistingAttachment}
+                        files={data.attachments}
+                        onFilesChange={files => setData('attachments', files)}
+                      />
+                      {Object.entries(errors).filter(([k]) => k.startsWith('attachments')).map(([k, msg]) => (
+                        <p key={k} className="text-red-500 text-[11px] mt-1.5">{msg}</p>
+                      ))}
+                    </div>
                   </div>
                 </div>
 

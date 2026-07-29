@@ -45,6 +45,11 @@ class FetchedEmail extends Model
         return $this->belongsTo(SmtpCredential::class, 'smtp_credential_id');
     }
 
+    public function attachments()
+    {
+        return $this->hasMany(EmailAttachment::class);
+    }
+
     public function scopeInbox($query)
     {
         return $query->where('folder', 'inbox')->where('is_trashed', false);

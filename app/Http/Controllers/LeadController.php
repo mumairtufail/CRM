@@ -254,6 +254,10 @@ class LeadController extends Controller
             'phones.*.phone.required_with' => 'Phone number is required.',
         ]);
 
+        if (auth()->user()->organization->hasReachedLeadLimit()) {
+            return back()->withErrors(['limit' => "You've reached your plan's lead limit. Upgrade to add more leads."]);
+        }
+
         $lead = Lead::create(array_merge(
             Arr::except($validated, ['tag_ids']),
             [

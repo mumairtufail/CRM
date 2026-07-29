@@ -9,6 +9,7 @@ import {
   FileText, Upload, Trash2, Download, FilePlus, Pencil,
   Check, X, FolderKanban, User, Plus, CheckSquare, Square,
   Circle, AlertCircle, Clock, CheckCircle2, Flag, MoreVertical,
+  FileArchive, FileSpreadsheet, File as FileIcon,
 } from 'lucide-react'
 import { format } from 'date-fns'
 
@@ -47,13 +48,11 @@ function avatarLetter(name) { return (name ?? '?').trim()[0]?.toUpperCase() ?? '
 const csrf = () => document.querySelector('meta[name=csrf-token]')?.content
 
 function mimeIcon(mime) {
-  if (!mime) return '📄'
-  if (mime.startsWith('image/')) return '🖼️'
-  if (mime === 'application/pdf') return '📕'
-  if (mime.includes('word') || mime.includes('document')) return '📝'
-  if (mime.includes('sheet') || mime.includes('excel')) return '📊'
-  if (mime.includes('zip') || mime.includes('compressed')) return '🗜️'
-  return '📄'
+  if (!mime) return FileIcon
+  if (mime.includes('sheet') || mime.includes('excel')) return FileSpreadsheet
+  if (mime.includes('zip') || mime.includes('compressed')) return FileArchive
+  if (mime === 'application/pdf' || mime.includes('word') || mime.includes('document')) return FileText
+  return FileIcon
 }
 
 // ─── Inline editable field ────────────────────────────────────────────────────
@@ -439,7 +438,10 @@ function DocRow({ doc, projectId, onDeleted }) {
           </a>
         )}
         <div className="flex items-start gap-3 p-3">
-          {!isImage && <div className="text-xl shrink-0 mt-0.5">{mimeIcon(doc.mime_type)}</div>}
+          {!isImage && (() => {
+            const Icon = mimeIcon(doc.mime_type)
+            return <Icon size={20} className="text-slate-400 shrink-0 mt-0.5" />
+          })()}
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold text-slate-800 truncate">{doc.name}</p>
             <p className="text-[11px] text-slate-400 truncate">{doc.original_name} · {doc.formatted_size}</p>

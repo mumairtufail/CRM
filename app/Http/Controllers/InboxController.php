@@ -4,12 +4,26 @@ namespace App\Http\Controllers;
 
 use App\Jobs\FetchEmailsJob;
 use App\Models\FetchedEmail;
+use App\Rules\SafeAttachment;
 use App\Services\MailService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class InboxController extends Controller
 {
+    // Same caps as campaign attachments — 20 MB per file, 25 MB combined
+    // (stays under typical SMTP relay caps like Gmail's ~25 MB).
+    private const MAX_ATTACHMENT_KB          = 20480;
+    private const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+
+    private function attachmentValidationRules(): array
+    {
+        return [
+            'attachments'   => 'nullable|array|max:10',
+            'attachments.*' => ['file', 'max:' . self::MAX_ATTACHMENT_KB, new SafeAttachment],
+        ];
+    }
+
     public function index(Request $request)
     {
         $user   = $request->user();
@@ -35,21 +49,22 @@ class InboxController extends Controller
             });
         }
 
-        $emails = $query->select([
+        $emails = $query->withCount('attachments')->select([
             'id', 'folder', 'from_name', 'from_email', 'to_addresses', 'subject',
             'body_text', 'is_read', 'is_starred', 'is_trashed', 'sent_at',
         ])->paginate(30)->withQueryString()->through(fn ($e) => [
-            'id'         => $e->id,
-            'folder'     => $e->folder,
-            'from_name'  => $e->from_name,
-            'from_email' => $e->from_email,
-            'to'         => $e->to_addresses[0] ?? null,
-            'subject'    => $e->subject,
-            'snippet'    => $e->body_text ? mb_substr(strip_tags($e->body_text), 0, 120) : '',
-            'is_read'    => $e->is_read,
-            'is_starred' => $e->is_starred,
-            'is_trashed' => $e->is_trashed,
-            'sent_at'    => $e->sent_at?->toISOString(),
+            'id'               => $e->id,
+            'folder'           => $e->folder,
+            'from_name'        => $e->from_name,
+            'from_email'       => $e->from_email,
+            'to'               => $e->to_addresses[0] ?? null,
+            'subject'          => $e->subject,
+            'snippet'          => $e->body_text ? mb_substr(strip_tags($e->body_text), 0, 120) : '',
+            'is_read'          => $e->is_read,
+            'is_starred'       => $e->is_starred,
+            'is_trashed'       => $e->is_trashed,
+            'sent_at'          => $e->sent_at?->toISOString(),
+            'attachment_count' => $e->attachments_count,
         ]);
 
         $counts = [
@@ -104,6 +119,14 @@ class InboxController extends Controller
             'is_starred'   => $fetchedEmail->is_starred,
             'is_trashed'   => $fetchedEmail->is_trashed,
             'sent_at'      => $fetchedEmail->sent_at?->toISOString(),
+            'attachments'  => $fetchedEmail->attachments->map(fn ($a) => [
+                'id'             => $a->id,
+                'original_name'  => $a->original_name,
+                'mime_type'      => $a->mime_type,
+                'size'           => $a->size,
+                'formatted_size' => $a->formatted_size,
+                'url'            => $a->url,
+            ])->values(),
         ]);
     }
 
@@ -180,7 +203,14 @@ class InboxController extends Controller
             'to_email'  => 'required|email|max:255',
             'subject'   => 'required|string|max:500',
             'body_html' => 'required|string',
+            ...$this->attachmentValidationRules(),
         ]);
+
+        $attachments = $request->file('attachments', []);
+        $total       = collect($attachments)->sum(fn ($f) => $f->getSize());
+        if ($total > self::MAX_TOTAL_ATTACHMENT_BYTES) {
+            return response()->json(['ok' => false, 'error' => 'Combined attachments must be under 25 MB.'], 422);
+        }
 
         $mailer = MailService::forUser($request->user());
 
@@ -196,6 +226,7 @@ class InboxController extends Controller
                 $request->to_email,
                 $request->subject,
                 $request->body_html,
+                $attachments,
             );
         } catch (\Throwable $e) {
             return response()->json([
@@ -211,7 +242,14 @@ class InboxController extends Controller
     {
         $request->validate([
             'body_html' => 'required|string',
+            ...$this->attachmentValidationRules(),
         ]);
+
+        $attachments = $request->file('attachments', []);
+        $total       = collect($attachments)->sum(fn ($f) => $f->getSize());
+        if ($total > self::MAX_TOTAL_ATTACHMENT_BYTES) {
+            return response()->json(['ok' => false, 'error' => 'Combined attachments must be under 25 MB.'], 422);
+        }
 
         $mailer = MailService::forUser($request->user());
 
@@ -223,7 +261,7 @@ class InboxController extends Controller
         }
 
         try {
-            $mailer->sendReply($fetchedEmail, $request->body_html);
+            $mailer->sendReply($fetchedEmail, $request->body_html, $attachments);
         } catch (\Throwable $e) {
             return response()->json([
                 'ok'    => false,

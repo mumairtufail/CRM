@@ -3,6 +3,7 @@ import { useCallback, useState } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import DataTable from '@/Components/Common/DataTable'
+import ConfirmDialog from '@/Components/Common/ConfirmDialog'
 import { Badge } from '@/Components/ui/badge'
 import { Button } from '@/Components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
@@ -24,6 +25,7 @@ export default function AdminBilling({ subscriptions, transactions }) {
   const { data: subRows, ...subPagination } = subscriptions
   const { data: txnRows, ...txnPagination } = transactions
   const [actingId, setActingId] = useState(null)
+  const [pauseTarget, setPauseTarget] = useState(null)
 
   const handleSubsPage = useCallback((page) => {
     router.get('/admin/billing', { subs_page: page }, { preserveState: true })
@@ -33,22 +35,24 @@ export default function AdminBilling({ subscriptions, transactions }) {
     router.get('/admin/billing', { txns_page: page }, { preserveState: true })
   }, [])
 
-  const pause = (subscription) => {
-    if (!confirm(`Pause ${subscription.organization?.name}'s subscription? They keep access until the end of their current billing period.`)) return
+  const confirmPause = () => {
+    const subscription = pauseTarget
     setActingId(subscription.id)
     router.post(`/admin/billing/${subscription.id}/pause`, {}, {
       preserveScroll: true,
-      onSuccess: () => toast.success('Subscription will pause at the end of the current period.'),
+      onSuccess: () => { toast.success('Subscription will pause at the end of the current period.'); setPauseTarget(null) },
       onError: () => toast.error('Failed to pause subscription.'),
       onFinish: () => setActingId(null),
     })
   }
 
+  // Also cancels a scheduled-but-not-yet-effective pause — resume() is the
+  // correct call for both, per Admin\BillingController::resume().
   const resume = (subscription) => {
     setActingId(subscription.id)
     router.post(`/admin/billing/${subscription.id}/resume`, {}, {
       preserveScroll: true,
-      onSuccess: () => toast.success('Subscription resumed.'),
+      onSuccess: () => toast.success(subscription.status === 'paused' ? 'Subscription resumed.' : 'Scheduled pause canceled.'),
       onError: () => toast.error('Failed to resume subscription.'),
       onFinish: () => setActingId(null),
     })
@@ -77,16 +81,18 @@ export default function AdminBilling({ subscriptions, transactions }) {
       cell: ({ row }) => {
         const s = row.original
         const busy = actingId === s.id
-        if (s.status === 'paused') {
+        const isPaused = s.status === 'paused'
+        const isPausing = s.scheduled_change_action === 'pause'
+        if (isPaused || isPausing) {
           return (
             <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => resume(s)} className="h-7 text-[11px] gap-1">
-              <PlayCircle size={11} /> Resume
+              <PlayCircle size={11} /> {isPaused ? 'Resume' : 'Cancel pause'}
             </Button>
           )
         }
-        if (ACTIVE_STATUSES.includes(s.status) && !s.scheduled_change_action) {
+        if (ACTIVE_STATUSES.includes(s.status)) {
           return (
-            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => pause(s)} className="h-7 text-[11px] gap-1">
+            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => setPauseTarget(s)} className="h-7 text-[11px] gap-1">
               <PauseCircle size={11} /> Pause
             </Button>
           )
@@ -140,6 +146,18 @@ export default function AdminBilling({ subscriptions, transactions }) {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ConfirmDialog
+        open={!!pauseTarget}
+        onOpenChange={(open) => { if (!open) setPauseTarget(null) }}
+        title={pauseTarget ? `Pause ${pauseTarget.organization?.name}'s subscription?` : undefined}
+        description="They keep access until the end of their current billing period."
+        onConfirm={confirmPause}
+        loading={!!actingId}
+        confirmText="Pause subscription"
+        loadingText="Pausing…"
+        variant="default"
+      />
     </>
   )
 }

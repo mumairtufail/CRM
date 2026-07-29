@@ -20,12 +20,16 @@ trait CreatesOrganizationWithOwner
      *
      * @param  array<string, mixed>  $ownerAttributes  Attributes for the owner User
      *                                                  (organization_id and role are set here).
+     * @param  array<string, mixed>  $orgOverrides  Extra/overriding Organization attributes
+     *                                               (e.g. plan_id, is_internal, expires_at) —
+     *                                               used by admin-driven creation; registration
+     *                                               call sites leave this empty.
      */
-    protected function createOrganizationWithOwner(string $workspaceName, ?string $slug, array $ownerAttributes): User
+    protected function createOrganizationWithOwner(string $workspaceName, ?string $slug, array $ownerAttributes, array $orgOverrides = []): User
     {
         $slug ??= $this->uniqueSlug($workspaceName);
 
-        return DB::transaction(function () use ($workspaceName, $slug, $ownerAttributes) {
+        return DB::transaction(function () use ($workspaceName, $slug, $ownerAttributes, $orgOverrides) {
             $basicPlan = Plan::where('slug', 'basic')->first()
                 ?? Plan::where('is_active', true)->orderBy('sort_order')->first()
                 ?? Plan::first();
@@ -36,6 +40,7 @@ trait CreatesOrganizationWithOwner
                 'plan_id'          => $basicPlan?->id,
                 'plan_status'      => 'active',
                 'plan_assigned_at' => now(),
+                ...$orgOverrides,
             ]);
 
             $user = User::create($ownerAttributes + [

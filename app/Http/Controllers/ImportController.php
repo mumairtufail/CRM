@@ -225,6 +225,25 @@ class ImportController extends Controller
         $source      = $job->source ?? 'csv';
         $sourceLabel = $source === 'google_sheet' ? 'Google Sheets' : 'CSV';
 
+        $organization = auth()->user()->organization;
+        $leadLimit    = $organization->leadLimit();
+
+        if ($leadLimit !== null) {
+            $newLeadCount = 0;
+            foreach ($rows as $i => $row) {
+                $dup    = $duplicates[$i] ?? null;
+                $action = $dup ? ($resolutions[$i] ?? 'skip') : 'create';
+                if ($action === 'create') {
+                    $newLeadCount++;
+                }
+            }
+
+            $remaining = $leadLimit - $organization->leads()->count();
+            if ($newLeadCount > max($remaining, 0)) {
+                return back()->withErrors(['limit' => "This import would add {$newLeadCount} leads, but your plan only has room for " . max($remaining, 0) . " more (limit: {$leadLimit}). Upgrade to import more."]);
+            }
+        }
+
         foreach ($rows as $i => $row) {
             $firstName = trim($row['first_name'] ?? $row['First Name'] ?? $row['firstname'] ?? '');
             $dup       = $duplicates[$i] ?? null;

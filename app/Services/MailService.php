@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Jobs\FetchEmailsJob;
 use App\Mail\CampaignMail;
+use App\Models\EmailAttachment;
 use App\Models\EmailCampaign;
 use App\Models\EmailSend;
 use App\Models\EmailTemplate;
@@ -11,6 +12,7 @@ use App\Models\FetchedEmail;
 use App\Models\Lead;
 use App\Models\SmtpCredential;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -162,8 +164,10 @@ class MailService
 
     /**
      * Send a composed email from the Inbox compose dialog.
+     *
+     * @param UploadedFile[] $attachments
      */
-    public function sendCompose(string $toEmail, string $subject, string $bodyHtml): void
+    public function sendCompose(string $toEmail, string $subject, string $bodyHtml, array $attachments = []): void
     {
         $this->configureMailer();
 
@@ -185,25 +189,34 @@ class MailService
         $domain    = Str::after($this->credential->from_email, '@') ?: 'localhost';
         $messageId = (string) Str::uuid() . '@' . $domain;
 
-        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $subject, $messageId) {
+        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $subject, $messageId, $attachments) {
             $message
                 ->to($toEmail)
                 ->from($this->credential->from_email, $this->credential->from_name)
                 ->subject($subject);
+
+            foreach ($attachments as $file) {
+                $message->attachData($file->get(), $file->getClientOriginalName(), ['mime' => $file->getMimeType()]);
+            }
 
             $headers = $message->getSymfonyMessage()->getHeaders();
             $headers->remove('Message-ID');
             $headers->addIdHeader('Message-ID', $messageId);
         });
 
-        $this->recordSent($toEmail, $subject, $html, $messageId);
+        $fetched = $this->recordSent($toEmail, $subject, $html, $messageId);
+        if ($fetched && $attachments) {
+            $this->storeAttachmentCopies($fetched, $attachments);
+        }
     }
 
     /**
      * Reply to a fetched email, threading it via In-Reply-To/References so it
      * lands in the same conversation in the recipient's mail client.
+     *
+     * @param UploadedFile[] $attachments
      */
-    public function sendReply(FetchedEmail $original, string $bodyHtml): void
+    public function sendReply(FetchedEmail $original, string $bodyHtml, array $attachments = []): void
     {
         $this->configureMailer();
 
@@ -237,11 +250,15 @@ class MailService
         $messageId = (string) Str::uuid() . '@' . $domain;
         $inReplyTo = $original->message_id ? '<' . $original->message_id . '>' : null;
 
-        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $toName, $subject, $messageId, $inReplyTo) {
+        Mail::mailer('dynamic')->html($html, function ($message) use ($toEmail, $toName, $subject, $messageId, $inReplyTo, $attachments) {
             $message
                 ->to($toEmail, $toName ?: null)
                 ->from($this->credential->from_email, $this->credential->from_name)
                 ->subject($subject);
+
+            foreach ($attachments as $file) {
+                $message->attachData($file->get(), $file->getClientOriginalName(), ['mime' => $file->getMimeType()]);
+            }
 
             $headers = $message->getSymfonyMessage()->getHeaders();
             $headers->remove('Message-ID');
@@ -252,7 +269,10 @@ class MailService
             }
         });
 
-        $this->recordSent($toEmail, $subject, $html, $messageId, $toName ?: '');
+        $fetched = $this->recordSent($toEmail, $subject, $html, $messageId, $toName ?: '');
+        if ($fetched && $attachments) {
+            $this->storeAttachmentCopies($fetched, $attachments);
+        }
     }
 
     /**
@@ -262,10 +282,10 @@ class MailService
      * surface as a send failure. The shared Message-ID lets the next IMAP Sent
      * sync de-dupe against this row instead of creating a duplicate.
      */
-    public function recordSent(string $toEmail, string $subject, string $html, string $messageId, string $toName = ''): void
+    public function recordSent(string $toEmail, string $subject, string $html, string $messageId, string $toName = ''): ?FetchedEmail
     {
         try {
-            FetchedEmail::create([
+            $fetched = FetchedEmail::create([
                 'organization_id'    => $this->credential->organization_id,
                 'smtp_credential_id' => $this->credential->id,
                 'folder'             => 'sent',
@@ -288,11 +308,47 @@ class MailService
                 'subject'    => mb_substr($subject, 0, 80),
                 'message_id' => $messageId,
             ]);
+
+            return $fetched;
         } catch (\Throwable $e) {
             \Log::channel('mail')->warning('Failed to record sent email', [
                 'to'    => $toEmail,
                 'error' => $e->getMessage(),
             ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Save copies of uploaded attachments against the just-recorded Sent row,
+     * so they show up alongside the email in the inbox. Best-effort, same as
+     * recordSent — a storage failure here shouldn't surface as a send failure
+     * since the email itself already went out.
+     *
+     * @param UploadedFile[] $attachments
+     */
+    private function storeAttachmentCopies(FetchedEmail $fetched, array $attachments): void
+    {
+        foreach ($attachments as $file) {
+            try {
+                $path = $file->store("email-attachments/{$fetched->organization_id}/{$fetched->id}", 'public');
+
+                EmailAttachment::create([
+                    'organization_id'  => $fetched->organization_id,
+                    'fetched_email_id' => $fetched->id,
+                    'file_path'        => $path,
+                    'original_name'    => $file->getClientOriginalName(),
+                    'mime_type'        => $file->getMimeType(),
+                    'size'             => $file->getSize(),
+                ]);
+            } catch (\Throwable $e) {
+                \Log::channel('mail')->warning('Failed to store outgoing attachment copy', [
+                    'email_id' => $fetched->id,
+                    'name'     => $file->getClientOriginalName(),
+                    'error'    => $e->getMessage(),
+                ]);
+            }
         }
     }
 

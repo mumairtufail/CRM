@@ -4,15 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Jobs\SendCampaignBatch;
 use App\Models\EmailCampaign;
+use App\Models\EmailCampaignAttachment;
 use App\Models\EmailSend;
 use App\Models\FormSession;
 use App\Models\Lead;
 use App\Models\LeadForm;
 use App\Models\LeadGroup;
 use App\Models\Tag;
+use App\Rules\SafeAttachment;
 use App\Services\AiService;
 use App\Services\MailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class CampaignController extends Controller
@@ -103,7 +106,13 @@ class CampaignController extends Controller
             'followup_steps.*.delay_hours' => 'required_with:followup_steps|integer|in:24,48,72,120,168,216,336',
             'followup_steps.*.subject'     => 'required_with:followup_steps|string|max:500',
             'followup_steps.*.body_html'   => 'required_with:followup_steps|string',
+            ...$this->attachmentValidationRules(),
         ]);
+
+        $newTotal = collect($request->file('attachments', []))->sum(fn ($f) => $f->getSize());
+        if ($newTotal > self::MAX_TOTAL_ATTACHMENT_BYTES) {
+            return back()->withErrors(['attachments' => 'Combined attachments must be under 25 MB.'])->withInput();
+        }
 
         $count = $this->countRecipients(
             $validated['filters'] ?? [],
@@ -112,13 +121,15 @@ class CampaignController extends Controller
         );
 
         $campaign = EmailCampaign::create([
-            ...$validated,
+            ...collect($validated)->except('attachments')->all(),
             ...$this->resolveSender($request->user()),
             'total_recipients' => $count,
             'status'           => 'draft',
             'followup_enabled' => $validated['followup_enabled'] ?? false,
             'followup_steps'   => $validated['followup_steps'] ?? null,
         ]);
+
+        $this->storeAttachments($campaign, $request);
 
         return redirect()->route('campaigns.show', $campaign);
     }
@@ -167,6 +178,7 @@ class CampaignController extends Controller
                 'total_recipients' => $campaign->total_recipients,
                 'followup_enabled' => (bool) $campaign->followup_enabled,
                 'followup_steps'   => $campaign->followup_steps ?? [],
+                'attachments'      => $this->attachmentsPayload($campaign),
             ],
         ]);
     }
@@ -207,6 +219,9 @@ class CampaignController extends Controller
             'followup_steps.*.delay_hours' => 'required_with:followup_steps|integer|in:24,48,72,120,168,216,336',
             'followup_steps.*.subject'     => 'required_with:followup_steps|string|max:500',
             'followup_steps.*.body_html'   => 'required_with:followup_steps|string',
+            'remove_attachment_ids'        => 'nullable|array',
+            'remove_attachment_ids.*'      => 'integer',
+            ...$this->attachmentValidationRules(),
         ]);
 
         $count = $this->countRecipients(
@@ -215,13 +230,30 @@ class CampaignController extends Controller
             $validated['recipient_mode']
         );
 
+        $removeIds = $validated['remove_attachment_ids'] ?? [];
+        $keptTotal = $campaign->attachments()->whereNotIn('id', $removeIds)->sum('size');
+        $newTotal  = collect($request->file('attachments', []))->sum(fn ($f) => $f->getSize());
+        if ($keptTotal + $newTotal > self::MAX_TOTAL_ATTACHMENT_BYTES) {
+            return back()->withErrors(['attachments' => 'Combined attachments must be under 25 MB.'])->withInput();
+        }
+
         $campaign->update([
-            ...$validated,
+            ...collect($validated)->except(['attachments', 'remove_attachment_ids'])->all(),
             ...$this->resolveSender($request->user()),
             'total_recipients' => $count,
             'followup_enabled' => $validated['followup_enabled'] ?? false,
             'followup_steps'   => $validated['followup_steps'] ?? null,
         ]);
+
+        if ($removeIds) {
+            $toRemove = $campaign->attachments()->whereIn('id', $removeIds)->get();
+            foreach ($toRemove as $att) {
+                Storage::disk('public')->delete($att->file_path);
+                $att->delete();
+            }
+        }
+
+        $this->storeAttachments($campaign, $request);
 
         return redirect()->route('campaigns.show', $campaign)->with('success', 'Campaign updated');
     }
@@ -312,6 +344,7 @@ class CampaignController extends Controller
                 ] : null,
                 'form_submissions'  => $formSubmissions,
                 'form_clicks'       => $campaign->form_clicks_count,
+                'attachments'       => $this->attachmentsPayload($campaign),
             ],
             'sends' => $sends,
         ]);
@@ -640,6 +673,47 @@ class CampaignController extends Controller
             'from_name'  => $cred->from_name  ?? $user->name,
             'from_email' => $cred->from_email ?? $user->email,
         ];
+    }
+
+    // 20 MB per file (matches ClientDocumentController's precedent), 25 MB
+    // combined (stays under typical SMTP relay caps like Gmail's ~25 MB).
+    private const MAX_ATTACHMENT_KB          = 20480;
+    private const MAX_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+
+    private function attachmentValidationRules(): array
+    {
+        return [
+            'attachments'   => 'nullable|array|max:10',
+            'attachments.*' => ['file', 'max:' . self::MAX_ATTACHMENT_KB, new SafeAttachment],
+        ];
+    }
+
+    private function storeAttachments(EmailCampaign $campaign, Request $request): void
+    {
+        foreach ($request->file('attachments', []) as $file) {
+            $path = $file->store("campaign-attachments/{$campaign->organization_id}/{$campaign->id}", 'public');
+
+            EmailCampaignAttachment::create([
+                'organization_id'   => $campaign->organization_id,
+                'email_campaign_id' => $campaign->id,
+                'file_path'         => $path,
+                'original_name'     => $file->getClientOriginalName(),
+                'mime_type'         => $file->getMimeType(),
+                'size'              => $file->getSize(),
+            ]);
+        }
+    }
+
+    private function attachmentsPayload(EmailCampaign $campaign): array
+    {
+        return $campaign->attachments->map(fn ($a) => [
+            'id'             => $a->id,
+            'original_name'  => $a->original_name,
+            'mime_type'      => $a->mime_type,
+            'size'           => $a->size,
+            'formatted_size' => $a->formatted_size,
+            'url'            => $a->url,
+        ])->values()->toArray();
     }
 
     /**

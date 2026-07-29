@@ -131,9 +131,14 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
         let cancelled = false;
         setPreviewError(false);
 
+        // The Free tier has no Paddle price (priceId is null) — never a
+        // checkout item, so it's excluded from the price-preview request too.
+        const paidTiers = tiers.filter((tier) => tier.priceId[billingCycle]);
+        if (paidTiers.length === 0) return;
+
         getPaddle(paddle)
             .then((instance) => instance.PricePreview({
-                items: tiers.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
+                items: paidTiers.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
                 ...(country ? { address: { countryCode: country } } : {}),
             }))
             .then((result) => {
@@ -172,6 +177,14 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
     // the subscription to and grant access on. An anonymous click opens the
     // sign-in/register modal instead of leaving the page.
     const openCheckout = (tier) => {
+        // Free tier isn't sold through Paddle — a fresh registration already
+        // defaults to it, so the CTA just sends anonymous visitors to sign up,
+        // and a signed-in visitor is already on some plan, nothing to do.
+        if (!tier.priceId[billingCycle]) {
+            if (!userEmail) router.visit('/register');
+            return;
+        }
+
         if (!userEmail || !organizationId) {
             setPendingTier(tier);
             setAuthModalOpen(true);
@@ -651,11 +664,12 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
 
                     <motion.div
                         variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
-                        className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
+                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch"
                     >
                         {tiers.map((tier) => {
                             const featured = tier.isFeatured;
                             const priceId = tier.priceId[billingCycle];
+                            const isFree = !priceId;
                             const formattedTotal = pricePreviews[priceId]?.total;
                             return (
                                 <motion.div
@@ -678,7 +692,9 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                     <p className="text-white/40 text-sm mb-6 min-h-[40px]">{tier.description}</p>
 
                                     <div className="mb-6 flex items-baseline gap-2 min-h-[44px]">
-                                        {formattedTotal ? (
+                                        {isFree ? (
+                                            <span className="text-4xl font-black text-white">Free</span>
+                                        ) : formattedTotal ? (
                                             <>
                                                 <span className="text-4xl font-black text-white">{formattedTotal}</span>
                                                 <span className="text-white/35 text-sm font-medium">/{billingCycle === 'month' ? 'mo' : 'yr'}</span>
@@ -709,7 +725,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                         )}
                                         style={featured ? { background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' } : undefined}
                                     >
-                                        {checkoutTier === tier.slug ? 'Opening…' : 'Subscribe'}
+                                        {checkoutTier === tier.slug ? 'Opening…' : isFree ? 'Get started free' : 'Subscribe'}
                                         <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                                     </button>
                                 </motion.div>

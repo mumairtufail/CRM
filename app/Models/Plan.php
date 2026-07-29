@@ -13,7 +13,7 @@ class Plan extends Model
 {
     protected $fillable = [
         'name', 'slug', 'tagline', 'description', 'price_monthly', 'price_monthly_original', 'price_yearly', 'price_yearly_original',
-        'is_active', 'is_featured', 'sort_order', 'cta_text',
+        'is_active', 'is_featured', 'sort_order', 'cta_text', 'lead_limit',
         'paddle_product_id', 'paddle_price_id_monthly', 'paddle_price_id_yearly',
     ];
 
@@ -24,6 +24,7 @@ class Plan extends Model
         'price_monthly_original' => 'decimal:2',
         'price_yearly'           => 'decimal:2',
         'price_yearly_original'  => 'decimal:2',
+        'lead_limit'             => 'integer',
     ];
 
     public function modules(): BelongsToMany
@@ -85,6 +86,39 @@ class Plan extends Model
                     'year'  => $plan->paddle_price_id_yearly,
                 ],
                 'isFeatured' => $plan->is_featured,
+            ])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The public landing-page tier list. Same shape as paddleTiers() but also
+     * includes the Free tier (no Paddle product — priceId is null, handled
+     * by Welcome.jsx by skipping PricePreview/Checkout and linking to
+     * /register instead).
+     *
+     * @return array<int, array{name: string, slug: string, description: ?string, features: array<int, string>, priceId: array{month: ?string, year: ?string}, isFeatured: bool, leadLimit: ?int}>
+     */
+    public static function publicPricingTiers(): array
+    {
+        return static::where('is_active', true)
+            ->with('modules:id,name')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn (Plan $plan) => [
+                'name'        => $plan->name,
+                'slug'        => $plan->slug,
+                'description' => $plan->tagline,
+                'features'    => [
+                    'Core CRM — leads, pipeline, invoicing, reports, team',
+                    ...$plan->modules->pluck('name')->all(),
+                ],
+                'priceId' => [
+                    'month' => $plan->paddle_price_id_monthly,
+                    'year'  => $plan->paddle_price_id_yearly,
+                ],
+                'isFeatured' => $plan->is_featured,
+                'leadLimit'  => $plan->lead_limit,
             ])
             ->values()
             ->all();

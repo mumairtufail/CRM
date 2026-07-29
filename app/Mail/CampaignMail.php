@@ -7,6 +7,7 @@ use App\Models\Lead;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 
 class CampaignMail extends Mailable
 {
@@ -20,6 +21,7 @@ class CampaignMail extends Mailable
         public readonly ?string $fromName  = null,
         public readonly ?string $renderedSubject = null,
         public readonly ?string $messageId = null,
+        public readonly ?Collection $attachmentSet = null,
     ) {}
 
     public function build(): static
@@ -31,6 +33,12 @@ class CampaignMail extends Mailable
             )
             ->subject($this->renderedSubject ?? $this->campaign->subject)
             ->html($this->renderedHtml ?? $this->campaign->body_html);
+
+        foreach ($this->attachmentSet ?? [] as $att) {
+            $mail->attachFromStorageDisk('public', $att->file_path, $att->original_name, [
+                'mime' => $att->mime_type,
+            ]);
+        }
 
         // Pin an explicit Message-ID so replies (In-Reply-To) and the Sent-folder
         // copy can be tied back to this exact send.

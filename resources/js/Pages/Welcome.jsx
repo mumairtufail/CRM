@@ -15,7 +15,6 @@ import ActivityShowcase from '@/Components/Marketing/ActivityShowcase';
 import ModuleShowcase, { MODULES } from '@/Components/Marketing/ModuleShowcase';
 import DotGrid from '@/Components/Marketing/DotGrid';
 import { cn } from '@/lib/utils';
-import { TIERS } from '@/lib/pricingTiers';
 import { getPaddle } from '@/lib/paddle';
 import SubscribeAuthModal from '@/Components/Marketing/SubscribeAuthModal';
 
@@ -107,7 +106,7 @@ const FAQS = [
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = null }) {
+export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = null, tiers = [] }) {
     const { props } = usePage();
     const seo = props.seo || {};
     const userEmail = props.auth?.user?.email || undefined;
@@ -134,7 +133,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
 
         getPaddle(paddle)
             .then((instance) => instance.PricePreview({
-                items: TIERS.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
+                items: tiers.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
                 ...(country ? { address: { countryCode: country } } : {}),
             }))
             .then((result) => {
@@ -147,7 +146,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
             .catch(() => { if (!cancelled) setPreviewError(true); });
 
         return () => { cancelled = true };
-    }, [billingCycle, country, paddle.environment, paddle.clientToken]);
+    }, [billingCycle, country, paddle.environment, paddle.clientToken, tiers]);
 
     const organizationId = props.organization?.id;
 
@@ -192,8 +191,11 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                         // Checkout only ever runs for a signed-in user (see the
                         // gate above), so they already have a workspace —
                         // straight to the dashboard, not a "create your
-                        // workspace" page.
-                        successUrl: `${window.location.origin}/dashboard`,
+                        // workspace" page. The ?checkout=success marker is
+                        // what triggers the "thanks for subscribing" toast in
+                        // AppLayout — Paddle's redirect is a plain browser
+                        // navigation, there's no server-side flash to hook.
+                        successUrl: `${window.location.origin}/dashboard?checkout=success`,
                     },
                 });
             })
@@ -253,7 +255,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                         // Prices are localized per visitor via Paddle at render time, so a
                         // static catalog price here would go stale/mismatched — omitted
                         // rather than hardcoding a number that isn't what anyone is charged.
-                        offers: TIERS.map(tier => ({
+                        offers: tiers.map(tier => ({
                             '@type': 'Offer',
                             name: tier.name,
                             priceCurrency: 'USD',
@@ -651,8 +653,8 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                         variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}
                         className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch"
                     >
-                        {TIERS.map((tier, i) => {
-                            const featured = i === 1;
+                        {tiers.map((tier) => {
+                            const featured = tier.isFeatured;
                             const priceId = tier.priceId[billingCycle];
                             const formattedTotal = pricePreviews[priceId]?.total;
                             return (

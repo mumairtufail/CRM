@@ -14,6 +14,7 @@ class Plan extends Model
     protected $fillable = [
         'name', 'slug', 'tagline', 'description', 'price_monthly', 'price_monthly_original', 'price_yearly', 'price_yearly_original',
         'is_active', 'is_featured', 'sort_order', 'cta_text',
+        'paddle_product_id', 'paddle_price_id_monthly', 'paddle_price_id_yearly',
     ];
 
     protected $casts = [
@@ -54,5 +55,38 @@ class Plan extends Model
     public static function forgetModuleCache(int $planId): void
     {
         Cache::forget("plan_modules:{$planId}");
+    }
+
+    /**
+     * The Paddle-checkout-ready tier list for the public pricing page and the
+     * in-app Billing page — same shape the old static pricingTiers.js
+     * exported, now sourced from the DB so admin edits actually take effect.
+     * Only plans with a linked Paddle product can be sold through checkout.
+     *
+     * @return array<int, array{name: string, slug: string, description: ?string, features: array<int, string>, priceId: array{month: ?string, year: ?string}, isFeatured: bool}>
+     */
+    public static function paddleTiers(): array
+    {
+        return static::where('is_active', true)
+            ->whereNotNull('paddle_product_id')
+            ->with('modules:id,name')
+            ->orderBy('sort_order')
+            ->get()
+            ->map(fn (Plan $plan) => [
+                'name'        => $plan->name,
+                'slug'        => $plan->slug,
+                'description' => $plan->tagline,
+                'features'    => [
+                    'Core CRM — leads, pipeline, invoicing, reports, team',
+                    ...$plan->modules->pluck('name')->all(),
+                ],
+                'priceId' => [
+                    'month' => $plan->paddle_price_id_monthly,
+                    'year'  => $plan->paddle_price_id_yearly,
+                ],
+                'isFeatured' => $plan->is_featured,
+            ])
+            ->values()
+            ->all();
     }
 }

@@ -68,33 +68,14 @@ return [
     // checkout against the wrong Paddle account. `api_key` is server-only and
     // must never be passed to an Inertia prop or otherwise reach the frontend.
     'paddle' => [
-        'environment'      => env('PADDLE_ENVIRONMENT'),
-        'client_token'     => env('PADDLE_CLIENT_KEY'),
-        'api_key'          => env('PADDLE_API_KEY'),
-        'webhook_secret'   => env('PADDLE_WEBHOOK_SECRET'),
-        // Paddle checkout tiers (resources/js/lib/pricingTiers.js) use their own
-        // naming (starter/pro/agency) — this maps each Paddle `plan_slug`
-        // custom_data value to the existing Plan model's slug (basic/pro/premium)
-        // that actually drives module gating, so a webhook-fulfilled subscription
-        // grants the equivalent real plan rather than a plan that doesn't exist.
-        'plan_map' => [
-            'starter' => 'basic',
-            'pro'     => 'pro',
-            'agency'  => 'premium',
-        ],
-        // Authoritative price_id -> plan_slug lookup, keyed off the Paddle
-        // product id (shared by both the monthly and yearly price of a tier).
-        // Webhook fulfillment prefers this over custom_data.plan_slug, since
-        // custom_data is only set at the original checkout and goes stale the
-        // moment a subscription's price changes some other way (portal
-        // self-service upgrade, admin-initiated change, etc.) — the current
-        // price/product on the subscription is always the source of truth for
-        // what the customer is actually paying for.
-        'product_plan_map' => [
-            'pro_01kyn9cx2wn5e82k9c23vf02xz' => 'starter',
-            'pro_01kyn9cz3smmhfp6d7bys3rpw7' => 'pro',
-            'pro_01kyn9d0rk14nv309dsx969e0k' => 'agency',
-        ],
+        'environment'    => env('PADDLE_ENVIRONMENT'),
+        'client_token'   => env('PADDLE_CLIENT_KEY'),
+        'api_key'        => env('PADDLE_API_KEY'),
+        'webhook_secret' => env('PADDLE_WEBHOOK_SECRET'),
+        // No product/plan mapping config needed — Plan rows own their Paddle
+        // product/price IDs directly (see Plan::paddleTiers(),
+        // Admin\PlanController::syncToPaddle()), so webhook fulfillment
+        // resolves the Plan with a single `paddle_product_id` lookup.
     ],
 
 ];

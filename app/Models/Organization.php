@@ -77,6 +77,16 @@ class Organization extends Model
     }
 
     /**
+     * The most recent subscription regardless of status — unlike
+     * activeSubscription(), this also finds one that's already `paused`,
+     * which is exactly the case resuming needs to look up.
+     */
+    public function latestSubscription(): ?Subscription
+    {
+        return $this->subscriptions()->latest('id')->first();
+    }
+
+    /**
      * Whether this tenant's active plan unlocks the given module key.
      * Modules not in the catalog (e.g. core CRM) are always available.
      */

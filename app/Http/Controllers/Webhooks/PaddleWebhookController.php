@@ -95,11 +95,13 @@ class PaddleWebhookController extends Controller
         $item = $data['items'][0] ?? [];
         $priceId = $item['price']['id'] ?? null;
         $productId = $item['price']['product_id'] ?? null;
-        // The subscription's CURRENT product is the source of truth for which
-        // tier it's on — custom_data.plan_slug is only a fallback for the rare
-        // case a product isn't in the map yet, since custom_data is set once at
-        // checkout and doesn't get refreshed by a later upgrade/downgrade.
-        $planSlug = config("services.paddle.product_plan_map.{$productId}") ?? $data['custom_data']['plan_slug'] ?? null;
+        // custom_data.plan_slug is the real Plan.slug (Plan::paddleTiers()
+        // sends it straight from the DB at checkout) — stored for display,
+        // but syncOrganizationPlan() below resolves the Plan from `product_id`
+        // (the subscription's current line item), not this string, since a
+        // later upgrade/downgrade changes the product without custom_data
+        // ever being resent.
+        $planSlug = $data['custom_data']['plan_slug'] ?? null;
         $scheduledChange = $data['scheduled_change'] ?? null;
 
         // Idempotent upsert keyed on the Paddle subscription id — deliveries are
@@ -141,11 +143,13 @@ class PaddleWebhookController extends Controller
             return;
         }
 
-        $planSlug = config("services.paddle.plan_map.{$active->plan_slug}");
-        $plan = $planSlug ? Plan::where('slug', $planSlug)->first() : null;
+        // Resolved by the subscription's current Paddle product — the single
+        // source of truth for which tier it's actually on, since Plans now
+        // own their Paddle product directly (see Admin\PlanController).
+        $plan = Plan::where('paddle_product_id', $active->product_id)->first();
 
         if (!$plan) {
-            Log::warning("Paddle webhook: no Plan mapped for plan_slug [{$active->plan_slug}] on subscription {$active->paddle_subscription_id}.");
+            Log::warning("Paddle webhook: no Plan linked to Paddle product [{$active->product_id}] on subscription {$active->paddle_subscription_id}.");
             return;
         }
 

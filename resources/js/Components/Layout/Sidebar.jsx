@@ -42,7 +42,7 @@ const navItems = [
       { label: 'Conversations',    href: '/whatsapp/conversations',  icon: MessagesSquare },
     ],
   },
-  { label: 'Dialer',     href: '/twilio',    icon: Phone, section: 'Communication' },
+  { label: 'Dialer',     href: '/twilio',    icon: Phone, module: 'dialer', section: 'Communication' },
   { label: 'Inbox',      href: '/inbox',     icon: Inbox, section: 'Communication' },
 
   { label: 'Forms',      href: '/forms',     icon: ClipboardList, section: 'Work' },

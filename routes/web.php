@@ -82,6 +82,9 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
         // purpose — Paddle.PricePreview() auto-detects from IP when no
         // country is passed, and we must never invent one.
         'country' => \App\Support\GeoCountry::fromRequest($request),
+        // DB-driven — admin-editable via /admin/plans, synced to real Paddle
+        // products/prices there. See Plan::paddleTiers().
+        'tiers' => \App\Models\Plan::paddleTiers(),
     ]);
 })->name('home');
 
@@ -157,6 +160,8 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     // Billing — cross-tenant subscriptions & invoices (Paddle)
     Route::get('/billing',                          [\App\Http\Controllers\Admin\BillingController::class, 'index'])->name('billing.index');
     Route::get('/billing/invoices/{transaction}/download', [\App\Http\Controllers\Admin\BillingController::class, 'downloadInvoice'])->name('billing.invoices.download');
+    Route::post('/billing/{subscription}/pause',            [\App\Http\Controllers\Admin\BillingController::class, 'pause'])->name('billing.pause');
+    Route::post('/billing/{subscription}/resume',           [\App\Http\Controllers\Admin\BillingController::class, 'resume'])->name('billing.resume');
 
     // Blogs Management
     Route::get('/blogs',                        [AdminBlogController::class, 'index'])->name('blogs.index');
@@ -381,6 +386,8 @@ Route::middleware(['auth'])->group(function () {
     // Billing & Invoices (Paddle) — no module gate, every plan needs to see its own billing
     Route::get('/billing',                             [\App\Http\Controllers\BillingController::class, 'index'])->name('billing.index');
     Route::get('/billing/invoices/{transaction}/download', [\App\Http\Controllers\BillingController::class, 'downloadInvoice'])->name('billing.invoices.download');
+    Route::post('/billing/pause',                       [\App\Http\Controllers\BillingController::class, 'pause'])->name('billing.pause');
+    Route::post('/billing/resume',                      [\App\Http\Controllers\BillingController::class, 'resume'])->name('billing.resume');
 
     // Tags — managed from the Settings > Tags tab (see ProfileController::edit)
     Route::post('/tags',           [TagController::class, 'store'])->name('tags.store');
@@ -482,22 +489,23 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/settings/whatsapp', [WhatsappStatusController::class, 'show'])->name('whatsapp.settings');
     });
 
-    // Twilio Settings
-    Route::post('/settings/twilio',          [TwilioController::class, 'store'])->name('twilio.store');
-    Route::post('/settings/twilio/validate', [TwilioController::class, 'validateCredentials'])->name('twilio.validate');
-    Route::delete('/settings/twilio',        [TwilioController::class, 'destroy'])->name('twilio.destroy');
-    Route::get('/settings/twilio/balance',   [TwilioController::class, 'balance'])->name('twilio.balance');
+    // Twilio Settings & Dialer — gated to plans that include the `dialer` module
+    Route::middleware('module:dialer')->group(function () {
+        Route::post('/settings/twilio',          [TwilioController::class, 'store'])->name('twilio.store');
+        Route::post('/settings/twilio/validate', [TwilioController::class, 'validateCredentials'])->name('twilio.validate');
+        Route::delete('/settings/twilio',        [TwilioController::class, 'destroy'])->name('twilio.destroy');
+        Route::get('/settings/twilio/balance',   [TwilioController::class, 'balance'])->name('twilio.balance');
 
-    // Twilio Dialer & Dashboard
-    Route::get('/twilio',       [TwilioController::class, 'index'])->name('twilio.index');
-    Route::get('/twilio/token',  [TwilioController::class, 'generateToken'])->name('twilio.token');
-    Route::post('/twilio/call',  [TwilioController::class, 'placeCall'])->name('twilio.call');
-    Route::post('/twilio/sms',   [TwilioController::class, 'sendSms'])->name('twilio.sms');
-    Route::post('/twilio/sync',  [TwilioController::class, 'syncLogs'])->name('twilio.sync');
-    Route::get('/twilio/leads',  [TwilioController::class, 'searchLeads'])->name('twilio.leads');
-    Route::get('/twilio/calls/{call}/recording', [TwilioController::class, 'streamRecording'])->name('twilio.recording');
-    Route::delete('/twilio/calls/bulk',   [TwilioController::class, 'bulkDestroyCalls'])->name('twilio.calls.bulk-destroy');
-    Route::delete('/twilio/calls/{call}', [TwilioController::class, 'destroyCall'])->name('twilio.calls.destroy');
+        Route::get('/twilio',       [TwilioController::class, 'index'])->name('twilio.index');
+        Route::get('/twilio/token',  [TwilioController::class, 'generateToken'])->name('twilio.token');
+        Route::post('/twilio/call',  [TwilioController::class, 'placeCall'])->name('twilio.call');
+        Route::post('/twilio/sms',   [TwilioController::class, 'sendSms'])->name('twilio.sms');
+        Route::post('/twilio/sync',  [TwilioController::class, 'syncLogs'])->name('twilio.sync');
+        Route::get('/twilio/leads',  [TwilioController::class, 'searchLeads'])->name('twilio.leads');
+        Route::get('/twilio/calls/{call}/recording', [TwilioController::class, 'streamRecording'])->name('twilio.recording');
+        Route::delete('/twilio/calls/bulk',   [TwilioController::class, 'bulkDestroyCalls'])->name('twilio.calls.bulk-destroy');
+        Route::delete('/twilio/calls/{call}', [TwilioController::class, 'destroyCall'])->name('twilio.calls.destroy');
+    });
 
     Route::post('/settings/cache/clear', [ProfileController::class, 'clearLeadsCache'])->name('settings.cache.clear');
 

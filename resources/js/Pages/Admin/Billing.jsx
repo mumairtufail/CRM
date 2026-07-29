@@ -1,11 +1,13 @@
 import { Head, router } from '@inertiajs/react'
-import { useCallback } from 'react'
+import { useCallback, useState } from 'react'
 import AdminLayout from '@/Components/Layout/AdminLayout'
 import PageHeader from '@/Components/Common/PageHeader'
 import DataTable from '@/Components/Common/DataTable'
 import { Badge } from '@/Components/ui/badge'
+import { Button } from '@/Components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
-import { CreditCard, Receipt, Download } from 'lucide-react'
+import { CreditCard, Receipt, Download, PauseCircle, PlayCircle } from 'lucide-react'
+import { toast } from 'sonner'
 
 const ACTIVE_STATUSES = ['active', 'trialing', 'past_due']
 
@@ -21,6 +23,7 @@ function OrgCell({ organization }) {
 export default function AdminBilling({ subscriptions, transactions }) {
   const { data: subRows, ...subPagination } = subscriptions
   const { data: txnRows, ...txnPagination } = transactions
+  const [actingId, setActingId] = useState(null)
 
   const handleSubsPage = useCallback((page) => {
     router.get('/admin/billing', { subs_page: page }, { preserveState: true })
@@ -29,6 +32,27 @@ export default function AdminBilling({ subscriptions, transactions }) {
   const handleTxnsPage = useCallback((page) => {
     router.get('/admin/billing', { txns_page: page }, { preserveState: true })
   }, [])
+
+  const pause = (subscription) => {
+    if (!confirm(`Pause ${subscription.organization?.name}'s subscription? They keep access until the end of their current billing period.`)) return
+    setActingId(subscription.id)
+    router.post(`/admin/billing/${subscription.id}/pause`, {}, {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Subscription will pause at the end of the current period.'),
+      onError: () => toast.error('Failed to pause subscription.'),
+      onFinish: () => setActingId(null),
+    })
+  }
+
+  const resume = (subscription) => {
+    setActingId(subscription.id)
+    router.post(`/admin/billing/${subscription.id}/resume`, {}, {
+      preserveScroll: true,
+      onSuccess: () => toast.success('Subscription resumed.'),
+      onError: () => toast.error('Failed to resume subscription.'),
+      onFinish: () => setActingId(null),
+    })
+  }
 
   const subColumns = [
     { id: 'organization', header: 'Organization', size: 220, cell: ({ row }) => <OrgCell organization={row.original.organization} /> },
@@ -48,6 +72,28 @@ export default function AdminBilling({ subscriptions, transactions }) {
         : <span className="text-gray-300 text-sm">—</span>,
     },
     { id: 'created_at', header: 'Since', size: 120, cell: ({ row }) => <span className="text-sm text-gray-500">{row.original.created_at}</span> },
+    {
+      id: 'actions', header: '', size: 140,
+      cell: ({ row }) => {
+        const s = row.original
+        const busy = actingId === s.id
+        if (s.status === 'paused') {
+          return (
+            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => resume(s)} className="h-7 text-[11px] gap-1">
+              <PlayCircle size={11} /> Resume
+            </Button>
+          )
+        }
+        if (ACTIVE_STATUSES.includes(s.status) && !s.scheduled_change_action) {
+          return (
+            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={() => pause(s)} className="h-7 text-[11px] gap-1">
+              <PauseCircle size={11} /> Pause
+            </Button>
+          )
+        }
+        return null
+      },
+    },
   ]
 
   const txnColumns = [

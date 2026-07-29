@@ -1,4 +1,4 @@
-import { Head, usePage } from '@inertiajs/react'
+import { Head, usePage, router } from '@inertiajs/react'
 import { useEffect, useState } from 'react'
 import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
@@ -6,16 +6,16 @@ import EmptyState from '@/Components/Common/EmptyState'
 import { Badge } from '@/Components/ui/badge'
 import { Button } from '@/Components/ui/button'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/Components/ui/tabs'
-import { Wallet, Receipt, Check, Download, ExternalLink } from 'lucide-react'
-import { TIERS } from '@/lib/pricingTiers'
+import { Wallet, Receipt, Check, Download, ExternalLink, PauseCircle, PlayCircle } from 'lucide-react'
 import { getPaddle } from '@/lib/paddle'
+import { toast } from 'sonner'
 
 function StatusBadge({ status }) {
   const active = status === 'active'
   return <Badge variant={active ? 'default' : 'secondary'}>{active ? 'Active' : 'Inactive'}</Badge>
 }
 
-export default function BillingIndex({ plan, subscription, transactions, paddle, country }) {
+export default function BillingIndex({ plan, subscription, transactions, paddle, country, tiers = [] }) {
   const { props } = usePage()
   const userEmail = props.auth?.user?.email
   const organizationId = props.organization?.id
@@ -28,7 +28,7 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
     let cancelled = false
     getPaddle(paddle)
       .then((instance) => instance.PricePreview({
-        items: TIERS.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
+        items: tiers.map((tier) => ({ priceId: tier.priceId[billingCycle], quantity: 1 })),
         ...(country ? { address: { countryCode: country } } : {}),
       }))
       .then((result) => {
@@ -40,7 +40,7 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
       })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [billingCycle, country, paddle.environment, paddle.clientToken])
+  }, [billingCycle, country, paddle.environment, paddle.clientToken, tiers])
 
   const changePlan = (tier) => {
     setChangingTier(tier.slug)
@@ -53,12 +53,37 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
           settings: {
             displayMode: 'overlay',
             variant: 'one-page',
-            successUrl: `${window.location.origin}/billing`,
+            successUrl: `${window.location.origin}/billing?checkout=success`,
           },
         })
       })
       .finally(() => setChangingTier(null))
   }
+
+  const [pausing, setPausing] = useState(false)
+  const [resuming, setResuming] = useState(false)
+
+  const pauseSubscription = () => {
+    if (!confirm('Pause your subscription? You\'ll keep full access until the end of the current billing period, then it pauses until you resume it.')) return
+    setPausing(true)
+    router.post('/billing/pause', {}, {
+      onSuccess: () => toast.success('Subscription will pause at the end of this billing period.'),
+      onError: () => toast.error('Failed to pause subscription.'),
+      onFinish: () => setPausing(false),
+    })
+  }
+
+  const resumeSubscription = () => {
+    setResuming(true)
+    router.post('/billing/resume', {}, {
+      onSuccess: () => toast.success('Subscription resumed.'),
+      onError: () => toast.error('Failed to resume subscription.'),
+      onFinish: () => setResuming(false),
+    })
+  }
+
+  const isPaused = subscription?.status === 'paused'
+  const isPausing = subscription?.scheduled_change_action === 'pause'
 
   return (
     <>
@@ -83,8 +108,18 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
                   </p>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <StatusBadge status={plan?.status} />
+                {isPaused && <Badge variant="secondary">Paused</Badge>}
+                {isPaused ? (
+                  <Button type="button" variant="outline" size="sm" disabled={resuming} onClick={resumeSubscription} className="h-8 text-xs gap-1.5">
+                    <PlayCircle size={12} /> {resuming ? 'Resuming…' : 'Resume subscription'}
+                  </Button>
+                ) : (!isPausing && subscription) && (
+                  <Button type="button" variant="outline" size="sm" disabled={pausing} onClick={pauseSubscription} className="h-8 text-xs gap-1.5">
+                    <PauseCircle size={12} /> {pausing ? 'Pausing…' : 'Pause subscription'}
+                  </Button>
+                )}
                 <a href="/settings/billing/portal">
                   <Button type="button" variant="outline" size="sm" className="h-8 text-xs gap-1.5">
                     Manage billing <ExternalLink size={12} />
@@ -114,7 +149,7 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {TIERS.map((tier) => {
+              {tiers.map((tier) => {
                 const priceId = tier.priceId[billingCycle]
                 const total = pricePreviews[priceId]?.total
                 const isCurrent = subscription?.plan_slug === tier.slug

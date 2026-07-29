@@ -26,6 +26,12 @@ class ModuleSeeder extends Seeder
             'description' => 'Two-way WhatsApp conversations, auto-reply bot, knowledge base, and automatic lead conversion.',
             'sort_order'  => 3,
         ],
+        [
+            'key'         => 'dialer',
+            'name'        => 'Dialer',
+            'description' => 'Bring-your-own Twilio dialer — click-to-call, inbound/outbound call logging on every lead.',
+            'sort_order'  => 4,
+        ],
     ];
 
     public function run(): void

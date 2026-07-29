@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
-import { usePage, router } from '@inertiajs/react'
+import { usePage, router, Link } from '@inertiajs/react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
-import { Toaster } from 'sonner'
-import { Eye, LogOut } from 'lucide-react'
+import { Toaster, toast } from 'sonner'
+import { Eye, LogOut, PauseCircle } from 'lucide-react'
 
 
 function ImpersonationBanner({ name }) {
@@ -26,6 +26,26 @@ function ImpersonationBanner({ name }) {
   )
 }
 
+const SCHEDULED_CHANGE_LABEL = { pause: 'pause', cancel: 'cancel' }
+
+// A scheduled pause/cancel doesn't revoke access early — they keep everything
+// they already paid for until the effective date — but they should still see
+// it coming from anywhere in the app, not just the Billing page.
+function ScheduledChangeBanner({ action, effectiveAt }) {
+  const label = SCHEDULED_CHANGE_LABEL[action] || action
+  return (
+    <div className="flex items-center justify-center gap-3 px-4 py-2 bg-amber-500 text-white text-[12.5px] font-medium shrink-0">
+      <PauseCircle size={14} className="shrink-0" />
+      <span className="truncate">
+        Your plan is set to {label} on <strong className="font-bold">{new Date(effectiveAt).toLocaleDateString()}</strong> — you keep full access until then.
+      </span>
+      <Link href="/billing" className="rounded-md bg-white/15 hover:bg-white/25 px-2.5 py-1 transition-colors font-semibold shrink-0">
+        Manage plan
+      </Link>
+    </div>
+  )
+}
+
 // Compute the initial state synchronously so the sidebar never animates
 // from closed → open on mount (which caused a "collapse then open" flash
 // on every page navigation, since each page mounts its own AppLayout).
@@ -41,11 +61,28 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
     if (defaultSidebarClosed) return false
     return getInitialSidebar()
   })
-  const { impersonating } = usePage().props
+  const { impersonating, plan } = usePage().props
+  const scheduledChange = plan?.subscription?.scheduled_change_action
 
   useEffect(() => {
     document.body.classList.add('overflow-hidden')
     return () => document.body.classList.remove('overflow-hidden')
+  }, [])
+
+  // Paddle's successUrl redirect is a plain browser navigation, not a
+  // server-side response — there's no Laravel flash to hook, so the "thanks
+  // for subscribing" toast is driven by a ?checkout=success marker instead,
+  // stripped from the URL right after so a refresh doesn't re-show it. Lives
+  // here (not Dashboard/Billing individually) since checkout can land on
+  // either page.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('checkout') !== 'success') return
+
+    toast.success('Payment successful — thanks for subscribing!')
+    params.delete('checkout')
+    const query = params.toString()
+    window.history.replaceState({}, '', window.location.pathname + (query ? `?${query}` : ''))
   }, [])
 
   const toggleSidebar = () => setSidebarOpen(v => {
@@ -57,6 +94,9 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'rgb(var(--brand-tint))' }}>
       {impersonating && <ImpersonationBanner name={impersonating.name} />}
+      {scheduledChange && (
+        <ScheduledChangeBanner action={scheduledChange} effectiveAt={plan.subscription.scheduled_change_at} />
+      )}
 
       <div className="flex flex-1 overflow-hidden min-h-0">
         {/* Mobile backdrop — closes sidebar when tapped outside */}

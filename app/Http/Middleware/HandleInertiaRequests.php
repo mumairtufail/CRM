@@ -75,13 +75,27 @@ class HandleInertiaRequests extends Middleware
                 'name' => $organization->name,
                 'slug' => $organization->slug,
             ] : null,
-            'plan' => $organization ? [
-                'name'    => $organization->plan?->name,
-                'status'  => $organization->plan_status,
-                'modules' => $organization->plan_status === 'active' && $organization->plan_id
-                    ? Plan::cachedModuleKeys($organization->plan_id)
-                    : [],
-            ] : null,
+            'plan' => $organization ? (function () use ($organization) {
+                // Scheduled-change info powers the persistent "your plan is
+                // pausing/canceling on X" banner (AppLayout) — a scheduled
+                // change doesn't revoke access early, but the customer should
+                // still see it coming everywhere in the app, not just on the
+                // Billing page.
+                $activeSubscription = $organization->activeSubscription();
+
+                return [
+                    'name'    => $organization->plan?->name,
+                    'status'  => $organization->plan_status,
+                    'modules' => $organization->plan_status === 'active' && $organization->plan_id
+                        ? Plan::cachedModuleKeys($organization->plan_id)
+                        : [],
+                    'subscription' => $activeSubscription ? [
+                        'status'                  => $activeSubscription->status,
+                        'scheduled_change_action' => $activeSubscription->scheduled_change_action,
+                        'scheduled_change_at'     => $activeSubscription->scheduled_change_at?->toIso8601String(),
+                    ] : null,
+                ];
+            })() : null,
             'impersonating' => $impersonatorId ? [
                 'name' => $webUser?->name,
             ] : null,

@@ -7,7 +7,12 @@ use App\Models\Subscription;
 use App\Models\Transaction;
 use App\Services\PaddleService;
 use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
+use Paddle\SDK\Entities\Subscription\SubscriptionEffectiveFrom;
+use Paddle\SDK\Entities\Subscription\SubscriptionResumeEffectiveFrom;
+use Paddle\SDK\Resources\Subscriptions\Operations\PauseSubscription;
+use Paddle\SDK\Resources\Subscriptions\Operations\ResumeSubscription;
 use Paddle\SDK\Resources\Transactions\Operations\GetTransactionInvoice;
 
 class BillingController extends Controller
@@ -60,5 +65,31 @@ class BillingController extends Controller
         );
 
         return redirect()->away($invoice->url);
+    }
+
+    /**
+     * Merchant-side pause on any org's subscription, effective at the end of
+     * their already-paid-for period — same policy as the tenant self-service
+     * pause, so support staff pausing on a customer's behalf never forfeits
+     * time that customer already paid for.
+     */
+    public function pause(Subscription $subscription): RedirectResponse
+    {
+        PaddleService::client()->subscriptions->pause(
+            $subscription->paddle_subscription_id,
+            new PauseSubscription(effectiveFrom: SubscriptionEffectiveFrom::NextBillingPeriod()),
+        );
+
+        return back()->with('success', "Subscription for {$subscription->organization?->name} will pause at the end of the current period.");
+    }
+
+    public function resume(Subscription $subscription): RedirectResponse
+    {
+        PaddleService::client()->subscriptions->resume(
+            $subscription->paddle_subscription_id,
+            new ResumeSubscription(effectiveFrom: SubscriptionResumeEffectiveFrom::Immediately()),
+        );
+
+        return back()->with('success', "Subscription for {$subscription->organization?->name} resumed.");
     }
 }

@@ -29,10 +29,7 @@ class TwilioMessage extends Model
             return null;
         }
 
-        $cleanNumber = preg_replace('/[^0-9]/', '', $numberToFind);
-
-        $leadPhone = LeadPhone::whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE ?", ["%{$cleanNumber}%"])
-            ->first();
+        $leadPhone = LeadPhone::matchNumber($numberToFind);
 
         return $leadPhone ? $leadPhone->lead : null;
     }

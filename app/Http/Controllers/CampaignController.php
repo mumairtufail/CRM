@@ -17,25 +17,28 @@ use Inertia\Inertia;
 
 class CampaignController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $campaigns = EmailCampaign::latest()->get()->map(fn ($c) => [
-            'id'               => $c->id,
-            'name'             => $c->name,
-            'subject'          => $c->subject,
-            'status'           => $c->status,
-            'from_name'        => $c->from_name,
-            'from_email'       => $c->from_email,
-            'recipient_mode'   => $c->recipient_mode ?? 'all',
-            'total_recipients' => $c->total_recipients,
-            'sent_count'       => $c->sent_count,
-            'opened_count'     => $c->opened_count,
-            'clicked_count'    => $c->clicked_count,
-            'followup_enabled' => (bool) $c->followup_enabled,
-            'followup_subject' => $c->followup_subject,
-            'sent_at'          => $c->sent_at?->diffForHumans(),
-            'created_at'       => $c->created_at->diffForHumans(),
-        ]);
+        $campaigns = EmailCampaign::latest()
+            ->paginate(25)
+            ->withQueryString()
+            ->through(fn ($c) => [
+                'id'               => $c->id,
+                'name'             => $c->name,
+                'subject'          => $c->subject,
+                'status'           => $c->status,
+                'from_name'        => $c->from_name,
+                'from_email'       => $c->from_email,
+                'recipient_mode'   => $c->recipient_mode ?? 'all',
+                'total_recipients' => $c->total_recipients,
+                'sent_count'       => $c->sent_count,
+                'opened_count'     => $c->opened_count,
+                'clicked_count'    => $c->clicked_count,
+                'followup_enabled' => (bool) $c->followup_enabled,
+                'followup_subject' => $c->followup_subject,
+                'sent_at'          => $c->sent_at?->diffForHumans(),
+                'created_at'       => $c->created_at->diffForHumans(),
+            ]);
 
         return Inertia::render('Campaigns/Index', ['campaigns' => $campaigns]);
     }

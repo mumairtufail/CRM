@@ -121,13 +121,11 @@ class TwilioWebhookController extends Controller
         }
 
         // Determine who to dial (client name)
-        $cleanFrom = preg_replace('/[^0-9]/', '', $from);
         $targetClient = 'agent';
         $resolvedUser = null;
 
         // Try to find if this phone belongs to a lead
-        $leadPhone = LeadPhone::whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE ?", ["%{$cleanFrom}%"])
-            ->first();
+        $leadPhone = LeadPhone::matchNumber($from);
 
         if ($leadPhone && $leadPhone->lead && $leadPhone->lead->assigned_to) {
             $lead = $leadPhone->lead;
@@ -335,11 +333,8 @@ class TwilioWebhookController extends Controller
             return response("<Response></Response>", 200)->header('Content-Type', 'text/xml');
         }
 
-        $cleanFrom = preg_replace('/[^0-9]/', '', $from);
-
         // Find or create the Lead
-        $leadPhone = LeadPhone::whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE ?", ["%{$cleanFrom}%"])
-            ->first();
+        $leadPhone = LeadPhone::matchNumber($from);
 
         if ($leadPhone) {
             $lead = $leadPhone->lead;

@@ -22,8 +22,8 @@ class SyncInboxes extends Command
 
         foreach ($credentials as $cred) {
             try {
-                FetchEmailsJob::dispatchSync($cred->organization_id, $cred->id);
-                $this->line("  ✓ org:{$cred->organization_id} cred:{$cred->id}");
+                FetchEmailsJob::dispatch($cred->organization_id, $cred->id);
+                $this->line("  → queued org:{$cred->organization_id} cred:{$cred->id}");
             } catch (\Throwable $e) {
                 $this->error("  ✗ org:{$cred->organization_id} cred:{$cred->id} — {$e->getMessage()}");
             }

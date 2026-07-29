@@ -918,7 +918,7 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
     <>
       <Head title="Inbox" />
       <AppLayout title="Inbox" noPadding>
-        <div className="flex flex-col flex-1 overflow-hidden lg:flex-row">
+        <div className="flex flex-col flex-1 min-h-0 overflow-hidden lg:flex-row">
 
           <FolderPanel
             folder={folder}
@@ -939,9 +939,10 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
             onCompose={() => setComposeOpen(true)}
           />
 
-          {/* Email list — full width on mobile, hidden once an email is open */}
+          {/* Email list — fills remaining height on mobile so it can scroll internally
+              instead of growing past the screen; fixed-width sidebar column on desktop. */}
           <div className={cn(
-            'w-full lg:w-[300px] shrink-0 flex-col border-r border-slate-100 bg-white',
+            'w-full flex-1 min-h-0 flex-col lg:w-[300px] lg:flex-none border-r border-slate-100 bg-white',
             selected ? 'hidden lg:flex' : 'flex'
           )}>
             <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between shrink-0">
@@ -984,7 +985,7 @@ export default function InboxIndex({ emails: initialEmails, folder, search: init
 
           {/* Reading pane — full width on mobile, shown only once an email is selected */}
           <div className={cn(
-            'flex-1 flex-col bg-white min-w-0',
+            'flex-1 min-h-0 flex-col bg-white min-w-0',
             selected ? 'flex' : 'hidden lg:flex'
           )}>
             {notReady ? (

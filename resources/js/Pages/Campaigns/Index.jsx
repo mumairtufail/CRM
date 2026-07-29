@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react'
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import DataTable from '@/Components/Common/DataTable'
 import AppLayout from '@/Components/Layout/AppLayout'
 import PageHeader from '@/Components/Common/PageHeader'
@@ -14,7 +14,7 @@ import {
 import {
   Mail, Plus, Users, Send, Eye, MousePointerClick, Trash2,
   MoreHorizontal, StopCircle, RotateCcw, RotateCw, Pencil, PauseCircle,
-  LayoutGrid, List,
+  LayoutGrid, List, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
 } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -131,7 +131,7 @@ function CampaignActions({ campaign, onDelete }) {
   )
 }
 
-export default function CampaignsIndex({ campaigns }) {
+export default function CampaignsIndex({ campaigns: campaignsPage }) {
   // Selection shared between both views — object keyed by campaign id (as string),
   // matching the shape DataTable's row selection expects.
   const [rowSelection, setRowSelection]     = useState({})
@@ -142,14 +142,23 @@ export default function CampaignsIndex({ campaigns }) {
 
   const switchView = v => { setView(v); localStorage.setItem('campaigns_view', v) }
 
+  // Server-paginated — 25 per page, newest first.
+  const { data: campaigns = [], ...pagination } = campaignsPage ?? {}
+
+  const handlePageChange = page => router.get('/campaigns', { page }, { preserveState: true, preserveScroll: true })
+
   const selectedIds = useMemo(() => Object.keys(rowSelection).map(Number), [rowSelection])
   const selCount    = selectedIds.length
 
-  // Sequence number per workspace: newest-first list, so #total is the latest send.
+  // Sequence number across the whole workspace, not just this page — #total is the latest send.
+  const pageStart = (pagination.from ?? 1) - 1
   const data = useMemo(
-    () => (campaigns ?? []).map((c, i) => ({ ...c, seq: campaigns.length - i })),
-    [campaigns]
+    () => campaigns.map((c, i) => ({ ...c, seq: (pagination.total ?? campaigns.length) - pageStart - i })),
+    [campaigns, pagination.total, pageStart]
   )
+
+  // Selection resets across page navigation — it isn't meaningful once the underlying rows change.
+  useEffect(() => { setRowSelection({}) }, [campaignsPage])
 
   const allIds      = campaigns?.map(c => c.id) ?? []
   const allSelected = allIds.length > 0 && allIds.every(id => rowSelection[String(id)])
@@ -314,7 +323,7 @@ export default function CampaignsIndex({ campaigns }) {
       <AppLayout title="Campaigns">
         <PageHeader
           title="Email Campaigns"
-          description={`${campaigns?.length ?? 0} campaigns`}
+          description={`${pagination.total ?? campaigns.length} campaigns`}
           action={
             <div className="flex items-center gap-2">
               {/* Card / list view toggle */}
@@ -442,7 +451,39 @@ export default function CampaignsIndex({ campaigns }) {
                 rowSelection={rowSelection}
                 onRowSelectionChange={setRowSelection}
                 getRowId={row => String(row.id)}
+                pagination={pagination}
+                onPageChange={handlePageChange}
               />
+            )}
+
+            {/* Card view has no built-in pagination footer like DataTable does */}
+            {view === 'card' && pagination.last_page > 1 && (
+              <div className="flex items-center justify-between px-1 pt-1">
+                <p className="text-xs text-muted-foreground">
+                  Showing {pagination.from}–{pagination.to} of {pagination.total} results
+                </p>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-8 w-8"
+                    onClick={() => handlePageChange(1)} disabled={pagination.current_page === 1}>
+                    <ChevronsLeft size={14} />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8"
+                    onClick={() => handlePageChange(pagination.current_page - 1)} disabled={pagination.current_page === 1}>
+                    <ChevronLeft size={14} />
+                  </Button>
+                  <span className="text-xs font-medium px-2 text-gray-600">
+                    {pagination.current_page} / {pagination.last_page}
+                  </span>
+                  <Button variant="outline" size="icon" className="h-8 w-8"
+                    onClick={() => handlePageChange(pagination.current_page + 1)} disabled={pagination.current_page === pagination.last_page}>
+                    <ChevronRight size={14} />
+                  </Button>
+                  <Button variant="outline" size="icon" className="h-8 w-8"
+                    onClick={() => handlePageChange(pagination.last_page)} disabled={pagination.current_page === pagination.last_page}>
+                    <ChevronsRight size={14} />
+                  </Button>
+                </div>
+              </div>
             )}
           </div>
         ) : (

@@ -40,12 +40,8 @@ class TwilioCall extends Model
             return null;
         }
 
-        // Clean the number for matching (removing + and spaces)
-        $cleanNumber = preg_replace('/[^0-9]/', '', $numberToFind);
-
         // Search in LeadPhone
-        $leadPhone = LeadPhone::whereRaw("REPLACE(REPLACE(REPLACE(REPLACE(phone, '+', ''), ' ', ''), '-', ''), '(', '') LIKE ?", ["%{$cleanNumber}%"])
-            ->first();
+        $leadPhone = LeadPhone::matchNumber($numberToFind);
 
         return $leadPhone ? $leadPhone->lead : null;
     }

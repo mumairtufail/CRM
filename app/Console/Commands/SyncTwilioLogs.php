@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\SyncTwilioLogsJob;
 use App\Models\TwilioSetting;
-use App\Services\TwilioService;
 use Illuminate\Console\Command;
 
 class SyncTwilioLogs extends Command
@@ -32,19 +32,11 @@ class SyncTwilioLogs extends Command
         $this->info("Found " . $settings->count() . " active Twilio configurations to sync.");
 
         foreach ($settings as $setting) {
-            $this->info("Syncing organization: {$setting->organization_id} (Number: {$setting->phone_number})");
-            
-            $service = new TwilioService($setting);
-            $res = $service->syncLogs();
-
-            if ($res['success']) {
-                $this->info("Successfully synced {$res['calls']} calls and {$res['messages']} messages.");
-            } else {
-                $this->error("Sync failed: {$res['error']}");
-            }
+            SyncTwilioLogsJob::dispatch($setting->id);
+            $this->info("Queued sync for organization: {$setting->organization_id} (Number: {$setting->phone_number})");
         }
 
-        $this->info('Twilio sync complete.');
+        $this->info('Twilio sync jobs queued.');
         return 0;
     }
 }

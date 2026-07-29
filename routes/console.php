@@ -3,10 +3,10 @@
 use Illuminate\Support\Facades\Schedule;
 
 // Fetch new emails for all IMAP-enabled accounts every 10 minutes
-Schedule::command('inboxes:sync')->everyTenMinutes();
+Schedule::command('inboxes:sync')->everyTenMinutes()->withoutOverlapping();
 
 // Sync Twilio call and message logs hourly
-Schedule::command('twilio:sync')->hourly();
+Schedule::command('twilio:sync')->hourly()->withoutOverlapping();
 
 // Dispatch follow-up emails for leads who haven't opened the original campaign email
 Schedule::command('campaigns:send-followups')->everyFifteenMinutes();

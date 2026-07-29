@@ -6,7 +6,7 @@ import {
   Plus, Clock, ChevronRight, FileText, Inbox, Sparkles,
   LogOut, Briefcase, FolderKanban, UsersRound, ChevronDown, BookOpen,
   MessageSquare, MessagesSquare, ClipboardList, ShieldCheck, BarChart3, LifeBuoy,
-  Phone,
+  Phone, Wallet,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -48,6 +48,7 @@ const navItems = [
   { label: 'Forms',      href: '/forms',     icon: ClipboardList, section: 'Work' },
   { label: 'Projects',   href: '/projects',  icon: FolderKanban, section: 'Work' },
   { label: 'Invoices',   href: '/invoices',  icon: FileText, section: 'Work' },
+  { label: 'Billing',    href: '/billing',   icon: Wallet, section: 'Work' },
 
   { label: 'Reports',    href: '/reports',   icon: BarChart3, permission: 'reports.view', section: 'Insights' },
   { label: 'Team',       href: '/settings/team', icon: ShieldCheck, permission: 'team.view', section: 'Insights' },
@@ -82,6 +83,7 @@ const COMPONENT_LABELS = {
   'Invoices/Index':   'Invoices',
   'Invoices/Create':  'New Invoice',
   'Invoices/Show':    'Invoice',
+  'Billing/Index':    'Billing',
   'Pipeline':         'Pipeline',
   'Import':           'Import',
   'Profile/Edit':     'Settings',

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -175,15 +176,33 @@ class PaddleWebhookController extends Controller
 
     /**
      * transaction.completed doesn't change access on its own (subscription.*
-     * events are the source of truth for status) — logged for now as the hook
-     * point for receipts/invoicing later.
+     * events are the source of truth for status) — this persists it as an
+     * invoice/receipt row for the tenant Billing page and the admin
+     * cross-tenant billing view. The actual PDF is fetched on demand from
+     * Paddle (BillingController::downloadInvoice) rather than stored here,
+     * since Paddle's invoice URLs are short-lived signed links.
      */
     private function handleTransactionCompleted(array $data): void
     {
-        Log::info('Paddle webhook: transaction.completed', [
-            'transaction_id'  => $data['id'] ?? null,
-            'subscription_id' => $data['subscription_id'] ?? null,
-            'customer_id'     => $data['customer_id'] ?? null,
-        ]);
+        $transactionId = $data['id'] ?? null;
+        $organizationId = $data['custom_data']['organization_id'] ?? null;
+
+        if (!$transactionId || !$organizationId || !Organization::find($organizationId)) {
+            Log::warning('Paddle webhook: transaction.completed missing id or resolvable organization_id, skipped.', ['data' => $data]);
+            return;
+        }
+
+        Transaction::updateOrCreate(
+            ['paddle_transaction_id' => $transactionId],
+            [
+                'organization_id'         => $organizationId,
+                'paddle_subscription_id'  => $data['subscription_id'] ?? null,
+                'status'                  => $data['status'] ?? 'unknown',
+                'currency_code'           => $data['currency_code'] ?? 'USD',
+                'total'                   => (int) ($data['details']['totals']['total'] ?? 0),
+                'plan_slug'               => $data['custom_data']['plan_slug'] ?? null,
+                'billed_at'               => $data['billed_at'] ?? null,
+            ]
+        );
     }
 }

@@ -51,9 +51,6 @@ class ProfileController extends Controller
             'mustVerifyEmail'    => $user instanceof MustVerifyEmail,
             'status'             => session('status'),
             'canManageWorkspace' => $user->isOwner() || $user->hasPermission('team.manage'),
-            'billing'            => [
-                'hasPaddleCustomer' => (bool) $org?->paddle_customer_id,
-            ],
             'leadGenSettings'    => [
                 'provider' => $orgSettings['lead_generation_provider'] ?? null,
                 'enabled'  => $orgSettings['lead_generation_enabled'] ?? false,

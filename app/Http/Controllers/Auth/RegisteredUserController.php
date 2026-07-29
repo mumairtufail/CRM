@@ -75,7 +75,7 @@ class RegisteredUserController extends Controller
      *
      * @throws ValidationException
      */
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         // Keep whatever was entered so a reload (or a fix-and-resubmit after a
         // server-side error) doesn't lose progress, regardless of what fails below.
@@ -154,6 +154,13 @@ class RegisteredUserController extends Controller
         // Store user ID in session to allow access to verify form
         session(['register_user_id' => $user->id]);
 
+        // The Subscribe-flow auth modal (Welcome.jsx) posts here with
+        // Accept: application/json — it switches its own view to the code-entry
+        // step in place rather than following a redirect to the full page.
+        if ($request->wantsJson()) {
+            return response()->json(['step' => 'verify']);
+        }
+
         return redirect()->route('register.verify');
     }
 
@@ -173,7 +180,7 @@ class RegisteredUserController extends Controller
     /**
      * Verify the user's submitted 6-digit code.
      */
-    public function verifyCode(Request $request): RedirectResponse
+    public function verifyCode(Request $request): RedirectResponse|JsonResponse
     {
         $userId = session('register_user_id');
         if (!$userId) {
@@ -201,8 +208,12 @@ class RegisteredUserController extends Controller
         session()->forget('register_user_id');
 
         app(TenantContext::class)->set($user->organization);
-        
+
         Auth::login($user);
+
+        if ($request->wantsJson()) {
+            return response()->json(['authenticated' => true]);
+        }
 
         return redirect(route('dashboard', absolute: false));
     }

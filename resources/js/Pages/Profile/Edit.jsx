@@ -88,7 +88,6 @@ const NAV = [
     items: [
       { id: 'profile',   label: 'Profile',        icon: User },
       { id: 'workspace', label: 'Workspace',       icon: Building2 },
-      { id: 'billing',   label: 'Billing',        icon: Wallet },
       { id: 'tags',      label: 'Tags',           icon: TagIcon },
     ],
   },
@@ -1820,54 +1819,6 @@ function WhatsappTab({ status }) {
 
 // ─── Maintenance tab ──────────────────────────────────────────────────────────
 
-function BillingTab() {
-  const { props } = usePage()
-  const plan = props.plan
-  const hasPaddleCustomer = props.billing?.hasPaddleCustomer
-
-  return (
-    <div className="space-y-3 max-w-xl">
-      <Card title="Current plan">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[13px] font-semibold text-slate-800">{plan?.name || 'Free'}</p>
-            <p className="text-[12px] text-slate-500 mt-0.5">
-              {plan?.status === 'active' ? 'Active' : 'Inactive'}
-            </p>
-          </div>
-          <Badge variant={plan?.status === 'active' ? 'default' : 'secondary'}>
-            {plan?.status === 'active' ? 'Active' : 'Inactive'}
-          </Badge>
-        </div>
-      </Card>
-
-      <Card title="Manage billing">
-        {hasPaddleCustomer ? (
-          <>
-            <p className="text-[12px] text-slate-500 leading-relaxed">
-              Update your payment method, view invoices, or cancel your subscription in Paddle's secure customer portal.
-            </p>
-            <a href="/settings/billing/portal">
-              <Button type="button" size="sm" className="h-8 text-xs gap-1.5 mt-1">
-                <Wallet size={12} />
-                Manage billing
-              </Button>
-            </a>
-          </>
-        ) : (
-          <p className="text-[12px] text-slate-500 leading-relaxed">
-            You don't have an active subscription yet.{' '}
-            <Link href="/#pricing" className="text-brand-600 font-medium hover:underline">
-              View plans
-            </Link>{' '}
-            to subscribe.
-          </p>
-        )}
-      </Card>
-    </div>
-  )
-}
-
 function MaintenanceTab() {
   const [clearing, setClearing] = useState(false)
   const [cleared, setCleared]   = useState(false)
@@ -2339,7 +2290,6 @@ export default function ProfileEdit({
           <div className="flex-1 min-w-0 p-4 sm:p-6 bg-slate-50 overflow-y-auto">
             {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
             {tab === 'workspace' && <WorkspaceTab />}
-            {tab === 'billing'   && <BillingTab />}
             {tab === 'tags'      && <TagsTab tags={tags} />}
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} orgDefault={orgDefaultSmtp} />}
             {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}

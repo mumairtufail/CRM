@@ -17,6 +17,7 @@ import DotGrid from '@/Components/Marketing/DotGrid';
 import { cn } from '@/lib/utils';
 import { TIERS } from '@/lib/pricingTiers';
 import { getPaddle } from '@/lib/paddle';
+import SubscribeAuthModal from '@/Components/Marketing/SubscribeAuthModal';
 
 // ─── Variants ─────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,8 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
     const [pricePreviews, setPricePreviews] = useState({});
     const [previewError, setPreviewError] = useState(false);
     const [checkoutTier, setCheckoutTier] = useState(null);
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [pendingTier, setPendingTier] = useState(null);
 
     const contact = useForm({
         name: '', email: '', company: '', phone: '', subject: '', message: '',
@@ -148,13 +151,31 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
 
     const organizationId = props.organization?.id;
 
-    // Checkout only ever runs for a signed-in user's own organization — an
-    // anonymous click sends them to create a workspace first, since fulfillment
-    // (the Paddle webhook) needs a real organization_id to attach the
-    // subscription to and grant access on.
+    // Once the auth modal reports success, it reloads the auth/organization
+    // Inertia props (see onAuthenticated below) — this effect picks up the
+    // fresh userEmail/organizationId as soon as they land and proceeds to
+    // checkout. Deliberately not calling openCheckout directly from the
+    // modal's own success callback: that callback closes over the render it
+    // was created in, which still has the pre-login (empty) auth props, so
+    // it would just bounce straight back to the "not signed in" branch below.
+    useEffect(() => {
+        if (pendingTier && userEmail && organizationId) {
+            setAuthModalOpen(false);
+            const tier = pendingTier;
+            setPendingTier(null);
+            openCheckout(tier);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pendingTier, userEmail, organizationId]);
+
+    // Checkout only ever runs for a signed-in user's own organization —
+    // fulfillment (the Paddle webhook) needs a real organization_id to attach
+    // the subscription to and grant access on. An anonymous click opens the
+    // sign-in/register modal instead of leaving the page.
     const openCheckout = (tier) => {
         if (!userEmail || !organizationId) {
-            router.visit('/register');
+            setPendingTier(tier);
+            setAuthModalOpen(true);
             return;
         }
 
@@ -168,7 +189,11 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                     settings: {
                         displayMode: 'overlay',
                         variant: 'one-page',
-                        successUrl: `${window.location.origin}/welcome`,
+                        // Checkout only ever runs for a signed-in user (see the
+                        // gate above), so they already have a workspace —
+                        // straight to the dashboard, not a "create your
+                        // workspace" page.
+                        successUrl: `${window.location.origin}/dashboard`,
                     },
                 });
             })
@@ -682,7 +707,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                         )}
                                         style={featured ? { background: 'linear-gradient(135deg,rgb(var(--brand-700)),rgb(var(--brand2-700)))' } : undefined}
                                     >
-                                        {!userEmail ? 'Create free account' : checkoutTier === tier.slug ? 'Opening…' : 'Subscribe'}
+                                        {checkoutTier === tier.slug ? 'Opening…' : 'Subscribe'}
                                         <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                                     </button>
                                 </motion.div>
@@ -1019,6 +1044,12 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                     welcomeMessage={chatbot.welcome_message}
                 />
             )}
+
+            <SubscribeAuthModal
+                open={authModalOpen}
+                onClose={() => { setAuthModalOpen(false); setPendingTier(null); }}
+                onAuthenticated={() => router.reload({ only: ['auth', 'organization'] })}
+            />
         </div>
     );
 }

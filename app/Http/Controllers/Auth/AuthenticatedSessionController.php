@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Services\ActivityLogger;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,11 +29,19 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request): RedirectResponse|JsonResponse
     {
         $request->authenticate();
 
         $request->session()->regenerate();
+
+        // The Subscribe-flow auth modal (Welcome.jsx) posts here with
+        // Accept: application/json to log in without leaving the landing page,
+        // then reloads the auth/organization Inertia props itself — it doesn't
+        // want or follow a redirect.
+        if ($request->wantsJson()) {
+            return response()->json(['authenticated' => true]);
+        }
 
         // Only honor a stashed "intended" URL if it belongs to the tenant app —
         // a guest hitting an /admin/* page earlier in this browser session could

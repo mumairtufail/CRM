@@ -100,7 +100,6 @@ Route::get('/products', function () {
     ]);
 })->name('products');
 Route::get('/changelog',              fn () => inertia('Changelog'))->name('changelog');
-Route::get('/welcome',                fn () => inertia('CheckoutWelcome'))->name('checkout.welcome');
 Route::get('/privacy-policy',         fn () => inertia('Legal/PrivacyPolicy'))->name('legal.privacy');
 Route::get('/terms-and-conditions',   fn () => inertia('Legal/TermsAndConditions'))->name('legal.terms');
 Route::get('/refund-policy',          fn () => inertia('Legal/RefundPolicy'))->name('legal.refund');
@@ -154,6 +153,10 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::patch('/plans/{plan}',                 [AdminPlanController::class, 'update'])->name('plans.update');
     Route::patch('/plans/{plan}/toggle',          [AdminPlanController::class, 'toggleActive'])->name('plans.toggle');
     Route::delete('/plans/{plan}',                [AdminPlanController::class, 'destroy'])->name('plans.destroy');
+
+    // Billing — cross-tenant subscriptions & invoices (Paddle)
+    Route::get('/billing',                          [\App\Http\Controllers\Admin\BillingController::class, 'index'])->name('billing.index');
+    Route::get('/billing/invoices/{transaction}/download', [\App\Http\Controllers\Admin\BillingController::class, 'downloadInvoice'])->name('billing.invoices.download');
 
     // Blogs Management
     Route::get('/blogs',                        [AdminBlogController::class, 'index'])->name('blogs.index');
@@ -374,6 +377,10 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/invoices/{invoice}',          [InvoiceController::class, 'update'])->name('invoices.update');
     Route::post('/invoices/{invoice}/send',    [InvoiceController::class, 'send'])->name('invoices.send');
     Route::delete('/invoices/{invoice}',       [InvoiceController::class, 'destroy'])->name('invoices.destroy');
+
+    // Billing & Invoices (Paddle) — no module gate, every plan needs to see its own billing
+    Route::get('/billing',                             [\App\Http\Controllers\BillingController::class, 'index'])->name('billing.index');
+    Route::get('/billing/invoices/{transaction}/download', [\App\Http\Controllers\BillingController::class, 'downloadInvoice'])->name('billing.invoices.download');
 
     // Tags — managed from the Settings > Tags tab (see ProfileController::edit)
     Route::post('/tags',           [TagController::class, 'store'])->name('tags.store');

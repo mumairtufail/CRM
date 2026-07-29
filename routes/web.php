@@ -163,6 +163,12 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::post('/billing/{subscription}/pause',            [\App\Http\Controllers\Admin\BillingController::class, 'pause'])->name('billing.pause');
     Route::post('/billing/{subscription}/resume',           [\App\Http\Controllers\Admin\BillingController::class, 'resume'])->name('billing.resume');
 
+    // Discount codes (Paddle) — no local table, Paddle is the source of truth
+    Route::get('/discounts',           [\App\Http\Controllers\Admin\DiscountController::class, 'index'])->name('discounts.index');
+    Route::post('/discounts',          [\App\Http\Controllers\Admin\DiscountController::class, 'store'])->name('discounts.store');
+    Route::patch('/discounts/{discount}',  [\App\Http\Controllers\Admin\DiscountController::class, 'update'])->name('discounts.update');
+    Route::delete('/discounts/{discount}', [\App\Http\Controllers\Admin\DiscountController::class, 'destroy'])->name('discounts.destroy');
+
     // Blogs Management
     Route::get('/blogs',                        [AdminBlogController::class, 'index'])->name('blogs.index');
     Route::get('/blogs/create',                 [AdminBlogController::class, 'create'])->name('blogs.create');

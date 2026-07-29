@@ -2,7 +2,7 @@ import { Link, usePage } from '@inertiajs/react'
 import {
   LayoutDashboard, Users, Building2,
   Settings, PanelLeftClose, PanelLeftOpen, Mail, MessageSquare,
-  MessageCircle, LifeBuoy, CreditCard, BookOpen, Bot, ScrollText, AlertTriangle, Receipt,
+  MessageCircle, LifeBuoy, CreditCard, BookOpen, Bot, ScrollText, AlertTriangle, Receipt, Tag,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { LogoMark } from '@/Components/Common/Logo'
@@ -13,6 +13,7 @@ const navItems = [
   { label: 'Organizations', href: '/admin/organizations',     icon: Building2 },
   { label: 'Plans',         href: '/admin/plans',             icon: CreditCard },
   { label: 'Billing',       href: '/admin/billing',           icon: Receipt },
+  { label: 'Discounts',     href: '/admin/discounts',         icon: Tag },
   { label: 'Blogs',         href: '/admin/blogs',             icon: BookOpen },
   { label: 'Contact Msgs',  href: '/admin/contact-messages',  icon: MessageSquare },
   { label: 'Support Cases', href: '/admin/support',           icon: LifeBuoy },

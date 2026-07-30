@@ -296,6 +296,14 @@ function buildSections() {
             rows={[['⧖', 'Queued'], ['○', 'Pending'], ['✓', 'Sent'], ['◎', 'Opened'], ['◈', 'Clicked'], ['✗', 'Failed'], ['⚠', 'Bounced']]}
           />
           <Callout type="tip"><strong>Retry is safe.</strong> Re-sending a campaign only re-attempts the failures — people who already received it are skipped, so no one is emailed twice. Emails go out in batches (configurable in <em>Settings → Sending Limits</em>).</Callout>
+          <SubHead>Automated follow-up sequences</SubHead>
+          <Lead>Each campaign has its own <strong>Automated Follow-up Sequence</strong> toggle, right on the create/edit page — this isn't a workspace-wide setting, every campaign turns it on separately.</Lead>
+          <Steps items={[
+            <>Toggle it on, then add up to <strong>10 follow-up steps</strong>, each with its own delay (1 day and up), subject, and body.</>,
+            <>Use <strong>Generate with AI</strong> to draft the whole sequence for you, then review and adjust before sending.</>,
+            <>A step only sends to a lead who <strong>hasn't opened or clicked</strong> anything earlier in that same campaign — as soon as they engage, the sequence stops for them.</>,
+          ]} />
+          <Callout type="note">Each step's delay must be longer than the one before it, so the sequence always fans out over time rather than firing all at once.</Callout>
         </>
       ),
     },
@@ -485,9 +493,9 @@ function buildSections() {
             <>Use <strong>Test SMTP</strong> / <strong>Test IMAP</strong>, then set one account <strong>active</strong> (only one at a time).</>,
           ]} />
           <Callout type="tip">Gmail: enable 2-Factor Authentication, then create an <strong>App Password</strong> and use it as the password.</Callout>
-          <SubHead>Sending Limits &amp; automated follow-ups</SubHead>
+          <SubHead>Sending Limits</SubHead>
           <Lead>Control bulk send speed: <strong>batch size</strong> (emails per batch) and <strong>delay</strong> (seconds between batches). A provider-limits reference table is shown to help you choose.</Lead>
-          <Lead>The <strong>Automated follow-ups</strong> toggle on this same page turns the feature on for your workspace. Once it's on, any campaign can add a follow-up sequence that automatically re-sends to leads who haven't opened the original email — you write the sequence once per campaign, then it runs on its own.</Lead>
+          <Callout type="note">Automated follow-up sequences are configured per campaign, not here — see <em>Email Campaigns</em> below.</Callout>
           <SubHead>Templates</SubHead>
           <Lead>Choose one of <strong>three built-in designs</strong> to wrap your campaigns; <strong>Preview</strong> with the eye icon, or <strong>Deactivate</strong> for plain HTML.</Lead>
           <Callout type="note">There's no custom-template builder — to change branding, update your <strong>Workspace</strong> details and they flow into the signature automatically.</Callout>

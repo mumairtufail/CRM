@@ -179,10 +179,12 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
     // sign-in/register modal instead of leaving the page.
     const openCheckout = (tier) => {
         // Free tier isn't sold through Paddle — a fresh registration already
-        // defaults to it, so the CTA just sends anonymous visitors to sign up,
-        // and a signed-in visitor is already on some plan, nothing to do.
+        // defaults to it, so an anonymous visitor goes to sign up. A
+        // signed-in visitor already has a workspace (on Free or otherwise),
+        // so there's nothing to check out — send them to their dashboard
+        // rather than doing nothing on click.
         if (!tier.priceId[billingCycle]) {
-            if (!userEmail) router.visit('/register');
+            router.visit(userEmail ? '/dashboard' : '/register');
             return;
         }
 

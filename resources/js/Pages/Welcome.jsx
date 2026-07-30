@@ -620,7 +620,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
 
             {/* ── Pricing ──────────────────────────────────────────────────── */}
             <section id="pricing" className="py-24" style={{ background: 'linear-gradient(155deg,rgb(var(--brand-ink2)) 0%,rgb(var(--brand-ink)) 100%)' }}>
-                <div className="max-w-5xl mx-auto px-4 sm:px-6">
+                <div className="max-w-6xl mx-auto px-4 sm:px-6">
                     <motion.div variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center">
                         <motion.div variants={fadeUp} className="inline-flex items-center gap-3 mb-5">
                             <div className="h-px w-10 bg-brand-500" />
@@ -667,7 +667,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                 <motion.div
                                     key={tier.slug}
                                     variants={fadeUp}
-                                    className="relative rounded-2xl p-8 flex flex-col border"
+                                    className="relative rounded-2xl p-6 flex flex-col border"
                                     style={{
                                         background: featured ? 'rgb(var(--brand-600) / 0.08)' : 'rgba(255,255,255,0.025)',
                                         borderColor: featured ? 'rgb(var(--brand-600) / 0.5)' : 'rgba(255,255,255,0.08)',
@@ -680,15 +680,15 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                         </div>
                                     )}
 
-                                    <h3 className="text-white font-bold text-xl mb-1.5">{tier.name}</h3>
-                                    <p className="text-white/40 text-sm mb-6 min-h-[40px]">{tier.description}</p>
+                                    <h3 className="text-white font-bold text-lg mb-1.5">{tier.name}</h3>
+                                    <p className="text-white/40 text-[13px] mb-5 min-h-[36px] leading-snug">{tier.description}</p>
 
-                                    <div className="mb-6 flex items-baseline gap-2 min-h-[44px]">
+                                    <div className="mb-5 flex items-baseline gap-2 min-h-[40px]">
                                         {isFree ? (
-                                            <span className="text-4xl font-black text-white">Free</span>
+                                            <span className="text-3xl font-black text-white">Free</span>
                                         ) : formattedTotal ? (
                                             <>
-                                                <span className="text-4xl font-black text-white">{formattedTotal}</span>
+                                                <span className="text-3xl font-black text-white">{formattedTotal}</span>
                                                 <span className="text-white/35 text-sm font-medium">/{billingCycle === 'month' ? 'mo' : 'yr'}</span>
                                             </>
                                         ) : (
@@ -696,10 +696,10 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                         )}
                                     </div>
 
-                                    <div className="flex-1 space-y-3 mb-8">
+                                    <div className="flex-1 space-y-2.5 mb-6">
                                         {tier.features.map((feature) => (
-                                            <div key={feature} className="flex items-start gap-2.5 text-white/70 text-sm">
-                                                <Check className="w-4 h-4 text-brand-400 shrink-0 mt-0.5" />
+                                            <div key={feature} className="flex items-start gap-2 text-white/70 text-[13px] leading-snug">
+                                                <Check className="w-3.5 h-3.5 text-brand-400 shrink-0 mt-0.5" />
                                                 {feature}
                                             </div>
                                         ))}
@@ -710,7 +710,7 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                                         onClick={() => openCheckout(tier)}
                                         disabled={checkoutTier === tier.slug}
                                         className={cn(
-                                            'group inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-60 disabled:hover:translate-y-0',
+                                            'group inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all hover:-translate-y-px disabled:opacity-60 disabled:hover:translate-y-0',
                                             featured
                                                 ? 'text-white hover:opacity-90 hover:shadow-2xl hover:shadow-brand-500/25'
                                                 : 'text-white/70 border border-white/15 hover:bg-white/5 hover:text-white'

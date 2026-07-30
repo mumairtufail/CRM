@@ -104,41 +104,47 @@ class Plan extends Model
     {
         // Always-included core capabilities, regardless of tier — these are
         // never module-gated, so every plan (including Free) gets them.
+        // Merged into fewer, denser lines so the pricing cards don't turn
+        // into a scroll-length checklist.
         $coreFeatures = [
-            'Leads, pipeline & AI-powered lead search',
-            'Kanban & Timeline pipeline views',
-            'Projects with tasks & milestones',
-            'Client invoicing',
+            'AI-powered lead search & pipeline (Kanban + Timeline)',
+            'Projects, invoicing & reporting',
             'CSV & Google Sheets import/export',
-            'Reports & analytics',
-            'Roles & permissions',
-            'Dedicated support',
+            'Roles, permissions & dedicated support',
         ];
 
         // WhatsApp is built but not yet publicly launched (see project
         // convention: marked "coming soon" everywhere else on the site) — the
         // module stays assigned to Premium in the DB for when it ships, but
-        // isn't advertised as available today.
-        $unadvertisedModuleKeys = ['whatsapp_campaigns', 'whatsapp_automation'];
+        // isn't advertised as available today. Email Campaigns gets its own
+        // richer bullets below instead of just its bare module name.
+        $unadvertisedModuleKeys = ['whatsapp_campaigns', 'whatsapp_automation', 'email_campaigns'];
 
         return static::where('is_active', true)
             ->with('modules:id,name,key')
             ->orderBy('sort_order')
             ->get()
             ->map(function (Plan $plan) use ($coreFeatures, $unadvertisedModuleKeys) {
-                // Email Campaigns unlocks more than the module's bare name
-                // implies — call out the two things that actually sell it.
+                // Email Campaigns unlocks more than its bare module name
+                // implies — one merged bullet that says what actually sells it.
                 $emailCampaignExtras = $plan->modules->contains('key', 'email_campaigns')
-                    ? ['AI-generated campaign & follow-up content', 'Automated, configurable follow-up sequences']
+                    ? ['Email campaigns with AI-generated, auto-following-up content']
                     : [];
+
+                $capacity = $plan->lead_limit || $plan->user_limit
+                    ? sprintf(
+                        '%s leads · %s team members',
+                        $plan->lead_limit ? "Up to {$plan->lead_limit}" : 'Unlimited',
+                        $plan->user_limit ? "Up to {$plan->user_limit}" : 'Unlimited',
+                    )
+                    : 'No limits on leads or team members';
 
                 return [
                     'name'        => $plan->name,
                     'slug'        => $plan->slug,
                     'description' => $plan->tagline,
                     'features'    => [
-                        $plan->lead_limit ? "Up to {$plan->lead_limit} leads" : 'Unlimited leads',
-                        $plan->user_limit ? "Up to {$plan->user_limit} team members" : 'Unlimited team members',
+                        $capacity,
                         ...$coreFeatures,
                         ...$plan->modules->whereNotIn('key', $unadvertisedModuleKeys)->pluck('name')->all(),
                         ...$emailCampaignExtras,

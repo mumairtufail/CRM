@@ -34,8 +34,9 @@ export default function TermsAndConditions() {
                         <section>
                             <h2 className="text-xl font-bold text-slate-900 mb-3">1. The service</h2>
                             <p>
-                                Lumenia CRM is sold as a subscription (SaaS). Your workspace and the features available to
-                                it depend on the plan you choose — Basic, Pro, or Premium — as described on our{' '}
+                                Lumenia CRM is sold as a subscription (SaaS), with a free tier and paid plans above it.
+                                Your workspace and the features available to it depend on the plan you choose, as
+                                described on our{' '}
                                 <a href="/#pricing" className="text-brand-600 hover:underline">pricing page</a> and our{' '}
                                 <a href="/products" className="text-brand-600 hover:underline">Products & Services page</a>.
                                 We may add, change, or retire individual features as the product evolves; we won't remove

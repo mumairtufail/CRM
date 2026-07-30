@@ -32,7 +32,7 @@ export default function RefundPolicy() {
                         <section>
                             <h2 className="text-xl font-bold text-slate-900 mb-3">1. First-time subscribers — 7-day guarantee</h2>
                             <p>
-                                If you subscribe to a paid plan (Basic, Pro, or Premium) for the first time and decide it's
+                                If you subscribe to a paid plan (Starter, Pro, or Premium) for the first time and decide it's
                                 not right for you, email <a href="mailto:hello@lumenialab.com" className="text-brand-600 hover:underline">hello@lumenialab.com</a>{' '}
                                 within 7 days of your first payment and we'll refund that charge in full to your original
                                 payment method. This guarantee applies once per organization.

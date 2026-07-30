@@ -43,8 +43,8 @@ export default function ShippingPolicy() {
                         <section>
                             <h2 className="text-xl font-bold text-slate-900 mb-3">2. Paid plan delivery</h2>
                             <p>
-                                When you subscribe to Basic, Pro, or Premium, the plan's modules (email campaigns,
-                                WhatsApp automation, advanced reporting, etc.) are unlocked on your workspace as soon as
+                                When you subscribe to Starter, Pro, or Premium, the plan's modules (Dialer, email
+                                campaigns, WhatsApp automation once launched, etc.) are unlocked on your workspace as soon as
                                 the payment gateway confirms your payment — typically within a few seconds, and always
                                 within the same business day. You'll receive an email receipt for every successful charge.
                             </p>
@@ -70,11 +70,11 @@ export default function ShippingPolicy() {
 
                         <section>
                             <h2 className="text-xl font-bold text-slate-900 mb-3">5. Support response times</h2>
-                            <ul className="list-disc pl-5 space-y-2">
-                                <li>Contact-form and email inquiries: within 1 business day.</li>
-                                <li>In-app support tickets on Basic and Pro plans: within 1–2 business days.</li>
-                                <li>Priority support on the Premium plan: within 4 business hours, Monday–Saturday.</li>
-                            </ul>
+                            <p>
+                                Support is included for every workspace, free and paid alike — there's no plan
+                                requirement to open a case. We reply to contact-form messages, email, and in-app
+                                support tickets within 1 business day.
+                            </p>
                         </section>
 
                         <section>

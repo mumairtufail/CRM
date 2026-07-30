@@ -94,9 +94,11 @@ const NAV = [
   {
     group: 'Email',
     items: [
+      // SMTP Accounts stays ungated — it also powers Inbox (IMAP), which
+      // isn't module-gated and is available on every plan, Free included.
       { id: 'smtp',      label: 'SMTP Accounts',  icon: Server },
-      { id: 'mail',      label: 'Sending Limits', icon: Mail },
-      { id: 'templates', label: 'Templates',      icon: LayoutTemplate },
+      { id: 'mail',      label: 'Sending Limits', icon: Mail, module: 'email_campaigns' },
+      { id: 'templates', label: 'Templates',      icon: LayoutTemplate, module: 'email_campaigns' },
     ],
   },
   {
@@ -104,8 +106,8 @@ const NAV = [
     items: [
       { id: 'ai',        label: 'AI Provider',     icon: Zap },
       { id: 'leadgen',   label: 'Lead Generation', icon: Sparkles },
-      { id: 'whatsapp',  label: 'WhatsApp',        icon: MessageSquare },
-      { id: 'twilio',    label: 'Twilio Settings',  icon: Phone },
+      { id: 'whatsapp',  label: 'WhatsApp',        icon: MessageSquare, module: 'whatsapp_automation' },
+      { id: 'twilio',    label: 'Twilio Settings',  icon: Phone, module: 'dialer' },
     ],
   },
   {
@@ -116,8 +118,10 @@ const NAV = [
   },
 ]
 
-function SettingsNav({ active, onChange, leadGenEnabled }) {
-  const allItems = NAV.flatMap(s => s.items)
+function SettingsNav({ active, onChange, leadGenEnabled, moduleKeys }) {
+  const visible = (item) => !item.module || moduleKeys.includes(item.module)
+  const navSections = NAV.map(s => ({ ...s, items: s.items.filter(visible) })).filter(s => s.items.length > 0)
+  const allItems = navSections.flatMap(s => s.items)
 
   return (
     <>
@@ -147,7 +151,7 @@ function SettingsNav({ active, onChange, leadGenEnabled }) {
 
       {/* Desktop: vertical sidebar nav */}
       <nav className="hidden md:block">
-        {NAV.map((section, si) => (
+        {navSections.map((section, si) => (
           <div key={si} className={si > 0 ? 'mt-5' : ''}>
             {section.group && (
               <p className="px-3 mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
@@ -2249,14 +2253,22 @@ function TwilioSettingTab({ twilioSetting }) {
 
 // ─── Page root ────────────────────────────────────────────────────────────────
 
+// Which module (if any) each settings tab requires — mirrors the module
+// each tab's actual routes are gated behind server-side.
+const TAB_MODULE = { mail: 'email_campaigns', templates: 'email_campaigns', whatsapp: 'whatsapp_automation', twilio: 'dialer' }
+
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, orgDefaultSmtp, mailSettings,
   emailTemplates, activeTemplateId, smtpSuccess, leadGenSettings,
   whatsappStatus, aiSetting, twilioSetting, tags = [],
 }) {
+  const moduleKeys = usePage().props.plan?.modules ?? []
+  const tabAllowed = (id) => !TAB_MODULE[id] || moduleKeys.includes(TAB_MODULE[id])
+
   const [tab, setTab] = useState(() => {
     const p = new URLSearchParams(window.location.search)
-    return p.get('tab') || 'profile'
+    const requested = p.get('tab') || 'profile'
+    return tabAllowed(requested) ? requested : 'profile'
   })
 
   React.useEffect(() => {
@@ -2283,6 +2295,7 @@ export default function ProfileEdit({
               active={tab}
               onChange={setTab}
               leadGenEnabled={leadGenSettings?.enabled && leadGenSettings?.hasKey}
+              moduleKeys={moduleKeys}
             />
           </div>
 
@@ -2292,12 +2305,12 @@ export default function ProfileEdit({
             {tab === 'workspace' && <WorkspaceTab />}
             {tab === 'tags'      && <TagsTab tags={tags} />}
             {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} orgDefault={orgDefaultSmtp} />}
-            {tab === 'mail'      && <MailTab mailSettings={mailSettings} />}
-            {tab === 'templates' && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
+            {tab === 'mail'      && tabAllowed('mail')      && <MailTab mailSettings={mailSettings} />}
+            {tab === 'templates' && tabAllowed('templates') && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
             {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}
             {tab === 'leadgen'     && <LeadGenTab leadGenSettings={leadGenSettings} />}
-            {tab === 'whatsapp'    && <WhatsappTab status={whatsappStatus} />}
-            {tab === 'twilio'      && <TwilioSettingTab twilioSetting={twilioSetting} />}
+            {tab === 'whatsapp'    && tabAllowed('whatsapp') && <WhatsappTab status={whatsappStatus} />}
+            {tab === 'twilio'      && tabAllowed('twilio')   && <TwilioSettingTab twilioSetting={twilioSetting} />}
             {tab === 'maintenance' && <MaintenanceTab />}
           </div>
         </div>

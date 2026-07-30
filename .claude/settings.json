@@ -25,7 +25,8 @@
       "Bash(node -e \"require\\('@babel/core'\\)\")",
       "Bash(php -l app/Models/SystemSetting.php)",
       "Bash(php -l app/Http/Controllers/BlogController.php)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(git fetch *)"
     ]
   }
 }

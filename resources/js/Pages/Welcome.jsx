@@ -179,12 +179,12 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
     // sign-in/register modal instead of leaving the page.
     const openCheckout = (tier) => {
         // Free tier isn't sold through Paddle — a fresh registration already
-        // defaults to it, so an anonymous visitor goes to sign up. A
-        // signed-in visitor already has a workspace (on Free or otherwise),
-        // so there's nothing to check out — send them to their dashboard
-        // rather than doing nothing on click.
+        // defaults to it, so this always goes to sign up. If the visitor
+        // happens to already be logged in, Laravel's own `guest` middleware
+        // on the /register route bounces them straight to /dashboard, so
+        // this is never a dead click either way.
         if (!tier.priceId[billingCycle]) {
-            router.visit(userEmail ? '/dashboard' : '/register');
+            router.visit('/register');
             return;
         }
 

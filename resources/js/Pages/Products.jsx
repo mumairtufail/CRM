@@ -1,9 +1,10 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import {
     Users, Mail, Target, FileText, Cpu, Briefcase, MessageSquare, Wrench, Check,
 } from 'lucide-react';
 import SiteHeader from '@/Components/Common/SiteHeader';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import SeoHead from '@/Components/Common/SeoHead';
 import { cn } from '@/lib/utils';
 
 const PRODUCTS = [
@@ -60,10 +61,29 @@ const PRODUCTS = [
 export default function Products({ plans = [] }) {
     return (
         <>
-            <Head>
-                <title>Products & Services · Lumenia CRM</title>
-                <meta name="description" content="The products and services Lumenia Lab offers as part of Lumenia CRM: lead management, pipelines, invoicing, campaigns, WhatsApp automation, and free business tools." />
-            </Head>
+            <SeoHead
+                title="Products & Services · Lumenia CRM"
+                description="The products and services Lumenia Lab offers as part of Lumenia CRM: lead management, pipelines, invoicing, campaigns, WhatsApp automation, and free business tools."
+                path="/products"
+                jsonLd={plans.length > 0 ? {
+                    '@context': 'https://schema.org',
+                    '@type': 'ItemList',
+                    itemListElement: plans.map((plan, i) => ({
+                        '@type': 'ListItem',
+                        position: i + 1,
+                        item: {
+                            '@type': 'Product',
+                            name: plan.name,
+                            description: plan.tagline || undefined,
+                            offers: {
+                                '@type': 'Offer',
+                                priceCurrency: 'USD',
+                                price: plan.price_monthly,
+                            },
+                        },
+                    })),
+                } : undefined}
+            />
 
             <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />

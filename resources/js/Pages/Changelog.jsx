@@ -1,6 +1,6 @@
-import { Head } from '@inertiajs/react';
 import SiteHeader from '@/Components/Common/SiteHeader';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import SeoHead from '@/Components/Common/SeoHead';
 
 const RELEASES = [
     {
@@ -20,10 +20,11 @@ const RELEASES = [
 export default function Changelog() {
     return (
         <>
-            <Head>
-                <title>Changelog · Lumenia CRM</title>
-                <meta name="description" content="Recent product updates and improvements to Lumenia CRM." />
-            </Head>
+            <SeoHead
+                title="Changelog · Lumenia CRM"
+                description="Recent product updates and improvements to Lumenia CRM: new features, workflow changes, and what shipped each month."
+                path="/changelog"
+            />
 
             <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />

@@ -11,9 +11,13 @@
         <link rel="icon" href="/favicon.svg?v={{ file_exists(public_path('favicon.svg')) ? filemtime(public_path('favicon.svg')) : 1 }}" type="image/svg+xml">
         <link rel="alternate icon" href="/favicon.ico" sizes="any">
 
-        <!-- Fonts preconnect -->
+        <!-- Fonts: preconnect + a real <link> the preload scanner can find
+             immediately, instead of a CSS @import buried inside app.css that
+             the browser only discovers after fetching and parsing the bundle. -->
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap">
 
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-PQCRJ0SZN6"></script>

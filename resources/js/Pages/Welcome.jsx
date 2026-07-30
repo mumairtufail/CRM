@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useForm, Head, usePage, router } from '@inertiajs/react';
+import { Link, useForm, usePage, router } from '@inertiajs/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Mail, FileText, Upload, Users, PenTool, Link2,
@@ -10,6 +10,7 @@ import {
 import { LogoMark } from '@/Components/Common/Logo';
 import ChatWidget from '@/Components/Common/ChatWidget';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import SeoHead from '@/Components/Common/SeoHead';
 import FeatureOrbit from '@/Components/Marketing/FeatureOrbit';
 import ActivityShowcase from '@/Components/Marketing/ActivityShowcase';
 import ModuleShowcase, { MODULES } from '@/Components/Marketing/ModuleShowcase';
@@ -237,27 +238,20 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
         })
     };
 
+    // Real, existing asset — the old reference to a nonexistent /og-image.png
+    // silently broke every social-share preview of the homepage.
+    const ogImage = `https://${appUrl}/images/marketing/hero-team.jpg`;
+
     return (
         <div className="min-h-screen bg-brand-tint font-sans antialiased">
-            <Head>
-                <title>{seo.meta_title || 'LumeniaCRM'}</title>
-                <meta name="description" content={seo.meta_description || ''} />
-                {seo.meta_keywords && <meta name="keywords" content={seo.meta_keywords} />}
-                <link rel="canonical" href={`https://${appUrl}/`} />
-
-                <meta property="og:title" content={seo.meta_title || 'LumeniaCRM'} />
-                <meta property="og:description" content={seo.meta_description || ''} />
-                <meta property="og:type" content="website" />
-                <meta property="og:url" content={`https://${appUrl}/`} />
-                <meta property="og:image" content={`https://${appUrl}/og-image.png`} />
-
-                <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={seo.meta_title || 'LumeniaCRM'} />
-                <meta name="twitter:description" content={seo.meta_description || ''} />
-                <meta name="twitter:image" content={`https://${appUrl}/og-image.png`} />
-
-                <script type="application/ld+json">
-                    {JSON.stringify({
+            <SeoHead
+                title={seo.meta_title || 'LumeniaCRM'}
+                description={seo.meta_description || ''}
+                keywords={seo.meta_keywords}
+                path="/"
+                image={ogImage}
+                jsonLd={[
+                    {
                         '@context': 'https://schema.org',
                         '@type': 'SoftwareApplication',
                         name: 'LumeniaCRM',
@@ -273,10 +267,8 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                             name: tier.name,
                             priceCurrency: 'USD',
                         })),
-                    })}
-                </script>
-                <script type="application/ld+json">
-                    {JSON.stringify({
+                    },
+                    {
                         '@context': 'https://schema.org',
                         '@type': 'FAQPage',
                         mainEntity: FAQS.map(({ q, a }) => ({
@@ -284,9 +276,9 @@ export default function Welcome({ appUrl, chatbot = {}, paddle = {}, country = n
                             name: q,
                             acceptedAnswer: { '@type': 'Answer', text: a },
                         })),
-                    })}
-                </script>
-            </Head>
+                    },
+                ]}
+            />
 
             {/* ── Nav ──────────────────────────────────────────────────────── */}
             <nav className={`fixed inset-x-0 top-0 z-50 bg-white/95 backdrop-blur-md transition-all duration-300 ${

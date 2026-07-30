@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Head } from '@inertiajs/react'
 import AdminSidebar from './AdminSidebar'
 import TopBar from './TopBar'
 import { Toaster } from 'sonner'
@@ -21,6 +22,10 @@ export default function AdminLayout({ children, title }) {
 
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: 'rgb(var(--brand-tint))' }}>
+      <Head>
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
+
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"

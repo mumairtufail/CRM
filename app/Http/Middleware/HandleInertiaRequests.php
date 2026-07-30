@@ -51,6 +51,9 @@ class HandleInertiaRequests extends Middleware
 
         return [
             ...parent::share($request),
+            // Host only, no protocol — pages build canonical/OG URLs as
+            // `https://{appUrl}{path}` (SeoHead component).
+            'appUrl' => preg_replace('#^https?://#', '', rtrim(config('app.url'), '/')),
             'custom_logo_url' => \App\Models\SystemSetting::getCached('custom_logo_url'),
             'latestBlogs' => \Illuminate\Support\Facades\Cache::remember('latest_5_blogs', 3600, function () {
                 return \App\Models\Blog::where('is_published', true)

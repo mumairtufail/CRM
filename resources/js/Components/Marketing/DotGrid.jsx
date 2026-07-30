@@ -85,6 +85,11 @@ export default function DotGrid({
 
         let rafId = 0;
         let lastFrame = 0;
+        // Redraws every dot every frame, indefinitely, unless gated — with
+        // no gate this ran forever even scrolled off-screen or with the tab
+        // backgrounded, on the highest-traffic page in the app.
+        let inViewport = true;
+        let tabVisible = document.visibilityState !== 'hidden';
 
         const frame = (now) => {
             const dt = Math.min((now - (lastFrame || now)) / 1000, 0.05);
@@ -131,7 +136,14 @@ export default function DotGrid({
                 ctx.fill();
             }
 
-            rafId = requestAnimationFrame(frame);
+            rafId = (inViewport && tabVisible) ? requestAnimationFrame(frame) : 0;
+        };
+
+        const startLoop = () => {
+            if (!rafId && inViewport && tabVisible) {
+                lastFrame = 0;
+                rafId = requestAnimationFrame(frame);
+            }
         };
 
         const toLocal = (e) => {
@@ -186,16 +198,35 @@ export default function DotGrid({
         };
 
         buildGrid();
-        rafId = requestAnimationFrame(frame);
+        startLoop();
 
         const resizeObserver = new ResizeObserver(buildGrid);
         resizeObserver.observe(wrap);
         window.addEventListener('mousemove', onMove, { passive: true });
         window.addEventListener('click', onClick);
 
+        // Pause the redraw loop off-screen (below the fold, scrolled past) and
+        // while the tab is backgrounded — resume where it left off when either
+        // condition clears.
+        const intersectionObserver = new IntersectionObserver(([entry]) => {
+            inViewport = entry.isIntersecting;
+            if (inViewport && tabVisible) startLoop();
+            else { cancelAnimationFrame(rafId); rafId = 0; }
+        });
+        intersectionObserver.observe(wrap);
+
+        const onVisibilityChange = () => {
+            tabVisible = document.visibilityState !== 'hidden';
+            if (inViewport && tabVisible) startLoop();
+            else { cancelAnimationFrame(rafId); rafId = 0; }
+        };
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
         return () => {
             cancelAnimationFrame(rafId);
             resizeObserver.disconnect();
+            intersectionObserver.disconnect();
+            document.removeEventListener('visibilitychange', onVisibilityChange);
             window.removeEventListener('mousemove', onMove);
             window.removeEventListener('click', onClick);
         };

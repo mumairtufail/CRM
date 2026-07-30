@@ -154,11 +154,17 @@ class SystemSetting extends Model
 
     public static function getSeo(): array
     {
+        // Without a Sitemap: line, /sitemap.xml is only ever discovered by a
+        // crawler that already knows the URL — it never gets found on its
+        // own. Built from config('app.url') so the default is correct in
+        // whatever environment reads it, not hardcoded to one domain.
+        $sitemapUrl = rtrim(config('app.url'), '/') . '/sitemap.xml';
+
         return [
             'meta_title'       => static::getCached('seo_meta_title'),
             'meta_description' => static::getCached('seo_meta_description'),
             'meta_keywords'    => static::getCached('seo_meta_keywords'),
-            'robots_txt'       => static::getCached('seo_robots_txt', "User-agent: *\nDisallow:"),
+            'robots_txt'       => static::getCached('seo_robots_txt', "User-agent: *\nDisallow:\n\nSitemap: {$sitemapUrl}"),
         ];
     }
 

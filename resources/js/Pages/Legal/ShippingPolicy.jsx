@@ -1,16 +1,17 @@
-import { Head } from '@inertiajs/react';
 import SiteHeader from '@/Components/Common/SiteHeader';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import SeoHead from '@/Components/Common/SeoHead';
 
 const EFFECTIVE_DATE = 'July 5, 2026';
 
 export default function ShippingPolicy() {
     return (
         <>
-            <Head>
-                <title>Shipping & Service Delivery Policy · Lumenia CRM</title>
-                <meta name="description" content="How and when Lumenia CRM access and support are delivered after purchase." />
-            </Head>
+            <SeoHead
+                title="Shipping & Service Delivery Policy · Lumenia CRM"
+                description="How and when Lumenia CRM access and support are delivered after purchase."
+                path="/shipping-policy"
+            />
 
             <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />

@@ -1,7 +1,8 @@
-import { Head, Link, usePage } from '@inertiajs/react'
+import { Link, usePage } from '@inertiajs/react'
 import { BookOpen, Calendar, Clock, ArrowRight, ChevronRight, User } from 'lucide-react'
 import Logo from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 import { useState } from 'react'
 
 export default function Index({ blogs }) {
@@ -11,13 +12,21 @@ export default function Index({ blogs }) {
 
   return (
     <>
-      <Head>
-        <title>Blog · LumeniaCRM</title>
-        <meta name="description" content="Read the latest articles, guides, and updates on pipeline management, customer relations, and business growth from the team at LumeniaCRM." />
-        <meta property="og:title" content="LumeniaCRM Blog" />
-        <meta property="og:description" content="Guides and articles to help you turn leads into revenue." />
-        <meta property="og:type" content="website" />
-      </Head>
+      <SeoHead
+        title="Blog · LumeniaCRM"
+        description="Read the latest articles, guides, and updates on pipeline management, customer relations, and business growth from the team at LumeniaCRM."
+        path="/blog"
+        jsonLd={blogs.data.length > 0 ? {
+          '@context': 'https://schema.org',
+          '@type': 'ItemList',
+          itemListElement: blogs.data.map((post, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            url: `https://${props.appUrl}/blog/${post.slug}`,
+            name: post.title,
+          })),
+        } : undefined}
+      />
 
       <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
         {/* Simple Navbar */}

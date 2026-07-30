@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { usePage, router, Link } from '@inertiajs/react'
+import { usePage, router, Link, Head } from '@inertiajs/react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { Toaster, toast } from 'sonner'
@@ -118,6 +118,13 @@ export default function AppLayout({ children, title, noPadding = false, defaultS
 
   return (
     <div className="flex flex-col h-screen overflow-hidden" style={{ background: 'rgb(var(--brand-tint))' }}>
+      {/* Every authenticated route sits behind an auth redirect already, but
+          that's an implicit exclusion with no fallback — this is the
+          explicit one, so a cached crawl or redirect edge case can't index it. */}
+      <Head>
+        <meta name="robots" content="noindex, nofollow" />
+      </Head>
+
       {impersonating && <ImpersonationBanner name={impersonating.name} />}
       {plan?.subscription && <SubscriptionBanner subscription={plan.subscription} />}
 

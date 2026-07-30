@@ -256,7 +256,11 @@ export default function DynamicForm({ form }) {
                 style={{ background: BRAND_GRADIENT }}>
                 <LogoMark size={22} />
               </div>
-              <h1 className="text-[20px] font-bold text-slate-900 tracking-tight">{form.name}</h1>
+              {/* h2, not h1 — BrandPanel's heading (same form.name, desktop-only
+                  via `hidden lg:flex`) is the page's one true h1; both exist in
+                  the DOM at once regardless of viewport since Tailwind's
+                  responsive classes only toggle CSS display, not mounting. */}
+              <h2 className="text-[20px] font-bold text-slate-900 tracking-tight">{form.name}</h2>
               {form.description && (
                 <p className="text-[13px] text-slate-500 mt-1">{form.description}</p>
               )}

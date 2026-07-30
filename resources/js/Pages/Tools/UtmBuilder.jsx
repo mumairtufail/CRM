@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { useState } from 'react'
 import { ArrowLeft, Check, Copy, RefreshCw, Sparkles, Menu, X, ChevronRight, Link2, Share2, HelpCircle } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 
 export default function UtmBuilder({ latestBlogs = [] }) {
   const [copied, setCopied] = useState(false)
@@ -100,10 +101,20 @@ export default function UtmBuilder({ latestBlogs = [] }) {
 
   return (
     <>
-      <Head>
-        <title>Free Marketing UTM Campaign URL Builder · Lumenia CRM</title>
-        <meta name="description" content="Generate trackable UTM campaign URLs for Google Analytics, CRMs, and marketing. Instantly add utm_source, utm_medium, and campaign tags for free." />
-      </Head>
+      <SeoHead
+        title="Free Marketing UTM Campaign URL Builder · Lumenia CRM"
+        description="Generate trackable UTM campaign URLs for Google Analytics, CRMs, and marketing. Instantly add utm_source, utm_medium, and campaign tags for free."
+        path="/tools/utm-builder"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqs.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }}
+      />
 
       <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between">
         

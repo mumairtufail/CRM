@@ -67,7 +67,6 @@ Route::get('/', function (\Illuminate\Http\Request $request) {
     );
 
     return inertia('Welcome', [
-        'appUrl' => preg_replace('#^https?://#', '', rtrim(config('app.url'), '/')),
         'chatbot' => [
             'enabled'         => $chatbot['enabled'],
             'agent_name'      => $chatbot['agent_name'],

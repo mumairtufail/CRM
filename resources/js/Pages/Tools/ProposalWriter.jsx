@@ -3,6 +3,7 @@ import { useState, useRef } from 'react'
 import { ArrowLeft, Check, Copy, Plus, Trash2, Printer, Sparkles, Menu, X, ChevronRight, FileText, PenTool } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 
 export default function ProposalWriter({ latestBlogs = [] }) {
   const previewRef = useRef(null)
@@ -121,9 +122,21 @@ export default function ProposalWriter({ latestBlogs = [] }) {
 
   return (
     <>
+      <SeoHead
+        title="Free Online B2B Proposal & Contract Writer · Lumenia CRM"
+        description="Draft and generate professional B2B project proposals and freelance contracts. Customize templates, outline service deliverables, add pricing, and print as PDF for free."
+        path="/tools/proposal-writer"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqs.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }}
+      />
       <Head>
-        <title>Free Online B2B Proposal & Contract Writer · Lumenia CRM</title>
-        <meta name="description" content="Draft and generate professional B2B project proposals and freelance contracts. Customize templates, outline service deliverables, add pricing, and print as PDF for free." />
         <style>{`
           @media print {
             body, html {

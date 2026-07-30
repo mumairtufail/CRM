@@ -1,16 +1,17 @@
-import { Head } from '@inertiajs/react';
 import SiteHeader from '@/Components/Common/SiteHeader';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import SeoHead from '@/Components/Common/SeoHead';
 
 const EFFECTIVE_DATE = 'July 5, 2026';
 
 export default function RefundPolicy() {
     return (
         <>
-            <Head>
-                <title>Refund & Return Policy · Lumenia CRM</title>
-                <meta name="description" content="Refund, cancellation, and return terms for Lumenia CRM subscriptions." />
-            </Head>
+            <SeoHead
+                title="Refund & Return Policy · Lumenia CRM"
+                description="Refund, cancellation, and return terms for Lumenia CRM subscriptions."
+                path="/refund-policy"
+            />
 
             <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />

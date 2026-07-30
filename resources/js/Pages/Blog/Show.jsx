@@ -1,21 +1,31 @@
-import { Head, Link, usePage } from '@inertiajs/react'
+import { Link, usePage } from '@inertiajs/react'
 import { Calendar, Clock, ArrowLeft, User, Tag as TagIcon, Sparkles } from 'lucide-react'
 import Logo from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 
 export default function Show({ blog }) {
   const { props } = usePage()
   const latestBlogs = props.latestBlogs || []
   return (
     <>
-      <Head>
-        <title>{`${blog.title} · LumeniaCRM`}</title>
-        <meta name="description" content={blog.description || blog.subtitle} />
-        <meta property="og:title" content={blog.title} />
-        <meta property="og:description" content={blog.description || blog.subtitle} />
-        {blog.image_url && <meta property="og:image" content={blog.image_url} />}
-        <meta property="og:type" content="article" />
-      </Head>
+      <SeoHead
+        title={`${blog.title} · LumeniaCRM`}
+        description={blog.description || blog.subtitle}
+        path={`/blog/${blog.slug}`}
+        image={blog.image_url || undefined}
+        type="article"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'BlogPosting',
+          headline: blog.title,
+          description: blog.description || blog.subtitle || undefined,
+          image: blog.image_url || undefined,
+          datePublished: blog.published_at_iso || undefined,
+          author: { '@type': 'Person', name: blog.author_name },
+          mainEntityOfPage: { '@type': 'WebPage', '@id': `https://${props.appUrl}/blog/${blog.slug}` },
+        }}
+      />
 
       <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
         {/* Simple Navbar */}
@@ -96,7 +106,7 @@ export default function Show({ blog }) {
             {/* Featured Image */}
             {blog.image_url && (
               <div className="aspect-[16/9] w-full rounded-xl overflow-hidden border border-slate-250 mb-8 bg-slate-50">
-                <img src={blog.image_url} className="w-full h-full object-cover" alt="" />
+                <img src={blog.image_url} className="w-full h-full object-cover" alt={blog.title} />
               </div>
             )}
 

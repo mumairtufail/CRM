@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { useState, useRef, useEffect } from 'react'
 import { ArrowLeft, Check, Copy, RefreshCw, Sparkles, Layout, Palette, Share2, HelpCircle, ChevronRight, Menu, X } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 
 export default function EmailSignatureGenerator({ latestBlogs = [] }) {
   const previewRef = useRef(null)
@@ -241,11 +242,20 @@ export default function EmailSignatureGenerator({ latestBlogs = [] }) {
 
   return (
     <>
-      <Head>
-        <title>Free Email Signature Generator · Lumenia CRM</title>
-        <meta name="description" content="Design and build a professional HTML email signature for Gmail, Outlook, or Apple Mail. Choose from responsive templates, customize brand colors, add social links, and logos." />
-        <meta property="og:title" content="Free Email Signature Generator - Lumenia CRM" />
-      </Head>
+      <SeoHead
+        title="Free Email Signature Generator · Lumenia CRM"
+        description="Design and build a professional HTML email signature for Gmail, Outlook, or Apple Mail. Choose from responsive templates, customize brand colors, add social links, and logos."
+        path="/tools/email-signature-generator"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqs.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }}
+      />
 
       <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between">
         {/* Header/Nav */}

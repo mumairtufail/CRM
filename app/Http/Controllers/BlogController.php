@@ -42,15 +42,19 @@ class BlogController extends Controller
 
         return Inertia::render('Blog/Show', [
             'blog' => [
-                'title'        => $blog->title,
-                'subtitle'     => $blog->subtitle,
-                'description'  => $blog->description,
-                'body'         => $blog->body,
-                'image_url'    => $blog->imageUrl(),
-                'tags'         => $blog->tags ?? [],
-                'published_at' => $blog->published_at?->format('F j, Y') ?? $blog->created_at->format('F j, Y'),
-                'author_name'  => $blog->author?->name ?? 'System',
-                'read_time'    => $this->calculateReadTime($blog->body),
+                'slug'             => $blog->slug,
+                'title'            => $blog->title,
+                'subtitle'         => $blog->subtitle,
+                'description'      => $blog->description,
+                'body'             => $blog->body,
+                'image_url'        => $blog->imageUrl(),
+                'tags'             => $blog->tags ?? [],
+                'published_at'     => $blog->published_at?->format('F j, Y') ?? $blog->created_at->format('F j, Y'),
+                // ISO 8601, for the Article JSON-LD datePublished field — the
+                // human-formatted string above isn't a format schema.org parses reliably.
+                'published_at_iso' => ($blog->published_at ?? $blog->created_at)->toIso8601String(),
+                'author_name'      => $blog->author?->name ?? 'System',
+                'read_time'        => $this->calculateReadTime($blog->body),
             ],
         ]);
     }

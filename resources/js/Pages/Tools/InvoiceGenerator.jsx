@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { ArrowLeft, Plus, Trash2, Printer, Download, Sparkles, AlertCircle, ChevronRight, Menu, X } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 
 export default function InvoiceGenerator({ latestBlogs = [] }) {
   const [activeFaq, setActiveFaq] = useState(null)
@@ -108,9 +109,21 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
 
   return (
     <>
+      <SeoHead
+        title="Free Online Invoice Generator · Lumenia CRM"
+        description="Generate professional PDF invoices for clients instantly. Customize invoice fields, calculate taxes, add items, and download/print for free. No signup needed."
+        path="/tools/invoice-generator"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqs.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }}
+      />
       <Head>
-        <title>Free Online Invoice Generator · Lumenia CRM</title>
-        <meta name="description" content="Generate professional PDF invoices for clients instantly. Customize invoice fields, calculate taxes, add items, and download/print for free. No signup needed." />
         <style>{`
           @media print {
             body, html {
@@ -266,7 +279,7 @@ export default function InvoiceGenerator({ latestBlogs = [] }) {
 
               {/* Right Side: Title & Invoice Meta */}
               <div className="md:text-right space-y-4 max-w-xs md:ml-auto">
-                <h1 className="text-4xl font-extrabold tracking-tight text-slate-400 uppercase select-none">INVOICE</h1>
+                <div className="text-4xl font-extrabold tracking-tight text-slate-400 uppercase select-none">INVOICE</div>
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm text-slate-500 md:justify-items-end">
                   <span className="font-semibold text-slate-400">Invoice No:</span>
                   <span className="w-32 inline-block text-right font-bold text-slate-700">

@@ -1,8 +1,9 @@
-import { Head, Link } from '@inertiajs/react'
+import { Link } from '@inertiajs/react'
 import { useState } from 'react'
 import { Mail, FileText, ArrowRight, Award, HelpCircle, ChevronRight, Menu, X, PenTool, Link2 } from 'lucide-react'
 import Logo, { LogoMark } from '@/Components/Common/Logo'
 import SiteFooter from '@/Components/Common/SiteFooter'
+import SeoHead from '@/Components/Common/SeoHead'
 
 export default function Hub({ latestBlogs = [] }) {
   const [activeFaq, setActiveFaq] = useState(null)
@@ -86,13 +87,20 @@ export default function Hub({ latestBlogs = [] }) {
 
   return (
     <>
-      <Head>
-        <title>Free Business & Sales Tools · Lumenia CRM</title>
-        <meta name="description" content="Discover free B2B business tools by Lumenia CRM. Design HTML email signatures, generate PDF invoices, scan for AEO/AI engine optimization, and grow your traffic." />
-        <meta property="og:title" content="Free Sales & Growth Tools by Lumenia CRM" />
-        <meta property="og:description" content="Level up your sales process with free high-value tools." />
-        <meta property="og:type" content="website" />
-      </Head>
+      <SeoHead
+        title="Free Business & Sales Tools · Lumenia CRM"
+        description="Discover free B2B business tools by Lumenia CRM. Design HTML email signatures, generate PDF invoices, scan for AEO/AI engine optimization, and grow your traffic."
+        path="/tools"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: faqs.map(({ q, a }) => ({
+            '@type': 'Question',
+            name: q,
+            acceptedAnswer: { '@type': 'Answer', text: a },
+          })),
+        }}
+      />
 
       <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800 flex flex-col justify-between">
         {/* Header/Nav */}

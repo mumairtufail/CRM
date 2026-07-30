@@ -1,16 +1,17 @@
-import { Head } from '@inertiajs/react';
 import SiteHeader from '@/Components/Common/SiteHeader';
 import SiteFooter from '@/Components/Common/SiteFooter';
+import SeoHead from '@/Components/Common/SeoHead';
 
 const EFFECTIVE_DATE = 'July 5, 2026';
 
 export default function PrivacyPolicy() {
     return (
         <>
-            <Head>
-                <title>Privacy Policy · Lumenia CRM</title>
-                <meta name="description" content="How Lumenia Lab Pvt. Ltd. collects, uses, stores, and protects data for Lumenia CRM customers and website visitors." />
-            </Head>
+            <SeoHead
+                title="Privacy Policy · Lumenia CRM"
+                description="How Lumenia Lab Pvt. Ltd. collects, uses, stores, and protects data for Lumenia CRM customers and website visitors."
+                path="/privacy-policy"
+            />
 
             <div className="min-h-screen bg-[rgb(var(--brand-tint))] font-sans antialiased text-slate-800">
                 <SiteHeader />

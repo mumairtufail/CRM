@@ -82,7 +82,18 @@ class LeadGenerationController extends Controller
         $imported = 0;
         $skipped  = 0;
 
+        $organization = $request->user()->organization;
+        $leadLimit    = $organization->leadLimit();
+        $remaining    = $leadLimit === null ? null : max($leadLimit - $organization->leads()->count(), 0);
+        $limitReached = false;
+
         foreach ($request->input('contacts') as $contact) {
+            if ($remaining !== null && $remaining <= 0) {
+                $limitReached = true;
+                $skipped++;
+                continue;
+            }
+
             $firstName   = trim($contact['first_name'] ?? '');
             $lastName    = trim($contact['last_name'] ?? '');
             $companyName = trim($contact['company_name'] ?? '');
@@ -127,11 +138,15 @@ class LeadGenerationController extends Controller
             }
 
             $imported++;
+            if ($remaining !== null) {
+                $remaining--;
+            }
         }
 
         return response()->json([
-            'imported' => $imported,
-            'skipped'  => $skipped,
+            'imported'      => $imported,
+            'skipped'       => $skipped,
+            'limit_reached' => $limitReached,
         ]);
     }
 }

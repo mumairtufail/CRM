@@ -398,7 +398,11 @@ export default function LeadGenerationIndex({ configured, providerName }) {
       const msg = data.skipped > 0
         ? `${data.imported} imported, ${data.skipped} duplicate${data.skipped !== 1 ? 's' : ''} skipped`
         : `${data.imported} lead${data.imported !== 1 ? 's' : ''} imported successfully`
-      toast.success(msg)
+      if (data.limit_reached) {
+        toast.warning(`${msg} — you've reached your plan's lead limit. Upgrade to import more.`)
+      } else {
+        toast.success(msg)
+      }
       setSelectedIds(new Set())
     } catch (e) {
       toast.error(e.message)

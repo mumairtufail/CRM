@@ -30,6 +30,7 @@ function MemberForm({ open, onOpenChange, roles, member }) {
     const options = {
       preserveScroll: true,
       onSuccess: () => { onOpenChange(false); reset() },
+      onError: (errs) => { if (errs.limit) toast.error(errs.limit) },
     }
     if (isEdit) {
       patch(route('settings.team.update', member.id), options)
@@ -45,6 +46,9 @@ function MemberForm({ open, onOpenChange, roles, member }) {
           <DialogTitle>{isEdit ? 'Edit team member' : 'Add team member'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
+          {errors.limit && (
+            <p className="text-[12px] text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{errors.limit}</p>
+          )}
           <div className="space-y-1.5">
             <Label className="text-[12px]">Name</Label>
             <Input value={data.name} onChange={e => setData('name', e.target.value)} />

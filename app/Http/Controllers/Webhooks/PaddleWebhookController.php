@@ -139,7 +139,23 @@ class PaddleWebhookController extends Controller
         $active = $organization->activeSubscription();
 
         if (!$active) {
-            $organization->update(['plan_status' => 'inactive']);
+            // No paid subscription grants access anymore — fall back to the
+            // Free plan rather than leaving plan_id stuck on their old paid
+            // tier. Otherwise a canceled Pro/Premium org would keep that
+            // plan's lead_limit (null = unlimited) forever, even though
+            // they're no longer paying for it.
+            $freePlan = Plan::where('slug', 'basic')->first();
+
+            $organization->update([
+                'plan_id'          => $freePlan?->id ?? $organization->plan_id,
+                'plan_status'      => 'active',
+                'plan_assigned_at' => now(),
+            ]);
+
+            if ($freePlan) {
+                Plan::forgetModuleCache($freePlan->id);
+            }
+
             return;
         }
 

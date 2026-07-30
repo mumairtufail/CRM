@@ -13,7 +13,7 @@ class Plan extends Model
 {
     protected $fillable = [
         'name', 'slug', 'tagline', 'description', 'price_monthly', 'price_monthly_original', 'price_yearly', 'price_yearly_original',
-        'is_active', 'is_featured', 'sort_order', 'cta_text', 'lead_limit',
+        'is_active', 'is_featured', 'sort_order', 'cta_text', 'lead_limit', 'user_limit',
         'paddle_product_id', 'paddle_price_id_monthly', 'paddle_price_id_yearly',
     ];
 
@@ -25,6 +25,7 @@ class Plan extends Model
         'price_yearly'           => 'decimal:2',
         'price_yearly_original'  => 'decimal:2',
         'lead_limit'             => 'integer',
+        'user_limit'             => 'integer',
     ];
 
     public function modules(): BelongsToMany
@@ -101,25 +102,55 @@ class Plan extends Model
      */
     public static function publicPricingTiers(): array
     {
+        // Always-included core capabilities, regardless of tier — these are
+        // never module-gated, so every plan (including Free) gets them.
+        $coreFeatures = [
+            'Leads, pipeline & AI-powered lead search',
+            'Kanban & Timeline pipeline views',
+            'Projects with tasks & milestones',
+            'Client invoicing',
+            'CSV & Google Sheets import/export',
+            'Reports & analytics',
+            'Roles & permissions',
+            'Dedicated support',
+        ];
+
+        // WhatsApp is built but not yet publicly launched (see project
+        // convention: marked "coming soon" everywhere else on the site) — the
+        // module stays assigned to Premium in the DB for when it ships, but
+        // isn't advertised as available today.
+        $unadvertisedModuleKeys = ['whatsapp_campaigns', 'whatsapp_automation'];
+
         return static::where('is_active', true)
-            ->with('modules:id,name')
+            ->with('modules:id,name,key')
             ->orderBy('sort_order')
             ->get()
-            ->map(fn (Plan $plan) => [
-                'name'        => $plan->name,
-                'slug'        => $plan->slug,
-                'description' => $plan->tagline,
-                'features'    => [
-                    'Core CRM — leads, pipeline, invoicing, reports, team',
-                    ...$plan->modules->pluck('name')->all(),
-                ],
-                'priceId' => [
-                    'month' => $plan->paddle_price_id_monthly,
-                    'year'  => $plan->paddle_price_id_yearly,
-                ],
-                'isFeatured' => $plan->is_featured,
-                'leadLimit'  => $plan->lead_limit,
-            ])
+            ->map(function (Plan $plan) use ($coreFeatures, $unadvertisedModuleKeys) {
+                // Email Campaigns unlocks more than the module's bare name
+                // implies — call out the two things that actually sell it.
+                $emailCampaignExtras = $plan->modules->contains('key', 'email_campaigns')
+                    ? ['AI-generated campaign & follow-up content', 'Automated, configurable follow-up sequences']
+                    : [];
+
+                return [
+                    'name'        => $plan->name,
+                    'slug'        => $plan->slug,
+                    'description' => $plan->tagline,
+                    'features'    => [
+                        $plan->lead_limit ? "Up to {$plan->lead_limit} leads" : 'Unlimited leads',
+                        $plan->user_limit ? "Up to {$plan->user_limit} team members" : 'Unlimited team members',
+                        ...$coreFeatures,
+                        ...$plan->modules->whereNotIn('key', $unadvertisedModuleKeys)->pluck('name')->all(),
+                        ...$emailCampaignExtras,
+                    ],
+                    'priceId' => [
+                        'month' => $plan->paddle_price_id_monthly,
+                        'year'  => $plan->paddle_price_id_yearly,
+                    ],
+                    'isFeatured' => $plan->is_featured,
+                    'leadLimit'  => $plan->lead_limit,
+                ];
+            })
             ->values()
             ->all();
     }

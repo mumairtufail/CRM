@@ -16,6 +16,26 @@ function StatusBadge({ status }) {
   return <Badge variant={active ? 'default' : 'secondary'}>{active ? 'Active' : 'Inactive'}</Badge>
 }
 
+function UsageMeter({ label, used, limit }) {
+  const pct = Math.min(100, Math.round((used / limit) * 100))
+  const atCap = used >= limit
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-[12px] font-medium text-slate-600">{label}</span>
+        <span className={`text-[12px] font-semibold ${atCap ? 'text-red-600' : 'text-slate-500'}`}>{used} / {limit}</span>
+      </div>
+      <div className="h-1.5 rounded-full bg-slate-100 overflow-hidden">
+        <div
+          className={`h-full rounded-full ${atCap ? 'bg-red-500' : pct >= 80 ? 'bg-amber-500' : 'bg-brand-500'}`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      {atCap && <p className="text-[11px] text-red-600 mt-1">Limit reached — upgrade to add more.</p>}
+    </div>
+  )
+}
+
 export default function BillingIndex({ plan, subscription, transactions, paddle, country, tiers = [] }) {
   const { props } = usePage()
   const userEmail = props.auth?.user?.email
@@ -130,6 +150,13 @@ export default function BillingIndex({ plan, subscription, transactions, paddle,
                 </a>
               </div>
             </div>
+
+            {(plan?.leadLimit || plan?.userLimit) && (
+              <div className="mt-4 pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {plan?.leadLimit && <UsageMeter label="Leads" used={plan.leadsUsed} limit={plan.leadLimit} />}
+                {plan?.userLimit && <UsageMeter label="Team members" used={plan.usersUsed} limit={plan.userLimit} />}
+              </div>
+            )}
           </div>
 
           <div>

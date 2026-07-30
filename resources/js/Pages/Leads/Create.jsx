@@ -85,7 +85,7 @@ export default function LeadCreate({ tags = [] }) {
     e.preventDefault()
     post('/leads', {
       onSuccess: () => toast.success('Lead created successfully'),
-      onError: () => toast.error('Please fix the errors below'),
+      onError: (errs) => toast.error(errs.limit || 'Please fix the errors below'),
     })
   }
 

@@ -24,6 +24,8 @@ function emptyForm() {
     price_yearly_original: '',
     is_featured: false,
     cta_text: '',
+    lead_limit: '',
+    user_limit: '',
     modules: [],
   }
 }
@@ -48,6 +50,8 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
         price_yearly_original: editing.price_yearly_original ?? '',
         is_featured: editing.is_featured,
         cta_text: editing.cta_text || '',
+        lead_limit: editing.lead_limit ?? '',
+        user_limit: editing.user_limit ?? '',
         modules: editing.modules.map(m => m.id),
       })
     } else {
@@ -169,6 +173,31 @@ function PlanFormDialog({ open, onOpenChange, modules, editing, onSaved }) {
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Lead limit</label>
+              <input
+                type="number" min="0" step="1"
+                value={form.data.lead_limit}
+                onChange={e => form.setData('lead_limit', e.target.value)}
+                placeholder="Blank = unlimited"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {form.errors.lead_limit && <p className="text-xs text-red-500 mt-1">{form.errors.lead_limit}</p>}
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Team member limit</label>
+              <input
+                type="number" min="0" step="1"
+                value={form.data.user_limit}
+                onChange={e => form.setData('user_limit', e.target.value)}
+                placeholder="Blank = unlimited"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+              />
+              {form.errors.user_limit && <p className="text-xs text-red-500 mt-1">{form.errors.user_limit}</p>}
+            </div>
+          </div>
+
           <label className="flex items-center gap-2.5 cursor-pointer">
             <Checkbox checked={form.data.is_featured} onCheckedChange={v => form.setData('is_featured', !!v)} />
             <span className="text-sm text-slate-700">Highlight as "Most Popular" on the pricing page</span>
@@ -262,6 +291,14 @@ function PlanCard({ plan, modules, onEdit, onDelete }) {
       </div>
 
       <div className="flex-1 space-y-2 mb-5">
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Check size={14} className="text-emerald-500 shrink-0" />
+          {plan.lead_limit ? `Up to ${plan.lead_limit} leads` : 'Unlimited leads'}
+        </div>
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Check size={14} className="text-emerald-500 shrink-0" />
+          {plan.user_limit ? `Up to ${plan.user_limit} team members` : 'Unlimited team members'}
+        </div>
         <div className="flex items-center gap-2 text-sm text-slate-600">
           <Check size={14} className="text-emerald-500 shrink-0" />
           Core CRM (leads, pipeline, invoicing, reports, team)

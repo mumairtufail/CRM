@@ -38,6 +38,11 @@ class PublicFormController extends Controller
         // middleware sets tenant context on this unauthenticated route.
         app(TenantContext::class)->set($form->organization);
 
+        // A public form is just another lead-creation entry point — it must
+        // respect the same plan cap as the in-app "Add Lead" flow, otherwise
+        // a Free-plan org could blow past its limit via an embedded form.
+        abort_if($form->organization->hasReachedLeadLimit(), 410, 'This form is no longer accepting submissions.');
+
         $validated = $request->validate([
             ...$this->buildRules($form),
             'session_token' => 'nullable|string|max:64',

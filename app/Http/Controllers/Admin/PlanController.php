@@ -125,8 +125,12 @@ class PlanController extends Controller
      */
     private function syncToPaddle(Plan $plan, ?float $oldMonthly, ?float $oldYearly): void
     {
-        if (!$plan->price_monthly) {
-            return; // no monthly price yet — nothing sellable to sync
+        // price_monthly is a decimal:2 cast, so it's the string "0.00" for a
+        // free plan — PHP only treats the literal string "0" as falsy, so a
+        // plain !$plan->price_monthly check would miss this and try to mint
+        // a real $0 Paddle product/price.
+        if ((float) $plan->price_monthly <= 0) {
+            return; // free plan — nothing sellable to sync
         }
 
         try {
@@ -191,6 +195,8 @@ class PlanController extends Controller
             'price_yearly_original'  => 'nullable|numeric|min:0',
             'is_featured'            => 'boolean',
             'cta_text'               => 'nullable|string|max:100',
+            'lead_limit'             => 'nullable|integer|min:0',
+            'user_limit'             => 'nullable|integer|min:0',
             'modules'                => 'array',
             'modules.*'              => [Rule::exists('modules', 'id')],
         ]);
@@ -224,6 +230,8 @@ class PlanController extends Controller
             'is_active'              => $plan->is_active,
             'is_featured'            => $plan->is_featured,
             'cta_text'               => $plan->cta_text,
+            'lead_limit'             => $plan->lead_limit,
+            'user_limit'             => $plan->user_limit,
             'organizations_count'    => $plan->organizations_count,
             'modules'                => $plan->modules->map(fn ($m) => ['id' => $m->id, 'key' => $m->key, 'name' => $m->name]),
         ];

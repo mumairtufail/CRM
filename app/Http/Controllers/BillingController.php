@@ -49,8 +49,12 @@ class BillingController extends Controller
 
         return Inertia::render('Billing/Index', [
             'plan' => [
-                'name'   => $organization->plan?->name,
-                'status' => $organization->plan_status,
+                'name'        => $organization->plan?->name,
+                'status'      => $organization->plan_status,
+                'leadLimit'   => $organization->leadLimit(),
+                'leadsUsed'   => $organization->leads()->count(),
+                'userLimit'   => $organization->userLimit(),
+                'usersUsed'   => $organization->users()->count(),
             ],
             'subscription' => $latestSubscription ? [
                 'status'                  => $latestSubscription->status,

@@ -11,7 +11,18 @@
       "Bash(php -l app/Http/Middleware/CheckOrganizationExpiry.php)",
       "Bash(php -l bootstrap/app.php)",
       "Bash(php -l app/Http/Controllers/LeadController.php)",
-      "Bash(php -l app/Http/Controllers/ImportController.php)"
+      "Bash(php -l app/Http/Controllers/ImportController.php)",
+      "Bash(sc query *)",
+      "Bash(grep -o '\"tiers\":\\\\[.\\\\{0,600\\\\}')",
+      "Bash(curl -s -o /tmp_resp.html -w \"HTTP %{http_code}\\\\n\" http://localhost/)",
+      "Bash(wc -c /tmp_resp.html)",
+      "Bash(grep -o \"data-page=\\\\\"[^\\\\\"]\\\\{0,50\\\\}\" /tmp_resp.html)",
+      "Bash(curl -s -o C:/Users/Umair/AppData/Local/Temp/claude/d--clean-work-crm-app/cc1711a2-16d3-4e98-9c98-6b1ef4679dc3/scratchpad/resp2.html -w 'HTTP %{http_code}\\\\n' http://crm-app.test/ --resolve crm-app.test:80:127.0.0.1)",
+      "Bash(curl -s -o C:/Users/Umair/AppData/Local/Temp/claude/d--clean-work-crm-app/cc1711a2-16d3-4e98-9c98-6b1ef4679dc3/scratchpad/home.html -w 'HTTP %{http_code}\\\\n' http://127.0.0.1:8791/)",
+      "Bash(php -l app/Http/Controllers/TeamMemberController.php)",
+      "Bash(curl -s -o C:/Users/Umair/AppData/Local/Temp/claude/d--clean-work-crm-app/cc1711a2-16d3-4e98-9c98-6b1ef4679dc3/scratchpad/home2.html -w 'HTTP %{http_code}\\\\n' http://127.0.0.1:8791/)",
+      "Bash(grep -o 'Premium&quot;.\\\\{0,900\\\\}' C:/Users/Umair/AppData/Local/Temp/claude/d--clean-work-crm-app/cc1711a2-16d3-4e98-9c98-6b1ef4679dc3/scratchpad/home2.html)",
+      "Bash(node -e \"require\\('@babel/core'\\)\")"
     ]
   }
 }

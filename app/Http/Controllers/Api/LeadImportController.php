@@ -80,6 +80,12 @@ class LeadImportController extends Controller
             $description = 'Lead updated via LinkedIn extension';
             $created = false;
         } else {
+            if ($user->organization->hasReachedLeadLimit()) {
+                return response()->json([
+                    'message' => "You've reached your plan's lead limit. Upgrade to add more leads.",
+                ], 422);
+            }
+
             $lead = Lead::create(array_merge($attributes, [
                 'organization_id' => $organizationId,
                 'assigned_to'     => $user->id,

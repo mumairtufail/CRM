@@ -120,4 +120,19 @@ class Organization extends Model
 
         return $limit !== null && $this->leads()->count() >= $limit;
     }
+
+    /**
+     * Team-member seat cap from the current plan, or null when unlimited.
+     */
+    public function userLimit(): ?int
+    {
+        return $this->plan?->user_limit;
+    }
+
+    public function hasReachedUserLimit(): bool
+    {
+        $limit = $this->userLimit();
+
+        return $limit !== null && $this->users()->count() >= $limit;
+    }
 }

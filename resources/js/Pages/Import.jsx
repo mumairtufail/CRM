@@ -424,7 +424,7 @@ export default function Import({ importJob }) {
     setConfirming(true)
     router.post(`/import/${importJob.id}/confirm`, { resolutions }, {
       onFinish: () => setConfirming(false),
-      onError:  () => { toast.error('Import failed'); setConfirming(false) },
+      onError:  (errs) => toast.error(errs.limit || 'Import failed'),
     })
   }
 

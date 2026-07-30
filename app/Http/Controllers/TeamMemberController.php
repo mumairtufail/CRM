@@ -72,6 +72,10 @@ class TeamMemberController extends Controller
     {
         $orgId = $request->user()->organization_id;
 
+        if ($request->user()->organization->hasReachedUserLimit()) {
+            return back()->withErrors(['limit' => "You've reached your plan's team member limit. Upgrade to add more."]);
+        }
+
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => ['required', 'email', 'max:255', Rule::unique('users', 'email')],

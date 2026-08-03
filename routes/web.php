@@ -472,18 +472,20 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/projects/{project}/documents',                       [ProjectDocumentController::class, 'store'])->name('projects.documents.store');
     Route::delete('/projects/{project}/documents/{document}',          [ProjectDocumentController::class, 'destroy'])->name('projects.documents.destroy');
 
-    // Inbox (IMAP fetch)
-    Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');
-    Route::get('/inbox/sync-status',                       [InboxController::class, 'syncStatus'])->name('inbox.sync-status');
-    Route::get('/inbox/{fetchedEmail}',                    [InboxController::class, 'show'])->name('inbox.show');
-    Route::post('/inbox/sync',                             [InboxController::class, 'sync'])->name('inbox.sync');
-    Route::post('/inbox/send',                             [InboxController::class, 'send'])->name('inbox.send');
-    Route::post('/inbox/{fetchedEmail}/reply',             [InboxController::class, 'reply'])->name('inbox.reply');
-    Route::patch('/inbox/{fetchedEmail}/read',             [InboxController::class, 'markRead'])->name('inbox.read');
-    Route::patch('/inbox/{fetchedEmail}/starred',          [InboxController::class, 'markStarred'])->name('inbox.starred');
-    Route::patch('/inbox/{fetchedEmail}/trash',            [InboxController::class, 'trash'])->name('inbox.trash');
-    Route::patch('/inbox/{fetchedEmail}/restore',          [InboxController::class, 'restore'])->name('inbox.restore');
-    Route::delete('/inbox/{fetchedEmail}',                 [InboxController::class, 'destroy'])->name('inbox.destroy');
+    // Inbox (IMAP fetch) — gated to plans that include the `inbox` module
+    Route::middleware('module:inbox')->group(function () {
+        Route::get('/inbox',                                   [InboxController::class, 'index'])->name('inbox.index');
+        Route::get('/inbox/sync-status',                       [InboxController::class, 'syncStatus'])->name('inbox.sync-status');
+        Route::get('/inbox/{fetchedEmail}',                    [InboxController::class, 'show'])->name('inbox.show');
+        Route::post('/inbox/sync',                             [InboxController::class, 'sync'])->name('inbox.sync');
+        Route::post('/inbox/send',                             [InboxController::class, 'send'])->name('inbox.send');
+        Route::post('/inbox/{fetchedEmail}/reply',             [InboxController::class, 'reply'])->name('inbox.reply');
+        Route::patch('/inbox/{fetchedEmail}/read',             [InboxController::class, 'markRead'])->name('inbox.read');
+        Route::patch('/inbox/{fetchedEmail}/starred',          [InboxController::class, 'markStarred'])->name('inbox.starred');
+        Route::patch('/inbox/{fetchedEmail}/trash',            [InboxController::class, 'trash'])->name('inbox.trash');
+        Route::patch('/inbox/{fetchedEmail}/restore',          [InboxController::class, 'restore'])->name('inbox.restore');
+        Route::delete('/inbox/{fetchedEmail}',                 [InboxController::class, 'destroy'])->name('inbox.destroy');
+    });
 
     // AI Provider Settings
     Route::get('/settings/ai',          [AiProviderController::class, 'show'])->name('ai.show');

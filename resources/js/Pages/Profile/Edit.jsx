@@ -94,9 +94,9 @@ const NAV = [
   {
     group: 'Email',
     items: [
-      // SMTP Accounts stays ungated — it also powers Inbox (IMAP), which
-      // isn't module-gated and is available on every plan, Free included.
-      { id: 'smtp',      label: 'SMTP Accounts',  icon: Server },
+      // SMTP Accounts powers both Inbox (IMAP) and Email Campaigns (SMTP
+      // sending) — visible if the plan includes either module.
+      { id: 'smtp',      label: 'SMTP Accounts',  icon: Server, module: ['inbox', 'email_campaigns'] },
       { id: 'mail',      label: 'Sending Limits', icon: Mail, module: 'email_campaigns' },
       { id: 'templates', label: 'Templates',      icon: LayoutTemplate, module: 'email_campaigns' },
     ],
@@ -119,7 +119,11 @@ const NAV = [
 ]
 
 function SettingsNav({ active, onChange, leadGenEnabled, moduleKeys }) {
-  const visible = (item) => !item.module || moduleKeys.includes(item.module)
+  const visible = (item) => {
+    if (!item.module) return true
+    const required = Array.isArray(item.module) ? item.module : [item.module]
+    return required.some(m => moduleKeys.includes(m))
+  }
   const navSections = NAV.map(s => ({ ...s, items: s.items.filter(visible) })).filter(s => s.items.length > 0)
   const allItems = navSections.flatMap(s => s.items)
 
@@ -2253,9 +2257,10 @@ function TwilioSettingTab({ twilioSetting }) {
 
 // ─── Page root ────────────────────────────────────────────────────────────────
 
-// Which module (if any) each settings tab requires — mirrors the module
-// each tab's actual routes are gated behind server-side.
-const TAB_MODULE = { mail: 'email_campaigns', templates: 'email_campaigns', whatsapp: 'whatsapp_automation', twilio: 'dialer' }
+// Which module(s) (if any) each settings tab requires — mirrors the module
+// each tab's actual routes are gated behind server-side. An array means
+// "any of these" (e.g. SMTP powers both Inbox and Email Campaigns).
+const TAB_MODULE = { smtp: ['inbox', 'email_campaigns'], mail: 'email_campaigns', templates: 'email_campaigns', whatsapp: 'whatsapp_automation', twilio: 'dialer' }
 
 export default function ProfileEdit({
   mustVerifyEmail, smtpCredentials, orgDefaultSmtp, mailSettings,
@@ -2263,7 +2268,11 @@ export default function ProfileEdit({
   whatsappStatus, aiSetting, twilioSetting, tags = [],
 }) {
   const moduleKeys = usePage().props.plan?.modules ?? []
-  const tabAllowed = (id) => !TAB_MODULE[id] || moduleKeys.includes(TAB_MODULE[id])
+  const tabAllowed = (id) => {
+    const required = TAB_MODULE[id]
+    if (!required) return true
+    return (Array.isArray(required) ? required : [required]).some(m => moduleKeys.includes(m))
+  }
 
   const [tab, setTab] = useState(() => {
     const p = new URLSearchParams(window.location.search)
@@ -2304,7 +2313,7 @@ export default function ProfileEdit({
             {tab === 'profile'   && <ProfileTab mustVerifyEmail={mustVerifyEmail} />}
             {tab === 'workspace' && <WorkspaceTab />}
             {tab === 'tags'      && <TagsTab tags={tags} />}
-            {tab === 'smtp'      && <SmtpTab credentials={smtpCredentials} orgDefault={orgDefaultSmtp} />}
+            {tab === 'smtp'      && tabAllowed('smtp')       && <SmtpTab credentials={smtpCredentials} orgDefault={orgDefaultSmtp} />}
             {tab === 'mail'      && tabAllowed('mail')      && <MailTab mailSettings={mailSettings} />}
             {tab === 'templates' && tabAllowed('templates') && <TemplatesTab templates={emailTemplates ?? []} activeTemplateId={activeTemplateId} onGoToWorkspace={() => setTab('workspace')} />}
             {tab === 'ai'          && <AiProviderTab aiSetting={aiSetting} />}

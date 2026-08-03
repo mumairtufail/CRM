@@ -373,10 +373,11 @@ function buildSections() {
     },
     {
       id: 'inbox', title: 'Inbox (Connected Email)', icon: Inbox,
-      keywords: 'inbox imap email read reply compose sync star trash fetch',
+      keywords: 'inbox imap email read reply compose sync star trash fetch outreach complete plan',
       body: (
         <>
           <Lead>Read and reply to real email inside the CRM, with incoming mail linked to the matching lead. Go to <em>Inbox</em>.</Lead>
+          <Callout type="note">Inbox is included on the <strong>Outreach</strong> and <strong>Complete</strong> plans. Not seeing it in your sidebar? It isn't included on your current plan.</Callout>
           <Callout type="warning">Requires an account with <strong>IMAP settings</strong> in <em>Settings → SMTP Accounts</em>. Without it, the Inbox shows a setup banner.</Callout>
           <Bullets items={[
             <>Folders: <strong>Inbox</strong>, <strong>Starred</strong>, <strong>Trash</strong>. Unread mail appears in bold.</>,

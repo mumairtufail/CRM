@@ -12,8 +12,8 @@ class PlanSeeder extends Seeder
     public const TIER_MODULES = [
         'basic'   => [],
         'starter' => ['dialer'],
-        'pro'     => ['dialer', 'email_campaigns'],
-        'premium' => ['dialer', 'email_campaigns', 'whatsapp_campaigns', 'whatsapp_automation'],
+        'pro'     => ['email_campaigns', 'inbox'],
+        'premium' => ['dialer', 'email_campaigns', 'inbox', 'whatsapp_campaigns', 'whatsapp_automation'],
     ];
 
     public function run(): void
@@ -41,13 +41,16 @@ class PlanSeeder extends Seeder
                 'paddle_price_id_yearly'   => null,
             ],
             [
-                'name'                     => 'Starter',
+                // slug stays 'starter' (DB identifier, never renamed — see the
+                // 'basic'->Free precedent) but this tier is now positioned and
+                // sold as "Caller": Dialer only, no Email Campaigns or Inbox.
+                'name'                     => 'Caller',
                 'slug'                     => 'starter',
-                'tagline'                  => 'Free plus the Dialer, for teams calling leads directly.',
-                'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Built-in Dialer</li></ul>',
-                'price_monthly'            => 10,
+                'tagline'                  => 'Free plus the Dialer, for teams that live on the phone.',
+                'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Built-in Dialer — click-to-call, recordings, SMS</li></ul>',
+                'price_monthly'            => 20,
                 'price_monthly_original'   => null,
-                'price_yearly'             => 100,
+                'price_yearly'             => 200,
                 'price_yearly_original'    => null,
                 'lead_limit'               => null,
                 'user_limit'               => null,
@@ -55,14 +58,17 @@ class PlanSeeder extends Seeder
                 'sort_order'               => 2,
                 'cta_text'                 => 'Sign up free, then upgrade',
                 'paddle_product_id'        => 'pro_01kyqag9mqzazdh1wmak0s6tet',
-                'paddle_price_id_monthly'  => 'pri_01kyqag9zhahzhyz19nae7e68w',
-                'paddle_price_id_yearly'   => 'pri_01kyqaga9zmrzsxt4hdxtnbbev',
+                'paddle_price_id_monthly'  => 'pri_01kyvdpxj7905znnvc8mk84tmr',
+                'paddle_price_id_yearly'   => 'pri_01kyvdq089a9n3fdnp0q8wt4be',
             ],
             [
-                'name'                     => 'Pro',
+                // slug stays 'pro'; sold as "Outreach": Email Campaigns + Inbox,
+                // no Dialer. Price unchanged from the previous "Pro" tier, so
+                // the existing Paddle price IDs stay valid — nothing to re-mint.
+                'name'                     => 'Outreach',
                 'slug'                     => 'pro',
-                'tagline'                  => 'Starter plus automated email campaigns to nurture leads at scale.',
-                'description'              => '<p>Everything in Starter, plus:</p><ul><li>Automated email campaigns</li><li>Advanced reports</li></ul>',
+                'tagline'                  => 'Free plus Email Campaigns and a connected Inbox, for structured outreach.',
+                'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Automated email campaigns with AI-generated follow-ups</li><li>Connected Inbox (IMAP)</li></ul>',
                 'price_monthly'            => 20,
                 'price_monthly_original'   => null,
                 'price_yearly'             => 200,
@@ -77,13 +83,16 @@ class PlanSeeder extends Seeder
                 'paddle_price_id_yearly'   => 'pri_01kyqagb7p26pnyt66c7jmt3nq',
             ],
             [
-                'name'                     => 'Premium',
+                // slug stays 'premium'; sold as "Complete": everything — Dialer,
+                // Email Campaigns, Inbox — plus first access to WhatsApp once it
+                // publicly launches.
+                'name'                     => 'Complete',
                 'slug'                     => 'premium',
-                'tagline'                  => 'Everything in Pro, ready for WhatsApp the moment it launches.',
-                'description'              => '<p>Everything in Pro, plus:</p><ul><li>WhatsApp Campaigns & Auto-Response Bot (coming soon)</li><li>Dedicated Support</li></ul>',
-                'price_monthly'            => 25,
+                'tagline'                  => 'Dialer, Email Campaigns, and Inbox together — plus WhatsApp the moment it launches.',
+                'description'              => '<p>Everything Lumenia CRM offers:</p><ul><li>Unlimited leads</li><li>Built-in Dialer</li><li>Email campaigns with AI-generated follow-ups</li><li>Connected Inbox (IMAP)</li><li>WhatsApp Campaigns & Auto-Response Bot (coming soon)</li></ul>',
+                'price_monthly'            => 35,
                 'price_monthly_original'   => null,
-                'price_yearly'             => 250,
+                'price_yearly'             => 350,
                 'price_yearly_original'    => null,
                 'lead_limit'               => null,
                 'user_limit'               => null,
@@ -91,8 +100,8 @@ class PlanSeeder extends Seeder
                 'sort_order'               => 4,
                 'cta_text'                 => 'Sign up free, then upgrade',
                 'paddle_product_id'        => 'pro_01kyn9d0rk14nv309dsx969e0k',
-                'paddle_price_id_monthly'  => 'pri_01kyqagbjf6fqe7mf0rdanxf78',
-                'paddle_price_id_yearly'   => 'pri_01kyqagbwy4yccjndypn2z152v',
+                'paddle_price_id_monthly'  => 'pri_01kyvdq0hand28tmmv73rvekva',
+                'paddle_price_id_yearly'   => 'pri_01kyvdq0trhwz6pj4c1vpsbx32',
             ],
         ];
 

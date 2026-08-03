@@ -43,7 +43,7 @@ const navItems = [
     ],
   },
   { label: 'Dialer',     href: '/twilio',    icon: Phone, module: 'dialer', section: 'Communication' },
-  { label: 'Inbox',      href: '/inbox',     icon: Inbox, section: 'Communication' },
+  { label: 'Inbox',      href: '/inbox',     icon: Inbox, module: 'inbox', section: 'Communication' },
 
   { label: 'Forms',      href: '/forms',     icon: ClipboardList, section: 'Work' },
   { label: 'Projects',   href: '/projects',  icon: FolderKanban, section: 'Work' },

@@ -32,6 +32,12 @@ class ModuleSeeder extends Seeder
             'description' => 'Bring-your-own Twilio dialer — click-to-call, inbound/outbound call logging on every lead.',
             'sort_order'  => 4,
         ],
+        [
+            'key'         => 'inbox',
+            'name'        => 'Inbox',
+            'description' => 'Connected email inbox (IMAP) — read, reply, and track email conversations with leads from inside the CRM.',
+            'sort_order'  => 5,
+        ],
     ];
 
     public function run(): void

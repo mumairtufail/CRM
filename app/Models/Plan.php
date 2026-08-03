@@ -69,9 +69,14 @@ class Plan extends Model
      */
     public static function paddleTiers(): array
     {
+        // WhatsApp is built but not yet publicly launched — stays assigned to
+        // Premium in the DB for when it ships, but isn't advertised as
+        // available today. Mirrors the same exclusion in publicPricingTiers().
+        $unadvertisedModuleKeys = ['whatsapp_campaigns', 'whatsapp_automation'];
+
         return static::where('is_active', true)
             ->whereNotNull('paddle_product_id')
-            ->with('modules:id,name')
+            ->with('modules:id,name,key')
             ->orderBy('sort_order')
             ->get()
             ->map(fn (Plan $plan) => [
@@ -80,7 +85,7 @@ class Plan extends Model
                 'description' => $plan->tagline,
                 'features'    => [
                     'Core CRM — leads, pipeline, invoicing, reports, team',
-                    ...$plan->modules->pluck('name')->all(),
+                    ...$plan->modules->whereNotIn('key', $unadvertisedModuleKeys)->pluck('name')->all(),
                 ],
                 'priceId' => [
                     'month' => $plan->paddle_price_id_monthly,

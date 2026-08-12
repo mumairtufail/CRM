@@ -110,12 +110,13 @@ class Plan extends Model
         // Always-included core capabilities, regardless of tier — these are
         // never module-gated, so every plan (including Free) gets them.
         // Merged into fewer, denser lines so the pricing cards don't turn
-        // into a scroll-length checklist.
+        // into a scroll-length checklist. Dedicated support is intentionally
+        // separate — it's a paid-plan perk, not a Free one (see below).
         $coreFeatures = [
             'AI-powered lead search & pipeline (Kanban + Timeline)',
             'Projects, invoicing & reporting',
             'CSV & Google Sheets import/export',
-            'Roles, permissions & dedicated support',
+            'Roles & permissions',
         ];
 
         // WhatsApp is built but not yet publicly launched (see project
@@ -144,6 +145,10 @@ class Plan extends Model
                     )
                     : 'No limits on leads or team members';
 
+                // Dedicated support is a paid-plan perk — every plan with a
+                // Paddle product behind it is paid; Free has none.
+                $supportFeature = $plan->paddle_product_id ? ['Dedicated support'] : [];
+
                 return [
                     'name'        => $plan->name,
                     'slug'        => $plan->slug,
@@ -153,6 +158,7 @@ class Plan extends Model
                         ...$coreFeatures,
                         ...$plan->modules->whereNotIn('key', $unadvertisedModuleKeys)->pluck('name')->all(),
                         ...$emailCampaignExtras,
+                        ...$supportFeature,
                     ],
                     'priceId' => [
                         'month' => $plan->paddle_price_id_monthly,

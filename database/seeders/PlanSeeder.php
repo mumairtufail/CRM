@@ -8,6 +8,14 @@ use Illuminate\Database\Seeder;
 
 class PlanSeeder extends Seeder
 {
+    // NOTE: price_monthly/price_yearly below are display defaults only. This
+    // seeder does not call Admin\PlanController::syncToPaddle() — a price
+    // change here won't mint a new Paddle Price or update paddle_price_id_*,
+    // so the paddle_price_id_* values on the starter/pro/premium plans still
+    // point at whatever amount was live in Paddle the last time someone
+    // edited that plan through Admin > Plans. To actually change what
+    // customers get charged, edit the plan's price there instead.
+
     /** Modules each tier unlocks, on top of the always-included core CRM. */
     public const TIER_MODULES = [
         'basic'   => [],
@@ -48,9 +56,9 @@ class PlanSeeder extends Seeder
                 'slug'                     => 'starter',
                 'tagline'                  => 'Free plus the Dialer and a connected Inbox, for teams that live on the phone.',
                 'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Built-in Dialer — click-to-call, recordings, SMS</li><li>Connected Inbox (IMAP)</li></ul>',
-                'price_monthly'            => 20,
+                'price_monthly'            => 10,
                 'price_monthly_original'   => null,
-                'price_yearly'             => 200,
+                'price_yearly'             => 100,
                 'price_yearly_original'    => null,
                 'lead_limit'               => null,
                 'user_limit'               => null,
@@ -63,15 +71,14 @@ class PlanSeeder extends Seeder
             ],
             [
                 // slug stays 'pro'; sold as "Outreach": Email Campaigns + Inbox,
-                // no Dialer. Price unchanged from the previous "Pro" tier, so
-                // the existing Paddle price IDs stay valid — nothing to re-mint.
+                // no Dialer.
                 'name'                     => 'Outreach',
                 'slug'                     => 'pro',
                 'tagline'                  => 'Free plus Email Campaigns and a connected Inbox, for structured outreach.',
                 'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Automated email campaigns with AI-generated follow-ups</li><li>Connected Inbox (IMAP)</li></ul>',
-                'price_monthly'            => 20,
+                'price_monthly'            => 10,
                 'price_monthly_original'   => null,
-                'price_yearly'             => 200,
+                'price_yearly'             => 100,
                 'price_yearly_original'    => null,
                 'lead_limit'               => null,
                 'user_limit'               => null,
@@ -90,9 +97,9 @@ class PlanSeeder extends Seeder
                 'slug'                     => 'premium',
                 'tagline'                  => 'Dialer, Email Campaigns, and Inbox together — plus WhatsApp the moment it launches.',
                 'description'              => '<p>Everything Lumenia CRM offers:</p><ul><li>Unlimited leads</li><li>Built-in Dialer</li><li>Email campaigns with AI-generated follow-ups</li><li>Connected Inbox (IMAP)</li><li>WhatsApp Campaigns & Auto-Response Bot (coming soon)</li></ul>',
-                'price_monthly'            => 35,
+                'price_monthly'            => 20,
                 'price_monthly_original'   => null,
-                'price_yearly'             => 350,
+                'price_yearly'             => 200,
                 'price_yearly_original'    => null,
                 'lead_limit'               => null,
                 'user_limit'               => null,

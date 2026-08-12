@@ -4,17 +4,16 @@ namespace Database\Seeders;
 
 use App\Models\Module;
 use App\Models\Plan;
+use App\Services\PlanPaddleSync;
 use Illuminate\Database\Seeder;
 
 class PlanSeeder extends Seeder
 {
-    // NOTE: price_monthly/price_yearly below are display defaults only. This
-    // seeder does not call Admin\PlanController::syncToPaddle() — a price
-    // change here won't mint a new Paddle Price or update paddle_price_id_*,
-    // so the paddle_price_id_* values on the starter/pro/premium plans still
-    // point at whatever amount was live in Paddle the last time someone
-    // edited that plan through Admin > Plans. To actually change what
-    // customers get charged, edit the plan's price there instead.
+    // NOTE: a price_monthly/price_yearly change here DOES sync to Paddle —
+    // run() diffs each plan's old DB price against $data below and calls
+    // PlanPaddleSync::sync(), the same routine Admin\PlanController uses, so
+    // re-running this seeder after a price edit is a safe way to both update
+    // the DB and re-mint the matching Paddle price (see run()).
 
     /** Modules each tier unlocks, on top of the always-included core CRM. */
     public const TIER_MODULES = [
@@ -114,10 +113,20 @@ class PlanSeeder extends Seeder
 
         foreach ($plans as $data) {
             $slug = $data['slug'];
+
+            // Captured before the write so PlanPaddleSync can tell whether
+            // the price actually changed — same before/after pattern
+            // Admin\PlanController::update() uses.
+            $existing   = Plan::where('slug', $slug)->first();
+            $oldMonthly = $existing?->price_monthly === null ? null : (float) $existing->price_monthly;
+            $oldYearly  = $existing?->price_yearly === null ? null : (float) $existing->price_yearly;
+
             $plan = Plan::updateOrCreate(['slug' => $slug], $data);
 
             $moduleIds = Module::whereIn('key', self::TIER_MODULES[$slug])->pluck('id');
             $plan->modules()->sync($moduleIds);
+
+            PlanPaddleSync::sync($plan, $oldMonthly, $oldYearly);
         }
     }
 }

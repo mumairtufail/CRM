@@ -89,10 +89,10 @@ class PlanSeeder extends Seeder
                 'paddle_price_id_yearly'   => 'pri_01kyqagb7p26pnyt66c7jmt3nq',
             ],
             [
-                // slug stays 'premium'; sold as "Complete": everything — Dialer,
+                // slug stays 'premium'; sold as "Max": everything — Dialer,
                 // Email Campaigns, Inbox — plus first access to WhatsApp once it
                 // publicly launches.
-                'name'                     => 'Complete',
+                'name'                     => 'Max',
                 'slug'                     => 'premium',
                 'tagline'                  => 'Dialer, Email Campaigns, and Inbox together — plus WhatsApp the moment it launches.',
                 'description'              => '<p>Everything Lumenia CRM offers:</p><ul><li>Unlimited leads</li><li>Built-in Dialer</li><li>Email campaigns with AI-generated follow-ups</li><li>Connected Inbox (IMAP)</li><li>WhatsApp Campaigns & Auto-Response Bot (coming soon)</li></ul>',

@@ -11,7 +11,7 @@ class PlanSeeder extends Seeder
     /** Modules each tier unlocks, on top of the always-included core CRM. */
     public const TIER_MODULES = [
         'basic'   => [],
-        'starter' => ['dialer'],
+        'starter' => ['dialer', 'inbox'],
         'pro'     => ['email_campaigns', 'inbox'],
         'premium' => ['dialer', 'email_campaigns', 'inbox', 'whatsapp_campaigns', 'whatsapp_automation'],
     ];
@@ -43,11 +43,11 @@ class PlanSeeder extends Seeder
             [
                 // slug stays 'starter' (DB identifier, never renamed — see the
                 // 'basic'->Free precedent) but this tier is now positioned and
-                // sold as "Caller": Dialer only, no Email Campaigns or Inbox.
+                // sold as "Caller": Dialer and a connected Inbox, no Email Campaigns.
                 'name'                     => 'Caller',
                 'slug'                     => 'starter',
-                'tagline'                  => 'Free plus the Dialer, for teams that live on the phone.',
-                'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Built-in Dialer — click-to-call, recordings, SMS</li></ul>',
+                'tagline'                  => 'Free plus the Dialer and a connected Inbox, for teams that live on the phone.',
+                'description'              => '<p>Everything in Free, plus:</p><ul><li>Unlimited leads</li><li>Built-in Dialer — click-to-call, recordings, SMS</li><li>Connected Inbox (IMAP)</li></ul>',
                 'price_monthly'            => 20,
                 'price_monthly_original'   => null,
                 'price_yearly'             => 200,

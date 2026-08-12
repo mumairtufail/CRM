@@ -21,6 +21,7 @@ class CheckOrganizationExpiry
         $organization = app(TenantContext::class)->get();
 
         if (! $organization
+            || $organization->is_internal
             || ! $organization->expires_at
             || ! $organization->expires_at->isPast()
             || $request->is('support*', 'impersonate/leave', 'logout')

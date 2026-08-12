@@ -91,9 +91,14 @@ class Organization extends Model
     /**
      * Whether this tenant's active plan unlocks the given module key.
      * Modules not in the catalog (e.g. core CRM) are always available.
+     * Internal (staff/test) organizations skip plan gating entirely.
      */
     public function hasModule(string $key): bool
     {
+        if ($this->is_internal) {
+            return true;
+        }
+
         if ($this->plan_status !== 'active' || ! $this->plan_id) {
             return false;
         }

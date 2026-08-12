@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Module;
 use App\Models\Notification;
 use App\Models\Plan;
 use App\Support\TenantContext;
@@ -86,6 +87,19 @@ class HandleInertiaRequests extends Middleware
                 // activeSubscription() deliberately excludes, and the banner
                 // needs to keep showing (with a Resume action) for exactly
                 // that state, not just the scheduled countdown before it.
+                //
+                // Internal (staff/test) organizations bypass plan gating and
+                // billing state entirely, regardless of whatever Paddle
+                // subscription happens to be attached to them.
+                if ($organization->is_internal) {
+                    return [
+                        'name'         => $organization->plan?->name ?? 'Internal',
+                        'status'       => 'active',
+                        'modules'      => Module::pluck('key')->all(),
+                        'subscription' => null,
+                    ];
+                }
+
                 $latestSubscription = $organization->latestSubscription();
 
                 return [

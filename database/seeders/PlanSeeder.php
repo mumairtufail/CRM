@@ -13,7 +13,11 @@ class PlanSeeder extends Seeder
     // run() diffs each plan's old DB price against $data below and calls
     // PlanPaddleSync::sync(), the same routine Admin\PlanController uses, so
     // re-running this seeder after a price edit is a safe way to both update
-    // the DB and re-mint the matching Paddle price (see run()).
+    // the DB and re-mint the matching Paddle price. The paddle_product_id /
+    // paddle_price_id_* fields below are NOT part of that sync, though —
+    // they're bootstrap values used only the first time a plan row is ever
+    // created; once a plan exists, its live Paddle linkage is left alone
+    // here and owned entirely by PlanPaddleSync (see run()).
 
     /** Modules each tier unlocks, on top of the always-included core CRM. */
     public const TIER_MODULES = [
@@ -114,14 +118,31 @@ class PlanSeeder extends Seeder
         foreach ($plans as $data) {
             $slug = $data['slug'];
 
+            // The paddle_* fields above are bootstrap values for a brand-new
+            // install only — once a plan row exists, its paddle_product_id /
+            // paddle_price_id_* are live state owned by PlanPaddleSync (the
+            // only thing that talks to the Paddle API), never by this seeder.
+            // Letting updateOrCreate() below write these hardcoded, eventually
+            // stale IDs back over a plan that already has real ones is exactly
+            // what silently undid a live Paddle fix once already.
+            $paddleBootstrap = [
+                'paddle_product_id'       => $data['paddle_product_id'],
+                'paddle_price_id_monthly' => $data['paddle_price_id_monthly'],
+                'paddle_price_id_yearly'  => $data['paddle_price_id_yearly'],
+            ];
+            unset($data['paddle_product_id'], $data['paddle_price_id_monthly'], $data['paddle_price_id_yearly']);
+
+            $existing = Plan::where('slug', $slug)->first();
+
             // Captured before the write so PlanPaddleSync can tell whether
             // the price actually changed — same before/after pattern
             // Admin\PlanController::update() uses.
-            $existing   = Plan::where('slug', $slug)->first();
             $oldMonthly = $existing?->price_monthly === null ? null : (float) $existing->price_monthly;
             $oldYearly  = $existing?->price_yearly === null ? null : (float) $existing->price_yearly;
 
-            $plan = Plan::updateOrCreate(['slug' => $slug], $data);
+            $plan = $existing
+                ? tap($existing)->update($data)
+                : Plan::create([...$data, ...$paddleBootstrap]);
 
             $moduleIds = Module::whereIn('key', self::TIER_MODULES[$slug])->pluck('id');
             $plan->modules()->sync($moduleIds);
